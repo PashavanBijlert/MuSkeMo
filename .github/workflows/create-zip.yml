@@ -32,7 +32,7 @@ jobs:
       if: github.event_name == 'release'
       uses: ncipollo/release-action@v1
       with:
-        artifacts: repo.zip
+        artifacts: MuSkeMo.zip
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.event.release.tag_name }}
         name: ${{ github.event.release.name }}
