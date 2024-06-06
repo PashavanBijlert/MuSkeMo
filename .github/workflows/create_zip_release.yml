@@ -8,6 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+    - name: Prepare MuSkeMo Directory
+      run: |
+        mkdir -p MuSkeMo
+        cp -r __init__.py scripts README.md MuSkeMo/
     - name: Archive Release
       uses: thedoctor0/zip-release@0.7.6
       with:
