@@ -2,7 +2,7 @@
 
 Build and visualize musculoskeletal models in Blender.
 
-To download: Download the latest release on the right, under "Releases"
+To download: Click on the latest release on the right, and download "MuSkeMo.zip".
 
 To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark.
 
