@@ -2,9 +2,9 @@
 
 Build and visualize musculoskeletal models in Blender.
 
-To download: Press the "Code" button on the repository page, and click "Download ZIP".
+To download: Download the latest package on the right, under "Packages"
 
-To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...".
+To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...", and then select your downloaded zip file.
 
 This README is currently very short and incomplete, more details will be added in due course. A video tutorial will be uploaded that demonstrates the functionality of the plugin.
 
