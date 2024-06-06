@@ -10,9 +10,9 @@ bl_info = {
     "category" : "Physics",
     "doc_url" : "https://github.com/PashavanBijlert/MuSkeMo",
     "tracker_url" : "https://github.com/PashavanBijlert/MuSkeMo/issues"
-    
+    }
 
-}
+
 import bpy
 from mathutils import Vector
 
