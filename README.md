@@ -2,6 +2,10 @@
 
 Build and visualize musculoskeletal models in Blender.
 
+To download: Press the "Code" button on the repository page, and click "Download ZIP".
+
+To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...".
+
 This README is currently very short and incomplete, more details will be added in due course. A video tutorial will be uploaded that demonstrates the functionality of the plugin.
 
 **Inertial properties panel**
