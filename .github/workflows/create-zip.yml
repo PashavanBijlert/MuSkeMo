@@ -1,0 +1,38 @@
+name: Create Zip without Subdirectory
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-zip:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Create zip without subdirectory
+      run: |
+        mkdir temp_dir
+        cp -r ./* temp_dir
+        cd temp_dir
+        zip -r ../MuSkeMo.zip ./*
+        cd ..
+        rm -rf temp_dir
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: MuSkeMo-zip
+        path: MuSkeMo.zip
+
+    - name: Create Release
+      if: github.event_name == 'release'
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: repo.zip
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.event.release.tag_name }}
+        name: ${{ github.event.release.name }}
