@@ -1,50 +1,13 @@
-name: 'Zip Release'
-author: 'TheDoctor0'
-description: 'Make an archive from specified files and directories as workflow action'
-inputs:
-  filename:
-    description: 'Filename for archive'
-    required: true
-    default: 'MuSkeMo.zip'
-  path:
-    description: 'Base path for archive files'
-    default: '.'
-    required: false
-  directory:
-    description: 'Working directory before zipping'
-    default: '.'
-    required: false
-  exclusions:
-    description: 'List of excluded files / directories'
-    default: ''
-    required: false
-  recursive_exclusions:
-    description: 'List of excluded files / directories with recursive wildcards (only applies on Windows with `zip` type)'
-    default: ''
-    required: false
-  custom:
-    description: 'Provide any custom parameters to the zipping command'
-    default: ''
-    required: false
-  type:
-    description: 'Tool to use for archiving'
-    default: 'zip'
-    required: false
-  command:
-    description: 'An extra command that will run before zipping'
-    default: ''
-    required: false
-runs:
-  using: composite
-  steps:
-    - shell: bash
-      env:
-        INPUT_FILENAME: ${{ inputs.filename }}
-        INPUT_PATH: ${{ inputs.path }}
-        INPUT_DIRECTORY: ${{ inputs.directory }}
-        INPUT_EXCLUSIONS: ${{ inputs.exclusions }}
-        INPUT_RECURSIVE_EXCLUSIONS: ${{ inputs.recursive_exclusions }}
-        INPUT_CUSTOM: ${{ inputs.custom }}
-        INPUT_TYPE: ${{ inputs.type }}
-        INPUT_COMMAND: ${{ inputs.command }}
-      run: $GITHUB_ACTION_PATH/entrypoint.sh
+name: Create Archive
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Archive Release
+      uses: thedoctor0/zip-release@0.7.5
+      with:
+        type: 'zip'
+        filename: 'MuSkeMo.zip'
+        exclusions: '*.git* /*node_modules/* .editorconfig'
