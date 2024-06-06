@@ -1,5 +1,8 @@
 name: Create Archive
-on: [push]
+on:
+  push:
+    tags:
+      - '*' # Trigger on tag pushes that start with 'v'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,3 +14,8 @@ jobs:
         type: 'zip'
         filename: 'MuSkeMo.zip'
         exclusions: '*.git* /*node_modules/* .editorconfig'
+    - name: Upload Release
+      uses: ncipollo/release-action@v1.14.0
+      with:
+        artifacts: "MuSkeMo.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
