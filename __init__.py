@@ -9,7 +9,7 @@ bl_info = {
     "warning" : "",
     "category" : "Physics",
     "doc_url" : "https://github.com/PashavanBijlert/MuSkeMo",
-    "tracker_url" : "https://github.com/PashavanBijlert/MuSkeMo/issues"
+    "tracker_url" : "https://github.com/PashavanBijlert/MuSkeMo/issues",
     }
 
 
