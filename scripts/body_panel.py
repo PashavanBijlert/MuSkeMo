@@ -68,9 +68,9 @@ class CreateNewBodyOperator(Operator):
             bpy.context.object['COM'] = [nan, nan, nan]
             bpy.context.object.id_properties_ui('COM').update(description = 'COM location (in global frame)')
         
-            bpy.context.object['COM'] = [nan, nan, nan]
-                
+     
             bpy.context.object['Geometry'] = 'no geometry'    #add list of mesh files
+            bpy.context.object.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes)')  
            
             bpy.ops.object.select_all(action='DESELECT')
         
@@ -177,7 +177,7 @@ class UpdateLocationFromCOMOperator(Operator):
         body_name = bpy.context.scene.muskemo.bodyname
         
         if not body_name: #if the user didn't fill out a name
-            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body. Operation aborted")
+            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity. Operation aborted")
             return {'FINISHED'}
         
         try: bpy.data.objects[body_name]  #check if the body exists
@@ -245,7 +245,7 @@ class AssignInertialPropertiesOperator(Operator):
         sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
         if not body_name: #if the user didn't fill out a name
-            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body. Operation aborted")
+            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity. Operation aborted")
             return {'FINISHED'}
 
 
@@ -375,10 +375,9 @@ class ComputeInertialPropertiesOperator(Operator):
         active_obj = bpy.context.active_object  #should be the body
         sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
-        #InProp =  bpy.data.texts['inertialproperties_v1.1.py'].as_module()  ### inertial properties. This will eventually be a separate script
-
+        
         if not body_name: #if the user didn't fill out a name
-            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body. Operation aborted")
+            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity. Operation aborted")
             return {'FINISHED'}
 
 
@@ -564,8 +563,234 @@ class ComputeInertialPropertiesOperator(Operator):
         return {'FINISHED'}    
 
 
+class AttachVizGeometryOperator(Operator):
+    bl_idname = "body.attach_visual_geometry"
+    bl_label = "Select 1+ meshes and the target body. Attaches visual geometry (eg. bone meshes) to a body.  Geometry is placed in the designated collection"
+    bl_description = "Select 1+ meshes and the target body. Attaches visual geometry (eg. bone meshes) to a body.  Geometry is placed in the designated collection"
 
-  
+
+    def execute(self, context):
+        body_name = bpy.context.scene.muskemo.bodyname
+        colname = bpy.context.scene.muskemo.body_collection
+        active_obj = bpy.context.active_object  #should be the body
+        sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
+        
+        geom_colname = bpy.context.scene.muskemo.geometry_collection    
+
+        
+        if not body_name: #if the user didn't fill out a name
+            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity to prevent ambiguity. Operation aborted")
+            return {'FINISHED'}
+
+
+        try: bpy.data.objects[body_name]  #check if the body exists
+        
+        except:  #throw an error if the body doesn't exist
+            self.report({'ERROR'}, "Body with the name '" + body_name + "' does not exist yet, create it first")
+            return {'FINISHED'}
+        
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) == 0):
+            self.report({'ERROR'}, "No objects selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+            return {'FINISHED'}
+        
+        if (len(sel_obj) == 1):
+            self.report({'ERROR'}, "Only 1 object selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+            return {'FINISHED'}
+        
+        if bpy.data.objects[body_name] not in sel_obj:
+            self.report({'ERROR'}, "None of the selected objects is the target body. The target body and body name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if len([ob for ob in sel_obj if ob.name in bpy.data.collections[colname].objects])>1: #if multiple bodies selected
+            self.report({'ERROR'}, "More than one selected object is a 'Body' in the '" + colname +  "' collection. You can selected multiple source objects, but only one target body. Operation cancelled.")
+            return {'FINISHED'}
+        
+        ## source objects are all the selected objects, except the active object (which is the target body)
+        geom_objects = [ob for ob in sel_obj if ob.name != body_name]
+        target_body = bpy.data.objects[body_name]
+
+        error_check = []  #check if there are non-mesh data types, visualization geometry can only be of the type mesh
+
+        for geom in geom_objects:
+            if geom.type != 'MESH':
+                error_check.append([1])
+                self.report({'ERROR'}, "The selected object '" + geom.name +  "' is not a 'MESH'. Only meshes can act as visualization geometry. Operation cancelled.")
+
+        
+        if len(error_check)>1:
+            return {'FINISHED'}
+            
+        ### if none of the previous scenarios triggered an error, we can actually set geometry
+
+        #check if the collection name exists, and if not create it
+        if geom_colname not in bpy.data.collections:
+            bpy.data.collections.new(geom_colname)
+            self.report({'INFO'},"Collection with the name '" + geom_colname + "' doesn't exist yet, automatically creating it. Visualization geometry will be moved to this collection.")
+
+
+        coll = bpy.data.collections[geom_colname] #Collection which will recieve the scaled  hulls
+
+        if geom_colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+            bpy.context.scene.collection.children.link(coll)     #add it to the scene
+        
+        #Make sure the geom collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[geom_colname]
+        
+
+        ##target body:
+        body = bpy.data.objects[body_name]
+
+        for geom in geom_objects:
+            
+            if coll not in geom.users_collection:
+        
+                for old_coll in geom.users_collection:
+                    # Unlink the object
+                    old_coll.objects.unlink(geom)
+
+            # Link each object to the geom collection
+                coll.objects.link(geom)
+    
+        
+        ## instantiate geom list, and append each geometry to it with the folder name
+
+        geom_list = []
+
+
+        for geom in geom_objects:
+            
+
+            ## construct the relative directory in the geometry folder (to be used in the model)
+            geom_relpath = geom_colname + '/' + geom.name + '.obj'
+            
+            ### check if geom_relpath is already attached to another body
+            skip_geom = False
+            for obj in [obj for obj in bpy.data.collections[colname].objects if obj != body]: #for all the bodies in the body collection that aren't the target body
+                
+                
+                if geom_relpath in obj['Geometry']:
+                    self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' is already attached to a different body with the name '" + obj.name + "'. Detach it from that body first. Skipped this geometry object.")
+                    skip_geom = True
+                    break
+
+            if skip_geom:
+                continue
+
+
+            if geom_relpath in body['Geometry']:
+                self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' is already attached to target body with name '" + obj.name + "'. Skipped this geometry object.")    
+                continue
+            
+            
+            ##parent the body as the parent
+            geom.parent = body
+            
+            #this undoes the transformation after parenting
+            geom.matrix_parent_inverse = body.matrix_world.inverted()
+
+            
+            geom_list.append(geom_relpath)
+
+
+
+
+        geom_delimiter = ';'
+
+        if geom_list:  #if the geom_list is nonempty
+            
+            geom_list_str = geom_delimiter.join(geom_list) + geom_delimiter
+            
+            if body['Geometry'] == 'no geometry':
+                body['Geometry'] = geom_list_str
+            else:
+                body['Geometry'] = body['Geometry'] + geom_list_str  
+
+
+        
+        return {'FINISHED'}
+    
+
+class DetachVizGeometryOperator(Operator):
+    bl_idname = "body.detach_visual_geometry"
+    bl_label = "Select 1+ meshes and the target body. Detaches visual geometry (eg. bone meshes) from a body."
+    bl_description = "Select 1+ meshes and the target body. Detaches visual geometry (eg. bone meshes) from a body."
+
+
+    def execute(self, context):
+        body_name = bpy.context.scene.muskemo.bodyname
+        colname = bpy.context.scene.muskemo.body_collection
+        active_obj = bpy.context.active_object  #should be the body
+        sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
+        
+        geom_colname = bpy.context.scene.muskemo.geometry_collection    
+
+        if not body_name: #if the user didn't fill out a name
+            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity to prevent ambiguity. Operation aborted")
+            return {'FINISHED'}
+
+
+        try: bpy.data.objects[body_name]  #check if the body exists
+        
+        except:  #throw an error if the body doesn't exist
+            self.report({'ERROR'}, "Body with the name '" + body_name + "' does not exist yet, create it first")
+            return {'FINISHED'}
+        
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) == 0):
+            self.report({'ERROR'}, "No objects selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+            return {'FINISHED'}
+        
+        if (len(sel_obj) == 1):
+            self.report({'ERROR'}, "Only 1 object selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+            return {'FINISHED'}
+        
+        if bpy.data.objects[body_name] not in sel_obj:
+            self.report({'ERROR'}, "None of the selected objects is the target body. The target body and body name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if len([ob for ob in sel_obj if ob.name in bpy.data.collections[colname].objects])>1: #if multiple bodies selected
+            self.report({'ERROR'}, "More than one selected object is a 'Body' in the '" + colname +  "' collection. You can selected multiple source objects, but only one target body. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if len([ob for ob in sel_obj if ob.name in bpy.data.collections[geom_colname].objects])<1: #if less than 1 object is in the geometry collection
+            self.report({'ERROR'}, "None of the selected objects are a geometry file in the '" + colname +  "' collection. Operation cancelled.")
+            return {'FINISHED'}
+
+        ## source objects are all the selected objects, except the active object (which is the target body)
+        geom_objects = [ob for ob in sel_obj if ob.name != body_name]
+        target_body = bpy.data.objects[body_name]
+
+        geom_delimiter = ';'
+        for geom in geom_objects:
+            geom_relpath = geom_colname + '/' + geom.name + '.obj'
+
+            if geom_relpath in target_body['Geometry']:  #if geom is attached to the body
+                
+                target_body['Geometry'] = target_body['Geometry'].replace(geom_relpath + geom_delimiter,'')  #remove the geom path from the body
+
+                ## unparent the geometry in blender, without moving the geometry
+                parented_worldmatrix =geom.matrix_world.copy() 
+                geom.parent = None
+                geom.matrix_world = parented_worldmatrix
+
+            else: 
+                
+                self.report({'ERROR'}, "Geometry file '" + geom.name +  "' does not appear to be attached to body '" + target_body.name + "'. Operation cancelled.")
+
+
+
+
+        if not target_body['Geometry']: #if the geometry list is now empty, state so explicitly
+            target_body['Geometry'] = 'no geometry'
+
+
+        return {'FINISHED'}
+
+
+
     
 
 class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
@@ -672,41 +897,28 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         row.prop(muskemo, "axes_size")
         
         
+class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
+    bl_idname = 'VIEW3D_PT_vizgeometry_subpanel'
+    bl_parent_id = 'VIEW3D_PT_body_panel'
+    
+    #bl_category = "Body panel"  # found in the Sidebar
+    bl_label = "Attach visual (bone) geometry"  # found at the top of the Panel
+    bl_context = "objectmode"
+    
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    #bl_options = {'HEADER_LAYOUT_EXPAND'}
 
-'''
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        
+        ## user input body name    
+        layout.prop(muskemo, "geometry_collection")
+        row = self.layout.row()
 
-def register():
-    
-    
-    bpy.utils.register_class(MyProperties)
-    bpy.utils.register_class(CreateNewBodyOperator)
-    bpy.utils.register_class(ReflectBilateralBodiesOperator)
-    bpy.utils.register_class(AssignInertialPropertiesOperator)
-    bpy.utils.register_class(ComputeInertialPropertiesOperator)
-    bpy.utils.register_class(UpdateLocationFromCOMOperator)
-    bpy.utils.register_class(VIEW3D_PT_body_panel)
-    bpy.utils.register_class(VIEW3D_PT_muscle_panel)
-    bpy.utils.register_class(VIEW3D_PT_bodysubpanel)
-    
-    
-    bpy.types.Scene.muskemo = PointerProperty(type=MyProperties)
-
-def unregister():
-    
-    bpy.utils.unregister_class(VIEW3D_PT_bodysubpanel)
-    bpy.utils.unregister_class(VIEW3D_PT_muscle_panel)
-    bpy.utils.unregister_class(VIEW3D_PT_body_panel)
-    bpy.utils.unregister_class(ReflectBilateralBodiesOperator)
-    bpy.utils.unregister_class(AssignInertialPropertiesOperator)
-    bpy.utils.unregister_class(ComputeInertialPropertiesOperator)
-    bpy.utils.unregister_class(UpdateLocationFromCOMOperator)    
-    bpy.utils.unregister_class(CreateNewBodyOperator)
-    bpy.utils.unregister_class(MyProperties)
-    
-    del bpy.types.Scene.muskemo
-    
-
-if __name__ == "__main__":
-    register()
-
-'''    
+        row.operator("body.attach_visual_geometry", text = "Attach visual (bone) geometry")
+        row = self.layout.row()
+        row.operator("body.detach_visual_geometry", text = "Detach visual (bone) geometry")
+        return

@@ -55,6 +55,13 @@ class MuSkeMoProperties(PropertyGroup):
         max = 100
         )
     
+    geometry_collection: StringProperty(
+        name="Geometry collection",
+        description="Blender collection name in which the visual (bone) geometry will be placed. This will also be the geometry folder name during export.",
+        default="Geometry",
+        maxlen=1024,
+        )
+    
 
 
 #### joints

@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (3, 0, 0),
-    "version" : (0, 2, 52),
+    "version" : (0, 3, 0),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
@@ -41,9 +41,12 @@ from .scripts.muskemo_properties import (MuSkeMoProperties)          ## all prop
 
 
 #### body panel
-from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel, CreateNewBodyOperator,
+from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_PT_vizgeometry_subpanel, 
+                                    CreateNewBodyOperator,
                                       ReflectBilateralBodiesOperator, AssignInertialPropertiesOperator,
-                                      ComputeInertialPropertiesOperator,UpdateLocationFromCOMOperator,)
+                                      ComputeInertialPropertiesOperator,UpdateLocationFromCOMOperator,
+                                      AttachVizGeometryOperator, DetachVizGeometryOperator,
+                                      )
 
 #### joint panel
 from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJointsOperator, 
@@ -85,9 +88,11 @@ classes = (  #Inertial properties panel
                                     VIEW3D_PT_convex_hull_subpanel, 
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
             #body_panel
-                                    VIEW3D_PT_body_panel, MuSkeMoProperties, CreateNewBodyOperator,
+                                    VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,
+                                     CreateNewBodyOperator,
                                     ReflectBilateralBodiesOperator, AssignInertialPropertiesOperator,
                                       ComputeInertialPropertiesOperator,UpdateLocationFromCOMOperator,
+                                      AttachVizGeometryOperator, DetachVizGeometryOperator,
             #joint panel
                                       CreateNewJointOperator, ReflectRightsideJointsOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,
@@ -102,6 +107,9 @@ classes = (  #Inertial properties panel
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
                                    ExportMusclesOperator,
+
+            # properties
+                                   MuSkeMoProperties,
          
 )
 
