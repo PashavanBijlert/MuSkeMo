@@ -23,4 +23,6 @@ jobs:
       uses: ncipollo/release-action@v1.14.0
       with:
         artifacts: "MuSkeMo.zip"
-        token: ${{ secrets.PAT_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN }}  #for this to work, you must set "PAT_TOKEN" as a repository secret, under "actions".
+        #when pushing commits from VSCode, you also need to set the following: git remote set-url origin https://[PASTE PAT HERE]@github.com/PashavanBijlert/MuSkeMo.git
+        #The PAT also needs repo privileges and action/workflow privileges
