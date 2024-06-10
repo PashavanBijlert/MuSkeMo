@@ -55,7 +55,11 @@ class AddMusclepointOperator(Operator):
             obj = bpy.data.objects.new(muscle_name, curve)
             bpy.data.collections[colname].objects.link(obj)
                 
-            
+            ## define MuSkeMo type
+            obj['MuSkeMo_type'] = 'MUSCLE'    #to inform the user what type is created
+            obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
+
+
             ### hook point to body
             
             curve = bpy.data.objects[muscle_name]

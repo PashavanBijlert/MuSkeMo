@@ -52,23 +52,27 @@ class CreateNewJointOperator(Operator):
             
             
                 
-            bpy.context.object['coordinate_Tx'] = ''       #add mass property
+            bpy.context.object['coordinate_Tx'] = ''       #add coordinate
             bpy.context.object.id_properties_ui('coordinate_Tx').update(description = 'name of the Translational x coordinate')
             
-            bpy.context.object['coordinate_Ty'] = ''       #add mass property
+            bpy.context.object['coordinate_Ty'] = ''       #add coordinate
             bpy.context.object.id_properties_ui('coordinate_Ty').update(description = 'name of the Translational y coordinate')
             
-            bpy.context.object['coordinate_Tz'] = ''       #add mass property
+            bpy.context.object['coordinate_Tz'] = ''       #add coordinate
             bpy.context.object.id_properties_ui('coordinate_Tz').update(description = 'name of the Translational z coordinate')
             
-            bpy.context.object['coordinate_Rx'] = ''       #add mass property
+            bpy.context.object['coordinate_Rx'] = ''       #add coordinate
             bpy.context.object.id_properties_ui('coordinate_Rx').update(description = 'name of the Rotational x coordinate')
             
-            bpy.context.object['coordinate_Ry'] = ''       #add mass property
+            bpy.context.object['coordinate_Ry'] = ''       #add coordinate
             bpy.context.object.id_properties_ui('coordinate_Ry').update(description = 'name of the Rotational y coordinate')
             
-            bpy.context.object['coordinate_Rz'] = ''       #add mass property
+            bpy.context.object['coordinate_Rz'] = ''       #add coordinate
             bpy.context.object.id_properties_ui('coordinate_Rz').update(description = 'name of the Rotational z coordinate')
+
+
+            bpy.context.object['MuSkeMo_type'] = 'JOINT'    #to inform the user what type is created
+            bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
             
             
             bpy.ops.object.select_all(action='DESELECT')

@@ -62,16 +62,19 @@ class CreateNewBodyOperator(Operator):
             
             bpy.context.object['inertia_COM'] = [nan, nan, nan, nan, nan, nan]    #add inertia property
             bpy.context.object.id_properties_ui('inertia_COM').update(description = 'Ixx Iyy Izz Ixy Ixz Iyz (in kg*m^2) about body COM in global frame')
-            
-            
-           
+                    
             bpy.context.object['COM'] = [nan, nan, nan]
             bpy.context.object.id_properties_ui('COM').update(description = 'COM location (in global frame)')
         
-     
             bpy.context.object['Geometry'] = 'no geometry'    #add list of mesh files
             bpy.context.object.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes)')  
-           
+
+            bpy.context.object['MuSkeMo_type'] = 'BODY'    #to inform the user what type is created
+            bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
+
+            bpy.context.object['Local_frame'] = 'No local frame assigned'    #pre-allocate the Local_frame property
+            bpy.context.object.id_properties_ui('Local_frame').update(description = "Name of the local reference frame. You can create and assign these in the local reference frame subpanel")  
+
             bpy.ops.object.select_all(action='DESELECT')
         
         else:
@@ -684,16 +687,24 @@ class AttachVizGeometryOperator(Operator):
                 continue
             
             
-            ##parent the body as the parent
+
+            ### if nothing throws an error, assign the body as the parent
             geom.parent = body
             
             #this undoes the transformation after parenting
             geom.matrix_parent_inverse = body.matrix_world.inverted()
 
-            
             geom_list.append(geom_relpath)
 
+            ## Assign a MuSkeMo_type if it doesn't already exist:
+            try:
+                geom['MuSkeMo_type']
+            except:
+                geom['MuSkeMo_type'] = 'GEOMETRY'    #to inform the user what type is created
+                geom.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
 
+            geom['Attached to'] = body.name
+            geom.id_properties_ui('Attached to').update(description = "The body that this geometry is attached to")
 
 
         geom_delimiter = ';'
@@ -770,11 +781,16 @@ class DetachVizGeometryOperator(Operator):
             if geom_relpath in target_body['Geometry']:  #if geom is attached to the body
                 
                 target_body['Geometry'] = target_body['Geometry'].replace(geom_relpath + geom_delimiter,'')  #remove the geom path from the body
+                geom['Attached to'] = 'no body'  #update the "attached to" state of the geometry
+
 
                 ## unparent the geometry in blender, without moving the geometry
                 parented_worldmatrix =geom.matrix_world.copy() 
                 geom.parent = None
                 geom.matrix_world = parented_worldmatrix
+
+                
+                
 
             else: 
                 
