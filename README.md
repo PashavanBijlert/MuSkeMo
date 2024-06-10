@@ -18,6 +18,8 @@ Inertial properties are **not dynamic**, if you move the 3D meshes or change the
 Define rigid bodies, assign precomputed inertial properties, or compute directly by selecting one or several volumetric meshes.
 Inertial properties are **not dynamic**, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated.
 
+In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. 
+
 **Joint panel**
 
 Define joints, and assign (and remove) parent and child bodies. If you want to change a joint location, remove the parent and child bodies first.
