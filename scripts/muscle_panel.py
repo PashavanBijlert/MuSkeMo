@@ -65,7 +65,7 @@ class AddMusclepointOperator(Operator):
             obj.id_properties_ui('F_max').update(description = "Maximal isometric force of the muscle fiber (in N)")
 
             obj['pennation_angle'] = 0    #In degrees
-            obj.id_properties_ui('[pennation_angle').update(description = "Pennation angle (in degrees)")
+            obj.id_properties_ui('pennation_angle').update(description = "Pennation angle (in degrees)")
 
             obj['optimal_fiber_length'] = 0    #In meters
             obj.id_properties_ui('optimal_fiber_length').update(description = "Optimal fiber length (in m)")
