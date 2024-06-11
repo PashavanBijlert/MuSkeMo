@@ -79,7 +79,8 @@ class ReflectSelectedRSideFrames(Operator):
                 new_obj.location = obj.location*Vector([1,1,-1])
                 new_obj.rotation_euler = [-1*obj.rotation_euler[0], -1*obj.rotation_euler[1], 1*obj.rotation_euler[2]]
                     
-                  
+                new_obj['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
+                new_obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
         
         
         return {'FINISHED'}       
