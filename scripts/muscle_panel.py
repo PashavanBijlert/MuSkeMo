@@ -60,6 +60,22 @@ class AddMusclepointOperator(Operator):
             obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
 
 
+            ##
+            obj['F_max'] = 0    #In Newtons
+            obj.id_properties_ui('F_max').update(description = "Maximal isometric force of the muscle fiber (in N)")
+
+            obj['pennation_angle'] = 0    #In degrees
+            obj.id_properties_ui('[pennation_angle').update(description = "Pennation angle (in degrees)")
+
+            obj['optimal_fiber_length'] = 0    #In meters
+            obj.id_properties_ui('optimal_fiber_length').update(description = "Optimal fiber length (in m)")
+
+            obj['tendon_length'] = 0    #In meters
+            obj.id_properties_ui('tendon_length').update(description = "Tendon length (in m)")
+
+
+
+
             ### hook point to body
             
             curve = bpy.data.objects[muscle_name]
