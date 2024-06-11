@@ -192,3 +192,42 @@ class MuSkeMoProperties(PropertyGroup):
         default = ",",
         maxlen = 8,
         )
+
+
+#### anatomical (local) reference frame panel
+
+    framename: StringProperty(
+        name="Frame name",
+        description="Name of the new anatomical (local) reference frame",
+        default="",
+        maxlen=1024,
+        )
+
+
+    or_landmark_name: StringProperty(
+        name="Origin",
+        description="Name of the landmark that defines the frame origin",
+        default="",
+        maxlen=1024,
+        )
+
+    ydir_landmark_name: StringProperty(
+        name="Y direction",
+        description="Name of the landmark that defines the y (long-axis) direction",
+        default="",
+        maxlen=1024,
+        )
+        
+    yz_plane_landmark_name: StringProperty(
+        name="YZ plane (temp z)",
+        description="Name of the landmark that defines the YZ plane (by defining a temporary z axis)",
+        default="",
+        maxlen=1024,
+        )
+
+    frame_collection: StringProperty(
+        name = "Frame collection",
+        description="Name of the collection (ie. folder) that contains the anatomical (local) frames",
+        default = "Frames",
+        maxlen = 1024,
+        )

@@ -76,6 +76,13 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
                                     
                                     )
 
+#### Anatomical (local) reference frame panel
+from .scripts.ARF_panel import (VIEW3D_PT_arf_panel,
+                                AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
+                                AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
+                                ConstructARFOperator,)
+
+
 
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
@@ -107,6 +114,12 @@ classes = (  #Inertial properties panel
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
                                    ExportMusclesOperator,
+            #anatomical (local) reference frames panel
+                                 VIEW3D_PT_arf_panel,
+                                AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
+                                AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
+                                ConstructARFOperator,
+
 
             # properties
                                    MuSkeMoProperties,
