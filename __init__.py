@@ -120,6 +120,9 @@ classes = (  #Inertial properties panel
                                 AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
                                 ConstructARFOperator,
 
+            #landmark & marker panel
+                                                    
+
 
             # properties
                                    MuSkeMoProperties,

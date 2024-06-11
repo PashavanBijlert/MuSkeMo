@@ -17,9 +17,6 @@ from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 
 
 
-
-
-
 class AssignOrLandmarkOperator(Operator):
     bl_idname = "arf.assign_origin"
     bl_label = "Assign the selected landmark as the origin of the frame."
@@ -169,6 +166,9 @@ class ConstructARFOperator(Operator):
         bpy.context.object.rotation_mode = 'ZYX'    #change rotation sequence
         bpy.context.object.rotation_euler = [phi_x, phi_y, phi_z]
 
+        bpy.context.object['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
+        bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
+
         return {'FINISHED'}
 
 
@@ -182,8 +182,7 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
     bl_idname = 'VIEW3D_PT_ARF_panel'
     
     
-    
-    bl_label = "Anatomical reference frames panel"  # found at the top of the Panel
+    bl_label = "Anatomical & local reference frames panel"  # found at the top of the Panel
     
     
     bl_options = {'DEFAULT_CLOSED'}
