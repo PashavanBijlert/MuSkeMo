@@ -38,9 +38,15 @@ Construct anatomical and local reference frames, by assigning landmarks or marke
 
 Similar to muscle points, landmarks are added to the 3D cursor location.
 
+**Contact panel**
+
+Similar to muscle points, contacts are added to the 3D cursor location. Contacts can also be assigned a parent body.
+
 **Export panel**
 
-You can currently export Bodies, Joints, and Muscle paths. Under export options, it is possible to configure other text-based filetypes for export (e.g., txt, bat), and and configure custom delimiters.
+As of v0.4.0, you can currently export Bodies, Joints, and Muscle paths. The export of other datatypes will be added in v0.5.0
+Under export options, it is possible to configure other text-based filetypes for export (e.g., txt, bat), and and configure custom delimiters.
+
 
 **Import panel**
 
