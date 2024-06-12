@@ -89,7 +89,7 @@ from .scripts.landmark_marker_panel import (VIEW3D_PT_landmark_panel, CreateLand
 
 #### Contact panel
 from .scripts.contact_panel import (VIEW3D_PT_contact_panel, CreateContactOperator, 
-                                    )
+                                    AssignContactParentOperator,ClearContactParentOperator,)
 
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
@@ -133,7 +133,7 @@ classes = (  #Inertial properties panel
             
             #contact sphere panel
                                 VIEW3D_PT_contact_panel, CreateContactOperator,                                       
-
+                                AssignContactParentOperator, ClearContactParentOperator,
 
             # properties
                                    MuSkeMoProperties,

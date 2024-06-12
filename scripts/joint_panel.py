@@ -318,7 +318,7 @@ class AssignChildBodyOperator(Operator):
             
         return {'FINISHED'}
     
-class ClearParentBodyOperator(bpy.types.Operator):
+class ClearParentBodyOperator(Operator):
     bl_idname = "joint.clear_parent_body"
     bl_label = "Clears the parent body assigned to a joint. Select the joint, then press the button."
     bl_description = "Clears the parent body assigned to a joint. Select the joint, then press the button."
@@ -385,7 +385,7 @@ class ClearParentBodyOperator(bpy.types.Operator):
         return {'FINISHED'}
     
     
-class ClearChildBodyOperator(bpy.types.Operator):
+class ClearChildBodyOperator(Operator):
     bl_idname = "joint.clear_child_body"
     bl_label = "Clears the child body assigned to a joint. Select the joint, then press the button."
     bl_description = "Clears the child body assigned to a joint. Select the joint, then press the button."
