@@ -102,6 +102,7 @@ class ConstructARFOperator(Operator):
         refframe_name = bpy.context.scene.muskemo.framename
         colname = bpy.context.scene.muskemo.frame_collection  #target collection
 
+        rad = bpy.context.scence.muskemo.ARF_axes_size
 
         #check if the collection name exists, and if not create it
         if colname not in bpy.data.collections:
@@ -158,7 +159,7 @@ class ConstructARFOperator(Operator):
         
 
         name = refframe_name #name of the object
-        rad = 1
+        
 
         bpy.ops.object.empty_add(type='ARROWS', radius=rad, align='WORLD', location=origin)
         bpy.context.object.name = name #set the name
@@ -229,3 +230,9 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         
         row = self.layout.row()
         row.operator("arf.reflect_selected_r_arfs", text="Reflect selected r-side arfs")
+
+        self.layout.row()
+        self.layout.row()
+        
+        row = self.layout.row()
+        row.prop(muskemo,  "ARF_axes_size")

@@ -231,6 +231,14 @@ class MuSkeMoProperties(PropertyGroup):
         default = "Frames",
         maxlen = 1024,
         )
+    
+    ARF_axes_size: FloatProperty(
+        name = "Reference frame axes display size",
+        description="Display size of the axes for newly created reference frames, in meters",
+        default = 0.075,
+        min = 1e-12,
+        max = 100
+        )
 
 
 #### landmark and marker panel
