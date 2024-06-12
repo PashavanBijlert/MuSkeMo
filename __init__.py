@@ -82,6 +82,9 @@ from .scripts.ARF_panel import (VIEW3D_PT_arf_panel,
                                 AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
                                 ConstructARFOperator,)
 
+#### Landmark & marker panel
+from .scripts.landmark_marker_panel import (VIEW3D_PT_landmark_panel, CreateLandmarkOperator,
+                                            )
 
 
 #### body segment inertial properties function
@@ -121,7 +124,7 @@ classes = (  #Inertial properties panel
                                 ConstructARFOperator,
 
             #landmark & marker panel
-                                                    
+                                VIEW3D_PT_landmark_panel, CreateLandmarkOperator,                   
 
 
             # properties

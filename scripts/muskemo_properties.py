@@ -234,3 +234,25 @@ class MuSkeMoProperties(PropertyGroup):
 
 
 #### landmark and marker panel
+
+    landmark_name: StringProperty(
+        name = "Landmark name",
+        description="Desired name of the landmark or marker",
+        default = "Landmark",
+        maxlen = 1024,
+        )
+    
+    landmark_collection: StringProperty(
+        name = "Landmark collection",
+        description="Name of the collection (ie. folder) that contains the landmarks and markers",
+        default = "Landmarks",
+        maxlen = 1024,
+        )
+    
+    landmark_radius: FloatProperty(
+        name = "Landmark radius",
+        description="Landmark visualization radius, in meters",
+        default = 0.01,
+        min = 1e-12,
+        max = 100
+        )

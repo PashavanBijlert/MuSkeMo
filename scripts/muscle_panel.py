@@ -13,8 +13,8 @@ from .. import VIEW3D_PT_MuSkeMo
 
 class AddMusclepointOperator(Operator):
     bl_idname = "muscle.add_muscle_point"
-    bl_label = "Adds a viapoint to the muscle (or creates a new muscle)"  #not sure what bl_label does, bl_description gives a hover tooltip
-    bl_description = "Adds a viapoint to the muscle (or creates a new muscle)"
+    bl_label = "Adds a viapoint to the muscle (or creates a new muscle) at the 3D cursor location"  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Adds a viapoint to the muscle (or creates a new muscle) at the 3D cursor location"
     
     def execute(self, context):
 
