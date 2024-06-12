@@ -26,8 +26,17 @@ Define joints, and assign (and remove) parent and child bodies. If you want to c
 
 **Muscle panel**
 
-Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies first).
-You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB"). If the parent bodies are repositioned, you must redefine the muscles.
+Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies first). 
+To add a point, type in the muscle name, and select the target body. Press shift + right mouse button to position the 3D cursor. Muscle points are added to the 3D cursor location.
+You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB"). If the parent bodies are repositioned, you must delete and redraw the muscles.
+
+**Anatomical & local reference frames panel**
+
+Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions.
+
+**Landmark & marker panel**
+
+Similar to muscle points, landmarks are added to the 3D cursor location.
 
 **Export panel**
 
