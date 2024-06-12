@@ -9,6 +9,7 @@ from bpy.types import (Panel,
                         Operator,
                         )
 
+from math import nan
 
 import numpy as np
 
@@ -74,7 +75,25 @@ class CreateNewJointOperator(Operator):
             bpy.context.object['MuSkeMo_type'] = 'JOINT'    #to inform the user what type is created
             bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
             
+            bpy.context.object['parent_body'] = 'not yet assigned'    #to inform the user what type is created
+            bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this joint")
+
+            bpy.context.object['child_body'] = 'not yet assigned'    #to inform the user what type is created
+            bpy.context.object.id_properties_ui('parent_body').update(description = "The child body of this joint")  
             
+
+            bpy.context.object['loc_parent_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('loc_parent_frame').update(description = 'Joint location in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+
+            bpy.context.object['rot_parent_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('rot_parent_frame').update(description = 'Joint orientation XYZ-Euler angles in the parent body anatomical (local) reference frame (x, y, z, in rad). Optional.')
+
+            bpy.context.object['loc_child_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('loc_child_frame').update(description = 'Joint location in the child body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+
+            bpy.context.object['rot_child_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('rot_child_frame').update(description = 'Joint orientation XYZ-Euler angles in the child body anatomical (local) reference frame (x, y, z, in rad). Optional.')
+
             bpy.ops.object.select_all(action='DESELECT')
         
         else:
@@ -87,8 +106,8 @@ class CreateNewJointOperator(Operator):
 
 class ReflectRightsideJointsOperator(Operator):
     bl_idname = "joint.reflect_rightside_joints"
-    bl_label = "Duplicates and reflects bodies across XY plane if they contain '_r' in the name. Automatically mirrors transforms COM and MOI as well."
-    bl_description = "Duplicates and reflects bodies across XY plane if they contain '_r' in the name. Automatically mirrors transforms COM and MOI as well."
+    bl_label = "Duplicates and reflects joints across XY plane if they contain '_r' in the name."
+    bl_description = "Duplicates and reflects joints across XY plane if they contain '_r' in the name."
     
     def execute(self, context):
         colname = bpy.context.scene.muskemo.joint_collection
@@ -147,11 +166,7 @@ class UpdateCoordinateNamesOperator(Operator):
                 obj['coordinate_Ry']=bpy.context.scene.muskemo.coor_Ry
                 obj['coordinate_Rz']=bpy.context.scene.muskemo.coor_Rz
                   
-               
-                
-                            
-        
-        
+            
             else:
                 self.report({'ERROR'}, "Joint with the name '" + joint_name + "' is not the (only) selected joint. Operation cancelled, please either deselect all objects or only select the '" + joint_name + "' joint. This button operates on the joint that corresponds to the user (text) input joint name")
         
@@ -178,6 +193,8 @@ class AssignParentBodyOperator(Operator):
             return {'FINISHED'}
         
         
+        joint = bpy.data.objects[joint_name]
+        
         # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
             self.report({'ERROR'}, "Too few objects selected. Select the parent body and the target joint.")
@@ -188,12 +205,24 @@ class AssignParentBodyOperator(Operator):
             self.report({'ERROR'}, "Too many objects selected. Select the parent body and the target joint.")
             return {'FINISHED'}
         
-        if bpy.data.objects[joint_name] not in sel_obj:
+        if joint not in sel_obj:
             self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
             return {'FINISHED'}
         
         parent_body = [s_obj for s_obj in sel_obj if s_obj.name not in bpy.data.collections[colname].objects][0]  #get the object that's not the joint
         
+        
+        
+        try:
+            joint.children[0]
+        except:
+            pass
+        else:
+            if joint.children[0] == parent_body:
+                self.report({'ERROR'}, "You are attempting to assign body '" + parent_body.name + "' as the parent body, but it is already the child body. Operation cancelled.")
+                return {'FINISHED'}
+
+
         
         if parent_body.name not in bpy.data.collections[bodycolname].objects:
             self.report({'ERROR'}, "The parent body is not in the '" + bodycolname + "' collection. Make sure one of the two selected objects is a 'Body' as created by the bodies panel")
@@ -201,10 +230,17 @@ class AssignParentBodyOperator(Operator):
             
         ### if none of the previous scenarios triggered an error, set the parent body
         
-        bpy.data.objects[joint_name].parent = parent_body
+        joint.parent = parent_body
             
         #this undoes the transformation after parenting
-        bpy.data.objects[joint_name].matrix_parent_inverse = parent_body.matrix_world.inverted()
+        joint.matrix_parent_inverse = parent_body.matrix_world.inverted()
+
+        joint['parent_body'] = parent_body.name
+
+        if parent_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
+            
+
             
         return {'FINISHED'}
         
@@ -230,6 +266,7 @@ class AssignChildBodyOperator(Operator):
             self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
             return {'FINISHED'}
         
+        joint = bpy.data.objects[joint_name]
         
         # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
@@ -241,7 +278,7 @@ class AssignChildBodyOperator(Operator):
             self.report({'ERROR'}, "Too many objects selected. Select the child body and the target joint.")
             return {'FINISHED'}
         
-        if bpy.data.objects[joint_name] not in sel_obj:
+        if joint not in sel_obj:
             self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
             return {'FINISHED'}
         
@@ -252,19 +289,28 @@ class AssignChildBodyOperator(Operator):
             self.report({'ERROR'}, "The child body is not in the '" + bodycolname + "' collection. Make sure one of the two selected objects is a 'Body' as created by the bodies panel")
             return {'FINISHED'}
 
-        if len(bpy.data.objects[joint_name].children)>0:
+        if len(joint.children)>0:
             self.report({'ERROR'}, "Joint with the name '" + joint_name + "' already has a child body. Clear it first, before assigning a new one")
+            return {'FINISHED'}
+        
+        if joint.parent == child_body:
+            self.report({'ERROR'}, "You are attempting to assign body '" + child_body.name + "' as the child body, but it is already the parent body. Operation cancelled.")
             return {'FINISHED'}
 
 
         ### if none of the previous scenarios triggered an error, set the parent body
         
-        child_body.parent = bpy.data.objects[joint_name]
+        child_body.parent = joint
         
             
         #this undoes the transformation after parenting
-        child_body.matrix_parent_inverse = bpy.data.objects[joint_name].matrix_world.inverted()
-            
+        child_body.matrix_parent_inverse = joint.matrix_world.inverted()
+
+        joint['child_body'] = child_body.name
+
+        if child_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in child
+            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
+
         #parented_wm = childObject.matrix_world.copy()
         #childObject.parent = None
         #childObject.matrix_world = parented_wm         
@@ -294,7 +340,9 @@ class ClearParentBodyOperator(bpy.types.Operator):
             self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
             return {'FINISHED'}
         
-        try: bpy.data.objects[joint_name].parent.name
+        joint = bpy.data.objects[joint_name]
+
+        try: joint.parent.name
         
         except: #throw an error if the joint has no parent
             self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not have a parent body")
@@ -310,11 +358,11 @@ class ClearParentBodyOperator(bpy.types.Operator):
             self.report({'ERROR'}, "Too many objects selected. Only select the target joint.")
             return {'FINISHED'}
         
-        if bpy.data.objects[joint_name].name != active_obj.name:
+        if joint.name != active_obj.name:
             self.report({'ERROR'}, "Selected joint and joint_name (text input at the top) must correspond to prevent ambiguity. Operation cancelled.")
             return {'FINISHED'}
         
-        if bpy.data.objects[joint_name].name not in bpy.data.collections[colname].objects:
+        if joint.name not in bpy.data.collections[colname].objects:
             self.report({'ERROR'}, "Selected object is not in the '" + colname + "' collection. Make sure you have selected a joint in that collection.")
             return {'FINISHED'}
         
@@ -324,10 +372,16 @@ class ClearParentBodyOperator(bpy.types.Operator):
         
         
         #clear the parent, without moving the joint
-        parented_worldmatrix = bpy.data.objects[joint_name].matrix_world.copy() 
-        bpy.data.objects[joint_name].parent = None
-        bpy.data.objects[joint_name].matrix_world = parented_worldmatrix   
+        parented_worldmatrix = joint.matrix_world.copy() 
+        joint.parent = None
+        joint.matrix_world = parented_worldmatrix   
         
+        joint['parent_body'] = 'not yet assigned'
+
+        joint['loc_parent_frame'] = [nan, nan, nan]
+        joint['rot_parent_frame'] = [nan, nan, nan]
+
+
         return {'FINISHED'}
     
     
@@ -351,7 +405,9 @@ class ClearChildBodyOperator(bpy.types.Operator):
             self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
             return {'FINISHED'}
         
-        if len(bpy.data.objects[joint_name].children)==0:
+
+        joint = bpy.data.objects[joint_name]
+        if len(joint.children)==0:
             self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not have a child body")
             return {'FINISHED'}
 
@@ -366,11 +422,11 @@ class ClearChildBodyOperator(bpy.types.Operator):
             self.report({'ERROR'}, "Too many objects selected. Only select the target joint.")
             return {'FINISHED'}
         
-        if bpy.data.objects[joint_name].name != active_obj.name:
+        if joint.name != active_obj.name:
             self.report({'ERROR'}, "Selected joint and joint_name (text input at the top) must correspond to prevent ambiguity. Operation cancelled.")
             return {'FINISHED'}
         
-        if bpy.data.objects[joint_name].name not in bpy.data.collections[colname].objects:
+        if joint.name not in bpy.data.collections[colname].objects:
             self.report({'ERROR'}, "Selected object is not in the '" + colname + "' collection. Make sure you have selected a joint in that collection.")
             return {'FINISHED'}
         
@@ -378,11 +434,15 @@ class ClearChildBodyOperator(bpy.types.Operator):
                 
         ### if none of the previous scenarios triggered an error, clear the child body
         
-        child_body = bpy.data.objects[joint_name].children[0]
+        child_body = joint.children[0]
         #clear the parent, without moving the joint
         parented_worldmatrix =child_body.matrix_world.copy() 
         child_body.parent = None
-        child_body.matrix_world = parented_worldmatrix   
+        child_body.matrix_world = parented_worldmatrix 
+
+        joint['child_body'] = 'not yet assigned'  
+        joint['loc_child_frame'] = [nan, nan, nan]
+        joint['rot_child_frame'] = [nan, nan, nan]
         
         return {'FINISHED'}        
 
@@ -443,11 +503,6 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         layout.prop(muskemo, "coor_Ty")
         layout.prop(muskemo, "coor_Tz")
         
-        
-        
-         
-       
-         
         
         
     
