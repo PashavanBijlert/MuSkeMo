@@ -260,7 +260,32 @@ class MuSkeMoProperties(PropertyGroup):
     landmark_radius: FloatProperty(
         name = "Landmark radius",
         description="Landmark visualization radius, in meters",
-        default = 0.01,
+        default = 0.001,
+        min = 1e-12,
+        max = 100
+        )
+    
+
+#### contact panel
+
+    contact_name: StringProperty(
+        name = "Contact sphere name",
+        description="Desired name of the contact sphere",
+        default = "contact",
+        maxlen = 1024,
+        )
+    
+    contact_collection: StringProperty(
+        name = "Contact collection",
+        description="Name of the collection (ie. folder) that contains the contacts",
+        default = "Contacts",
+        maxlen = 1024,
+        )
+    
+    contact_radius: FloatProperty(
+        name = "Contact sphere radius",
+        description="Contact sphere radius, in meters",
+        default = 0.015,
         min = 1e-12,
         max = 100
         )

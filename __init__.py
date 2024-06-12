@@ -87,6 +87,10 @@ from .scripts.landmark_marker_panel import (VIEW3D_PT_landmark_panel, CreateLand
                                             )
 
 
+#### Contact panel
+from .scripts.contact_panel import (VIEW3D_PT_contact_panel, CreateContactOperator, 
+                                    )
+
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
 
@@ -124,7 +128,11 @@ classes = (  #Inertial properties panel
                                 ConstructARFOperator,
 
             #landmark & marker panel
-                                VIEW3D_PT_landmark_panel, CreateLandmarkOperator,                   
+                                VIEW3D_PT_landmark_panel, CreateLandmarkOperator,
+
+            
+            #contact sphere panel
+                                VIEW3D_PT_contact_panel, CreateContactOperator,                                       
 
 
             # properties
