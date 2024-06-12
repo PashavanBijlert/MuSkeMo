@@ -50,39 +50,35 @@ class CreateLandmarkOperator(Operator):
 
 
 
-        try: bpy.data.objects[landmark_name]  #throws an error if the landmark doesn't exist, creates it under except
+        
 
-        except: #if the landmark doesn't exist, create it
+        target_loc = bpy.context.scene.cursor.location
+        
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=landmark_radius, enter_editmode=False, align='WORLD', location = target_loc) #create a sphere
+        bpy.context.object.name = landmark_name #set the name
+        bpy.context.object.data.name = landmark_name #set the name of the object data
+        
 
-            target_loc = bpy.context.scene.cursor.location
-            
-            bpy.ops.mesh.primitive_uv_sphere_add(radius=landmark_radius, enter_editmode=False, align='WORLD', location = target_loc) #create a sphere
-            bpy.context.object.name = landmark_name #set the name
-            bpy.context.object.data.name = landmark_name #set the name of the object data
-            
+        bpy.context.object['MuSkeMo_type'] = 'LANDMARK'    #to inform the user what type is created
+        bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
+        
+        bpy.ops.object.select_all(action='DESELECT')
 
-            bpy.context.object['MuSkeMo_type'] = 'LANDMARK'    #to inform the user what type is created
-            bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
-            
-            bpy.ops.object.select_all(action='DESELECT')
-
-            
-            bpy.data.objects[landmark_name].parent = target_mesh
-            
-            #this undoes the transformation after parenting
-            bpy.data.objects[landmark_name].matrix_parent_inverse = target_mesh.matrix_world.inverted()
+        
+        bpy.data.objects[landmark_name].parent = target_mesh
+        
+        #this undoes the transformation after parenting
+        bpy.data.objects[landmark_name].matrix_parent_inverse = target_mesh.matrix_world.inverted()
 
 
-            #restore selection status
-            target_mesh.select_set(True)
+        #restore selection status
+        target_mesh.select_set(True)
                     
 
 
 
 
-        else:
-            self.report({'ERROR'}, "Landmark with the name '" + landmark_name + "' already exists. Landmarks must have unique names. Operation cancelled")
-            return {'FINISHED'}
+        
         
         
         return {'FINISHED'}
