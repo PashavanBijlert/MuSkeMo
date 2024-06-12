@@ -35,7 +35,7 @@ class CreateNewJointOperator(Operator):
         if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
             bpy.context.scene.collection.children.link(coll)     #add it to the scene
         
-        #Make sure the "bodies" collection is active
+        #Make sure the "joints" collection is active
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
         
         

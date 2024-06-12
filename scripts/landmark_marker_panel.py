@@ -27,7 +27,8 @@ class CreateLandmarkOperator(Operator):
         if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
             bpy.context.scene.collection.children.link(coll)     #add it to the scene
             
-
+        #Make sure the landmarks collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
 
         active_obj = bpy.context.active_object  #should be the body that you want to parent the point to
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to

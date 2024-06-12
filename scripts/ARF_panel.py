@@ -102,7 +102,7 @@ class ConstructARFOperator(Operator):
         refframe_name = bpy.context.scene.muskemo.framename
         colname = bpy.context.scene.muskemo.frame_collection  #target collection
 
-        rad = bpy.context.scence.muskemo.ARF_axes_size
+        rad = bpy.context.scene.muskemo.ARF_axes_size
 
         #check if the collection name exists, and if not create it
         if colname not in bpy.data.collections:
