@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (3, 0, 0),
-    "version" : (0, 4, 0),
+    "version" : (0, 4, 1),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
@@ -69,10 +69,13 @@ from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel, VI
 #### export panel
 from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bodies_subpanel,
                                    VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
-                                  # VIEW3D_PT_export_inertialproperties_subpanel,
+                                     VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
+                                    VIEW3D_PT_export_landmarks_subpanel, VIEW3D_PT_export_contacts_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
-                                    ExportMusclesOperator,
+                                    ExportMusclesOperator,ExportMeshInPropsOperator,
+                                   ExportFramesOperator, ExportLandmarksOperator,
+                                   ExportContactsOperator,
                                     
                                     )
 
@@ -118,9 +121,13 @@ classes = (  #Inertial properties panel
             #export panel
                                     VIEW3D_PT_export_panel, VIEW3D_PT_export_bodies_subpanel,
                                     VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
+                                    VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
+                                    VIEW3D_PT_export_landmarks_subpanel, VIEW3D_PT_export_contacts_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
-                                   ExportMusclesOperator,
+                                   ExportMusclesOperator, ExportMeshInPropsOperator,
+                                   ExportFramesOperator, ExportLandmarksOperator,
+                                   ExportContactsOperator,
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_arf_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
