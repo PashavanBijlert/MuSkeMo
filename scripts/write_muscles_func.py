@@ -9,7 +9,11 @@ def write_muscles(context, filepath, collection_name, delimiter):
     
     coll = bpy.data.collections[collection_name]   
     
-    file.write('muscle_point_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z') #headers
+    header = 'muscle_point_name' + delimiter  + 'parent_body_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' #headers
+    ## if statement for if local frame is specified:
+    ### header = header + delimiter + ... 
+    
+    file.write(header) #headers
     
     file.write('\n') 
     

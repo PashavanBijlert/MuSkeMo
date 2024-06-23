@@ -4,15 +4,16 @@ def write_joints(context, filepath, collection_name, delimiter):
     
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     
-     
-    file.write('joint_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' + delimiter  
-    + 'parent_body' + delimiter  + 'child_body') #headers
+    header = 'joint_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' + delimiter   + 'parent_body' + delimiter  + 'child_body'
+    ## if statement for if local frame is specified:
+    ### header = header + delimiter + ... 
+
+    file.write(header) #headers
     
     file.write('\n') 
     
     
-    export_attached_bodies = 'yes'  #yes or no, if yes, export parent and child body name of each joint
-
+    
 
     coll = bpy.data.collections[collection_name]
     
@@ -43,19 +44,16 @@ def write_joints(context, filepath, collection_name, delimiter):
         file.write(f"{location.y:#.4f}{delimiter}")     # y location, 4 decimals
                                        # y location
         
-        if export_attached_bodies == 'no':
-            file.write(f"{location.z:#.4f}")     # z location, 4 decimals
         
-        if export_attached_bodies == 'yes':
-            file.write(f"{location.z:#.4f}{delimiter}")     # z location, 4 decimals
-            
-            if joint.parent is None:
-                file.write('ground' + delimiter) #parent body is ground if there is no parent
-                print(joint.name + ' joint has no parent, parent body set to Ground')
-            else:
-                file.write(joint.parent.name + delimiter) #parent body name
-            
-            file.write(joint.children[0].name) #child body name
+        file.write(f"{location.z:#.4f}{delimiter}")     # z location, 4 decimals
+        
+        if joint.parent is None:
+            file.write('ground' + delimiter) #parent body is ground if there is no parent
+            print(joint.name + ' joint has no parent, parent body set to Ground')
+        else:
+            file.write(joint.parent.name + delimiter) #parent body name
+        
+        file.write(joint.children[0].name) #child body name
             
         
         file.write('\n')                                                        # start a new line

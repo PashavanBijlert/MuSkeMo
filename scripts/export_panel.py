@@ -53,6 +53,26 @@ class ExportHelperCustom:  ## this is a helper class, that is inherited by all t
 
         return change_ext
     
+    def invoke(self, context, event): ## set a filepath using a subclass dependent default filename, and filter out other filetypes from the viewer
+
+        default_filename = self.default_filename       
+       
+        blend_filepath = context.blend_data.filepath
+        if not blend_filepath: ### if the current filepath is empty, it defaults to documents I think
+            blend_filepath = default_filename
+        else:
+            blend_filepath = os.path.split(blend_filepath)[0] + "\\" + default_filename 
+            
+              
+        self.filename_ext = "." + bpy.context.scene.muskemo.export_filetype #user assigned
+        self.filepath = blend_filepath + self.filename_ext #this sets the filepath, and the file extension.
+        
+        self.filter_glob = "*" + self.filename_ext   #set the filetype filter in the export window
+        context.window_manager.fileselect_add(self)
+        
+        
+        return {'RUNNING_MODAL'}
+    
     
 ### filename and path is defined below, in the invoke sections of each Export__Operator
 ## export bodies
@@ -65,23 +85,11 @@ class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from Export
     
     
     
-    def invoke(self, context, event):  ## set a filepath, and filter out other filetypes from the viewer (via the helper super class)
-               
-        blend_filepath = context.blend_data.filepath
-        if not blend_filepath: ### if the current filepath is empty, default to "untitled"
-            blend_filepath = "untitled"
-        else:
-            blend_filepath = os.path.split(blend_filepath)[0] + "\\" + bpy.context.scene.muskemo.body_collection
-            
-              
-        self.filename_ext = "." + bpy.context.scene.muskemo.export_filetype #user assigned
-        self.filepath = blend_filepath + self.filename_ext #this sets the filepath, and the file extension.
+    def invoke(self, context, event):
+        
+        self.default_filename = bpy.context.scene.muskemo.body_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
 
-        self.filter_glob = "*" + self.filename_ext   #set the filetype filter in the export window
-        context.window_manager.fileselect_add(self)
-                
-             
-        return {'RUNNING_MODAL'}
+        return super().invoke(context, event)
 
     
     def execute(self, context):
@@ -104,23 +112,11 @@ class ExportJointsOperator(Operator, ExportHelperCustom): #inherits from ExportH
 
    
     
-    def invoke(self, context, event): ## set a filepath, and filter out other filetypes from the viewer (via the helper super class)
-               
-        blend_filepath = context.blend_data.filepath
-        if not blend_filepath: ### if the current filepath is empty, default to "untitled"
-            blend_filepath = "untitled"
-        else:
-            blend_filepath = os.path.split(blend_filepath)[0] + "\\" + bpy.context.scene.muskemo.joint_collection
-            
-              
-        self.filename_ext = "." + bpy.context.scene.muskemo.export_filetype #user assigned
-        self.filepath = blend_filepath + self.filename_ext #this sets the filepath, and the file extension.
+    def invoke(self, context, event):
         
-        self.filter_glob = "*" + self.filename_ext   #set the filetype filter in the export window
-        context.window_manager.fileselect_add(self)
-        
-        
-        return {'RUNNING_MODAL'}
+        self.default_filename = bpy.context.scene.muskemo.joint_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
+
+        return super().invoke(context, event)
         
     
     
@@ -146,23 +142,11 @@ class ExportMusclesOperator(Operator, ExportHelperCustom): #inherits from Export
 
    
     
-    def invoke(self, context, event): ## set a filepath, and filter out other filetypes from the viewer (via the helper super class)
-               
-        blend_filepath = context.blend_data.filepath
-        if not blend_filepath: ### if the current filepath is empty, default to "untitled"
-            blend_filepath = "untitled"
-        else:
-            blend_filepath = os.path.split(blend_filepath)[0] + "\\" + bpy.context.scene.muskemo.muscle_collection
-            
-              
-        self.filename_ext = "." + bpy.context.scene.muskemo.export_filetype #user assigned
-        self.filepath = blend_filepath + self.filename_ext #this sets the filepath, and the file extension.
+    def invoke(self, context, event):
         
-        self.filter_glob = "*" + self.filename_ext   #set the filetype filter in the export window
-        context.window_manager.fileselect_add(self)
-        
-        
-        return {'RUNNING_MODAL'}
+        self.default_filename = bpy.context.scene.muskemo.muscle_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
+
+        return super().invoke(context, event)
         
     
     
@@ -192,12 +176,48 @@ class ExportContactsOperator(Operator, ExportHelperCustom): #inherits from Expor
     bl_idname = "export.export_contacts"
     bl_label = "Export contacts"
 
+    def invoke(self, context, event):
+        
+        self.default_filename = bpy.context.scene.muskemo.contact_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
+
+        return super().invoke(context, event)
+        
+    
+    
+    def execute(self, context):
+        from .write_loc_and_pbody_func import write_loc_and_pbody
+        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
+        
+        
+        delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
+        contact_colname = bpy.context.scene.muskemo.contact_collection
+        
+        write_loc_and_pbody(context, self.filepath, contact_colname, delimiter, 'contact')
+        return {'FINISHED'}
 
 ## export landmarks markers
 class ExportLandmarksOperator(Operator, ExportHelperCustom): #inherits from ExportHelperCustom class
     bl_description = "Export all the landmarks from the designated collection to a csv or other text file"
     bl_idname = "export.export_landmarks"
     bl_label = "Export landmarks"
+
+    def invoke(self, context, event):
+        
+        self.default_filename = bpy.context.scene.muskemo.landmark_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
+
+        return super().invoke(context, event)
+        
+    
+    
+    def execute(self, context):
+        from .write_loc_and_pbody_func import write_loc_and_pbody
+        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
+        
+        delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
+        landmark_colname = bpy.context.scene.muskemo.landmark_collection
+        
+        write_loc_and_pbody(context, self.filepath, landmark_colname, delimiter, 'landmark')
+        return {'FINISHED'}
 
 
 
@@ -320,7 +340,7 @@ class VIEW3D_PT_export_landmarks_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class na
         
         row = self.layout.row()
         row.prop(muskemo, "landmark_collection")
-        row.operator("export.export_mesh_inertial_props",text = 'Export mesh inertial properties')
+        row.operator("export.export_landmarks",text = 'Export landmarks')
         return 
     
 

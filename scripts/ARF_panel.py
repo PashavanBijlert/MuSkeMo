@@ -144,8 +144,8 @@ class ConstructARFOperator(Operator):
 
         # xyz
 
-        phi_y = np.arctan2(gRl[0,2], math.sqrt(1 - (gRl[0,2])**2)) 
-        # or just phi_y = np.arcsin(gRl[0,2])
+        
+        phi_y = np.arcsin(gRl[0,2]) #alternative: phi_y = np.arctan2(gRl[0,2], math.sqrt(1 - (gRl[0,2])**2)) 
         phi_x = np.arctan2(-gRl[1,2],gRl[2,2])    #angle alpha in wiki
         phi_z = np.arctan2(-gRl[0,1],gRl[0,0])    #angle gamma in wiki
 
