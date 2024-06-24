@@ -83,8 +83,6 @@ class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from Export
     bl_label = "Export bodies"
 
     
-    
-    
     def invoke(self, context, event):
         
         self.default_filename = bpy.context.scene.muskemo.body_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
@@ -93,14 +91,14 @@ class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from Export
 
     
     def execute(self, context):
-        from .write_bodies_func import write_bodies
+        from .write_inprop_func import write_inprop
         filetype = bpy.context.scene.muskemo.export_filetype #user assigned
         
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         body_colname = bpy.context.scene.muskemo.body_collection
         
-        write_bodies(context, self.filepath, body_colname, delimiter)
+        write_inprop(context, self.filepath, body_colname, delimiter,'body')
         return {'FINISHED'}
 
 ## export joints
@@ -168,7 +166,25 @@ class ExportMeshInPropsOperator(Operator, ExportHelperCustom): #inherits from Ex
     bl_description = "Export all the inertial properties computed for meshes in the  the designated collection to a csv or other text file"
     bl_idname = "export.export_mesh_inertial_props"
     bl_label = "Export mesh inertial properties"
+    
+    
+    def invoke(self, context, event):
+        
+        self.default_filename = bpy.context.scene.muskemo.source_object_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
 
+        return super().invoke(context, event)
+
+    
+    def execute(self, context):
+        from .write_inprop_func import write_inprop
+        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
+        
+        
+        delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
+        mesh_colname = bpy.context.scene.muskemo.source_object_collection
+        
+        write_inprop(context, self.filepath, mesh_colname, delimiter,'mesh')
+        return {'FINISHED'}
 
 ## export contacts
 class ExportContactsOperator(Operator, ExportHelperCustom): #inherits from ExportHelperCustom class
