@@ -32,7 +32,9 @@ You can change the locations of the path points by selecting the muscle in edit 
 
 **Anatomical & local reference frames panel**
 
-Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions.
+Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. Local reference frames have a location and an orientation with respect to the global reference frame.
+Internally, orientations are stored through rotation matrices, but they can be exported as rotation (unit) quaternions (w, x, y, z), and also as body-fixed XYZ-Euler angles (phi_x, phi_y, phi_z, in rad). The latter is prone to gimbal lock.
+As of v0.5.0, you can only export the local frames themselves. All other data types are exported in global coordinates. v0.6.0 will allow you to export data with respect to the locally defined reference frames.
 
 **Landmark & marker panel**
 
