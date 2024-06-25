@@ -75,7 +75,46 @@ class ExportHelperCustom:  ## this is a helper class, that is inherited by all t
     
     
 ### filename and path is defined below, in the invoke sections of each Export__Operator
+
+
+## select the export directory
+class SelectModelExportDirectoryOperator(Operator):
+    bl_idname = "export.select_model_export_directory"
+    bl_label = "Select model export directory"
+    bl_description = "Select the directory where you would like to export your model files to"
+
+    #based on this code example: https://blender.stackexchange.com/a/126596
+
+    # Define this to tell 'fileselect_add' that we want a directoy
+    directory: StringProperty(
+        name="Outdir Path",
+        description="User selected output directory"
+        )
+
+    # Filters folders, so we don't see files
+    filter_folder: BoolProperty(
+        default=True,
+        options={"HIDDEN"}
+        )
+
+    def invoke(self, context, event):
+        
+        context.window_manager.fileselect_add(self)
+        
+        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+
+               
+        output_path = self.directory
+        output_path = output_path.replace('\\', '/') 
+        
+        bpy.context.scene.muskemo.model_export_directory = output_path
+        return {'FINISHED'}
+
+
 ## export bodies
+
 
 class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from ExportHelperCustom class
     bl_description = "Export all the bodies from the designated collection to a csv or other text file"
@@ -248,6 +287,51 @@ class ExportFramesOperator(Operator, ExportHelperCustom): #inherits from ExportH
         
         write_frames(context, self.filepath, frame_colname, delimiter)
         return {'FINISHED'}
+
+
+## Export visual geometry folder
+
+class ExportGeometryFolderOperator(Operator):
+
+    bl_idname = "export.export_geometry_folder"
+    bl_label = "Export visual geometry"
+    bl_description = "Export all the visual geometry from the designated geometry collection as '.obj' meshes to a subdirectory in the model directory. The folder name will be the same as the geometry collection name."
+
+    def execute(self, context):
+
+        geo_folder = bpy.context.scene.muskemo.geometry_collection
+        model_export_directory = bpy.context.scene.muskemo.model_export_directory
+
+        if not model_export_directory:
+            self.report({'ERROR'}, "You must first select a model export directory. Press the 'Select export directory' and choose a target folder")
+            return {'FINISHED'}
+
+
+        output_path = model_export_directory + geo_folder + '/'
+        
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        bpy.ops.object.select_all(action='DESELECT')
+
+        objects=  [x for x in bpy.data.collections[geo_folder].objects if 'MESH' in x.id_data.type] #get the name for each object in collection 'Convex Hulls', if the data type is a 'MESH'
+
+        #IF STATEMENT FOR CHECKING IF IT IS PARENTED
+        #IF STATEMENT IF THE MUSKEMO_PROPS MAKE SENSE
+
+        for obj in objects:
+            obj.select_set(True)
+                                        
+            bpy.ops.export_scene.obj(filepath= os.path.join(output_path, obj.name + '.obj'), use_selection = True, axis_forward = 'Y', axis_up = 'Z',use_materials = False)
+            self.report({'INFO'}, "Exported geometry with the name '" + obj.name + "' to the '" + geo_folder + "' subdirectory")
+                        
+            obj.select_set(False)    
+
+
+        self.report({'INFO'}, "Exported " + str(len(objects)) + " geometries to the '" + geo_folder + "' subdirectory")
+        return {'FINISHED'}
+    
+
 ### The panels
 
 
@@ -260,6 +344,14 @@ class VIEW3D_PT_export_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        row = layout.row()
+       
+        row.operator("export.select_model_export_directory",text = 'Select export directory')
+        row = layout.row()
+        row.prop(muskemo, "model_export_directory")
         return
 
 ## Export bodies subpanel
@@ -379,7 +471,26 @@ class VIEW3D_PT_export_frames_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class namin
         row = self.layout.row()
         row.prop(muskemo, "frame_collection")
         row.operator("export.export_frames",text = 'Export frames')
-        return    
+        return
+
+## Export visual geometry folder subpanel
+class VIEW3D_PT_geometry_folder_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+    bl_idname = 'VIEW3D_PT_export_geometry_folder_subpanel'
+    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
+    bl_label = "Export visual geometry folder"  # found at the top of the Panel
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    
+    def draw(self, context):
+        scene = context.scene
+        muskemo = scene.muskemo
+        
+        row = self.layout.row()
+        row.prop(muskemo, "geometry_collection")
+
+        row = self.layout.row()
+        row.operator("export.export_geometry_folder",text = 'Export geometry folder')
+        return        
 
 ## File export options
 class VIEW3D_PT_export_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’

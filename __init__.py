@@ -71,12 +71,13 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
                                    VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
                                      VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
                                     VIEW3D_PT_export_landmarks_subpanel, VIEW3D_PT_export_contacts_subpanel,
+                                    VIEW3D_PT_geometry_folder_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
                                     ExportMusclesOperator,ExportMeshInPropsOperator,
                                    ExportFramesOperator, ExportLandmarksOperator,
-                                   ExportContactsOperator,
-                                    
+                                   ExportContactsOperator, ExportGeometryFolderOperator,
+                                    SelectModelExportDirectoryOperator,
                                     )
 
 #### Anatomical (local) reference frame panel
@@ -123,11 +124,13 @@ classes = (  #Inertial properties panel
                                     VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
                                     VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
                                     VIEW3D_PT_export_landmarks_subpanel, VIEW3D_PT_export_contacts_subpanel,
+                                    VIEW3D_PT_geometry_folder_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
                                    ExportMusclesOperator, ExportMeshInPropsOperator,
                                    ExportFramesOperator, ExportLandmarksOperator,
-                                   ExportContactsOperator,
+                                   ExportContactsOperator, ExportGeometryFolderOperator,
+                                   SelectModelExportDirectoryOperator,
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_arf_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,

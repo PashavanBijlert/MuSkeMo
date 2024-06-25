@@ -194,6 +194,13 @@ class MuSkeMoProperties(PropertyGroup):
         )
 
 
+    model_export_directory: StringProperty(
+        name = "Model export directory",
+        description="Absolute filepath to the directory where you would like to export your model files",
+        default = "",
+        maxlen = 1024,
+        )
+
 #### anatomical (local) reference frame panel
 
     framename: StringProperty(
