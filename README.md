@@ -46,8 +46,12 @@ Similar to muscle points, contacts are added to the 3D cursor location. Contacts
 
 **Export panel**
 
-As of v0.4.0, you can currently export Bodies, Joints, and Muscle paths. The export of other datatypes will be added in v0.5.0
+You can export all the user-created datatypes via this panel. The individual exporters export all the data types from the user-designated collections (folders) in Blender. It is possible to export all the visual geometry to a subfolder.
+
 Under export options, it is possible to configure other text-based filetypes for export (e.g., txt, bat), and and configure custom delimiters.
+
+As of v0.5.0, all the exports are only in the global reference frame. v0.6.0 will include both global and local frame export.
+
 
 
 **Import panel**
