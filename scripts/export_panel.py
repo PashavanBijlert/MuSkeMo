@@ -92,8 +92,6 @@ class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from Export
     
     def execute(self, context):
         from .write_inprop_func import write_inprop
-        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
-        
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         body_colname = bpy.context.scene.muskemo.body_collection
@@ -120,8 +118,6 @@ class ExportJointsOperator(Operator, ExportHelperCustom): #inherits from ExportH
     
     def execute(self, context):
         from .write_joints_func import write_joints
-        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
-        
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         joint_colname = bpy.context.scene.muskemo.joint_collection
@@ -150,9 +146,7 @@ class ExportMusclesOperator(Operator, ExportHelperCustom): #inherits from Export
     
     def execute(self, context):
         from .write_muscles_func import write_muscles
-        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
-        
-        
+       
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         muscle_colname = bpy.context.scene.muskemo.muscle_collection
         
@@ -177,9 +171,7 @@ class ExportMeshInPropsOperator(Operator, ExportHelperCustom): #inherits from Ex
     
     def execute(self, context):
         from .write_inprop_func import write_inprop
-        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
-        
-        
+         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         mesh_colname = bpy.context.scene.muskemo.source_object_collection
         
@@ -202,8 +194,6 @@ class ExportContactsOperator(Operator, ExportHelperCustom): #inherits from Expor
     
     def execute(self, context):
         from .write_loc_and_pbody_func import write_loc_and_pbody
-        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
-        
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         contact_colname = bpy.context.scene.muskemo.contact_collection
@@ -227,7 +217,6 @@ class ExportLandmarksOperator(Operator, ExportHelperCustom): #inherits from Expo
     
     def execute(self, context):
         from .write_loc_and_pbody_func import write_loc_and_pbody
-        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         landmark_colname = bpy.context.scene.muskemo.landmark_collection
@@ -253,7 +242,6 @@ class ExportFramesOperator(Operator, ExportHelperCustom): #inherits from ExportH
     
     def execute(self, context):
         from .write_frames_func import write_frames
-        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         frame_colname = bpy.context.scene.muskemo.frame_collection
