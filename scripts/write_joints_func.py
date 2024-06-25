@@ -12,8 +12,6 @@ def write_joints(context, filepath, collection_name, delimiter):
     
     file.write('\n') 
     
-    
-    
 
     coll = bpy.data.collections[collection_name]
     

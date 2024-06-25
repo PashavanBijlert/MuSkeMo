@@ -243,7 +243,23 @@ class ExportFramesOperator(Operator, ExportHelperCustom): #inherits from ExportH
     bl_idname = "export.export_frames"
     bl_label = "Export frames"
 
+    def invoke(self, context, event):
+        
+        self.default_filename = bpy.context.scene.muskemo.frame_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
 
+        return super().invoke(context, event)
+        
+    
+    
+    def execute(self, context):
+        from .write_frames_func import write_frames
+        filetype = bpy.context.scene.muskemo.export_filetype #user assigned
+        
+        delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
+        frame_colname = bpy.context.scene.muskemo.frame_collection
+        
+        write_frames(context, self.filepath, frame_colname, delimiter)
+        return {'FINISHED'}
 ### The panels
 
 
