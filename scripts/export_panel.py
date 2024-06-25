@@ -57,15 +57,17 @@ class ExportHelperCustom:  ## this is a helper class, that is inherited by all t
 
         default_filename = self.default_filename       
        
-        blend_filepath = context.blend_data.filepath
-        if not blend_filepath: ### if the current filepath is empty, it defaults to documents I think
-            blend_filepath = default_filename
+        
+        model_export_dir = bpy.context.scene.muskemo.model_export_directory
+        
+        if not model_export_dir: ### if the user-selected export directory is empty, it defaults to the blend file's parent directory
+            model_export_dir = default_filename
         else:
-            blend_filepath = os.path.split(blend_filepath)[0] + "\\" + default_filename 
+            model_export_dir = os.path.split(model_export_dir)[0] + "\\" + default_filename 
             
               
         self.filename_ext = "." + bpy.context.scene.muskemo.export_filetype #user assigned
-        self.filepath = blend_filepath + self.filename_ext #this sets the filepath, and the file extension.
+        self.filepath = model_export_dir + self.filename_ext #this sets the filepath, and the file extension.
         
         self.filter_glob = "*" + self.filename_ext   #set the filetype filter in the export window
         context.window_manager.fileselect_add(self)
