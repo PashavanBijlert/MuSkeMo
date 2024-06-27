@@ -52,7 +52,9 @@ from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_
 from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJointsOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,
                                       ClearParentBodyOperator,ClearChildBodyOperator,
-                                      UpdateCoordinateNamesOperator,
+                                      UpdateCoordinateNamesOperator,FitSphereOperator,
+                                      FitCylinderOperator, FitEllipsoidOperator,
+                                      FitPlaneOperator, MatchTransformationsOperator,
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
                                       )
@@ -117,7 +119,9 @@ classes = (  #Inertial properties panel
                                       CreateNewJointOperator, ReflectRightsideJointsOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,
                                        ClearParentBodyOperator,ClearChildBodyOperator,
-                                      UpdateCoordinateNamesOperator,
+                                      UpdateCoordinateNamesOperator,FitSphereOperator,
+                                      FitCylinderOperator, FitEllipsoidOperator,
+                                      FitPlaneOperator, MatchTransformationsOperator,
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 

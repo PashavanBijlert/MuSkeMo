@@ -445,6 +445,52 @@ class ClearChildBodyOperator(Operator):
         joint['rot_child_frame'] = [nan, nan, nan]
         
         return {'FINISHED'}        
+    
+
+class FitSphereOperator(Operator):
+    bl_idname = "joint.fit_sphere"
+    bl_label = "Fit a sphere to a selected mesh"
+    bl_description = "Fit a sphere to a selected mesh"
+        
+    def execute(self, context):
+        
+        return {'FINISHED'}
+
+class FitCylinderOperator(Operator):
+    bl_idname = "joint.fit_cylinder"
+    bl_label = "Fit a cylinder to a selected mesh"
+    bl_description = "Fit a cylinder to a selected mesh"
+        
+    def execute(self, context):
+        
+        return {'FINISHED'}
+
+class FitEllipsoidOperator(Operator):
+    bl_idname = "joint.fit_ellipsoid"
+    bl_label = "Fit an ellipsoid to a selected mesh"
+    bl_description = "Fit a ellipsoid to a selected mesh"
+        
+    def execute(self, context):
+        
+        return {'FINISHED'}
+
+class FitPlaneOperator(Operator):
+    bl_idname = "joint.fit_plane"
+    bl_label = "Fit a plane to a selected mesh"
+    bl_description = "Fit a plane to a selected mesh"
+        
+    def execute(self, context):
+        
+        return {'FINISHED'}
+    
+class MatchTransformationsOperator(Operator):
+    bl_idname = "joint.match_transformations"
+    bl_label = "This button matches a joint to a fitted object's transformations"
+    bl_description = "This button matches a joint to a fitted object's transformations"
+        
+    def execute(self, context):
+        
+        return {'FINISHED'}  
 
 class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo
@@ -562,9 +608,20 @@ class VIEW3D_PT_joint_utilities_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class nami
         row = self.layout.row()
         row.operator("joint.reflect_rightside_joints", text="Reflect right-side joints")
 
+        row = self.layout.row()
+        row.operator("joint.fit_sphere", text="Fit a sphere")
+        
+        row = self.layout.row()
+        row.operator("joint.fit_cylinder", text="Fit a cylinder")
 
-        ### fit sphere (2 buttons in one row)
-        ### fit cylinder 
-        ### fit ellipsoid
-        ### fit plane
-        ### match transformations
+        row = self.layout.row()
+        row.operator("joint.fit_ellipsoid", text="Fit an ellipsoid")
+
+        row = self.layout.row()
+        row.operator("joint.fit_plane", text="Fit a plane")
+
+        row = self.layout.row()
+        row.operator("joint.match_transformations", text="Match transformations")
+
+
+       
