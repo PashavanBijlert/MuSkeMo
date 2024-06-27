@@ -492,6 +492,36 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         row.operator("joint.clear_parent_body", text="Clear parent body")
         row.operator("joint.clear_child_body", text="Clear child body")
         
+        
+        self.layout.row()
+        self.layout.row()
+        row = self.layout.row()
+        row.prop(muskemo, "jointsphere_size")
+        
+        
+            
+        #row = self.layout.row()
+        #self.layout.prop(muskemo, "musclename_string")
+
+
+
+class VIEW3D_PT_joint_coordinate_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+
+    bl_idname = 'VIEW3D_PT_coordinate_subpanel'
+    bl_label = "Joint coordinate names (optional)"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_joint_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
+    
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+
         row = self.layout.row()
         row.label(text ="Coordinate names (optional)")
         ## user input coordinate names    
@@ -508,22 +538,33 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
     
         row = self.layout.row()
         row.operator("joint.update_coordinate_names", text="Update coordinate names")
+
+
+class VIEW3D_PT_joint_utilities_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+
+    bl_idname = 'VIEW3D_PT_utilities_subpanel'
+    bl_label = "Joint utilities"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_joint_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
+    
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+
+        row = self.layout.row()
         
-         
-        
-        self.layout.row()
-        self.layout.row()
         row = self.layout.row()
         row.operator("joint.reflect_rightside_joints", text="Reflect right-side joints")
-        
-        self.layout.row()
-        self.layout.row()
-        row = self.layout.row()
-        row.prop(muskemo, "jointsphere_size")
-        
-        
-            
-        #row = self.layout.row()
-        #self.layout.prop(muskemo, "musclename_string")
 
 
+        ### fit sphere (2 buttons in one row)
+        ### fit cylinder 
+        ### fit ellipsoid
+        ### fit plane
+        ### match transformations
