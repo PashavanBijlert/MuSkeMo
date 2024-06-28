@@ -2,7 +2,7 @@
 
 # give Python access to Blender's functionality
 import bpy
-from mathutils import Vector
+from mathutils import (Matrix, Vector)
 
 
 from bpy.types import (Panel,
@@ -447,13 +447,199 @@ class ClearChildBodyOperator(Operator):
         return {'FINISHED'}        
     
 
-class FitSphereOperator(Operator):
-    bl_idname = "joint.fit_sphere"
-    bl_label = "Fit a sphere to a selected mesh"
-    bl_description = "Fit a sphere to a selected mesh"
-        
+class FitSphereGeomOperator(Operator):
+    bl_idname = "joint.fit_sphere_geometric"
+    bl_label = "Fit a sphere to a selected mesh, using Yesudesan geometric fit"
+    bl_description = "Fit a sphere to a selected mesh, using Yesudesan geometric fit"
+    #Based on sumith_fit - https://doi.org/10.48550/arXiv.1506.02776
+  
     def execute(self, context):
         
+        active_obj = bpy.context.active_object  #should be the joint
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one target mesh.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one target mesh")
+            return {'FINISHED'}
+        
+        obj = sel_obj[0]
+        obj_name = obj.name
+
+        if obj.type != 'MESH':
+            self.report({'ERROR'}, "Selected object with the name '" + obj_name + "' is of the type '" + obj.type + "'. Primitive fitting only works on objects with the type MESH. Operation cancelled")
+            return {'FINISHED'}
+        
+        verts = obj.data.vertices #vertex coordinates in local frame
+        obj_global = obj.matrix_world  #global position of mesh
+
+        verts_x = []
+        verts_y = []
+        verts_z = []
+
+
+        for vert in verts: #loop through vertices
+            vert_glob = obj_global @ vert.co #vertex coordinates in global
+            verts_x.append(vert_glob[0]) #global x position 
+            verts_y.append(vert_glob[1])
+            verts_z.append(vert_glob[2])
+            
+
+        verts_x = np.array(verts_x)  #turn into numpy array
+        verts_y = np.array(verts_y)
+        verts_z = np.array(verts_z)
+
+
+        ### fitting starts here
+        x = verts_x
+        y = verts_y
+        z = verts_z
+
+
+
+        N = len(x)
+    
+        Sx = sum(x)
+        Sy = sum(y)     
+        Sz = sum(z)
+        Sxx = sum(x*x)    
+        Syy = sum(y*y)    
+        Szz = sum(z*z)
+        Sxy = sum(x*y)
+        Sxz = sum(x*z)
+        Syz = sum(y*z)
+        Sxxx = sum(x*x*x)
+        Syyy = sum(y*y*y)
+        Szzz = sum(z*z*z)
+        Sxyy = sum(x*y*y)
+        Sxzz = sum(x*z*z)
+        Sxxy = sum(x*x*y)
+        Sxxz = sum(x*x*z)
+        Syyz = sum(y*y*z)
+        Syzz = sum(y*z*z)
+        A1 = Sxx +Syy +Szz
+        a = 2*Sx*Sx-2*N*Sxx
+        b = 2*Sx*Sy-2*N*Sxy
+        c = 2*Sx*Sz-2*N*Sxz
+        d = -N*(Sxxx +Sxyy +Sxzz)+A1*Sx
+        e = b  # this is equal to 2*Sx*Sy-2*N*Sxy
+        f = 2*Sy*Sy-2*N*Syy
+        g = 2*Sy*Sz-2*N*Syz;
+        h = -N*(Sxxy +Syyy +Syzz)+A1*Sy;
+        j = c; #this is equal to 2*Sx*Sz-2*N*Sxz
+        k = g; # this is equal to 2*Sy*Sz-2*N*Syz;
+        l = 2*Sz*Sz-2*N*Szz
+        m = -N*(Sxxz +Syyz + Szzz)+A1*Sz;
+        delta = a*(f*l - g*k)-e*(b*l-c*k) + j*(b*g-c*f);
+        xc = (d*(f*l-g*k) -h*(b*l-c*k) +m*(b*g-c*f))/delta;
+        yc = (a*(h*l-m*g) -e*(d*l-m*c) +j*(d*g-h*c))/delta;
+        zc = (a*(f*m-h*k) -e*(b*m-d*k) +j*(b*h-d*f))/delta;
+        Radius = np.sqrt(xc**2 + yc**2 + zc**2 + (A1 -2*(xc*Sx+yc*Sy+zc*Sz))/N);
+
+        center = [xc, yc, zc]
+
+        ### fitting ends here
+
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=5, radius=Radius, align='WORLD', location=(xc, yc, zc))
+        fit_obj_name = obj_name + '_SphereGeoFit'
+        bpy.context.active_object.name = fit_obj_name
+
+        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        bpy.data.objects[fit_obj_name]['sphere_radius'] =  Radius   #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('sphere_radius').update(description = "Radius of the fitted sphere (in m)") 
+        
+        return {'FINISHED'}
+
+class FitSphereLSOperator(Operator):
+    bl_idname = "joint.fit_sphere_ls"
+    bl_label = "Fit a sphere to a selected mesh, using Jekel least-squares fit"
+    bl_description = "Fit a sphere to a selected mesh, using Jekel least-squares fit"
+    #based on: https://jekel.me/2015/Least-Squares-Sphere-Fit/, originally from Jekel's PhD thesis
+        
+    def execute(self, context):
+        active_obj = bpy.context.active_object  #should be the joint
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one target mesh.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one target mesh")
+            return {'FINISHED'}
+        
+        obj = sel_obj[0]
+        obj_name = obj.name
+
+        if obj.type != 'MESH':
+            self.report({'ERROR'}, "Selected object with the name '" + obj_name + "' is of the type '" + obj.type + "'. Primitive fitting only works on objects with the type MESH. Operation cancelled")
+            return {'FINISHED'}
+        
+        verts = obj.data.vertices #vertex coordinates in local frame
+        obj_global = obj.matrix_world  #global position of mesh
+
+        verts_x = []
+        verts_y = []
+        verts_z = []
+
+
+        for vert in verts: #loop through vertices
+            vert_glob = obj_global @ vert.co #vertex coordinates in global
+            verts_x.append(vert_glob[0]) #global x position 
+            verts_y.append(vert_glob[1])
+            verts_z.append(vert_glob[2])
+            
+
+        verts_x = np.array(verts_x)  #turn into numpy array
+        verts_y = np.array(verts_y)
+        verts_z = np.array(verts_z)
+
+
+        ### fitting starts here
+
+        spX = verts_x
+        spY = verts_y
+        spZ = verts_z
+
+        A = np.zeros((len(spX),4))
+        A[:,0] = spX*2
+        A[:,1] = spY*2
+        A[:,2] = spZ*2
+        A[:,3] = 1
+
+        #   Assemble the f matrix
+        f = np.zeros((len(spX),1))
+        f[:,0] = (spX*spX) + (spY*spY) + (spZ*spZ)
+        C, residules, rank, singval = np.linalg.lstsq(A,f,rcond=None)
+
+        #   solve for the radius
+        t = (C[0]*C[0])+(C[1]*C[1])+(C[2]*C[2])+C[3]
+        Radius = np.sqrt(t)
+
+        center = [C[0], C[1], C[2]]
+        ### fitting ends here
+
+        
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=5, radius=Radius, align='WORLD', location=(C[0], C[1], C[2]))
+        fit_obj_name = obj_name + '_SphereLSFit'
+        bpy.context.active_object.name = fit_obj_name
+
+        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        bpy.data.objects[fit_obj_name]['sphere_radius'] =  Radius   #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('sphere_radius').update(description = "Radius of the fitted sphere (in m)") 
+
+
         return {'FINISHED'}
 
 class FitCylinderOperator(Operator):
@@ -463,14 +649,279 @@ class FitCylinderOperator(Operator):
         
     def execute(self, context):
         
+        active_obj = bpy.context.active_object  #should be the joint
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one target mesh.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one target mesh")
+            return {'FINISHED'}
+        
+        obj = sel_obj[0]
+        obj_name = obj.name
+
+        if obj.type != 'MESH':
+            self.report({'ERROR'}, "Selected object with the name '" + obj_name + "' is of the type '" + obj.type + "'. Primitive fitting only works on objects with the type MESH. Operation cancelled")
+            return {'FINISHED'}
+        
+        verts = obj.data.vertices #vertex coordinates in local frame
+        obj_global = obj.matrix_world  #global position of mesh
+
+        verts_x = []
+        verts_y = []
+        verts_z = []
+
+
+        for vert in verts: #loop through vertices
+            vert_glob = obj_global @ vert.co #vertex coordinates in global
+            verts_x.append(vert_glob[0]) #global x position 
+            verts_y.append(vert_glob[1])
+            verts_z.append(vert_glob[2])
+            
+
+        verts_x = np.array(verts_x)  #turn into numpy array
+        verts_y = np.array(verts_y)
+        verts_z = np.array(verts_z)
+
+        n = len(verts_x)  # Number of points
+        points = np.stack((verts_x, verts_y, verts_z), axis=-1)  #reorder for the script input
+
+
+        ### fitting starts here
+        from .fit_cylinder_eberly import (preprocess, G, fit_cylinder)
+        minError, C, W, rSqr = fit_cylinder(n, points)  #C is the center, W is the cylinder axis direction, rSqr = radius squared
+
+        ### fitting ends here
+
+        Radius = np.sqrt(rSqr)
+        # Ensure W is a unit vector
+        W = W / np.linalg.norm(W)  #this is the cylinder axis vector
+            
+            
+        z_axis = Vector((0,0,1))
+        quat_diff = z_axis.rotation_difference(Vector(W))  #this gives a unit quaternion for a rotation matrix gRb
+        
+        from .quaternions import matrix_from_quaternion
+        gRb, bRg = matrix_from_quaternion(quat_diff)  #get the rotation matrix
+
+        worldMat = gRb.to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
+
+        for i in range(len(C)):
+            
+            worldMat[i][3] = C[i]  #set the fourth column as the location
+            
+        #worldmat is now ready for the fitted cylinder, but we need to compute the desired height of the cylinder, first
+            
+        #vertices in with respect to cylinder center
+        verts_x_C = verts_x - C[0]
+        verts_y_C = verts_y - C[1]
+        verts_z_C = verts_z - C[2]
+
+        vert_b = [] #vertices in the body-fixed frame of the cylinder
+
+        for v in range(len(verts_x_C)):
+            vert_b.append(bRg @ Vector([verts_x_C[v],verts_y_C[v],verts_z_C[v]]))  #rotate the vertex positions to body-fixed frame of the fitted cylinder
+            
+        vertical_cylinder_coordinates = [v[2] for v in vert_b]  #z is the cylinder axis, so this gives all the z-coordinates of the input data, in the frame of the fitted cylinder
+            
+        max_height = np.max(vertical_cylinder_coordinates)
+        min_height = np.min(vertical_cylinder_coordinates)
+
+
+        cylinder_height = max_height - min_height #in meters
+        
+        bpy.ops.mesh.primitive_cylinder_add(radius=Radius, depth=cylinder_height, end_fill_type='NGON', calc_uvs=True, enter_editmode=False, align='WORLD')
+        fit_obj_name = obj_name + '_CylinderFit'
+        bpy.context.active_object.name = fit_obj_name
+        bpy.context.active_object.matrix_world = worldMat
+
+        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        bpy.data.objects[fit_obj_name]['cylinder_radius'] =  Radius   #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('cylinder_radius').update(description = "Radius of the fitted cylinder (in m)")
+
+        bpy.data.objects[fit_obj_name]['cylinder_height'] =  cylinder_height  #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('cylinder_height').update(description = "Height of the fitted cylinder (in m)")  
+
         return {'FINISHED'}
 
 class FitEllipsoidOperator(Operator):
     bl_idname = "joint.fit_ellipsoid"
     bl_label = "Fit an ellipsoid to a selected mesh"
     bl_description = "Fit a ellipsoid to a selected mesh"
-        
+    #source: https://github.com/marksemple/pyEllipsoid_Fit/blob/master/ellipsoid_fit.py
+    #based on: https://nl.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
+    #Pasha van Bijlert modified this code to add a check for right-handed coordinate systems
+    
     def execute(self, context):
+        
+        active_obj = bpy.context.active_object  #should be the joint
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one target mesh.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one target mesh")
+            return {'FINISHED'}
+        
+        obj = sel_obj[0]
+        obj_name = obj.name
+
+        if obj.type != 'MESH':
+            self.report({'ERROR'}, "Selected object with the name '" + obj_name + "' is of the type '" + obj.type + "'. Primitive fitting only works on objects with the type MESH. Operation cancelled")
+            return {'FINISHED'}
+        
+        verts = obj.data.vertices #vertex coordinates in local frame
+        obj_global = obj.matrix_world  #global position of mesh
+
+        verts_x = []
+        verts_y = []
+        verts_z = []
+
+
+        for vert in verts: #loop through vertices
+            vert_glob = obj_global @ vert.co #vertex coordinates in global
+            verts_x.append(vert_glob[0]) #global x position 
+            verts_y.append(vert_glob[1])
+            verts_z.append(vert_glob[2])
+            
+
+        verts_x = np.array(verts_x)  #turn into numpy array
+        verts_y = np.array(verts_y)
+        verts_z = np.array(verts_z)
+
+
+        ### fitting starts here
+        mode = '' #set to 0 if you want 6DOF mode, otherwise it's 9 DOF
+        X = verts_x
+        Y = verts_y
+        Z = verts_z
+
+        # AlGEBRAIC EQUATION FOR ELLIPSOID, from CARTESIAN DATA
+        if mode == '':  # 9-DOF MODE
+            D = np.array([X * X + Y * Y - 2 * Z * Z,
+                        X * X + Z * Z - 2 * Y * Y,
+                        2 * X * Y, 2 * X * Z, 2 * Y * Z,
+                        2 * X, 2 * Y, 2 * Z,
+                        1 + 0 * X]).T
+
+        elif mode == 0:  # 6-DOF MODE (no rotation)
+            D = np.array([X * X + Y * Y - 2 * Z * Z,
+                        X * X + Z * Z - 2 * Y * Y,
+                        2 * X, 2 * Y, 2 * Z,
+                        1 + 0 * X]).T
+
+        
+
+        # THE RIGHT-HAND-SIDE OF THE LLSQ PROBLEM
+        d2 = np.array([X * X + Y * Y + Z * Z]).T
+
+        # SOLUTION TO NORMAL SYSTEM OF EQUATIONS
+        u = np.linalg.solve(D.T.dot(D), D.T.dot(d2))
+        # chi2 = (1 - (D.dot(u)) / d2) ^ 2
+
+        # CONVERT BACK TO ALGEBRAIC FORM
+        if mode == '':  # 9-DOF-MODE
+            a = np.array([u[0] + 1 * u[1] - 1])
+            b = np.array([u[0] - 2 * u[1] - 1])
+            c = np.array([u[1] - 2 * u[0] - 1])
+            v = np.concatenate([a, b, c, u[2:, :]], axis=0).flatten()
+
+        elif mode == 0:  # 6-DOF-MODE
+            a = u[0] + 1 * u[1] - 1
+            b = u[0] - 2 * u[1] - 1
+            c = u[1] - 2 * u[0] - 1
+            zs = np.array([0, 0, 0])
+            v = np.hstack((a, b, c, zs, u[2:, :].flatten()))
+
+        else:
+            pass
+
+        # PUT IN ALGEBRAIC FORM FOR ELLIPSOID
+        A = np.array([[v[0], v[3], v[4], v[6]],
+                    [v[3], v[1], v[5], v[7]],
+                    [v[4], v[5], v[2], v[8]],
+                    [v[6], v[7], v[8], v[9]]])
+
+        # FIND CENTRE OF ELLIPSOID
+        centre = np.linalg.solve(-A[0:3, 0:3], v[6:9])
+
+        # FORM THE CORRESPONDING TRANSLATION MATRIX
+        T = np.eye(4)
+        T[3, 0:3] = centre
+
+        # TRANSLATE TO THE CENTRE, ROTATE
+        R = T.dot(A).dot(T.T)
+
+        # SOLVE THE EIGENPROBLEM
+        evals, evecs = np.linalg.eig(R[0:3, 0:3] / -R[3, 3])
+        
+        
+        # addition by PvB: 
+        # check if this forms a right-handed coordinate system:
+        # cross(vec_x, vec_y) = vec_z in a right-handed coordinate system.
+        # If it is minus vec_z, then the magnitude of their difference will be larger than zero. 
+        #In that case we flip the eigenvector direction. Eigenvalue remains unchanged.
+        
+        vec_x = evecs[:,0]#eigenvectors which will form the rotation matrix.
+        vec_y = evecs[:,1] 
+        vec_z = evecs[:,2]
+
+        
+        threshold = 0.0001
+
+        if np.linalg.norm(np.cross(vec_x,vec_y) - vec_z) > threshold:  
+            
+            evecs[:,2] = -evecs[:,2]
+        
+        
+
+        # SORT EIGENVECTORS
+        # i = np.argsort(evals)
+        # evals = evals[i]
+        # evecs = evecs[:, i]
+        # evals = evals[::-1]
+        # evecs = evecs[::-1]
+
+        # CALCULATE SCALE FACTORS AND SIGNS
+        radii = np.sqrt(1 / abs(evals))
+        sgns = np.sign(evals)
+        radii *= sgns
+        ### fitting ends here
+
+
+        worldMat =Matrix(evecs).to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
+
+        for i in range(len(centre)):
+            
+            worldMat[i][3] = centre[i]  #set the fourth column as the location
+
+
+        bpy.ops.mesh.primitive_uv_sphere_add()
+        fit_obj_name = obj_name + '_EllipsoidFit'
+        bpy.context.active_object.name = fit_obj_name
+        
+        bpy.context.active_object.matrix_world = worldMat
+        bpy.context.active_object.scale = Vector(radii)  #initial radius of sphere is 1. radii is xyz radius in meters. Ellipsoid scale factor is radii[r]/sphere_radius, so each radius can just be set as the scale factor
+        bpy.ops.object.transform_apply(scale=True)
+
+       
+        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        bpy.data.objects[fit_obj_name]['ellipsoid_radii'] =  radii   #Ellipsoid radii
+        bpy.data.objects[fit_obj_name].id_properties_ui('ellipsoid_radii').update(description = "Radii of the fitted ellipsoid (x, y, z, in m)")
+
         
         return {'FINISHED'}
 
@@ -481,16 +932,186 @@ class FitPlaneOperator(Operator):
         
     def execute(self, context):
         
+        active_obj = bpy.context.active_object  #should be the joint
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one target mesh.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one target mesh")
+            return {'FINISHED'}
+        
+        obj = sel_obj[0]
+        obj_name = obj.name
+
+        if obj.type != 'MESH':
+            self.report({'ERROR'}, "Selected object with the name '" + obj_name + "' is of the type '" + obj.type + "'. Primitive fitting only works on objects with the type MESH. Operation cancelled")
+            return {'FINISHED'}
+        
+        verts = obj.data.vertices #vertex coordinates in local frame
+        obj_global = obj.matrix_world  #global position of mesh
+
+        verts_x = []
+        verts_y = []
+        verts_z = []
+
+
+        for vert in verts: #loop through vertices
+            vert_glob = obj_global @ vert.co #vertex coordinates in global
+            verts_x.append(vert_glob[0]) #global x position 
+            verts_y.append(vert_glob[1])
+            verts_z.append(vert_glob[2])
+            
+
+        verts_x = np.array(verts_x)  #turn into numpy array
+        verts_y = np.array(verts_y)
+        verts_z = np.array(verts_z)
+
+
+        ### fitting starts here
+        point_data = np.array([verts_x, verts_y, verts_z]).T
+        centroid = point_data.mean(axis=0)
+        verts_centered = point_data - centroid
+        cov_mat = np.cov(verts_centered.T)  #covariance matrix
+        eval, evec = np.linalg.eig(cov_mat) #eigen values, eigen vectors. #The eigenvector corresponding to the lowest value is the fitted-plane normal.
+        new_order = eval.argsort()[::-1]  #descending order by eigenvalue size. 
+        eval = eval[new_order]
+        evec = evec[:, new_order] #sorted by eigenvalue size
+
+        threshold = 0.0001
+        #evec forms a 3x3 gRb rotation matrix. Check if it is right-handed, and otherwise flip z-axis
+        if np.linalg.norm(np.cross(evec[:,0],evec[:,1]) - evec[:,2]) > threshold:  
+                
+            evec[:,2] = -evec[:,2]
+
+        ### fitting ends here
+
+
+        gRb = Matrix(evec)  #local to global rotation matrix
+
+        worldMat =gRb.to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
+
+        for i in range(len(centroid)):
+            worldMat[i][3] = centroid[i] 
+            
+        bRg = np.array(gRb).T  #global to local transformation matrix
+
+
+        verts_local = []
+
+        #find the local position of all the plane points
+        for v in range(len(verts_centered)):  #loop through all the vertices, transform to local coordinates
+            verts_local.append(bRg @ verts_centered[v,:])
+            
+        verts_local = np.array(verts_local)
+
+        #this will form the dimensions of our new plane
+        x_max = np.max(verts_local[:, 0])
+        x_min = np.min(verts_local[:, 0])
+        y_max = np.max(verts_local[:, 1])
+        y_min = np.min(verts_local[:, 1])    
+            
+        plane_x_dim = x_max - x_min  #x size in meters
+        plane_y_dim = y_max - y_min  #y size in meters
+
+        bpy.ops.mesh.primitive_plane_add(size=1, align='WORLD')
+
+        fit_obj_name = obj.name + '_PlaneFit'
+        bpy.context.active_object.name = fit_obj_name
+        bpy.context.active_object.matrix_world = worldMat
+
+        bpy.context.active_object.scale = Vector([plane_x_dim, plane_y_dim, 1])
+
+        bpy.ops.object.transform_apply(scale=True)
+
+        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        bpy.data.objects[fit_obj_name]['plane_dimensions'] =  [plane_x_dim, plane_y_dim]   #Ellipsoid radii
+        bpy.data.objects[fit_obj_name].id_properties_ui('plane_dimensions').update(description = "Dimensions of the fitted plane (x and y, in m)")
+        
+
         return {'FINISHED'}
     
-class MatchTransformationsOperator(Operator):
-    bl_idname = "joint.match_transformations"
-    bl_label = "This button matches a joint to a fitted object's transformations"
-    bl_description = "This button matches a joint to a fitted object's transformations"
+class MatchOrientationOperator(Operator):
+    bl_idname = "joint.match_orientation"
+    bl_label = "This button matches a joint to a another object's orientation"
+    bl_description = "This button matches a joint to a another object's orientation"
         
     def execute(self, context):
         
-        return {'FINISHED'}  
+        joint_name = bpy.context.scene.muskemo.jointname
+
+
+        active_obj = bpy.context.active_object  #should be the joint
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select one fitted geometry, and one target joint")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. Select one fitted geometry, and one target joint")
+            return {'FINISHED'}
+        joint = bpy.data.objects[joint_name]
+
+        if joint not in sel_obj:
+            self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+            return {'FINISHED'}
+
+        target_obj = [ob for ob in sel_obj if ob.name != joint_name][0]
+        
+
+        worldMatrix = target_obj.matrix_world.copy() #get a copy the target object transformation matrix
+        worldMatrix.translation = joint.matrix_world.translation  #ensure the original joints translation doesn't get lost.
+
+        joint.matrix_world = worldMatrix
+            
+
+        return {'FINISHED'}
+
+class MatchPositionOperator(Operator):
+    bl_idname = "joint.match_position"
+    bl_label = "This button matches a joint to a another object's position"
+    bl_description = "This button matches a joint to a another object's position"
+        
+    def execute(self, context):
+        
+        joint_name = bpy.context.scene.muskemo.jointname
+
+
+        active_obj = bpy.context.active_object  #should be the joint
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select one fitted geometry, and one target joint")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. Select one fitted geometry, and one target joint")
+            return {'FINISHED'}
+        joint = bpy.data.objects[joint_name]
+
+        if joint not in sel_obj:
+            self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+            return {'FINISHED'}
+
+        target_obj = [ob for ob in sel_obj if ob.name != joint_name][0]
+        
+
+        position = target_obj.matrix_world.translation.copy() #get a copy the target object transformation matrix
+        joint.matrix_world.translation = position
+            
+
+        return {'FINISHED'}        
 
 class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo
@@ -609,7 +1230,8 @@ class VIEW3D_PT_joint_utilities_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class nami
         row.operator("joint.reflect_rightside_joints", text="Reflect right-side joints")
 
         row = self.layout.row()
-        row.operator("joint.fit_sphere", text="Fit a sphere")
+        row.operator("joint.fit_sphere_geometric", text="Fit a sphere (geometric)")
+        row.operator("joint.fit_sphere_ls", text="Fit a sphere (least-squares)")
         
         row = self.layout.row()
         row.operator("joint.fit_cylinder", text="Fit a cylinder")
@@ -621,7 +1243,8 @@ class VIEW3D_PT_joint_utilities_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class nami
         row.operator("joint.fit_plane", text="Fit a plane")
 
         row = self.layout.row()
-        row.operator("joint.match_transformations", text="Match transformations")
+        row.operator("joint.match_position", text="Match position")
+        row.operator("joint.match_orientation", text="Match orientation")
 
 
        
