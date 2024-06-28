@@ -26,7 +26,7 @@ Define joints, and assign (and remove) parent and child bodies. If you want to c
 
 You can define the coordinate names for the joints here. Planned behaviour for this is that the conversion scripts will only add DOFs to model if they are named (e.g. hip_angle_r) 
 
-In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. Warning: because inertial properties are not dynamic - if you change the location or rotation of a joint while it has bodies attached to it, their inertial properties will be incorrect. You will have to recompute them in that case.
+In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. Warning: because inertial properties are not dynamic - if you change the location or rotation of a joint while it has bodies attached to it, their inertial properties will be incorrect. You will have to recompute them in that case. MuSkeMo provides a warning if this may have occured. 
 
 **Muscle panel**
 

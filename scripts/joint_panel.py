@@ -1072,7 +1072,10 @@ class MatchOrientationOperator(Operator):
         worldMatrix.translation = joint.matrix_world.translation  #ensure the original joints translation doesn't get lost.
 
         joint.matrix_world = worldMatrix
-            
+
+        if len(joint.children) != 0:
+            self.report({'ERROR'}, "Warning - the '" + joint.name + "' has children, if these have mass or inertial properties, you must now recompute them, since inertial properties are not dynamic.")
+               
 
         return {'FINISHED'}
 
@@ -1105,11 +1108,14 @@ class MatchPositionOperator(Operator):
             return {'FINISHED'}
 
         target_obj = [ob for ob in sel_obj if ob.name != joint_name][0]
-        
+               
 
         position = target_obj.matrix_world.translation.copy() #get a copy the target object transformation matrix
         joint.matrix_world.translation = position
-            
+
+        if len(joint.children) != 0:
+            self.report({'ERROR'}, "Warning - the '" + joint.name + "' has children, if these have mass or inertial properties, you must now recompute them, since inertial properties are not dynamic.")
+                    
 
         return {'FINISHED'}        
 

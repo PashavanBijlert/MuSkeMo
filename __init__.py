@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (3, 0, 0),
-    "version" : (0, 5, 5),
+    "version" : (0, 5, 6),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
@@ -125,7 +125,7 @@ classes = (  #Inertial properties panel
                                       FitSphereGeomOperator,FitSphereLSOperator,
                                       FitCylinderOperator, FitEllipsoidOperator,
                                       FitPlaneOperator, 
-                                      MatchOrientationOperator,
+                                      MatchOrientationOperator, MatchPositionOperator,
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 
