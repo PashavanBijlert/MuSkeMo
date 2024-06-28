@@ -495,7 +495,7 @@ class FitSphereGeomOperator(Operator):
         verts_z = np.array(verts_z)
 
 
-        ### fitting starts here
+        ### fitting starts here, input  = verts_x, verts_y, verts_z
         x = verts_x
         y = verts_y
         z = verts_z
@@ -543,7 +543,7 @@ class FitSphereGeomOperator(Operator):
 
         center = [xc, yc, zc]
 
-        ### fitting ends here
+        ### fitting ends here, output = Radius, xc, yc, zc
 
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=5, radius=Radius, align='WORLD', location=(xc, yc, zc))
         fit_obj_name = obj_name + '_SphereGeoFit'
@@ -604,7 +604,7 @@ class FitSphereLSOperator(Operator):
         verts_z = np.array(verts_z)
 
 
-        ### fitting starts here
+        ### fitting starts here, inputs = verts_x, verts_y, verts_z
 
         spX = verts_x
         spY = verts_y
@@ -626,7 +626,7 @@ class FitSphereLSOperator(Operator):
         Radius = np.sqrt(t)
 
         center = [C[0], C[1], C[2]]
-        ### fitting ends here
+        ### fitting ends here, output = Radius, center
 
         
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=5, radius=Radius, align='WORLD', location=(C[0], C[1], C[2]))
@@ -801,7 +801,7 @@ class FitEllipsoidOperator(Operator):
         verts_z = np.array(verts_z)
 
 
-        ### fitting starts here
+        ### fitting starts here, input verts x, verts_y, verts_z
         mode = '' #set to 0 if you want 6DOF mode, otherwise it's 9 DOF
         X = verts_x
         Y = verts_y
@@ -897,7 +897,7 @@ class FitEllipsoidOperator(Operator):
         radii = np.sqrt(1 / abs(evals))
         sgns = np.sign(evals)
         radii *= sgns
-        ### fitting ends here
+        ### fitting ends here, output evecs (rotation matrix gRb), centre, radii
 
 
         worldMat =Matrix(evecs).to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
@@ -972,7 +972,7 @@ class FitPlaneOperator(Operator):
         verts_z = np.array(verts_z)
 
 
-        ### fitting starts here
+        ### fitting starts here, inputs verts_x, verts_y, verts_z
         point_data = np.array([verts_x, verts_y, verts_z]).T
         centroid = point_data.mean(axis=0)
         verts_centered = point_data - centroid
@@ -988,7 +988,7 @@ class FitPlaneOperator(Operator):
                 
             evec[:,2] = -evec[:,2]
 
-        ### fitting ends here
+        ### fitting ends here outputs evec (rotation matrix gRb)
 
 
         gRb = Matrix(evec)  #local to global rotation matrix
