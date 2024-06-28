@@ -24,6 +24,10 @@ In this panel, you can also attach visualization geometry (eg., bone meshes) to 
 
 Define joints, and assign (and remove) parent and child bodies. If you want to change a joint location, remove the parent and child bodies first.
 
+You can define the coordinate names for the joints here. Planned behaviour for this is that the conversion scripts will only add DOFs to model if they are named (e.g. hip_angle_r) 
+
+In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. Warning: because inertial properties are not dynamic - if you change the location or rotation of a joint while it has bodies attached to it, their inertial properties will be incorrect. You will have to recompute them in that case.
+
 **Muscle panel**
 
 Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies first). 
