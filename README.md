@@ -8,7 +8,7 @@ To install: In Blender, go to Edit > preferences > Add-ons and then click "Insta
 
 **Check out the [video tutorial on YouTube](https://www.youtube.com/watch?v=9eMm9YalXtg)**
 
-This README is currently very short and incomplete, more details will be added in due course.
+This README gives an overview of the functionalities, but is not a full documentation. A complete documentation will be created in due course.
 
 # **Inertial properties panel**
 
