@@ -324,7 +324,7 @@ class ExportGeometryFolderOperator(Operator):
         for obj in objects:
             obj.select_set(True)
 
-            if bpy.apps.version[0] <4: #if blender version is below 4
+            if bpy.app.version[0] <4: #if blender version is below 4
                                         
                 bpy.ops.export_scene.obj(filepath= os.path.join(output_path, obj.name + '.obj'), use_selection = True, axis_forward = 'Y', axis_up = 'Z',use_materials = False)
             else: #if blender version is above 4:
