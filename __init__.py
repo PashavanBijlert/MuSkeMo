@@ -41,11 +41,13 @@ from .scripts.muskemo_properties import (MuSkeMoProperties)          ## all prop
 
 
 #### body panel
-from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_PT_vizgeometry_subpanel, 
+from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_PT_vizgeometry_subpanel,
+                                 VIEW3D_PT_body_utilities_subpanel, 
                                     CreateNewBodyOperator,
                                       ReflectBilateralBodiesOperator, AssignInertialPropertiesOperator,
                                       ComputeInertialPropertiesOperator,UpdateLocationFromCOMOperator,
                                       AttachVizGeometryOperator, DetachVizGeometryOperator,
+                                      
                                       )
 
 #### joint panel
@@ -113,6 +115,7 @@ classes = (  #Inertial properties panel
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
             #body_panel
                                     VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,
+                                    VIEW3D_PT_body_utilities_subpanel,
                                      CreateNewBodyOperator,
                                     ReflectBilateralBodiesOperator, AssignInertialPropertiesOperator,
                                       ComputeInertialPropertiesOperator,UpdateLocationFromCOMOperator,

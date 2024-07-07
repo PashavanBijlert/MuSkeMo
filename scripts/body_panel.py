@@ -843,29 +843,14 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         row = self.layout.row()
 
 
-        row.label(text ="Bodies are initially placed in the world origin, with nans for COM & mass properties")
-                
         ## Create new body
         row = self.layout.row()
         row.operator("body.create_new_body", text="Create new body")
         row = self.layout.row()
-        row = self.layout.row()
+                
         
-         
-        ## some tooltips
-        row = self.layout.row()
-        row.label(text = "When the body is selected, you can view and edit its mass, COM and inertia:")
-        row = self.layout.row()
-        row.label(text = "item panel > properties, or object properties > custom properties")
-        
-        row = self.layout.row()
-        row = self.layout.row()
-        row.label(text = "The buttons below provide multiple methods to assign mass properties.")
-        
-       
         ## compute inertial properties from other meshes
-        self.layout.row()
-        self.layout.row()
+        
         row = self.layout.row()
         row.label(text = "This button computes the mass properties using source objects with assigned densities")
         row = self.layout.row()
@@ -874,16 +859,57 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
             
         ## assign precomputed inertial properties from other meshes
         self.layout.row()
-        self.layout.row()
-        row = self.layout.row()
-        row.label(text = "This button assigns previously computed mass properties of source objects to the selected body")
+        
         row = self.layout.row()
         
+        row = self.layout.row()
+        row.label(text = "This button assigns the mass properties using source objects with precomputed mass properties")
          
         row = self.layout.row()
         row.operator("body.assign_inertial_properties", text="Assign precomputed inertial properties")
         row = self.layout.row()
         row.label(text = "Properties are not dynamic, recompute them if you move source objects around")
+
+
+        
+class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
+    bl_idname = 'VIEW3D_PT_vizgeometry_subpanel'
+    bl_parent_id = 'VIEW3D_PT_body_panel'
+    
+    #bl_category = "Body panel"  # found in the Sidebar
+    bl_label = "Attach visual (bone) geometry"  # found at the top of the Panel
+    bl_context = "objectmode"
+    
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    #bl_options = {'HEADER_LAYOUT_EXPAND'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        
+        ## user input body name    
+        layout.prop(muskemo, "geometry_collection")
+        row = self.layout.row()
+
+        row.operator("body.attach_visual_geometry", text = "Attach visual (bone) geometry")
+        row = self.layout.row()
+        row.operator("body.detach_visual_geometry", text = "Detach visual (bone) geometry")
+        return
+
+
+class VIEW3D_PT_body_utilities_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
+    bl_idname = 'VIEW3D_PT_body_utilities_subpanel'
+    bl_parent_id = 'VIEW3D_PT_body_panel'
+    
+    #bl_category = "Body panel"  # found in the Sidebar
+    bl_label = "Body utilities"  # found at the top of the Panel
+    bl_context = "objectmode"
+    
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
         ## update display location using COM
         row = self.layout.row()
         row.operator("body.update_location_from_com", text="Update display location using COM")
@@ -911,30 +937,3 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         self.layout.row()
         row = self.layout.row()
         row.prop(muskemo, "axes_size")
-        
-        
-class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
-    bl_idname = 'VIEW3D_PT_vizgeometry_subpanel'
-    bl_parent_id = 'VIEW3D_PT_body_panel'
-    
-    #bl_category = "Body panel"  # found in the Sidebar
-    bl_label = "Attach visual (bone) geometry"  # found at the top of the Panel
-    bl_context = "objectmode"
-    
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    #bl_options = {'HEADER_LAYOUT_EXPAND'}
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        muskemo = scene.muskemo
-        
-        ## user input body name    
-        layout.prop(muskemo, "geometry_collection")
-        row = self.layout.row()
-
-        row.operator("body.attach_visual_geometry", text = "Attach visual (bone) geometry")
-        row = self.layout.row()
-        row.operator("body.detach_visual_geometry", text = "Detach visual (bone) geometry")
-        return
