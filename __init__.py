@@ -92,7 +92,8 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
 from .scripts.ARF_panel import (VIEW3D_PT_arf_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
                                 AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
-                                ConstructARFOperator,)
+                                ConstructARFOperator, 
+                                AssignARFParentBodyOperator,ClearARFParentBodyOperator,)
 
 #### Landmark & marker panel
 from .scripts.landmark_marker_panel import (VIEW3D_PT_landmark_panel, CreateLandmarkOperator,
@@ -151,6 +152,7 @@ classes = (  #Inertial properties panel
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
                                 AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
                                 ConstructARFOperator,
+                                AssignARFParentBodyOperator,ClearARFParentBodyOperator,
 
             #landmark & marker panel
                                 VIEW3D_PT_landmark_panel, CreateLandmarkOperator,

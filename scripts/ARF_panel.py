@@ -172,10 +172,165 @@ class ConstructARFOperator(Operator):
         #bpy.context.object.location = origin
 
         bpy.context.object['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
-        bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
+        bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
+
+        bpy.context.object['parent_body'] = 'not yet assigned'    #to inform the user what type is created
+        bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this frame")  
 
         return {'FINISHED'}
 
+
+class AssignARFParentBodyOperator(Operator):
+    bl_idname = "arf.assign_parent_body"
+    bl_label = "Assigns a parent body to an anatomical (local) reference frame. Select both the parent body and the frame, then press the button."
+    bl_description = "Assigns a parent body to an anatomical (local) reference frame. Select both the parent body and the frame, then press the button."
+   
+    def execute(self, context):
+        
+        frame_name = bpy.context.scene.muskemo.framename
+        
+        active_obj = bpy.context.active_object  #
+        sel_obj = bpy.context.selected_objects  #should be the parent body and the frame
+        
+        colname = bpy.context.scene.muskemo.frame_collection
+        bodycolname = bpy.context.scene.muskemo.body_collection
+        try: bpy.data.objects[frame_name]  #check if the frame exists
+        
+        except:  #throw an error if the frame doesn't exist
+            self.report({'ERROR'}, "Frame with the name '" + frame_name + "' does not exist yet, create it first")
+            return {'FINISHED'}
+        
+        
+        frame = bpy.data.objects[frame_name]
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select the parent body and the target frame.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. Select the parent body and the target frame.")
+            return {'FINISHED'}
+        
+        if frame not in sel_obj:
+            self.report({'ERROR'}, "Neither of the selected objects is the target frame. Selected frame and frame_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+            return {'FINISHED'}
+        
+        parent_body = [s_obj for s_obj in sel_obj if s_obj.name not in bpy.data.collections[colname].objects][0]  #get the object that's not the frame
+        
+        
+        
+        try:
+            frame.children[0]
+        except:
+            pass
+        else:
+            
+            self.report({'ERROR'}, "You are attempting to assign body '" + parent_body.name + "' as the parent body, but it is already the child body. Operation cancelled.")
+            return {'FINISHED'}
+
+
+        
+        if parent_body.name not in bpy.data.collections[bodycolname].objects:
+            self.report({'ERROR'}, "The parent body is not in the '" + bodycolname + "' collection. Make sure one of the two selected objects is a 'Body' as created by the bodies panel")
+            return {'FINISHED'}
+            
+        ### if none of the previous scenarios triggered an error, set the parent body
+        
+        frame.parent = parent_body
+            
+        #this undoes the transformation after parenting
+        frame.matrix_parent_inverse = parent_body.matrix_world.inverted()
+
+        frame['parent_body'] = parent_body.name
+        parent_body['local_frame'] = frame.name
+
+        if parent_body['local_frame'] == 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+     
+            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
+            #Check for parent joint, set loc and rot in child
+            #loop through child joints, set loc and rot in parent
+            #Add COM extra properties COM loc_local, MOI_local
+  
+        return {'FINISHED'}
+
+class ClearARFParentBodyOperator(Operator):
+    bl_idname = "arf.clear_parent_body"
+    bl_label = "Clears the parent body assigned to a frame. Select the frame, then press the button."
+    bl_description = "Clears the parent body assigned to a frame. Select the frame, then press the button."
+    
+    def execute(self, context):
+        
+        frame_name = bpy.context.scene.muskemo.framename
+        
+        colname = bpy.context.scene.muskemo.frame_collection
+
+
+        active_obj = bpy.context.active_object  #should be the frame
+        sel_obj = bpy.context.selected_objects  #should be the only the frame
+        
+        
+        try: bpy.data.objects[frame_name]  #check if the body exists
+        
+        except:  #throw an error if the body doesn't exist
+            self.report({'ERROR'}, "Frame with the name '" + frame_name + "' does not exist yet, create it first")
+            return {'FINISHED'}
+        
+        frame = bpy.data.objects[frame_name]
+
+        try: frame.parent.name
+        
+        except: #throw an error if the frame has no parent
+            self.report({'ERROR'}, "Frame with the name '" + frame_name + "' does not have a parent body")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) == 0):
+            self.report({'ERROR'}, "No frame selected. Select the target frame and try again.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Only select the target frame.")
+            return {'FINISHED'}
+        
+        if frame.name != active_obj.name:
+            self.report({'ERROR'}, "Selected frame and frame_name (text input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if frame.name not in bpy.data.collections[colname].objects:
+            self.report({'ERROR'}, "Selected object is not in the '" + colname + "' collection. Make sure you have selected a frame in that collection.")
+            return {'FINISHED'}
+        
+        
+                
+        ### if none of the previous scenarios triggered an error, clear the parent body
+        
+        
+        #clear the parent, without moving the frame
+        parent_body = frame.parent
+
+        parented_worldmatrix = frame.matrix_world.copy() 
+        frame.parent = None
+        frame.matrix_world = parented_worldmatrix   
+        
+        frame['parent_body'] = 'not yet assigned'
+        parent_body['local_frame'] = 'not yet assigned'
+
+        if parent_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+     
+            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
+            #Check for parent joint, set loc and rot in child to NaN
+            #loop through child joints, set loc and rot in parent to Nan
+            #set COM extra properties COM to loc_local, MOI_local
+
+
+
+        
+
+
+        return {'FINISHED'}
 
 
 
@@ -229,6 +384,13 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         row = self.layout.row()
         row.operator("arf.construct_arf", text="Construct arf from points")
         self.layout.row()
+        row = self.layout.row()
+        row.operator("arf.assign_parent_body", text="Assign parent body")
+        row.operator("arf.clear_parent_body", text="Clear parent body")
+
+        
+        row = self.layout.row()
+        
         self.layout.row()
         
         row = self.layout.row()

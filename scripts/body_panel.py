@@ -660,7 +660,7 @@ class AttachVizGeometryOperator(Operator):
         ## instantiate geom list, and append each geometry to it with the folder name
 
         geom_list = []
-
+        
 
         for geom in geom_objects:
             
@@ -672,7 +672,12 @@ class AttachVizGeometryOperator(Operator):
             skip_geom = False
             for obj in [obj for obj in bpy.data.collections[colname].objects if obj != body]: #for all the bodies in the body collection that aren't the target body
                 
-                
+                try:
+                    obj['MuSkeMo_type']  #loop through all the bodies in the collection, check if they have the geometry custom property
+                except:     #if not, the user apparently created the body themself
+                    self.report({'INFO'}, "Body with name '" + obj.name +  "' in the '" + colname + "' does not have a MuSkeMo_type. Skipping this object during geometry conflict check.")
+                    continue #skip this object, try the next one
+               
                 if geom_relpath in obj['Geometry']:
                     self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' is already attached to a different body with the name '" + obj.name + "'. Detach it from that body first. Skipped this geometry object.")
                     skip_geom = True
