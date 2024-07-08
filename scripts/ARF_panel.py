@@ -8,6 +8,8 @@ from bpy.types import (Panel,
 import numpy as np
 import math
 
+from math import nan
+
 array = np.array
 norm  = np.linalg.norm 
 cross = np.cross
@@ -246,12 +248,48 @@ class AssignARFParentBodyOperator(Operator):
         frame['parent_body'] = parent_body.name
         parent_body['local_frame'] = frame.name
 
-        if parent_body['local_frame'] == 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
-     
-            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
-            #Check for parent joint, set loc and rot in child
-            #loop through child joints, set loc and rot in parent
-            #Add COM extra properties COM loc_local, MOI_local
+
+        #Add COM extra properties COM_local, inertia_COM_local
+
+        gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+        bRg = gRb.copy()
+        bRg.transpose()
+        
+        frame_or_g = frame.matrix_world.translation   #frame origin in global frame
+        COM_g = Vector(parent_body['COM'])  #COM loc in global frame
+
+        relCOM_g = COM_g - frame_or_g  #Relative COM location from the local frame origin, aligned in global frame
+        relCOM_b = bRg @ relCOM_g #COM of the body, expressed in the local frame
+
+        parent_body['COM_local'] = list(relCOM_b)  #set COM in local frame
+
+        MOI_glob_vec = parent_body['inertia_COM']  #vector of MOI about COM, in global frame. Ixx Iyy Izz Ixy Ixz Iyz
+        MOI_g = Matrix(((MOI_glob_vec[0], MOI_glob_vec[3], MOI_glob_vec[4]), #MOI tensor about COM in global
+                        (MOI_glob_vec[3],MOI_glob_vec[1],MOI_glob_vec[5]),
+                        (MOI_glob_vec[4],MOI_glob_vec[5],MOI_glob_vec[2])))
+        
+        MOI_b = bRg @ MOI_g @ gRb
+
+        MOI_b_vec = [MOI_b[0][0],  #Ixx, about COM, in local frame
+                     MOI_b[1][1],  #Iyy
+                     MOI_b[2][2],  #Izz
+                     MOI_b[0][1],  #Ixy
+                     MOI_b[0][2],  #Ixz
+                     MOI_b[1][2]]  #Iyz
+
+
+        parent_body['inertia_COM_local'] = MOI_b_vec
+
+        # for each joint, determine joint_loc_g, and determine gRb_joint
+        # gRb_joint = joint.matrix_world.to_3x3()
+        #joint_loc_in_frame = bRg @ [joint_loc_g - frame_or_g]
+        #b_frame_R_joint_frame = bRg @ gRb_joint
+
+        #Check for parent joint, set loc and rot in child
+        #loop through child joints, set loc and rot in parent
+        #loop through attached contacts
+        #loop through attached geometry?
+        
   
         return {'FINISHED'}
 
@@ -318,12 +356,14 @@ class ClearARFParentBodyOperator(Operator):
         frame['parent_body'] = 'not yet assigned'
         parent_body['local_frame'] = 'not yet assigned'
 
-        if parent_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
-     
-            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
-            #Check for parent joint, set loc and rot in child to NaN
-            #loop through child joints, set loc and rot in parent to Nan
-            #set COM extra properties COM to loc_local, MOI_local
+        parent_body['COM_local'] = [nan, nan, nan]
+        parent_body['inertia_COM_local'] = [nan, nan, nan, nan, nan, nan]
+
+
+        #Check for parent joint, set loc and rot in child to NaN
+        #loop through child joints, set loc and rot in parent to Nan
+        #loop through contacts, set local loc to nan
+        
 
 
 
