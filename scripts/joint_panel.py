@@ -82,17 +82,17 @@ class CreateNewJointOperator(Operator):
             bpy.context.object.id_properties_ui('parent_body').update(description = "The child body of this joint")  
             
 
-            bpy.context.object['loc_parent_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('loc_parent_frame').update(description = 'Joint location in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+            bpy.context.object['loc_in_parent_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('loc_in_parent_frame').update(description = 'Joint location in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
 
-            bpy.context.object['rot_parent_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('rot_parent_frame').update(description = 'Joint orientation XYZ-Euler angles in the parent body anatomical (local) reference frame (x, y, z, in rad). Optional.')
+            bpy.context.object['rot_in_parent_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('rot_in_parent_frame').update(description = 'Joint orientation XYZ-Euler angles in the parent body anatomical (local) reference frame (x, y, z, in rad). Optional.')
 
-            bpy.context.object['loc_child_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('loc_child_frame').update(description = 'Joint location in the child body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+            bpy.context.object['loc_in_child_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('loc_in_child_frame').update(description = 'Joint location in the child body anatomical (local) reference frame (x, y, z, in meters). Optional.')
 
-            bpy.context.object['rot_child_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('rot_child_frame').update(description = 'Joint orientation XYZ-Euler angles in the child body anatomical (local) reference frame (x, y, z, in rad). Optional.')
+            bpy.context.object['rot_in_child_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('rot_in_child_frame').update(description = 'Joint orientation XYZ-Euler angles in the child body anatomical (local) reference frame (x, y, z, in rad). Optional.')
 
             bpy.ops.object.select_all(action='DESELECT')
         
@@ -378,8 +378,8 @@ class ClearParentBodyOperator(Operator):
         
         joint['parent_body'] = 'not yet assigned'
 
-        joint['loc_parent_frame'] = [nan, nan, nan]
-        joint['rot_parent_frame'] = [nan, nan, nan]
+        joint['loc_in_parent_frame'] = [nan, nan, nan]
+        joint['rot_in_parent_frame'] = [nan, nan, nan]
 
 
         return {'FINISHED'}
@@ -441,8 +441,8 @@ class ClearChildBodyOperator(Operator):
         child_body.matrix_world = parented_worldmatrix 
 
         joint['child_body'] = 'not yet assigned'  
-        joint['loc_child_frame'] = [nan, nan, nan]
-        joint['rot_child_frame'] = [nan, nan, nan]
+        joint['loc_in_child_frame'] = [nan, nan, nan]
+        joint['rot_in_child_frame'] = [nan, nan, nan]
         
         return {'FINISHED'}        
     
