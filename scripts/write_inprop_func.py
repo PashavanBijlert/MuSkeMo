@@ -11,7 +11,7 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type):
     coll = bpy.data.collections[collection_name]
     
     
-    header = obj_type + '_name' + delimiter  + 'mass(kg)' + delimiter  + 'CoM_x' + delimiter  + 'CoM_y' + delimiter   + 'CoM_z' + delimiter  + 'Ixx(kg*m^2) about COM in global' + delimiter  + 'Iyy' + delimiter  + 'Izz' + delimiter  + 'Ixy' + delimiter  + 'Ixz' + delimiter  + 'Iyz' + delimiter  + 'Geometry'
+    header = obj_type + '_name' + delimiter  + 'mass(kg)' + delimiter  + 'CoM_x_in_global' + delimiter  + 'CoM_y' + delimiter   + 'CoM_z' + delimiter  + 'Ixx(kg*m^2)_about_COM_in_global' + delimiter  + 'Iyy' + delimiter  + 'Izz' + delimiter  + 'Ixy' + delimiter  + 'Ixz' + delimiter  + 'Iyz' + delimiter  + 'Geometry'
     ## if statement for if local frame is specified and obj_type is body:
     ### header = header + delimiter + ... 
     

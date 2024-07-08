@@ -65,6 +65,12 @@ class CreateNewBodyOperator(Operator):
                     
             bpy.context.object['COM'] = [nan, nan, nan]
             bpy.context.object.id_properties_ui('COM').update(description = 'COM location (in global frame)')
+
+            bpy.context.object['inertia_COM_local'] = [nan, nan, nan, nan, nan, nan]    #add inertia property
+            bpy.context.object.id_properties_ui('inertia_COM').update(description = 'Ixx Iyy Izz Ixy Ixz Iyz (in kg*m^2) about body COM in local frame')
+                    
+            bpy.context.object['COM_local'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('COM').update(description = 'COM location (in local frame)')
         
             bpy.context.object['Geometry'] = 'no geometry'    #add list of mesh files
             bpy.context.object.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes)')  
