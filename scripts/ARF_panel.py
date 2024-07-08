@@ -249,7 +249,10 @@ class AssignARFParentBodyOperator(Operator):
         parent_body['local_frame'] = frame.name
 
 
-        #Add COM extra properties COM_local, inertia_COM_local
+        ###### Add all the extra locations and rotations in the local frame of all parent and child objects where it is relevant
+        ### COM extra properties COM_local, inertia_COM_local
+
+
 
         gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
         bRg = gRb.copy()
@@ -278,15 +281,71 @@ class AssignARFParentBodyOperator(Operator):
                      MOI_b[1][2]]  #Iyz
 
 
-        parent_body['inertia_COM_local'] = MOI_b_vec
+        parent_body['inertia_COM_local'] = MOI_b_vec  #add moment of inertia in local frame to the body
 
-        # for each joint, determine joint_loc_g, and determine gRb_joint
-        # gRb_joint = joint.matrix_world.to_3x3()
-        #joint_loc_in_frame = bRg @ [joint_loc_g - frame_or_g]
-        #b_frame_R_joint_frame = bRg @ gRb_joint
+        ## import functions euler angles and quaternions from matrix
 
-        #Check for parent joint, set loc and rot in child
-        #loop through child joints, set loc and rot in parent
+        from .quaternions import quat_from_matrix
+        from .euler_XYZ_body import euler_XYZbody_from_matrix
+
+        ## parent joint
+
+        parent_joint_bool = False  # a boolean that is true if the parent_body's parent is of the type joint
+        if parent_body.parent is not None: #if the parent body has a parent, we check if it is a muskemo type JOINT, and if so, assign location and rotation in child
+
+            parent_joint = parent_body.parent
+
+            if 'MuSkeMo_type' in parent_joint: #if parent_joint actually has a muskemo type
+                
+                if parent_joint['MuSkeMo_type'] == 'JOINT': #if it's a joint, then we set the bool to true
+                    parent_joint_bool = True    
+                else: #else we throw an error
+                    self.report({'ERROR'}, "The body '" + parent_body.name + "' appears to be the child of the object '" + parent_joint.name + "', which is not a JOINT. Skipping this object when computing local transformations")
+            else:
+                self.report({'ERROR'}, "The body '" + parent_body.name + "' appears to be the child of the object '" + parent_joint.name + "', which is not a JOINT. Skipping this object when computing local transformations")
+                    
+        
+        if parent_joint_bool:  #if parent joint bool is still true after the previous error 
+            
+            parent_joint_loc_g = parent_joint.matrix_world.translation #location of the parent joint
+            gRb_parent_joint = parent_joint.matrix_world.to_3x3() #gRb rotation matrix of parent joint
+            parent_joint_loc_in_child = bRg @ (parent_joint_loc_g - frame_or_g) #location in child of parent joint
+            b_R_parentjointframe = bRg @ gRb_parent_joint #rotation matrix from parent joint frame to child frame - decompose this for rotation in child
+            
+            parent_joint_or_in_child_euler = euler_XYZbody_from_matrix(b_R_parentjointframe) #XYZ body-fixed decomposition of orientation in child
+            parent_joint_or_in_child_quat = quat_from_matrix(b_R_parentjointframe) #quaternion decomposition of orientation in child
+            
+            parent_joint['loc_in_child_frame'] = parent_joint_loc_in_child
+            parent_joint['or_in_child_frame_XYZeuler'] = parent_joint_or_in_child_euler
+            parent_joint['or_in_child_frame_quat'] = parent_joint_or_in_child_quat
+            
+            ## convert to euler angles and quats, assign as new custom properties
+
+        ## all children, sort into types
+
+        children = [obj for obj in parent_body.children if 'MuSkeMo_type' in obj]
+
+        joints = [obj for obj in children if 'JOINT' in obj['MuSkeMo_type']]
+        contacts = [obj for obj in children if 'CONTACT' in obj['MuSkeMo_type']]
+        landmarks = [obj for obj in children if 'LANDMARK' in obj['MuSkeMo_type']]
+        geometry = [obj for obj in children if 'GEOMETRY' in obj['MuSkeMo_type']]
+
+        ## for all child joints
+
+        for joint in joints:
+            joint_loc_g = joint.matrix_world.translation #location of the joint
+            gRb_joint = joint.matrix_world.to_3x3() #gRb rotation matrix of joint
+            joint_loc_in_parent = bRg @ (joint_loc_g - frame_or_g) #location in parent of joint
+            b_R_jointframe = bRg @ gRb_joint #rotation matrix from joint frame to parent frame - decompose this for orientation in parent
+            
+            joint_or_in_parent_euler = euler_XYZbody_from_matrix(b_R_jointframe) #XYZ body-fixed decomposition of orientation in parent
+            joint_or_in_parent_quat = quat_from_matrix(b_R_jointframe) #quaternion decomposition of orientation in parent
+            
+            joint['loc_in_parent_frame'] = joint_loc_in_parent
+            joint['or_in_parent_frame_XYZeuler'] = joint_or_in_parent_euler
+            joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat    
+
+        
         #loop through attached contacts
         #loop through attached geometry?
         
@@ -365,7 +424,54 @@ class ClearARFParentBodyOperator(Operator):
         #loop through contacts, set local loc to nan
         
 
+        ## parent joint
 
+        parent_joint_bool = False  # a boolean that is true if the parent_body's parent is of the type joint
+        if parent_body.parent is not None: #if the parent body has a parent, we check if it is a muskemo type JOINT, and if so, assign location and rotation in child
+
+            parent_joint = parent_body.parent
+
+            if 'MuSkeMo_type' in parent_joint: #if parent_joint actually has a muskemo type
+                
+                if parent_joint['MuSkeMo_type'] == 'JOINT': #if it's a joint, then we set the bool to true
+                    parent_joint_bool = True    
+                else: #else we throw an error
+                    self.report({'ERROR'}, "The body '" + parent_body.name + "' appears to be the child of the object '" + parent_joint.name + "', which is not a JOINT. Skipping this object when computing local transformations")
+            else:
+                self.report({'ERROR'}, "The body '" + parent_body.name + "' appears to be the child of the object '" + parent_joint.name + "', which is not a JOINT. Skipping this object when computing local transformations")
+                    
+        
+        if parent_joint_bool:  #if parent joint bool is still true after the previous error 
+            
+            
+            
+            parent_joint['loc_in_child_frame'] = [nan, nan, nan]
+            parent_joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
+            parent_joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]
+            
+            ## convert to euler angles and quats, assign as new custom properties
+
+        ## all children, sort into types
+
+        children = [obj for obj in parent_body.children if 'MuSkeMo_type' in obj]
+
+        joints = [obj for obj in children if 'JOINT' in obj['MuSkeMo_type']]
+        contacts = [obj for obj in children if 'CONTACT' in obj['MuSkeMo_type']]
+        landmarks = [obj for obj in children if 'LANDMARK' in obj['MuSkeMo_type']]
+        geometry = [obj for obj in children if 'GEOMETRY' in obj['MuSkeMo_type']]
+
+        ## for all child joints
+
+        for joint in joints:
+            
+            
+            joint['loc_in_parent_frame'] = [nan, nan, nan]
+            joint['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
+            joint['or_in_parent_frame_quat'] = [nan, nan, nan, nan]   
+
+        
+        #loop through attached contacts
+        #loop through attached geometry?
 
         
 
