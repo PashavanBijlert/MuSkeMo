@@ -118,9 +118,21 @@ class AssignContactParentOperator(Operator):
 
             contact['parent_body'] = parent_body.name
 
+
+            ### check if parent_body has a local frame, and if yes, compute contact location in parent frame 
             if parent_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
-                self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
-            
+                
+                frame = bpy.data.objects[parent_body['local_frame']]
+
+                gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+                bRg = gRb.copy()
+                bRg.transpose()
+        
+                frame_or_g = frame.matrix_world.translation                 
+                contact_loc_g = contact.matrix_world.translation #location of the contact
+                contact_loc_in_parent = bRg @ (contact_loc_g - frame_or_g) #location in parent of contact
+                contact['loc_in_parent_frame'] = contact_loc_in_parent
+               
 
             
         return {'FINISHED'}
@@ -163,7 +175,7 @@ class ClearContactParentOperator(Operator):
             
             contact['parent_body'] = 'not yet assigned'
 
-            contact['loc_parent_frame'] = [nan, nan, nan]
+            contact['loc_in_parent_frame'] = [nan, nan, nan]
             
 
 
