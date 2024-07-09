@@ -249,10 +249,8 @@ class AssignARFParentBodyOperator(Operator):
         parent_body['local_frame'] = frame.name
 
 
-        ###### Add all the extra locations and rotations in the local frame of all parent and child objects where it is relevant
+        ###### Add all the extra locations and orientations in the local frame of all parent and child objects where it is relevant
         ### COM extra properties COM_local, inertia_COM_local
-
-
 
         gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
         bRg = gRb.copy()
@@ -346,6 +344,17 @@ class AssignARFParentBodyOperator(Operator):
             joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat    
 
         
+        ## for all contacts
+
+        for contact in contacts:
+            
+            contact_loc_g = contact.matrix_world.translation #location of the contact
+            contact_loc_in_parent = bRg @ (contact_loc_g - frame_or_g) #location in parent of contact
+            contact['loc_in_parent_frame'] = contact_loc_in_parent
+               
+
+
+
         #loop through attached contacts
         #loop through attached geometry?
         
@@ -419,11 +428,6 @@ class ClearARFParentBodyOperator(Operator):
         parent_body['inertia_COM_local'] = [nan, nan, nan, nan, nan, nan]
 
 
-        #Check for parent joint, set loc and rot in child to NaN
-        #loop through child joints, set loc and rot in parent to Nan
-        #loop through contacts, set local loc to nan
-        
-
         ## parent joint
 
         parent_joint_bool = False  # a boolean that is true if the parent_body's parent is of the type joint
@@ -471,7 +475,14 @@ class ClearARFParentBodyOperator(Operator):
 
         
         #loop through attached contacts
+
+        for contact in contacts:
+            
+            
+            contact['loc_in_parent_frame'] = [nan, nan, nan]
+            
         #loop through attached geometry?
+        #loop through landmarks?
 
         
 

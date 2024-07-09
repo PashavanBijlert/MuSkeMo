@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (3, 0, 0),
-    "version" : (0, 5, 71),
+    "version" : (0, 5, 8),
     "location" : "",
     "warning" : "",
     "category" : "Physics",

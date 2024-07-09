@@ -48,8 +48,8 @@ class CreateContactOperator(Operator):
         bpy.context.object['parent_body'] = 'not yet assigned'    #to inform the user what type is created
         bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this contact sphere")
 
-        bpy.context.object['loc_parent_frame'] = [nan, nan, nan]
-        bpy.context.object.id_properties_ui('loc_parent_frame').update(description = 'Contact sphere location in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+        bpy.context.object['loc_in_parent_frame'] = [nan, nan, nan]
+        bpy.context.object.id_properties_ui('loc_in_parent_frame').update(description = 'Contact sphere location in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
 
         bpy.ops.object.select_all(action='DESELECT')
         
