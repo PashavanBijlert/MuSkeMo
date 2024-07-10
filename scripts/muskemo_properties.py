@@ -52,7 +52,8 @@ class MuSkeMoProperties(PropertyGroup):
         description="Size of the axes for newly created bodies, in meters",
         default = 0.1,
         min = 1e-12,
-        max = 100
+        max = 100,
+        precision = 5,
         )
     
     geometry_collection: StringProperty(
@@ -123,7 +124,8 @@ class MuSkeMoProperties(PropertyGroup):
         description="Joint sphere visualization radius, in meters",
         default = 0.05,
         min = 1e-12,
-        max = 100
+        max = 100,
+        precision = 5,
         )
 
     joint_collection: StringProperty(
@@ -155,6 +157,15 @@ class MuSkeMoProperties(PropertyGroup):
         default = 1,
         min = 1,
         max = 100
+        )
+    
+    muscle_visualization_radius: FloatProperty(
+        name = "Muscle visualization radius",
+        description="Visualization radius for newly created muscles",
+        default = 0.015,
+        min = 1e-12,
+        max = 100,
+        precision = 5,
         )
     
 
@@ -244,7 +255,8 @@ class MuSkeMoProperties(PropertyGroup):
         description="Display size of the axes for newly created reference frames, in meters",
         default = 0.075,
         min = 1e-12,
-        max = 100
+        max = 100,
+        precision = 5,
         )
 
 
@@ -269,7 +281,8 @@ class MuSkeMoProperties(PropertyGroup):
         description="Landmark visualization radius, in meters",
         default = 0.001,
         min = 1e-12,
-        max = 100
+        max = 100,
+        precision = 5,
         )
     
 
@@ -294,5 +307,6 @@ class MuSkeMoProperties(PropertyGroup):
         description="Contact sphere radius, in meters",
         default = 0.015,
         min = 1e-12,
-        max = 100
+        max = 100,
+        precision = 5,
         )

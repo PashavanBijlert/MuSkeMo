@@ -212,8 +212,10 @@ class VIEW3D_PT_contact_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convent
         row = self.layout.row()
         row.operator("contact.assign_parent_body", text = 'Assign parent body')
 
-        
         row.operator("contact.clear_parent_body", text = 'Clear parent body')
+
+        row = self.layout.row()
+        row.prop(muskemo, "contact_radius")
 
 
 

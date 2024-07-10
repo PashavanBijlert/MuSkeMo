@@ -73,7 +73,7 @@ class CreateNewBodyOperator(Operator):
             bpy.context.object.id_properties_ui('COM').update(description = 'COM location (in local frame)')
         
             bpy.context.object['Geometry'] = 'no geometry'    #add list of mesh files
-            bpy.context.object.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes)')  
+            bpy.context.object.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes). Optional')  
 
             bpy.context.object['MuSkeMo_type'] = 'BODY'    #to inform the user what type is created
             bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
