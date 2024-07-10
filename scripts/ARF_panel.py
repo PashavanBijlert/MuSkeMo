@@ -176,7 +176,7 @@ class ConstructARFOperator(Operator):
         bpy.context.object['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
         bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
 
-        bpy.context.object['parent_body'] = 'not yet assigned'    #to inform the user what type is created
+        bpy.context.object['parent_body'] = 'not_assigned'    #to inform the user what type is created
         bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this frame")  
 
         return {'FINISHED'}
@@ -421,8 +421,8 @@ class ClearARFParentBodyOperator(Operator):
         frame.parent = None
         frame.matrix_world = parented_worldmatrix   
         
-        frame['parent_body'] = 'not yet assigned'
-        parent_body['local_frame'] = 'not yet assigned'
+        frame['parent_body'] = 'not_assigned'
+        parent_body['local_frame'] = 'not_assigned'
 
         parent_body['COM_local'] = [nan, nan, nan]
         parent_body['inertia_COM_local'] = [nan, nan, nan, nan, nan, nan]

@@ -78,7 +78,7 @@ class CreateNewBodyOperator(Operator):
             bpy.context.object['MuSkeMo_type'] = 'BODY'    #to inform the user what type is created
             bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
 
-            bpy.context.object['local_frame'] = 'not yet assigned'    #pre-allocate the Local_frame property
+            bpy.context.object['local_frame'] = 'not_assigned'    #pre-allocate the Local_frame property
             bpy.context.object.id_properties_ui('local_frame').update(description = "Name of the local reference frame. You can create and assign these in the anatomical local reference frame panel. Optional")  
 
             bpy.ops.object.select_all(action='DESELECT')

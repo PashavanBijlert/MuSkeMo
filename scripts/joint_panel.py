@@ -75,10 +75,10 @@ class CreateNewJointOperator(Operator):
             bpy.context.object['MuSkeMo_type'] = 'JOINT'    #to inform the user what type is created
             bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
             
-            bpy.context.object['parent_body'] = 'not yet assigned'    #to inform the user what type is created
+            bpy.context.object['parent_body'] = 'not_assigned'    #to inform the user what type is created
             bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this joint")
 
-            bpy.context.object['child_body'] = 'not yet assigned'    #to inform the user what type is created
+            bpy.context.object['child_body'] = 'not_assigned'    #to inform the user what type is created
             bpy.context.object.id_properties_ui('parent_body').update(description = "The child body of this joint")  
             
           
@@ -243,11 +243,33 @@ class AssignParentBodyOperator(Operator):
 
         joint['parent_body'] = parent_body.name
 
-        if parent_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
-            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
+        if parent_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+            
+            ## import functions euler angles and quaternions from matrix
+
+            from .quaternions import quat_from_matrix
+            from .euler_XYZ_body import euler_XYZbody_from_matrix
+            
+            frame = bpy.data.objects[parent_body['local_frame']]
+            gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+            bRg = gRb.copy()
+            bRg.transpose()
+    
+            frame_or_g = frame.matrix_world.translation                 
+            
+            joint_loc_g = joint.matrix_world.translation #location of the joint
+            gRb_joint = joint.matrix_world.to_3x3() #gRb rotation matrix of joint
+            joint_loc_in_parent = bRg @ (joint_loc_g - frame_or_g) #location in parent of joint
+            b_R_jointframe = bRg @ gRb_joint #rotation matrix from joint frame to parent frame - decompose this for orientation in parent
+            
+            joint_or_in_parent_euler = euler_XYZbody_from_matrix(b_R_jointframe) #XYZ body-fixed decomposition of orientation in parent
+            joint_or_in_parent_quat = quat_from_matrix(b_R_jointframe) #quaternion decomposition of orientation in parent
+            
+            joint['loc_in_parent_frame'] = joint_loc_in_parent
+            joint['or_in_parent_frame_XYZeuler'] = joint_or_in_parent_euler
+            joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat 
             
 
-            
         return {'FINISHED'}
         
 class AssignChildBodyOperator(Operator):
@@ -314,12 +336,30 @@ class AssignChildBodyOperator(Operator):
 
         joint['child_body'] = child_body.name
 
-        if child_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in child
-            self.report({'ERROR'}, "Local transformations cannot be computed yet. Skipping for now")
+        if child_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in child
+            ## import functions euler angles and quaternions from matrix
 
-        #parented_wm = childObject.matrix_world.copy()
-        #childObject.parent = None
-        #childObject.matrix_world = parented_wm         
+            from .quaternions import quat_from_matrix
+            from .euler_XYZ_body import euler_XYZbody_from_matrix
+            
+            frame = bpy.data.objects[child_body['local_frame']]
+            gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+            bRg = gRb.copy()
+            bRg.transpose()
+    
+            frame_or_g = frame.matrix_world.translation                 
+            
+            joint_loc_g = joint.matrix_world.translation #location of the joint
+            gRb_joint = joint.matrix_world.to_3x3() #gRb rotation matrix of joint
+            joint_loc_in_child = bRg @ (joint_loc_g - frame_or_g) #location in child of joint
+            b_R_jointframe = bRg @ gRb_joint #rotation matrix from joint frame to child frame - decompose this for orientation in child
+            
+            joint_or_in_child_euler = euler_XYZbody_from_matrix(b_R_jointframe) #XYZ body-fixed decomposition of orientation in child
+            joint_or_in_child_quat = quat_from_matrix(b_R_jointframe) #quaternion decomposition of orientation in child
+            
+            joint['loc_in_child_frame'] = joint_loc_in_child
+            joint['or_in_child_frame_XYZeuler'] = joint_or_in_child_euler
+            joint['or_in_child_frame_quat'] = joint_or_in_child_quat        
          
             
         return {'FINISHED'}
@@ -382,7 +422,7 @@ class ClearParentBodyOperator(Operator):
         joint.parent = None
         joint.matrix_world = parented_worldmatrix   
         
-        joint['parent_body'] = 'not yet assigned'
+        joint['parent_body'] = 'not_assigned'
 
         joint['loc_in_parent_frame'] = [nan, nan, nan]
         joint['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
@@ -448,7 +488,7 @@ class ClearChildBodyOperator(Operator):
         child_body.parent = None
         child_body.matrix_world = parented_worldmatrix 
 
-        joint['child_body'] = 'not yet assigned'  
+        joint['child_body'] = 'not_assigned'  
         joint['loc_in_child_frame'] = [nan, nan, nan]
         joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
         joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]

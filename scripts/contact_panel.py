@@ -45,7 +45,7 @@ class CreateContactOperator(Operator):
         bpy.context.object['MuSkeMo_type'] = 'CONTACT'    #to inform the user what type is created
         bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
         
-        bpy.context.object['parent_body'] = 'not yet assigned'    #to inform the user what type is created
+        bpy.context.object['parent_body'] = 'not_assigned'    #to inform the user what type is created
         bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this contact sphere")
 
         bpy.context.object['loc_in_parent_frame'] = [nan, nan, nan]
@@ -120,7 +120,7 @@ class AssignContactParentOperator(Operator):
 
 
             ### check if parent_body has a local frame, and if yes, compute contact location in parent frame 
-            if parent_body['local_frame'] != 'not yet assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+            if parent_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
                 
                 frame = bpy.data.objects[parent_body['local_frame']]
 
@@ -173,7 +173,7 @@ class ClearContactParentOperator(Operator):
             contact.parent = None
             contact.matrix_world = parented_worldmatrix   
             
-            contact['parent_body'] = 'not yet assigned'
+            contact['parent_body'] = 'not_assigned'
 
             contact['loc_in_parent_frame'] = [nan, nan, nan]
             
