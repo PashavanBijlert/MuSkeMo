@@ -73,9 +73,28 @@ class AddMusclepointOperator(Operator):
             obj['tendon_length'] = 0    #In meters
             obj.id_properties_ui('tendon_length').update(description = "Tendon length (in m)")
 
+            
+
+            ## add visualization radius via bevel, and driver 
+
+            
+            driver = obj.data.driver_add('bevel_depth').driver  #this adds a driver to obj.data.bevel_depth
+            
+            var = driver.variables.new()        #make a new variable
+            var.name = 'viz_rad_var'            #give the variable a name
+
+            var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+            
+            var.targets[0].id = bpy.data.scenes['Scene']  #set the id to the active scene
+            var.targets[0].data_path = "muskemo.muscle_visualization_radius" #get the driving property
+
+            driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
+            obj.data.use_fill_caps = True 
+
+            ### add texture here
 
 
-
+            
             ### hook point to body
             
             curve = bpy.data.objects[muscle_name]
@@ -314,7 +333,12 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         row = self.layout.row()
         row.operator("muscle.insert_muscle_point", text="Insert muscle point")
         row.prop(muskemo, "insert_point_after")
-        
+        self.layout.row()
+        row = self.layout.row()
+       
+        row.prop(muskemo, "muscle_visualization_radius")
+
+
         self.layout.row()
         self.layout.row()
         row = self.layout.row()

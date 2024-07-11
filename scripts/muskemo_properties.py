@@ -161,11 +161,12 @@ class MuSkeMoProperties(PropertyGroup):
     
     muscle_visualization_radius: FloatProperty(
         name = "Muscle visualization radius",
-        description="Visualization radius for newly created muscles",
+        description="Global visualization radius for newly created muscles",
         default = 0.015,
-        min = 1e-12,
+        min = 0,
         max = 100,
         precision = 5,
+        step = 0.0025,
         )
     
 
