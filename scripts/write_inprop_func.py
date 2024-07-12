@@ -12,8 +12,8 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
     
     
     header = (obj_type + '_name' + delimiter  + 'mass(kg)' + delimiter  + 
-              'CoM_x_in_global' + delimiter  + 'CoM_y' + delimiter   + 'CoM_z' + delimiter  + 
-              'Ixx(kg*m^2)_about_COM_in_global' + delimiter  + 'Iyy' + delimiter  + 'Izz' + delimiter  + 'Ixy' + delimiter  + 'Ixz' + delimiter  + 'Iyz' )
+              'CoM_x_in_global' + delimiter  + 'CoM_y_in_global' + delimiter   + 'CoM_z_in_global' + delimiter  + 
+              'Ixx(kg*m^2)_about_COM_in_global' + delimiter  + 'Iyy_in_global' + delimiter  + 'Izz_in_global' + delimiter  + 'Ixy_in_global' + delimiter  + 'Ixz_in_global' + delimiter  + 'Iyz_in_global' )
           
     if obj_type == 'BODY':
 
