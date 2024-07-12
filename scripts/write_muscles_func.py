@@ -1,5 +1,6 @@
 import bpy
 from mathutils import Vector
+from math import nan
 
 ### This can use some proper error messages
 
@@ -9,10 +10,11 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
     
     coll = bpy.data.collections[collection_name]   
     
-    header = 'muscle_point_name' + delimiter  + 'parent_body_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' #headers
-    ## if statement for if local frame is specified:
-    ### header = header + delimiter + ... 
+    header = ('muscle_point_name' + delimiter  + 'parent_body_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter + #headers
+    'parent_frame_name' + delimiter + 'pos_x_in_local(m)' + delimiter + 'pos_y_in_local' + delimiter + 'pos_z_in_local' + delimiter + 
+    'optimal_fiber_length(m)' + delimiter + 'tendon_length(m)' + delimiter + 'F_max(N)' + delimiter + 'pennation_angle(deg)' )
     
+       
     file.write(header) #headers
     
     file.write('\n') 
@@ -45,17 +47,49 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
                 for j in range(len(modifier.vertex_indices)): #vertex index = connected curve point, so for each connected curve point j, which starts counting at 0
                     if i == modifier.vertex_indices[j]:       
                         body_name = modifier.object.name      #if curve point i equals a connected curve point j in modifier h, get the corresponding body name
-                        
+
+            location = curve.matrix_world @ curve.data.splines[0].points[i].co.xyz  # global location is matrix_world * local_point_location
+            position_local = [nan, nan, nan] #this gets overwritten if the point is hooked to a body, and that body has a local frame
+            parent_frame_name = 'not_assigned'
+
             if 'ERROR' in body_name:
                 print('ERROR! Point number ' + str(i+1) + ' of ' + curve.name + ' is not hooked to a body')
                 
-            location = curve.matrix_world @ curve.data.splines[0].points[i].co.xyz  # global location is matrix_world * local_point_location
+            else:
+                parent_body = bpy.data.objects[body_name]
+                parent_frame_name = parent_body['local_frame']
+                if parent_frame_name != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+                    
+                    frame = bpy.data.objects[parent_frame_name]
+
+                    gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+                    bRg = gRb.copy()
+                    bRg.transpose()
+            
+                    frame_or_g = frame.matrix_world.translation                 
+                    
+                    position_local = bRg @ (location - frame_or_g) #muscle point position in parent frame
+                        
+
+            
             file.write(curve_names[u] + point_name + delimiter)  #curve name, point name
             file.write(body_name + delimiter) # body it is attached to
           
-            file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 4 decimals
-            file.write(f"{location.y:{number_format}}{delimiter}")     # y location, 4 decimals
-            file.write(f"{location.z:{number_format}}")     # z location, 4 decimals                                                        # start a new line
+            file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 
+            file.write(f"{location.y:{number_format}}{delimiter}")     # y location
+            file.write(f"{location.z:{number_format}}{delimiter}")     # z location
+            file.write(parent_frame_name + delimiter)
+            file.write(f"{position_local[0]:{number_format}}{delimiter}")     # x position local 
+            file.write(f"{position_local[1]:{number_format}}{delimiter}")     # y 
+            file.write(f"{position_local[2]:{number_format}}{delimiter}")     # z 
+            file.write(f"{curve['optimal_fiber_length']:{number_format}}{delimiter}")
+            file.write(f"{curve['tendon_length']:{number_format}}{delimiter}")
+            file.write(f"{curve['F_max']:{number_format}}{delimiter}")
+            file.write(f"{curve['pennation_angle']:{number_format}}")
+
+
+            
+                                                                   # start a new line
             file.write('\n')
     
 
