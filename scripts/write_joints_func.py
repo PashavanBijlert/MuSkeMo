@@ -1,12 +1,21 @@
 import bpy
 from mathutils import Vector
 def write_joints(context, filepath, collection_name, delimiter, number_format):
-    
+    from .euler_XYZ_body import euler_XYZbody_from_matrix
+    from .quaternions import quat_from_matrix
+
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     
-    header = 'joint_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' + delimiter   + 'parent_body' + delimiter  + 'child_body'
-    ## if statement for if local frame is specified:
-    ### header = header + delimiter + ... 
+    header = ('joint_name' + delimiter  + 'parent_body' + delimiter  + 'child_body' + delimiter + 
+            'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' + delimiter   +
+            'or_x_in_glob(XYZeuler_rad)' + delimiter + 'or_y_in_glob(XYZeuler)' + delimiter + 'or_z_in_glob(XYZeuler)' + delimiter + 
+            'or_w_in_glob(quat)' + delimiter + 'or_x_in_glob(quat)' + delimiter + 'or_y_in_glob(quat)' + delimiter + 'or_z_in_glob(quat)' + delimiter + 
+            'parent_frame_name' + delimiter + 'pos_x_in_parent_frame(m)' + delimiter  + 'pos_y_in_parent_frame' + delimiter  + 'pos_z_in_parent_frame' + delimiter   +
+            'or_x_in_parent_frame(XYZeuler)' + delimiter + 'or_y_in_parent_frame(XYZeuler)' + delimiter + 'or_z_in_parent_fram(XYZeuler)' + delimiter + 
+            'or_w_in_parent_frame(quat)' + delimiter + 'or_x_in_parent_frame(quat)' + delimiter + 'or_y_in_parent_frame(quat)' + delimiter + 'or_z_in_parent_frame(quat)' + delimiter + 
+            'child_frame_name' + delimiter + 'pos_x_in_child_frame(m)' + delimiter  + 'pos_y_in_child_frame' + delimiter  + 'pos_z_in_child_frame' + delimiter   +
+            'or_x_in_child_frame(XYZeuler)' + delimiter + 'or_y_in_child_frame(XYZeuler)' + delimiter + 'or_z_in_child_fram(XYZeuler)' + delimiter + 
+            'or_w_in_child_frame(quat)' + delimiter + 'or_x_in_child_frame(quat)' + delimiter + 'or_y_in_child_frame(quat)' + delimiter + 'or_z_in_child_frame(quat)'  )
 
     file.write(header) #headers
     
@@ -27,31 +36,87 @@ def write_joints(context, filepath, collection_name, delimiter, number_format):
 
         joint = joints[u]
         location = joint.matrix_world.translation
+
+        gRb = joint.matrix_world.to_3x3() #orientation matrix from local to global
         
-        if location == Vector((0,0,0)):  #ground pelvis has transformations applied.
-            joint.select_set(True)
-            bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS')
+        or_glob_eulerXYZ = euler_XYZbody_from_matrix(gRb)
+        or_glob_quat = quat_from_matrix(gRb)
+        
+        
+        #if location == Vector((0,0,0)):  #ground pelvis has transformations applied.
+        #    joint.select_set(True)
+        #    bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS')
             
-            location = Vector(joint.matrix_world.translation)
-            bpy.ops.object.transform_apply()
-            bpy.ops.object.select_all(action='DESELECT')
+        #    location = Vector(joint.matrix_world.translation)
+        #    bpy.ops.object.transform_apply()
+        #    bpy.ops.object.select_all(action='DESELECT')
 
-
+        ### joint name, parent body and child body
         file.write(joint.name + delimiter) # joint name 
-        file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 4 decimals
-        file.write(f"{location.y:{number_format}}{delimiter}")     # y location, 4 decimals
-                                       # y location
+        file.write(joint['parent_body'] + delimiter) # joint name 
+        file.write(joint['child_body'] + delimiter) # joint name 
+
+        ### pos and or global
+
+        file.write(f"{location.x:{number_format}}{delimiter}")     # x location
+        file.write(f"{location.y:{number_format}}{delimiter}")     # y location
+        file.write(f"{location.z:{number_format}}{delimiter}")     # z location
+
+
+        file.write(f"{or_glob_eulerXYZ[0]:{number_format}}{delimiter}") #glob orientation eulerXYZ x
+        file.write(f"{or_glob_eulerXYZ[1]:{number_format}}{delimiter}") #glob orientation eulerXYZ y
+        file.write(f"{or_glob_eulerXYZ[2]:{number_format}}{delimiter}") #glob orientation eulerXYZ z
+
+        file.write(f"{or_glob_quat[0]:{number_format}}{delimiter}") #glob orientation quat w
+        file.write(f"{or_glob_quat[1]:{number_format}}{delimiter}") #glob orientation quat x
+        file.write(f"{or_glob_quat[2]:{number_format}}{delimiter}") #glob orientation quat y
+        file.write(f"{or_glob_quat[3]:{number_format}}{delimiter}") #glob orientation quat z
         
-        
-        file.write(f"{location.z:{number_format}}{delimiter}")     # z location, 4 decimals
-        
-        if joint.parent is None:
-            file.write('ground' + delimiter) #parent body is ground if there is no parent
-            print(joint.name + ' joint has no parent, parent body set to Ground')
+
+        ### parent frame and pos and or in parent frame
+        if joint['parent_body'] == 'not_assigned':
+            file.write('not_assigned' + delimiter) #if there is no parent body, there is no parent frame assigned
         else:
-            file.write(joint.parent.name + delimiter) #parent body name
+            parent = bpy.data.objects[joint['parent_body']]
+            file.write(parent['local_frame'] + delimiter) #parent frame name
         
-        file.write(joint.children[0].name) #child body name
+        file.write(f"{joint['pos_in_parent_frame'][0]:{number_format}}{delimiter}")     # x location
+        file.write(f"{joint['pos_in_parent_frame'][1]:{number_format}}{delimiter}")     # y location
+        file.write(f"{joint['pos_in_parent_frame'][2]:{number_format}}{delimiter}")     # z location
+
+
+        file.write(f"{joint['or_in_parent_frame_XYZeuler'][0]:{number_format}}{delimiter}") # orientation eulerXYZ x
+        file.write(f"{joint['or_in_parent_frame_XYZeuler'][1]:{number_format}}{delimiter}") # orientation eulerXYZ y
+        file.write(f"{joint['or_in_parent_frame_XYZeuler'][2]:{number_format}}{delimiter}") # orientation eulerXYZ z
+
+        file.write(f"{joint['or_in_parent_frame_quat'][0]:{number_format}}{delimiter}") #orientation quat w
+        file.write(f"{joint['or_in_parent_frame_quat'][1]:{number_format}}{delimiter}") #orientation quat x
+        file.write(f"{joint['or_in_parent_frame_quat'][2]:{number_format}}{delimiter}") #orientation quat y
+        file.write(f"{joint['or_in_parent_frame_quat'][3]:{number_format}}{delimiter}") #orientation quat z
+
+
+        ### child frame and pos and or in child frame
+        if joint['child_body'] == 'not_assigned':
+            file.write('not_assigned' + delimiter) #if there is no child body, there is no child frame assigned
+        else:
+            child = bpy.data.objects[joint['child_body']]
+            file.write(child['local_frame'] + delimiter) #child frame name
+
+        file.write(f"{joint['pos_in_child_frame'][0]:{number_format}}{delimiter}")     # x location
+        file.write(f"{joint['pos_in_child_frame'][1]:{number_format}}{delimiter}")     # y location
+        file.write(f"{joint['pos_in_child_frame'][2]:{number_format}}{delimiter}")     # z location
+
+
+        file.write(f"{joint['or_in_child_frame_XYZeuler'][0]:{number_format}}{delimiter}") # orientation eulerXYZ x
+        file.write(f"{joint['or_in_child_frame_XYZeuler'][1]:{number_format}}{delimiter}") # orientation eulerXYZ y
+        file.write(f"{joint['or_in_child_frame_XYZeuler'][2]:{number_format}}{delimiter}") # orientation eulerXYZ z
+
+        file.write(f"{joint['or_in_child_frame_quat'][0]:{number_format}}{delimiter}") #orientation quat w
+        file.write(f"{joint['or_in_child_frame_quat'][1]:{number_format}}{delimiter}") #orientation quat x
+        file.write(f"{joint['or_in_child_frame_quat'][2]:{number_format}}{delimiter}") #orientation quat y
+        file.write(f"{joint['or_in_child_frame_quat'][3]:{number_format}}{delimiter}") #orientation quat z
+
+       
             
         
         file.write('\n')                                                        # start a new line
