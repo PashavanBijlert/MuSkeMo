@@ -79,7 +79,7 @@ class CreateNewJointOperator(Operator):
             bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this joint")
 
             bpy.context.object['child_body'] = 'not_assigned'    #to inform the user what type is created
-            bpy.context.object.id_properties_ui('parent_body').update(description = "The child body of this joint")  
+            bpy.context.object.id_properties_ui('child_body').update(description = "The child body of this joint")  
             
           
             bpy.context.object['pos_in_parent_frame'] = [nan, nan, nan]
