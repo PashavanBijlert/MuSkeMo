@@ -13,7 +13,7 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
     header = ( obj_type + '_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' )
     
     if obj_type == 'CONTACT':
-        header = header + ( delimiter  + 'parent_body' +  delimiter + 'local_frame_name' + delimiter + 
+        header = header + ( delimiter  + 'parent_body' +  delimiter + 'parent_frame_name' + delimiter + 
                            'pos_x_in_local(m)' + delimiter + 'pos_y_in_local' + delimiter + 'pos_z_in_local')#headers
 
 
