@@ -180,7 +180,7 @@ class ExportJointsOperator(Operator, ExportHelperCustom): #inherits from ExportH
         
         
         
-        write_joints(context, self.filepath, joint_colname, delimiter)
+        write_joints(context, self.filepath, joint_colname, delimiter, self.number_format)
         return {'FINISHED'}
 
 ## export muscles
@@ -208,7 +208,7 @@ class ExportMusclesOperator(Operator, ExportHelperCustom): #inherits from Export
         muscle_colname = bpy.context.scene.muskemo.muscle_collection
         
         
-        write_muscles(context, self.filepath, muscle_colname, delimiter)
+        write_muscles(context, self.filepath, muscle_colname, delimiter, self.number_format)
         return {'FINISHED'}
 
 
@@ -232,7 +232,7 @@ class ExportMeshInPropsOperator(Operator, ExportHelperCustom): #inherits from Ex
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         mesh_colname = bpy.context.scene.muskemo.source_object_collection
         
-        write_inprop(context, self.filepath, mesh_colname, delimiter,'mesh')
+        write_inprop(context, self.filepath, mesh_colname, delimiter,'mesh', self.number_format)
         return {'FINISHED'}
 
 ## export contacts
@@ -255,7 +255,7 @@ class ExportContactsOperator(Operator, ExportHelperCustom): #inherits from Expor
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         contact_colname = bpy.context.scene.muskemo.contact_collection
         
-        write_loc_and_pbody(context, self.filepath, contact_colname, delimiter, 'contact')
+        write_loc_and_pbody(context, self.filepath, contact_colname, delimiter, 'contact', self.number_format)
         return {'FINISHED'}
 
 ## export landmarks markers
@@ -278,7 +278,7 @@ class ExportLandmarksOperator(Operator, ExportHelperCustom): #inherits from Expo
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         landmark_colname = bpy.context.scene.muskemo.landmark_collection
         
-        write_loc_and_pbody(context, self.filepath, landmark_colname, delimiter, 'landmark')
+        write_loc_and_pbody(context, self.filepath, landmark_colname, delimiter, 'landmark', self.number_format)
         return {'FINISHED'}
 
 
@@ -303,7 +303,7 @@ class ExportFramesOperator(Operator, ExportHelperCustom): #inherits from ExportH
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         frame_colname = bpy.context.scene.muskemo.frame_collection
         
-        write_frames(context, self.filepath, frame_colname, delimiter)
+        write_frames(context, self.filepath, frame_colname, delimiter, self.number_format)
         return {'FINISHED'}
 
 

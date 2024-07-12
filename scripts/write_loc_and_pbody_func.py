@@ -1,6 +1,6 @@
 import bpy
 from mathutils import Vector
-def write_loc_and_pbody(context, filepath, collection_name, delimiter, obj_type, number_type):  #write location and parent body. This is reused for both contacts and landmarks.
+def write_loc_and_pbody(context, filepath, collection_name, delimiter, obj_type, number_format):  #write location and parent body. This is reused for both contacts and landmarks.
     
     #### obj_type is a string, either "contact" or "landmark", or something else if you reuse this further
     #### the script will fail if you don't specify it when calling the function
