@@ -10,7 +10,7 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
 
     file = open(filepath, 'w', encoding='utf-8') #create or open a file,  "w" means it's writeable
     
-    header = ( obj_type + '_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' )
+    header = ( obj_type + '_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' )
     
     if obj_type == 'CONTACT':
         header = header + ( delimiter  + 'parent_body' +  delimiter + 'parent_frame_name' + delimiter + 
