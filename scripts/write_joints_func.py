@@ -7,15 +7,17 @@ def write_joints(context, filepath, collection_name, delimiter, number_format):
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     
     header = ('joint_name' + delimiter  + 'parent_body' + delimiter  + 'child_body' + delimiter + 
-            'pos_x_in_global(m)' + delimiter  + 'pos_y' + delimiter  + 'pos_z' + delimiter   +
-            'or_x_in_glob(XYZeuler_rad)' + delimiter + 'or_y_in_glob(XYZeuler)' + delimiter + 'or_z_in_glob(XYZeuler)' + delimiter + 
-            'or_w_in_glob(quat)' + delimiter + 'or_x_in_glob(quat)' + delimiter + 'or_y_in_glob(quat)' + delimiter + 'or_z_in_glob(quat)' + delimiter + 
+            'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter   +
+            'or_x_in_global(XYZeuler_rad)' + delimiter + 'or_y_in_global(XYZeuler)' + delimiter + 'or_z_in_global(XYZeuler)' + delimiter + 
+            'or_w_in_global(quat)' + delimiter + 'or_x_in_global(quat)' + delimiter + 'or_y_in_global(quat)' + delimiter + 'or_z_in_global(quat)' + delimiter + 
             'parent_frame_name' + delimiter + 'pos_x_in_parent_frame(m)' + delimiter  + 'pos_y_in_parent_frame' + delimiter  + 'pos_z_in_parent_frame' + delimiter   +
-            'or_x_in_parent_frame(XYZeuler)' + delimiter + 'or_y_in_parent_frame(XYZeuler)' + delimiter + 'or_z_in_parent_fram(XYZeuler)' + delimiter + 
+            'or_x_in_parent_frame(XYZeuler)' + delimiter + 'or_y_in_parent_frame(XYZeuler)' + delimiter + 'or_z_in_parent_frame(XYZeuler)' + delimiter + 
             'or_w_in_parent_frame(quat)' + delimiter + 'or_x_in_parent_frame(quat)' + delimiter + 'or_y_in_parent_frame(quat)' + delimiter + 'or_z_in_parent_frame(quat)' + delimiter + 
             'child_frame_name' + delimiter + 'pos_x_in_child_frame(m)' + delimiter  + 'pos_y_in_child_frame' + delimiter  + 'pos_z_in_child_frame' + delimiter   +
             'or_x_in_child_frame(XYZeuler)' + delimiter + 'or_y_in_child_frame(XYZeuler)' + delimiter + 'or_z_in_child_fram(XYZeuler)' + delimiter + 
-            'or_w_in_child_frame(quat)' + delimiter + 'or_x_in_child_frame(quat)' + delimiter + 'or_y_in_child_frame(quat)' + delimiter + 'or_z_in_child_frame(quat)'  )
+            'or_w_in_child_frame(quat)' + delimiter + 'or_x_in_child_frame(quat)' + delimiter + 'or_y_in_child_frame(quat)' + delimiter + 'or_z_in_child_frame(quat)' + delimiter + 
+            'coordinate_Tx' + delimiter + 'coordinate_Ty' + delimiter +  'coordinate_Tz' + delimiter + 'coordinate_Rx' + delimiter + 'coordinate_Ry' + delimiter +  'coordinate_Rz'  
+              )
 
     file.write(header) #headers
     
@@ -116,8 +118,13 @@ def write_joints(context, filepath, collection_name, delimiter, number_format):
         file.write(f"{joint['or_in_child_frame_quat'][2]:{number_format}}{delimiter}") #orientation quat y
         file.write(f"{joint['or_in_child_frame_quat'][3]:{number_format}}{delimiter}") #orientation quat z
 
-       
-            
+        ### coordinates
+        file.write(f"{joint['coordinate_Tx']}{delimiter}") # coordinate Tx
+        file.write(f"{joint['coordinate_Ty']}{delimiter}") # coordinate Ty  
+        file.write(f"{joint['coordinate_Tz']}{delimiter}") # coordinate Tz  
+        file.write(f"{joint['coordinate_Rx']}{delimiter}") # coordinate Rx  
+        file.write(f"{joint['coordinate_Ry']}{delimiter}") # coordinate Ry  
+        file.write(f"{joint['coordinate_Rz']}{delimiter}") # coordinate Rz      
         
         file.write('\n')                                                        # start a new line
             
