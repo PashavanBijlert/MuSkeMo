@@ -305,15 +305,15 @@ class AssignARFParentBodyOperator(Operator):
         
         if parent_joint_bool:  #if parent joint bool is still true after the previous error 
             
-            parent_joint_loc_g = parent_joint.matrix_world.translation #location of the parent joint
+            parent_joint_pos_g = parent_joint.matrix_world.translation #location of the parent joint
             gRb_parent_joint = parent_joint.matrix_world.to_3x3() #gRb rotation matrix of parent joint
-            parent_joint_loc_in_child = bRg @ (parent_joint_loc_g - frame_or_g) #location in child of parent joint
+            parent_joint_pos_in_child = bRg @ (parent_joint_pos_g - frame_or_g) #location in child of parent joint
             b_R_parentjointframe = bRg @ gRb_parent_joint #rotation matrix from parent joint frame to child frame - decompose this for rotation in child
             
             parent_joint_or_in_child_euler = euler_XYZbody_from_matrix(b_R_parentjointframe) #XYZ body-fixed decomposition of orientation in child
             parent_joint_or_in_child_quat = quat_from_matrix(b_R_parentjointframe) #quaternion decomposition of orientation in child
             
-            parent_joint['loc_in_child_frame'] = parent_joint_loc_in_child
+            parent_joint['pos_in_child_frame'] = parent_joint_pos_in_child
             parent_joint['or_in_child_frame_XYZeuler'] = parent_joint_or_in_child_euler
             parent_joint['or_in_child_frame_quat'] = parent_joint_or_in_child_quat
             
@@ -331,15 +331,15 @@ class AssignARFParentBodyOperator(Operator):
         ## for all child joints
 
         for joint in joints:
-            joint_loc_g = joint.matrix_world.translation #location of the joint
+            joint_pos_g = joint.matrix_world.translation #location of the joint
             gRb_joint = joint.matrix_world.to_3x3() #gRb rotation matrix of joint
-            joint_loc_in_parent = bRg @ (joint_loc_g - frame_or_g) #location in parent of joint
+            joint_pos_in_parent = bRg @ (joint_pos_g - frame_or_g) #location in parent of joint
             b_R_jointframe = bRg @ gRb_joint #rotation matrix from joint frame to parent frame - decompose this for orientation in parent
             
             joint_or_in_parent_euler = euler_XYZbody_from_matrix(b_R_jointframe) #XYZ body-fixed decomposition of orientation in parent
             joint_or_in_parent_quat = quat_from_matrix(b_R_jointframe) #quaternion decomposition of orientation in parent
             
-            joint['loc_in_parent_frame'] = joint_loc_in_parent
+            joint['pos_in_parent_frame'] = joint_pos_in_parent
             joint['or_in_parent_frame_XYZeuler'] = joint_or_in_parent_euler
             joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat    
 
@@ -348,9 +348,9 @@ class AssignARFParentBodyOperator(Operator):
 
         for contact in contacts:
             
-            contact_loc_g = contact.matrix_world.translation #location of the contact
-            contact_loc_in_parent = bRg @ (contact_loc_g - frame_or_g) #location in parent of contact
-            contact['loc_in_parent_frame'] = contact_loc_in_parent
+            contact_pos_g = contact.matrix_world.translation #location of the contact
+            contact_pos_in_parent = bRg @ (contact_pos_g - frame_or_g) #location in parent of contact
+            contact['pos_in_parent_frame'] = contact_pos_in_parent
                
 
 
@@ -449,7 +449,7 @@ class ClearARFParentBodyOperator(Operator):
             
             
             
-            parent_joint['loc_in_child_frame'] = [nan, nan, nan]
+            parent_joint['pos_in_child_frame'] = [nan, nan, nan]
             parent_joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
             parent_joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]
             
@@ -469,7 +469,7 @@ class ClearARFParentBodyOperator(Operator):
         for joint in joints:
             
             
-            joint['loc_in_parent_frame'] = [nan, nan, nan]
+            joint['pos_in_parent_frame'] = [nan, nan, nan]
             joint['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
             joint['or_in_parent_frame_quat'] = [nan, nan, nan, nan]   
 
@@ -479,7 +479,7 @@ class ClearARFParentBodyOperator(Operator):
         for contact in contacts:
             
             
-            contact['loc_in_parent_frame'] = [nan, nan, nan]
+            contact['pos_in_parent_frame'] = [nan, nan, nan]
             
         #loop through attached geometry?
         #loop through landmarks?

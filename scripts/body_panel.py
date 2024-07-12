@@ -220,10 +220,10 @@ class UpdateLocationFromCOMOperator(Operator):
                             chil.parent = None
                             #chil.matrix_world = global_transform
                         
-                        loc_old = obj.location.copy()
+                        pos_old = obj.location.copy()
                         obj.location = COM
                         
-                        difference = obj.location-loc_old
+                        difference = obj.location-pos_old
                         
                         for chil in children:
                             #global_transform = chil.matrix_world.copy()
@@ -352,10 +352,10 @@ class AssignInertialPropertiesOperator(Operator):
                 chil.parent = None
                 #chil.matrix_world = global_transform
             
-            loc_old = target_body.location.copy()
+            pos_old = target_body.location.copy()
             target_body.location = COM
             
-            difference = target_body.location-loc_old
+            difference = target_body.location-pos_old
             
             for chil in children:
                 #global_transform = chil.matrix_world.copy()
@@ -552,10 +552,10 @@ class ComputeInertialPropertiesOperator(Operator):
                 chil.parent = None
                 #chil.matrix_world = global_transform
             
-            loc_old = target_body.location.copy()
+            pos_old = target_body.location.copy()
             target_body.location = COM
             
-            difference = target_body.location-loc_old
+            difference = target_body.location-pos_old
             
             for chil in children:
                 #global_transform = chil.matrix_world.copy()

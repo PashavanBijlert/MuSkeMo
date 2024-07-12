@@ -250,12 +250,12 @@ class ExportContactsOperator(Operator, ExportHelperCustom): #inherits from Expor
     
     
     def execute(self, context):
-        from .write_loc_and_pbody_func import write_loc_and_pbody
+        from .write_pos_and_pbody_func import write_pos_and_pbody
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         contact_colname = bpy.context.scene.muskemo.contact_collection
         
-        write_loc_and_pbody(context, self.filepath, contact_colname, delimiter, 'contact', self.number_format)
+        write_pos_and_pbody(context, self.filepath, contact_colname, delimiter, 'CONTACT', self.number_format)
         return {'FINISHED'}
 
 ## export landmarks markers
@@ -273,12 +273,12 @@ class ExportLandmarksOperator(Operator, ExportHelperCustom): #inherits from Expo
     
     
     def execute(self, context):
-        from .write_loc_and_pbody_func import write_loc_and_pbody
+        from .write_pos_and_pbody_func import write_pos_and_pbody
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         landmark_colname = bpy.context.scene.muskemo.landmark_collection
         
-        write_loc_and_pbody(context, self.filepath, landmark_colname, delimiter, 'landmark', self.number_format)
+        write_pos_and_pbody(context, self.filepath, landmark_colname, delimiter, 'landmark', self.number_format)
         return {'FINISHED'}
 
 

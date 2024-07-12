@@ -48,8 +48,8 @@ class CreateContactOperator(Operator):
         bpy.context.object['parent_body'] = 'not_assigned'    #to inform the user what type is created
         bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this contact sphere")
 
-        bpy.context.object['loc_in_parent_frame'] = [nan, nan, nan]
-        bpy.context.object.id_properties_ui('loc_in_parent_frame').update(description = 'Contact sphere location in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+        bpy.context.object['pos_in_parent_frame'] = [nan, nan, nan]
+        bpy.context.object.id_properties_ui('pos_in_parent_frame').update(description = 'Contact sphere position in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
 
         bpy.ops.object.select_all(action='DESELECT')
         
@@ -129,9 +129,9 @@ class AssignContactParentOperator(Operator):
                 bRg.transpose()
         
                 frame_or_g = frame.matrix_world.translation                 
-                contact_loc_g = contact.matrix_world.translation #location of the contact
-                contact_loc_in_parent = bRg @ (contact_loc_g - frame_or_g) #location in parent of contact
-                contact['loc_in_parent_frame'] = contact_loc_in_parent
+                contact_pos_g = contact.matrix_world.translation #location of the contact
+                contact_pos_in_parent = bRg @ (contact_pos_g - frame_or_g) #location in parent of contact
+                contact['pos_in_parent_frame'] = contact_pos_in_parent
                
 
             
@@ -175,7 +175,7 @@ class ClearContactParentOperator(Operator):
             
             contact['parent_body'] = 'not_assigned'
 
-            contact['loc_in_parent_frame'] = [nan, nan, nan]
+            contact['pos_in_parent_frame'] = [nan, nan, nan]
             
 
 

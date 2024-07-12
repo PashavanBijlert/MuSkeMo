@@ -82,8 +82,8 @@ class CreateNewJointOperator(Operator):
             bpy.context.object.id_properties_ui('parent_body').update(description = "The child body of this joint")  
             
           
-            bpy.context.object['loc_in_parent_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('loc_in_parent_frame').update(description = 'Joint location in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+            bpy.context.object['pos_in_parent_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('pos_in_parent_frame').update(description = 'Joint position in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
 
             bpy.context.object['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
             bpy.context.object.id_properties_ui('or_in_parent_frame_XYZeuler').update(description = 'Joint orientation XYZ-Euler angles in the parent body anatomical (local) reference frame (x, y, z, in rad). Optional.')
@@ -91,8 +91,8 @@ class CreateNewJointOperator(Operator):
             bpy.context.object['or_in_parent_frame_quat'] = [nan, nan, nan, nan]
             bpy.context.object.id_properties_ui('or_in_parent_frame_quat').update(description = 'Joint orientation quaternion decomposition in the parent body anatomical (local) reference frame (w, x, y, z). Optional.')
 
-            bpy.context.object['loc_in_child_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('loc_in_child_frame').update(description = 'Joint location in the child body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+            bpy.context.object['pos_in_child_frame'] = [nan, nan, nan]
+            bpy.context.object.id_properties_ui('pos_in_child_frame').update(description = 'Joint position in the child body anatomical (local) reference frame (x, y, z, in meters). Optional.')
 
             bpy.context.object['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
             bpy.context.object.id_properties_ui('or_in_child_frame_XYZeuler').update(description = 'Joint orientation XYZ-Euler angles in the child body anatomical (local) reference frame (x, y, z, in rad). Optional.')
@@ -257,15 +257,15 @@ class AssignParentBodyOperator(Operator):
     
             frame_or_g = frame.matrix_world.translation                 
             
-            joint_loc_g = joint.matrix_world.translation #location of the joint
+            joint_pos_g = joint.matrix_world.translation #position of the joint
             gRb_joint = joint.matrix_world.to_3x3() #gRb rotation matrix of joint
-            joint_loc_in_parent = bRg @ (joint_loc_g - frame_or_g) #location in parent of joint
+            joint_pos_in_parent = bRg @ (joint_pos_g - frame_or_g) #position in parent of joint
             b_R_jointframe = bRg @ gRb_joint #rotation matrix from joint frame to parent frame - decompose this for orientation in parent
             
             joint_or_in_parent_euler = euler_XYZbody_from_matrix(b_R_jointframe) #XYZ body-fixed decomposition of orientation in parent
             joint_or_in_parent_quat = quat_from_matrix(b_R_jointframe) #quaternion decomposition of orientation in parent
             
-            joint['loc_in_parent_frame'] = joint_loc_in_parent
+            joint['pos_in_parent_frame'] = joint_pos_in_parent
             joint['or_in_parent_frame_XYZeuler'] = joint_or_in_parent_euler
             joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat 
             
@@ -349,15 +349,15 @@ class AssignChildBodyOperator(Operator):
     
             frame_or_g = frame.matrix_world.translation                 
             
-            joint_loc_g = joint.matrix_world.translation #location of the joint
+            joint_pos_g = joint.matrix_world.translation #location of the joint
             gRb_joint = joint.matrix_world.to_3x3() #gRb rotation matrix of joint
-            joint_loc_in_child = bRg @ (joint_loc_g - frame_or_g) #location in child of joint
+            joint_pos_in_child = bRg @ (joint_pos_g - frame_or_g) #location in child of joint
             b_R_jointframe = bRg @ gRb_joint #rotation matrix from joint frame to child frame - decompose this for orientation in child
             
             joint_or_in_child_euler = euler_XYZbody_from_matrix(b_R_jointframe) #XYZ body-fixed decomposition of orientation in child
             joint_or_in_child_quat = quat_from_matrix(b_R_jointframe) #quaternion decomposition of orientation in child
             
-            joint['loc_in_child_frame'] = joint_loc_in_child
+            joint['pos_in_child_frame'] = joint_pos_in_child
             joint['or_in_child_frame_XYZeuler'] = joint_or_in_child_euler
             joint['or_in_child_frame_quat'] = joint_or_in_child_quat        
          
@@ -424,7 +424,7 @@ class ClearParentBodyOperator(Operator):
         
         joint['parent_body'] = 'not_assigned'
 
-        joint['loc_in_parent_frame'] = [nan, nan, nan]
+        joint['pos_in_parent_frame'] = [nan, nan, nan]
         joint['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
         joint['or_in_parent_frame_quat'] = [nan, nan, nan, nan]
 
@@ -489,7 +489,7 @@ class ClearChildBodyOperator(Operator):
         child_body.matrix_world = parented_worldmatrix 
 
         joint['child_body'] = 'not_assigned'  
-        joint['loc_in_child_frame'] = [nan, nan, nan]
+        joint['pos_in_child_frame'] = [nan, nan, nan]
         joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
         joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]
         
