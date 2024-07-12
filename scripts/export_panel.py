@@ -152,7 +152,7 @@ class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from Export
 
         print(self.number_format)
         
-        write_inprop(context, self.filepath, body_colname, delimiter,'body', self.number_format)
+        write_inprop(context, self.filepath, body_colname, delimiter,'BODY', self.number_format)
         return {'FINISHED'}
 
 ## export joints
