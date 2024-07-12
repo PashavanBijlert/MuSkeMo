@@ -72,6 +72,19 @@ class ExportHelperCustom:  ## this is a helper class, that is inherited by all t
         self.filter_glob = "*" + self.filename_ext   #set the filetype filter in the export window
         context.window_manager.fileselect_add(self)
         
+        ### add number formatting to self
+
+        sig_dig = bpy.context.scene.muskemo.significant_digits
+        number_format = bpy.context.scene.muskemo.number_format  #can be 'e', 'g', or '8f'
+
+        if number_format == 'g':
+            number_format = f"{sig_dig}{number_format}"  #if it's g, we add the number of sig digits in front
+
+        elif number_format == 'e':
+            number_format = f"{sig_dig-1}{number_format}" #if it's e, we remove one digit (because e exports an extra digit)
+
+        self.number_format = '.' + number_format  #number format needs to be something like '.4e'
+
         
         return {'RUNNING_MODAL'}
     
@@ -136,8 +149,10 @@ class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from Export
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         body_colname = bpy.context.scene.muskemo.body_collection
+
+        print(self.number_format)
         
-        write_inprop(context, self.filepath, body_colname, delimiter,'body')
+        write_inprop(context, self.filepath, body_colname, delimiter,'body', self.number_format)
         return {'FINISHED'}
 
 ## export joints
@@ -162,6 +177,7 @@ class ExportJointsOperator(Operator, ExportHelperCustom): #inherits from ExportH
         
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         joint_colname = bpy.context.scene.muskemo.joint_collection
+        
         
         
         write_joints(context, self.filepath, joint_colname, delimiter)
@@ -524,6 +540,14 @@ class VIEW3D_PT_export_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class nami
         row  = self.layout.row()
         row  = self.layout.row()
         row.prop(muskemo, "delimiter")
+
+        row  = self.layout.row()
+        row  = self.layout.row()
+        row.prop(muskemo, "significant_digits")
+
+        row  = self.layout.row()
+        row  = self.layout.row()
+        row.prop(muskemo, "number_format")
         return     
         
     

@@ -1,6 +1,6 @@
 import bpy
 from mathutils import Vector
-def write_loc_and_pbody(context, filepath, collection_name, delimiter, obj_type):  #write location and parent body. This is reused for both contacts and landmarks.
+def write_loc_and_pbody(context, filepath, collection_name, delimiter, obj_type, number_type):  #write location and parent body. This is reused for both contacts and landmarks.
     
     #### obj_type is a string, either "contact" or "landmark", or something else if you reuse this further
     #### the script will fail if you don't specify it when calling the function
@@ -38,10 +38,10 @@ def write_loc_and_pbody(context, filepath, collection_name, delimiter, obj_type)
         
         
         file.write(obj.name + delimiter) # contact name 
-        file.write(f"{location.x:#.4f}{delimiter}")     # x location, 4 decimals
-        file.write(f"{location.y:#.4f}{delimiter}")     # y location, 4 decimals
+        file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 4 decimals
+        file.write(f"{location.y:{number_format}}{delimiter}")     # y location, 4 decimals
                                       
-        file.write(f"{location.z:#.4f}{delimiter}")     # z location, 4 decimals
+        file.write(f"{location.z:{number_format}}{delimiter}")     # z location, 4 decimals
         
         if obj.parent is None:
             file.write('No_parent_assigned') #if there is no parent, say so

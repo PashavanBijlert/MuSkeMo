@@ -4,6 +4,8 @@ from bpy.props import (StringProperty,
                         IntProperty,
                          PointerProperty,
                          FloatProperty,
+                         BoolProperty,
+                         EnumProperty,
                          )
 from bpy.types import (PropertyGroup,
                         )
@@ -211,6 +213,26 @@ class MuSkeMoProperties(PropertyGroup):
         description="Absolute filepath to the directory where you would like to export your model files",
         default = "",
         maxlen = 1024,
+        )
+
+
+    significant_digits: IntProperty(
+        name = "Export significant digits",
+        description="Significant digits in your data export",
+        default = 4,
+        min = 2,
+        max = 8,
+        )
+    
+        
+    number_format: EnumProperty(
+        name="Number format",
+        description="Number format during export. Scientific notatation and general use significant digits, Fixed point always uses 8 decimals. See Python documentation",
+        items=[ ('e', "Scientific notation", ""),
+                ('g', "General format", ""),
+                ('8f', "Fixed point 8 decimals", ""),
+              ],
+        default = "g",
         )
 
 #### anatomical (local) reference frame panel

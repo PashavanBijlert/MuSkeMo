@@ -1,4 +1,4 @@
-def write_inprop(context, filepath, collection_name, delimiter, obj_type):
+def write_inprop(context, filepath, collection_name, delimiter, obj_type, number_format):
     #### obj_type is a string, either "body" or "mesh", or something if you reuse this further
     #### the script will fail if you don't specify it when calling the function.
     #### currently, the script gives inertial properties for bodies or meshes
@@ -6,7 +6,7 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type):
 
     import bpy
 
-
+    
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     coll = bpy.data.collections[collection_name]
     
@@ -26,16 +26,16 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type):
             
         
         file.write(f"{u.name}{delimiter}")  # body name
-        file.write(f"{u['mass']:#.4g}{delimiter}")  # mass in kg, 4 decimals
-        file.write(f"{u['COM'][0]:#.4f}{delimiter}")  # Com_x location, 4 decimals
-        file.write(f"{u['COM'][1]:#.4f}{delimiter}")  # Com_y
-        file.write(f"{u['COM'][2]:#.4f}{delimiter}")  # Com_z
-        file.write(f"{u['inertia_COM'][0]:#.4g}{delimiter}")  # Ixx wrt body CoM
-        file.write(f"{u['inertia_COM'][1]:#.4g}{delimiter}")  # Iyy wrt body CoM
-        file.write(f"{u['inertia_COM'][2]:#.4g}{delimiter}")  # Izz wrt body CoM
-        file.write(f"{u['inertia_COM'][3]:#.4g}{delimiter}")  # Ixy wrt body CoM
-        file.write(f"{u['inertia_COM'][4]:#.4g}{delimiter}")  # Ixz wrt body CoM
-        file.write(f"{u['inertia_COM'][5]:#.4g}{delimiter}")  # Iyz wrt body CoM
+        file.write(f"{u['mass']:{number_format}}{delimiter}")  # mass in kg, 4 decimals
+        file.write(f"{u['COM'][0]:{number_format}}{delimiter}")  # Com_x location, 4 decimals
+        file.write(f"{u['COM'][1]:{number_format}}{delimiter}")  # Com_y
+        file.write(f"{u['COM'][2]:{number_format}}{delimiter}")  # Com_z
+        file.write(f"{u['inertia_COM'][0]:{number_format}}{delimiter}")  # Ixx wrt body CoM
+        file.write(f"{u['inertia_COM'][1]:{number_format}}{delimiter}")  # Iyy wrt body CoM
+        file.write(f"{u['inertia_COM'][2]:{number_format}}{delimiter}")  # Izz wrt body CoM
+        file.write(f"{u['inertia_COM'][3]:{number_format}}{delimiter}")  # Ixy wrt body CoM
+        file.write(f"{u['inertia_COM'][4]:{number_format}}{delimiter}")  # Ixz wrt body CoM
+        file.write(f"{u['inertia_COM'][5]:{number_format}}{delimiter}")  # Iyz wrt body CoM
 
         try:  # check if principal axes body frame is defined
             u['principal_axes_euler_XYZ']
@@ -44,15 +44,15 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type):
             print('No body frame aligned to principal direction of inertia detected')
         else:
             
-            file.write(f"{u['principal_axes_euler_XYZ'][0]:#.4g}{delimiter}")  # Angle x of body-fixed frame (Euler XYZ, in radians)
-            file.write(f"{u['principal_axes_euler_XYZ'][1]:#.4g}{delimiter}")  # Angle y
-            file.write(f"{u['principal_axes_euler_XYZ'][2]:#.4g}{delimiter}")  # Angle z
-            file.write(f"{u['inertia_body_fixed_principal'][0]:#.4g}{delimiter}")  # Ixx wrt body CoM, expressed in frame aligned to principal directions
-            file.write(f"{u['inertia_body_fixed_principal'][1]:#.4g}{delimiter}")  # Iyy wrt body CoM
-            file.write(f"{u['inertia_body_fixed_principal'][2]:#.4g}{delimiter}")  # Izz wrt body CoM
-            file.write(f"{u['inertia_body_fixed_principal'][3]:#.4g}{delimiter}")  # Ixy wrt body CoM
-            file.write(f"{u['inertia_body_fixed_principal'][4]:#.4g}{delimiter}")  # Ixz wrt body CoM
-            file.write(f"{u['inertia_body_fixed_principal'][5]:#.4g}{delimiter}")  # Iyz wrt body CoM
+            file.write(f"{u['principal_axes_euler_XYZ'][0]:{number_format}}{delimiter}")  # Angle x of body-fixed frame (Euler XYZ, in radians)
+            file.write(f"{u['principal_axes_euler_XYZ'][1]:{number_format}}{delimiter}")  # Angle y
+            file.write(f"{u['principal_axes_euler_XYZ'][2]:{number_format}}{delimiter}")  # Angle z
+            file.write(f"{u['inertia_body_fixed_principal'][0]:{number_format}}{delimiter}")  # Ixx wrt body CoM, expressed in frame aligned to principal directions
+            file.write(f"{u['inertia_body_fixed_principal'][1]:{number_format}}{delimiter}")  # Iyy wrt body CoM
+            file.write(f"{u['inertia_body_fixed_principal'][2]:{number_format}}{delimiter}")  # Izz wrt body CoM
+            file.write(f"{u['inertia_body_fixed_principal'][3]:{number_format}}{delimiter}")  # Ixy wrt body CoM
+            file.write(f"{u['inertia_body_fixed_principal'][4]:{number_format}}{delimiter}")  # Ixz wrt body CoM
+            file.write(f"{u['inertia_body_fixed_principal'][5]:{number_format}}{delimiter}")  # Iyz wrt body CoM
 
         try:
             u['Geometry']

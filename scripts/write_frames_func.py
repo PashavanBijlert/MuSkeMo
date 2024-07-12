@@ -1,6 +1,6 @@
 import bpy
 from mathutils import Vector
-def write_frames(context, filepath, collection_name, delimiter):
+def write_frames(context, filepath, collection_name, delimiter,number_format):
     
     from .quaternions import quat_from_matrix
     from .euler_XYZ_body import euler_XYZbody_from_matrix
@@ -50,23 +50,20 @@ def write_frames(context, filepath, collection_name, delimiter):
             file.write('No_parent' + delimiter) #parent body is ground if there is no parent
         else:
             file.write(frame.parent.name + delimiter) #parent body name
-        file.write(f"{location.x:#.4f}{delimiter}")     # x location, 4 decimals
-        file.write(f"{location.y:#.4f}{delimiter}")     # y location, 4 decimals
-        file.write(f"{location.z:#.4f}{delimiter}")     # z location, 4 decimals
+        file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 4 decimals
+        file.write(f"{location.y:{number_format}}{delimiter}")     # y location, 4 decimals
+        file.write(f"{location.z:{number_format}}{delimiter}")     # z location, 4 decimals
         
-        file.write(f"{quat[0]:#.4g}{delimiter}")     # quaternion w, 4 sig dig
-        file.write(f"{quat[1]:#.4g}{delimiter}")     # quaternion x, 4 sig dig
-        file.write(f"{quat[2]:#.4g}{delimiter}")     # quaternion y, 4 sig dig
-        file.write(f"{quat[3]:#.4g}{delimiter}")     # quaternion z, 4 sig dig
+        file.write(f"{quat[0]:{number_format}}{delimiter}")     # quaternion w, 4 sig dig
+        file.write(f"{quat[1]:{number_format}}{delimiter}")     # quaternion x, 4 sig dig
+        file.write(f"{quat[2]:{number_format}}{delimiter}")     # quaternion y, 4 sig dig
+        file.write(f"{quat[3]:{number_format}}{delimiter}")     # quaternion z, 4 sig dig
 
-        file.write(f"{euler_XYZ[0]:#.4g}{delimiter}")     # euler x, 4 sig dig
-        file.write(f"{euler_XYZ[1]:#.4g}{delimiter}")     # euler y, 4 sig dig
-        file.write(f"{euler_XYZ[2]:#.4g}{delimiter}")     # euler z, 4 sig dig
+        file.write(f"{euler_XYZ[0]:{number_format}}{delimiter}")     # euler x, 4 sig dig
+        file.write(f"{euler_XYZ[1]:{number_format}}{delimiter}")     # euler y, 4 sig dig
+        file.write(f"{euler_XYZ[2]:{number_format}}{delimiter}")     # euler z, 4 sig dig
 
-
-        
-
-                   
+       
         
         file.write('\n')                                                        # start a new line
             

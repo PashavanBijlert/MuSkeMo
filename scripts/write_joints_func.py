@@ -1,6 +1,6 @@
 import bpy
 from mathutils import Vector
-def write_joints(context, filepath, collection_name, delimiter):
+def write_joints(context, filepath, collection_name, delimiter, number_format):
     
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     
@@ -38,12 +38,12 @@ def write_joints(context, filepath, collection_name, delimiter):
 
 
         file.write(joint.name + delimiter) # joint name 
-        file.write(f"{location.x:#.4f}{delimiter}")     # x location, 4 decimals
-        file.write(f"{location.y:#.4f}{delimiter}")     # y location, 4 decimals
+        file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 4 decimals
+        file.write(f"{location.y:{number_format}}{delimiter}")     # y location, 4 decimals
                                        # y location
         
         
-        file.write(f"{location.z:#.4f}{delimiter}")     # z location, 4 decimals
+        file.write(f"{location.z:{number_format}}{delimiter}")     # z location, 4 decimals
         
         if joint.parent is None:
             file.write('ground' + delimiter) #parent body is ground if there is no parent
