@@ -222,6 +222,10 @@ class ExportMeshInPropsOperator(Operator, ExportHelperCustom): #inherits from Ex
     def invoke(self, context, event):
         
         self.default_filename = bpy.context.scene.muskemo.source_object_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
+        if not self.default_filename: #if the target collection has not been named
+            self.report({'ERROR'}, "You did not designate a collection (Blender folder) in which the 3D meshes are located. Place them in a single collection, and type the name in the text box")
+            return {'FINISHED'}
+
 
         return super().invoke(context, event)
 
@@ -231,6 +235,9 @@ class ExportMeshInPropsOperator(Operator, ExportHelperCustom): #inherits from Ex
          
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         mesh_colname = bpy.context.scene.muskemo.source_object_collection
+
+        
+
         
         write_inprop(context, self.filepath, mesh_colname, delimiter,'mesh', self.number_format)
         return {'FINISHED'}

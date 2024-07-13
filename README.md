@@ -39,8 +39,8 @@ You can change the locations of the path points by selecting the muscle in edit 
 # **Anatomical & local reference frames panel**
 
 Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. Local reference frames have a location and an orientation with respect to the global reference frame.
-Internally, orientations are stored through rotation matrices, but they can be exported as rotation (unit) quaternions (w, x, y, z), and also as body-fixed XYZ-Euler angles (phi_x, phi_y, phi_z, in rad). The latter is prone to gimbal lock.
-As of v0.5.0, you can only export the local frames themselves. All other data types are exported in global coordinates. v0.6.0 will allow you to export data with respect to the locally defined reference frames.
+Internally, orientations are stored through rotation matrices, but are exported as rotation (unit) quaternions (w, x, y, z), and also as body-fixed (intrinsic, active) XYZ-Euler angles (phi_x, phi_y, phi_z, in rad). The latter is prone to gimbal lock. If anatomical / local frames are assigned to a body, MuSkeMo also computes inertial properties, joint positions and orientations, contact positions, and muscle path points with respect to these frames.
+
 
 # **Landmark & marker panel**
 
@@ -54,9 +54,12 @@ Similar to muscle points, contacts are added to the 3D cursor location. Contacts
 
 You can export all the user-created datatypes via this panel. The individual exporters export all the data types from the user-designated collections (folders) in Blender. It is possible to export all the visual geometry to a subfolder.
 
-Under export options, it is possible to configure other text-based filetypes for export (e.g., txt, bat), and and configure custom delimiters.
+MuSkeMo exports all the data with respect to both the global reference frame (origin), and body-fixed local reference frames. Orientations are exported as XYZ-Euler angle decompositions, and as quaternion decompositions, of the rotation matrix that rotates the object in question to the local frame.
 
-As of v0.5.0, all the exports are only in the global reference frame. v0.6.0 will include both global and local frame export.
+Under export options, it is possible to configure other text-based filetypes for export (e.g., txt, bat), configure custom delimiters, and choose the number formatting in the exported files.
+
+
+
 
 
 
