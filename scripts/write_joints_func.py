@@ -124,7 +124,7 @@ def write_joints(context, filepath, collection_name, delimiter, number_format):
         file.write(f"{joint['coordinate_Tz']}{delimiter}") # coordinate Tz  
         file.write(f"{joint['coordinate_Rx']}{delimiter}") # coordinate Rx  
         file.write(f"{joint['coordinate_Ry']}{delimiter}") # coordinate Ry  
-        file.write(f"{joint['coordinate_Rz']}{delimiter}") # coordinate Rz      
+        file.write(f"{joint['coordinate_Rz']}") # coordinate Rz      
         
         file.write('\n')                                                        # start a new line
             

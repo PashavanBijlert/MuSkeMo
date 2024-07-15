@@ -61,7 +61,7 @@ def write_frames(context, filepath, collection_name, delimiter,number_format):
 
         file.write(f"{euler_XYZ[0]:{number_format}}{delimiter}")     # euler x, 4 sig dig
         file.write(f"{euler_XYZ[1]:{number_format}}{delimiter}")     # euler y, 4 sig dig
-        file.write(f"{euler_XYZ[2]:{number_format}}{delimiter}")     # euler z, 4 sig dig
+        file.write(f"{euler_XYZ[2]:{number_format}}")     # euler z, 4 sig dig
 
        
         
