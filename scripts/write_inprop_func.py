@@ -12,7 +12,7 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
     
     
     header = (obj_type + '_name' + delimiter  + 'mass(kg)' + delimiter  + 
-              'CoM_x_in_global' + delimiter  + 'CoM_y_in_global' + delimiter   + 'CoM_z_in_global' + delimiter  + 
+              'COM_x_in_global' + delimiter  + 'COM_y_in_global' + delimiter   + 'COM_z_in_global' + delimiter  + 
               'Ixx(kg*m^2)_about_COM_in_global' + delimiter  + 'Iyy_in_global' + delimiter  + 'Izz_in_global' + delimiter  + 'Ixy_in_global' + delimiter  + 'Ixz_in_global' + delimiter  + 'Iyz_in_global' )
           
     if obj_type == 'BODY':
@@ -27,7 +27,6 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
 
     
         
-    #file.write('body_name' + delimiter  + 'mass(kg)' + delimiter  + 'CoM_x' + delimiter  + 'CoM_y' + delimiter  + 'CoM_z' + delimiter  + 'Ixx(kg*m^2) about COM in global' + delimiter  + 'Iyy' + delimiter  + 'Izz' + delimiter  + 'Ixy' + delimiter  + 'Ixz' + delimiter  + 'Iyz' + delimiter  + 'Body-frame angle x (rad, XYZ-euler)' + delimiter  + 'angle y' + delimiter  + 'angle z' + delimiter  + 'Ixx(kg*m^2) about COM in body-fixed principal' + delimiter  + 'Iyy' + delimiter  + 'Izz' + delimiter  + 'Ixy' + delimiter  + 'Ixz' + delimiter  + 'Iyz' + delimiter  + 'Geometry') #headers
     file.write(header) #headers
     
     file.write('\n') 
@@ -40,12 +39,12 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
         file.write(f"{u['COM'][0]:{number_format}}{delimiter}")  # Com_x location, global
         file.write(f"{u['COM'][1]:{number_format}}{delimiter}")  # Com_y
         file.write(f"{u['COM'][2]:{number_format}}{delimiter}")  # Com_z
-        file.write(f"{u['inertia_COM'][0]:{number_format}}{delimiter}")  # Ixx wrt body CoM
-        file.write(f"{u['inertia_COM'][1]:{number_format}}{delimiter}")  # Iyy wrt body CoM
-        file.write(f"{u['inertia_COM'][2]:{number_format}}{delimiter}")  # Izz wrt body CoM
-        file.write(f"{u['inertia_COM'][3]:{number_format}}{delimiter}")  # Ixy wrt body CoM
-        file.write(f"{u['inertia_COM'][4]:{number_format}}{delimiter}")  # Ixz wrt body CoM
-        file.write(f"{u['inertia_COM'][5]:{number_format}}{delimiter}")  # Iyz wrt body CoM
+        file.write(f"{u['inertia_COM'][0]:{number_format}}{delimiter}")  # Ixx wrt body COM
+        file.write(f"{u['inertia_COM'][1]:{number_format}}{delimiter}")  # Iyy wrt body COM
+        file.write(f"{u['inertia_COM'][2]:{number_format}}{delimiter}")  # Izz wrt body COM
+        file.write(f"{u['inertia_COM'][3]:{number_format}}{delimiter}")  # Ixy wrt body COM
+        file.write(f"{u['inertia_COM'][4]:{number_format}}{delimiter}")  # Ixz wrt body COM
+        file.write(f"{u['inertia_COM'][5]:{number_format}}{delimiter}")  # Iyz wrt body COM
         
 
         if obj_type == 'BODY':
@@ -55,12 +54,12 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
             file.write(f"{u['COM_local'][0]:{number_format}}{delimiter}")  # Com_x location, local
             file.write(f"{u['COM_local'][1]:{number_format}}{delimiter}")  # Com_y
             file.write(f"{u['COM_local'][2]:{number_format}}{delimiter}")  # Com_z
-            file.write(f"{u['inertia_COM_local'][0]:{number_format}}{delimiter}")  # Ixx wrt body CoM, local
-            file.write(f"{u['inertia_COM_local'][1]:{number_format}}{delimiter}")  # Iyy wrt body CoM
-            file.write(f"{u['inertia_COM_local'][2]:{number_format}}{delimiter}")  # Izz wrt body CoM
-            file.write(f"{u['inertia_COM_local'][3]:{number_format}}{delimiter}")  # Ixy wrt body CoM
-            file.write(f"{u['inertia_COM_local'][4]:{number_format}}{delimiter}")  # Ixz wrt body CoM
-            file.write(f"{u['inertia_COM_local'][5]:{number_format}}")  # Iyz wrt body CoM
+            file.write(f"{u['inertia_COM_local'][0]:{number_format}}{delimiter}")  # Ixx wrt body COM, local
+            file.write(f"{u['inertia_COM_local'][1]:{number_format}}{delimiter}")  # Iyy wrt body COM
+            file.write(f"{u['inertia_COM_local'][2]:{number_format}}{delimiter}")  # Izz wrt body COM
+            file.write(f"{u['inertia_COM_local'][3]:{number_format}}{delimiter}")  # Ixy wrt body COM
+            file.write(f"{u['inertia_COM_local'][4]:{number_format}}{delimiter}")  # Ixz wrt body COM
+            file.write(f"{u['inertia_COM_local'][5]:{number_format}}")  # Iyz wrt body COM
         
         if obj_type == 'mesh':
             file.write(f"{u['density']:{number_format}}")
