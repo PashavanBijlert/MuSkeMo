@@ -70,8 +70,8 @@ class AddMusclepointOperator(Operator):
             obj['optimal_fiber_length'] = 0    #In meters
             obj.id_properties_ui('optimal_fiber_length').update(description = "Optimal fiber length (in m)")
 
-            obj['tendon_length'] = 0    #In meters
-            obj.id_properties_ui('tendon_length').update(description = "Tendon length (in m)")
+            obj['tendon_slack_length'] = 0    #In meters
+            obj.id_properties_ui('tendon_slack_length').update(description = "Tendon slack length (in m)")
 
             
 

@@ -12,7 +12,7 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
     
     header = ('muscle_point_name' + delimiter  + 'parent_body_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter + #headers
     'parent_frame_name' + delimiter + 'pos_x_in_local(m)' + delimiter + 'pos_y_in_local' + delimiter + 'pos_z_in_local' + delimiter + 
-    'optimal_fiber_length(m)' + delimiter + 'tendon_length(m)' + delimiter + 'F_max(N)' + delimiter + 'pennation_angle(deg)' )
+    'optimal_fiber_length(m)' + delimiter + 'tendon_slack_length(m)' + delimiter + 'F_max(N)' + delimiter + 'pennation_angle(deg)' )
     
        
     file.write(header) #headers
@@ -83,7 +83,7 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
             file.write(f"{position_local[1]:{number_format}}{delimiter}")     # y 
             file.write(f"{position_local[2]:{number_format}}{delimiter}")     # z 
             file.write(f"{curve['optimal_fiber_length']:{number_format}}{delimiter}")
-            file.write(f"{curve['tendon_length']:{number_format}}{delimiter}")
+            file.write(f"{curve['tendon_slack_length']:{number_format}}{delimiter}")
             file.write(f"{curve['F_max']:{number_format}}{delimiter}")
             file.write(f"{curve['pennation_angle']:{number_format}}")
 
