@@ -3,7 +3,7 @@ userInputsDialog();
 
 function userInputsDialog()
 % Create a figure for the dialog
-fig = uifigure('Position', [100 100 600 600], 'Name', 'Input your data for OpenSim model creation');
+fig = uifigure('Position', [100 100 600 600], 'Name', 'Select your files for OpenSim model creation');
 
 % Model Directory
 uilabel(fig, 'Position', [30 540 100 22], 'Text', 'Model Directory');
@@ -16,10 +16,10 @@ uibutton(fig, 'Position', [450 540 50 22], 'Text', 'Browse', 'ButtonPushedFcn', 
 DatafileLabels = {'Bodies', 'Joint Centers', 'Muscles (optional)', 'Contacts (optional)', 'Frames (optional)'};
 
 datafileTooltips = {'Bodies file';
-                    'Joint centers file (optional)';
-                    'Muscles file (optional)';
-                    'Contacts file (optional)';
-                    'Frames file (optional. Required if you want a locally-defined model'};
+    'Joint centers file (optional)';
+    'Muscles file (optional)';
+    'Contacts file (optional)';
+    'Frames file (optional. Required if you want a locally-defined model'};
 datafileFields = cell(1, length(DatafileLabels));
 for i = 1:length(DatafileLabels)
     uilabel(fig, 'Position', [30 500 - (i - 1) * 40 150 22], 'Text', DatafileLabels{i});
@@ -79,12 +79,12 @@ uibutton(fig, 'Position', [140 60 200 22], 'Text', 'Create OpenSim Model', 'Butt
 
     function browseFile(field,modeldir)
         
-            
-            [file, path] = uigetfile([modeldir '/*.*'], 'Select a file');
+        
+        [file, path] = uigetfile([modeldir '/*.*'], 'Select a file');
         if file ~= 0
             field.Value = file;
         end
-
+        
         % Bring the User Inputs window back to focus
         fig.WindowState = 'normal';
         fig.Visible = 'on';
@@ -99,16 +99,30 @@ function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, modelNa
 
 
 
-        ModelInfoStruct.model_dir = modelDirField.Value;
-        ModelInfoStruct.bodies_file = datafileFields{1}.Value;
-        ModelInfoStruct.joints_file = datafileFields{2}.Value;
-        ModelInfoStruct.muscles_file = datafileFields{3}.Value;
-        ModelInfoStruct.contacts_file = datafileFields{4}.Value;
-        ModelInfoStruct.frame_file = datafileFields{5}.Value;
-        ModelInfoStruct.model_name = modelNameField.Value;
-        ModelInfoStruct.filename = filenameField.Value;
-        ModelInfoStruct.version = versionField.Value;
-        ModelInfoStruct.global_or_local = globalOrLocalDropdown.Value;
-        ModelInfoStruct.export_nomusc_version = exportNoMuscDropdown.Value;
-        
+ModelInfoStruct.model_dir = modelDirField.Value;
+ModelInfoStruct.bodies_file = datafileFields{1}.Value;
+ModelInfoStruct.joints_file = datafileFields{2}.Value;
+ModelInfoStruct.muscles_file = datafileFields{3}.Value;
+ModelInfoStruct.contacts_file = datafileFields{4}.Value;
+ModelInfoStruct.frame_file = datafileFields{5}.Value;
+ModelInfoStruct.model_name = modelNameField.Value;
+ModelInfoStruct.filename = filenameField.Value;
+ModelInfoStruct.version = versionField.Value;
+ModelInfoStruct.global_or_local = globalOrLocalDropdown.Value;
+ModelInfoStruct.export_nomusc_version = exportNoMuscDropdown.Value;
+
+%% error checking
+if isempty(ModelInfoStruct.model_dir)
+    error(["You did not select the 'Model Directory'. You have to select the directory that contains all your MuSkeMo outputs."])
+end
+
+if isempty(ModelInfoStruct.bodies_file)
+    error(["You did not select a 'Bodies' file. You have to specify one, and ensure it is in the model directory."])
+end
+
+if isempty(ModelInfoStruct.joints_file)
+    error(["You did not select a 'Joints' file. You have to specify one, and ensure it is in the model directory."])
+end
+
+
 end
