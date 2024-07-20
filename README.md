@@ -59,10 +59,6 @@ MuSkeMo exports all the data with respect to both the global reference frame (or
 Under export options, it is possible to configure other text-based filetypes for export (e.g., txt, bat), configure custom delimiters, and choose the number formatting in the exported files.
 
 
-
-
-
-
 # **Import panel**
 
-[in development]
+This is in development, and will be part of v0.7.0
