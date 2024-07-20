@@ -26,6 +26,7 @@ class CreateNewBodyOperator(Operator):
         rad = bpy.context.scene.muskemo.axes_size #axis length, in meters
         name = bpy.context.scene.muskemo.bodyname  #name of the object
 
+        
 
         if not name: #if the user didn't fill out a name
             self.report({'ERROR'}, "Fill in a body name first. Operation aborted")
@@ -47,43 +48,16 @@ class CreateNewBodyOperator(Operator):
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
         
         
-        try: bpy.data.objects[name]
+        try: bpy.data.objects[name] #try out if an object with the new body's name already exists
         
-        except:
-                
-            bpy.ops.object.empty_add(type='ARROWS', radius=rad, align='WORLD',location = (0,0,0))
-            bpy.context.object.name = name #set the name
-            #bpy.context.object.data.name = name #set the name of the object data
-            bpy.context.object.rotation_mode = 'ZYX'    #change rotation sequence
+        except: #if not, create the new body
             
-            ##### add custom properties to the bodies (see blender documentation for properties)
-            bpy.context.object['mass'] = nan       #add mass property
-            bpy.context.object.id_properties_ui('mass').update(description = 'mass of the body in kg')
-            
-            bpy.context.object['inertia_COM'] = [nan, nan, nan, nan, nan, nan]    #add inertia property
-            bpy.context.object.id_properties_ui('inertia_COM').update(description = 'Ixx Iyy Izz Ixy Ixz Iyz (in kg*m^2) about body COM in global frame')
-                    
-            bpy.context.object['COM'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('COM').update(description = 'COM location (in global frame)')
+            from .create_body_func import create_body
+                       
+            create_body(name = name, size = rad, is_global =True)
 
-            bpy.context.object['inertia_COM_local'] = [nan, nan, nan, nan, nan, nan]    #add inertia property
-            bpy.context.object.id_properties_ui('inertia_COM').update(description = 'Ixx Iyy Izz Ixy Ixz Iyz (in kg*m^2) about body COM in local frame')
-                    
-            bpy.context.object['COM_local'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('COM').update(description = 'COM location (in local frame)')
         
-            bpy.context.object['Geometry'] = 'no geometry'    #add list of mesh files
-            bpy.context.object.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes). Optional')  
-
-            bpy.context.object['MuSkeMo_type'] = 'BODY'    #to inform the user what type is created
-            bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
-
-            bpy.context.object['local_frame'] = 'not_assigned'    #pre-allocate the Local_frame property
-            bpy.context.object.id_properties_ui('local_frame').update(description = "Name of the local reference frame. You can create and assign these in the anatomical local reference frame panel. Optional")  
-
-            bpy.ops.object.select_all(action='DESELECT')
-        
-        else:
+        else: #if it already exists, throw an error
             
             self.report({'ERROR'}, "Body with the name " + name + " already exists, please choose a different name")
         
