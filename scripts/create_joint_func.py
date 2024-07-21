@@ -139,6 +139,7 @@ def create_joint(name, radius, is_global = True,
     
     if not is_global:
         
+        
         #error check for existing frames
         #check if we use quats or euler
         #do the same for both parent and child
@@ -146,6 +147,7 @@ def create_joint(name, radius, is_global = True,
         
             print('local joint creation not implemented yet')
         ### get frame location and set obj location wrt frame    
-    
+
+
 
     bpy.ops.object.select_all(action='DESELECT')

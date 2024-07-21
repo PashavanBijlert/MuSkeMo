@@ -32,28 +32,12 @@ class CreateContactOperator(Operator):
         #Make sure the "contacts" collection is active
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
         
+        ## create the actual contact
+        target_pos = bpy.context.scene.cursor.location  #3D cursor location
         
-        target_loc = bpy.context.scene.cursor.location  #3D cursor location
-            
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=rad, enter_editmode=False, align='WORLD', location = target_loc) #create a sphere
-        bpy.context.object.name = name #set the name
-        bpy.context.object.data.name = name #set the name of the object data
-        bpy.context.object.rotation_mode = 'ZYX'    #change rotation sequence
-        bpy.ops.object.select_all(action='DESELECT')
-                
-        
-        bpy.context.object['MuSkeMo_type'] = 'CONTACT'    #to inform the user what type is created
-        bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
-        
-        bpy.context.object['parent_body'] = 'not_assigned'    #to inform the user what type is created
-        bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this contact sphere")
+        from .create_contact_func import create_contact
 
-        bpy.context.object['pos_in_parent_frame'] = [nan, nan, nan]
-        bpy.context.object.id_properties_ui('pos_in_parent_frame').update(description = 'Contact sphere position in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
-
-        bpy.ops.object.select_all(action='DESELECT')
-        
-       
+        create_contact(name = name, radius = rad, pos_in_global = target_pos)
         
         return {'FINISHED'}
 
