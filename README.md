@@ -24,9 +24,9 @@ In this panel, you can also attach visualization geometry (eg., bone meshes) to 
 
 # **Joint panel**
 
-Define joints, and assign (and remove) parent and child bodies. If you want to change a joint location, remove the parent and child bodies first.
+Define joints, and assign (and remove) parent and child bodies. If you want to change a joint's position or orientation, detach the parent and child bodies first. If a parent or child body has an anatomical (local) reference frame assigned, MuSkeMo automatically computes the relative positions and orientations in these frames as well. Orientations are stored as body-fixed, XYZ-Euler angles and as quaternions. All data that are created are included during export (if local frames are not assigned, these values will be nan).
 
-You can define the coordinate names for the joints here. Planned behaviour for this is that the conversion scripts will only add DOFs to model if they are named (e.g. hip_angle_r) 
+It is also possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo_to_OpenSim) will only add DOFs to model if they are named (e.g. hip_angle_r). If no coordinates are named for a joint, the joint is turne into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
 In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. Warning: because inertial properties are not dynamic - if you change the location or rotation of a joint while it has bodies attached to it, their inertial properties will be incorrect. You will have to recompute them in that case. MuSkeMo provides a warning if this may have occured. 
 
@@ -62,3 +62,9 @@ Under export options, it is possible to configure other text-based filetypes for
 # **Import panel**
 
 This is in development, and will be part of v0.7.0
+
+# **MuSkeMo utilities**
+
+This folder is in the MuSkeMo.zip release. It contains several utility scripts, including a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. 
+
+It also contains an updater (Python) script to update older MuSkeMo scenes to v0.6.2 and up. To run this, open the python script in the Blender script editor and run it. Back up your work first.
