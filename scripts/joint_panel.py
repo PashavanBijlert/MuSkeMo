@@ -40,68 +40,13 @@ class CreateNewJointOperator(Operator):
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
         
         
-        try: bpy.data.objects[name]
+        try: bpy.data.objects[name] #check if the joint exists
         
-        except:
+        except:  #if not, create it
+            from .create_joint_func import create_joint
+                       
+            create_joint(name = name, radius = rad)
             
-            bpy.ops.mesh.primitive_uv_sphere_add(radius=rad, enter_editmode=False, align='WORLD', location = (0,0,0)) #create a sphere
-            bpy.context.object.name = name #set the name
-            bpy.context.object.data.name = name #set the name of the object data
-            bpy.context.object.rotation_mode = 'ZYX'    #change rotation sequence
-            bpy.ops.object.select_all(action='DESELECT')
-                    
-            
-            
-                
-            bpy.context.object['coordinate_Tx'] = ''       #add coordinate
-            bpy.context.object.id_properties_ui('coordinate_Tx').update(description = 'name of the Translational x coordinate')
-            
-            bpy.context.object['coordinate_Ty'] = ''       #add coordinate
-            bpy.context.object.id_properties_ui('coordinate_Ty').update(description = 'name of the Translational y coordinate')
-            
-            bpy.context.object['coordinate_Tz'] = ''       #add coordinate
-            bpy.context.object.id_properties_ui('coordinate_Tz').update(description = 'name of the Translational z coordinate')
-            
-            bpy.context.object['coordinate_Rx'] = ''       #add coordinate
-            bpy.context.object.id_properties_ui('coordinate_Rx').update(description = 'name of the Rotational x coordinate')
-            
-            bpy.context.object['coordinate_Ry'] = ''       #add coordinate
-            bpy.context.object.id_properties_ui('coordinate_Ry').update(description = 'name of the Rotational y coordinate')
-            
-            bpy.context.object['coordinate_Rz'] = ''       #add coordinate
-            bpy.context.object.id_properties_ui('coordinate_Rz').update(description = 'name of the Rotational z coordinate')
-
-
-            bpy.context.object['MuSkeMo_type'] = 'JOINT'    #to inform the user what type is created
-            bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
-            
-            bpy.context.object['parent_body'] = 'not_assigned'    #to inform the user what type is created
-            bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this joint")
-
-            bpy.context.object['child_body'] = 'not_assigned'    #to inform the user what type is created
-            bpy.context.object.id_properties_ui('child_body').update(description = "The child body of this joint")  
-            
-          
-            bpy.context.object['pos_in_parent_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('pos_in_parent_frame').update(description = 'Joint position in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
-
-            bpy.context.object['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('or_in_parent_frame_XYZeuler').update(description = 'Joint orientation XYZ-Euler angles in the parent body anatomical (local) reference frame (x, y, z, in rad). Optional.')
-
-            bpy.context.object['or_in_parent_frame_quat'] = [nan, nan, nan, nan]
-            bpy.context.object.id_properties_ui('or_in_parent_frame_quat').update(description = 'Joint orientation quaternion decomposition in the parent body anatomical (local) reference frame (w, x, y, z). Optional.')
-
-            bpy.context.object['pos_in_child_frame'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('pos_in_child_frame').update(description = 'Joint position in the child body anatomical (local) reference frame (x, y, z, in meters). Optional.')
-
-            bpy.context.object['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
-            bpy.context.object.id_properties_ui('or_in_child_frame_XYZeuler').update(description = 'Joint orientation XYZ-Euler angles in the child body anatomical (local) reference frame (x, y, z, in rad). Optional.')
-
-            bpy.context.object['or_in_child_frame_quat'] = [nan, nan, nan, nan]
-            bpy.context.object.id_properties_ui('or_in_child_frame_quat').update(description = 'Joint orientation quaternion decomposition in the child body anatomical (local) reference frame (w, x, y, z). Optional.')
-
-            bpy.ops.object.select_all(action='DESELECT')
-        
         else:
             
             self.report({'ERROR'}, "Joint with the name " + name + " already exists, please choose a different name")

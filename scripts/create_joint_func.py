@@ -1,119 +1,151 @@
 import bpy
 from math import nan
 
+def create_joint(name, radius, is_global = True,
+                 parent_body='not_assigned', child_body='not_assigned', 
+                 pos_in_global=[nan] * 3, or_in_global_XYZeuler=[nan] * 3, 
+                 or_in_global_quat=[nan] * 4,
+                 pos_in_parent_frame=[nan] * 3,
+                 or_in_parent_frame_XYZeuler=[nan] * 3, or_in_parent_frame_quat=[nan] * 4,
+                 pos_in_child_frame=[nan] * 3, 
+                 or_in_child_frame_XYZeuler=[nan] * 3, or_in_child_frame_quat=[nan] * 4,
+                 coordinate_Tx='', coordinate_Ty='', coordinate_Tz='', 
+                 coordinate_Rx='', coordinate_Ry='', coordinate_Rz='',                  
+                ):
+    """
+    Creates a MuSkeMo JOINT in the Blender scene.
 
-def create_joint(name, size, is_global = True, mass=None, inertia_COM=None, COM=None, inertia_COM_local=None, COM_local=None, Geometry=None, local_frame=None):
-    # Creates a MuSkeMo JOINT in the blender scene.
-    # Inputs:
-    # name (string) - Mandatory. Name of the target body.
-    # size (float) - Mandatory. Size of the display geometry (in meters)
-    # is_global (boolean, optional). Whether to use the global COM location for display. Default is global
-    # mass (float, optional) - Mass in kg.
-    # inertia_COM (list of 6 floats, optional) - Moment of inertia (in kg m^2) about the COM, in the global frame.
-    # COM (list of 3 floats, optional) - Center of mass (in m) in the global frame
-    # inertia_COM_local (list of 6 floats, optional) - Moment of inertia (in kg m^2) about the COM, in the local (anatomical) frame.
-    # COM_local (list of 3 floats, optional) - Center of mass (in m) in the local frame
-    # Geometry (string, optional). List of attached geometry (including the subfolder and the filetype).
-    # local frame (string, optional). Name of the local (anatomical) reference frame.
+    Inputs:
+    - name (string) - Mandatory. Name of the joint.
+    - radius (float) - Mandatory. Radius of the display geometry (in meters)
+    - is_global (boolean) - Optional. Whether the joint should be defined using global coordinates
+    - parent_body (string, optional) - Name of the parent body. Default is 'not_assigned'.
+    - child_body (string, optional) - Name of the child body. Default is 'not_assigned'.
+    - pos_in_global (list of 3 floats, optional) - Joint position in the global frame (in meters).
+    - or_in_global_XYZeuler (list of 3 floats, optional) - Joint orientation in the global frame (XYZ Euler angles in radians).
+    - or_in_global_quat (list of 4 floats, optional) - Joint orientation in the global frame (quaternion).
+    - pos_in_parent_frame (list of 3 floats, optional) - Joint position in the parent body frame (in meters).
+    - or_in_parent_frame_XYZeuler (list of 3 floats, optional) - Joint orientation in the parent body frame (XYZ Euler angles in radians).
+    - or_in_parent_frame_quat (list of 4 floats, optional) - Joint orientation in the parent body frame (quaternion).
+    - pos_in_child_frame (list of 3 floats, optional) - Joint position in the child body frame (in meters).
+    - or_in_child_frame_XYZeuler (list of 3 floats, optional) - Joint orientation in the child body frame (XYZ Euler angles in radians).
+    - or_in_child_frame_quat (list of 4 floats, optional) - Joint orientation in the child body frame (quaternion).
+    - coordinate_Tx (string, optional) - Name of the translational x coordinate.
+    - coordinate_Ty (string, optional) - Name of the translational y coordinate.
+    - coordinate_Tz (string, optional) - Name of the translational z coordinate.
+    - coordinate_Rx (string, optional) - Name of the rotational x coordinate.
+    - coordinate_Ry (string, optional) - Name of the rotational y coordinate.
+    - coordinate_Rz (string, optional) - Name of the rotational z coordinate.
     
-    #call looks like this:
-    #create_body(
-    #name= ,
-    #size= ,
-    #mass= ,
-    #inertia_COM=,
-    #COM=,
-    #inertia_COM_local=,
-    #COM_local=,
-    #geometry=,
-    #local_frame=,
-    #is_global=  # Explicitly specify True or False for is_global
-    #)
+
+    # Default behavior is that none of the properties are known and filled with nan or a string, unless user-specified.
+    # is_global is only used during model import, and determines whether global coordinates can be used, or if the model should be imported using local coordinates.
     
+    """
     
-    
-    bpy.ops.object.empty_add(type='ARROWS', radius=size, align='WORLD',location = (0,0,0))
-    bpy.context.object.name  = name #set the name
-        
-    
+    # Create a sphere and set the name
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, enter_editmode=False, align='WORLD', location=(0, 0, 0))
+    obj = bpy.context.object
+    obj.name = name  # Set the name
     obj = bpy.data.objects[name] 
+    obj.rotation_mode = 'ZYX'  # Change rotation sequence
     
-    
-    obj.rotation_mode = 'ZYX'    #change rotation sequence
+    ## set parent & child
+    obj['parent_body'] = parent_body
+    obj.id_properties_ui('parent_body').update(description='The parent body of this joint')
 
-    ##### add custom properties to the bodies (see blender documentation for properties)
-    #add mass property
-    if mass is not None:
-        obj['mass'] = mass  # add mass property
-    
-    else: 
-        obj['mass'] = nan       #add mass property      
-    
-    obj.id_properties_ui('mass').update(description='mass of the body in kg')
-    
-    # Add inertia_COM property
-    if inertia_COM is not None:
-        obj['inertia_COM'] = inertia_COM
-    else:
-        obj['inertia_COM'] = [nan]*6   #add inertia property
-    obj.id_properties_ui('inertia_COM').update(description = 'Ixx Iyy Izz Ixy Ixz Iyz (in kg*m^2) about body COM in global frame')
-            
-    # Add COM property
-    if COM is not None:
-        obj['COM'] = COM
-    else:
-        obj['COM'] = [nan] * 3
-    obj.id_properties_ui('COM').update(description='COM position (in global frame)')
+    obj['child_body'] = child_body
+    obj.id_properties_ui('child_body').update(description='The child body of this joint')
     
     
-    # Add inertia_COM_local property
-    if inertia_COM_local is not None:
-        obj['inertia_COM_local'] = inertia_COM_local
-    else:
-        obj['inertia_COM_local'] = [nan] * 6
-    obj.id_properties_ui('inertia_COM_local').update(description='Ixx Iyy Izz Ixy Ixz Iyz (in kg*m^2) about body COM in local frame')
+    ## Set global or & pos
+    
+    obj['pos_in_global'] = pos_in_global
+    obj.id_properties_ui('pos_in_global').update(description='Joint position in the global reference frame (x, y, z, in meters). Optional.')
 
-    # Add COM_local property
-    if COM_local is not None:
-        obj['COM_local'] = COM_local
-    else:
-        obj['COM_local'] = [nan] * 3
-    obj.id_properties_ui('COM_local').update(description='COM position (in local frame)')
-    
-    # Add geometry property
-    if Geometry is not None:
-        obj['Geometry'] = Geometry
-    else:
-        obj['Geometry'] = 'no geometry'    #add list of mesh files
-    obj.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes). Optional')  
+    obj['or_in_global_XYZeuler'] = or_in_global_XYZeuler
+    obj.id_properties_ui('or_in_global_XYZeuler').update(description='Joint orientation XYZ-Euler angles in the global reference frame (x, y, z, in rad). Optional.')
 
-    #add local frame property
-    if local_frame is not None:
-        obj['local_frame'] = local_frame
-    else:
-        obj['local_frame'] = 'not_assigned'    #pre-allocate the Local_frame property
-    obj.id_properties_ui('local_frame').update(description = "Name of the local reference frame. You can create and assign these in the anatomical local reference frame panel. Optional")  
+    obj['or_in_global_quat'] = or_in_global_quat
+    obj.id_properties_ui('or_in_global_quat').update(description='Joint orientation quaternion decomposition in the global reference frame (w, x, y, z). Optional.')
 
-    ## add MuSkeMo type
-    obj['MuSkeMo_type'] = 'BODY'    #to inform the user what type is created
-    obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
+       
+    ## parent frame data
     
-    ### set the correct display position
-    if is_global and COM is not None:#if is_global is True and COM is defined
-        
-        obj.matrix_world.translation = COM
-      
-      
-      
-    if not is_global and COM_local is not None:#if is_global is False and COM is defined
-        
-        print('local body creation not implemented yet')
-        ### get frame location and set obj location wrt frame
-        
-        
+    #obj['parent_frame_name'] = parent_frame_name
+    #obj.id_properties_ui('parent_frame_name').update(description='Name of the parent frame.')
+    
+    obj['pos_in_parent_frame'] = pos_in_parent_frame
+    obj.id_properties_ui('pos_in_parent_frame').update(description='Joint position in the parent body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+
+    obj['or_in_parent_frame_XYZeuler'] = or_in_parent_frame_XYZeuler
+    obj.id_properties_ui('or_in_parent_frame_XYZeuler').update(description='Joint orientation XYZ-Euler angles in the parent body anatomical (local) reference frame (x, y, z, in rad). Optional.')
+
+    obj['or_in_parent_frame_quat'] = or_in_parent_frame_quat
+    obj.id_properties_ui('or_in_parent_frame_quat').update(description='Joint orientation quaternion decomposition in the parent body anatomical (local) reference frame (w, x, y, z). Optional.')
+
+    ## child frame data
+    
+    #obj['child_frame_name'] = child_frame_name
+    #obj.id_properties_ui('child_frame_name').update(description='Name of the child frame.')
+
+    obj['pos_in_child_frame'] = pos_in_child_frame
+    obj.id_properties_ui('pos_in_child_frame').update(description='Joint position in the child body anatomical (local) reference frame (x, y, z, in meters). Optional.')
+
+    obj['or_in_child_frame_XYZeuler'] = or_in_child_frame_XYZeuler
+    obj.id_properties_ui('or_in_child_frame_XYZeuler').update(description='Joint orientation XYZ-Euler angles in the child body anatomical (local) reference frame (x, y, z, in rad). Optional.')
+
+    obj['or_in_child_frame_quat'] = or_in_child_frame_quat
+    obj.id_properties_ui('or_in_child_frame_quat').update(description='Joint orientation quaternion decomposition in the child body anatomical (local) reference frame (w, x, y, z). Optional.')
+
+   
+    # Set joint coordinates
+    obj['coordinate_Tx'] = coordinate_Tx
+    obj.id_properties_ui('coordinate_Tx').update(description='Name of the Translational x coordinate')
+    
+    obj['coordinate_Ty'] = coordinate_Ty
+    obj.id_properties_ui('coordinate_Ty').update(description='Name of the Translational y coordinate')
+    
+    obj['coordinate_Tz'] = coordinate_Tz
+    obj.id_properties_ui('coordinate_Tz').update(description='Name of the Translational z coordinate')
+    
+    obj['coordinate_Rx'] = coordinate_Rx
+    obj.id_properties_ui('coordinate_Rx').update(description='Name of the Rotational x coordinate')
+    
+    obj['coordinate_Ry'] = coordinate_Ry
+    obj.id_properties_ui('coordinate_Ry').update(description='Name of the Rotational y coordinate')
+    
+    obj['coordinate_Rz'] = coordinate_Rz
+    obj.id_properties_ui('coordinate_Rz').update(description='Name of the Rotational z coordinate')
+    
+    ## set MuSkeMo type
+    obj['MuSkeMo_type'] = 'JOINT'
+    obj.id_properties_ui('MuSkeMo_type').update(description="The object type. Warning: don't modify this!")
     
     
+    if is_global: #if user wants to define using global coordinates
+    
+        if pos_in_global !=[nan]*3:  #if a global position is supplied
+            obj.matrix_world.translation = pos_in_global
+        
+        if or_in_global_XYZeuler !=[nan]*3:  #if a global orientation is supplied
+        
+            print('error I have to add this in')
+        
+        #if same for quat
+        
+        #if statement for if the parent body exists already, parent it
+        #if statement for if the child body exists already, parent it
+    
+    if not is_global:
+        
+        #error check for existing frames
+        #check if we use quats or euler
+        #do the same for both parent and child
+        if pos_in_parent_frame != [nan]*3:#if is_global is False and pos in parent is supplied
+        
+            print('local joint creation not implemented yet')
+        ### get frame location and set obj location wrt frame    
+    
+
     bpy.ops.object.select_all(action='DESELECT')
-    
-    return
-  
