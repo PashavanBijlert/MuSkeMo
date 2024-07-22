@@ -78,7 +78,7 @@ for obj in frames:
 #This was changed in v0.6.2
 for obj in muscles:
     if 'tendon_length' in obj:
-        obj['tendon_slack_length'] == obj['tendon_length']
+        obj['tendon_slack_length'] = obj['tendon_length']
         del obj['tendon_length']
     
                             
