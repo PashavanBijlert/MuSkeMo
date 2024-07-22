@@ -31,7 +31,8 @@ class AddMusclepointOperator(Operator):
         if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
             bpy.context.scene.collection.children.link(coll)     #add it to the scene
             
-
+        #Make sure the "Muscles" collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
 
         active_obj = bpy.context.active_object  #should be the body that you want to parent the point to
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
@@ -40,20 +41,29 @@ class AddMusclepointOperator(Operator):
         for obj in sel_obj:
             obj.select_set(False)
             
-            
-
-
-
+          
         try: bpy.data.objects[muscle_name]  #throws an error if the muscle doesn't exist, creates it under except
 
         except:
             
-            curve = bpy.data.curves.new(muscle_name,'CURVE')
+            '''curve = bpy.data.curves.new(muscle_name,'CURVE')
             curve.dimensions = '3D'
             spline = curve.splines.new(type='POLY')
-            spline.points[0].co = bpy.context.scene.cursor.location.to_4d()
+            
             obj = bpy.data.objects.new(muscle_name, curve)
-            bpy.data.collections[colname].objects.link(obj)
+            bpy.data.collections[colname].objects.link(obj)'''
+
+            #Add a bezier curve primitive, delete the spline, and replace the spline with a poly curve.
+            #By doing it this way, it gets added to the active collection, which enables me to deal with collection allocation outside of the muscle creation function
+            
+            #add a bezier curve
+            bpy.ops.curve.primitive_bezier_curve_add(align='WORLD', location=(0, 0, 0), rotation=(0, 0, 0), scale=(0, 0, 0)) 
+            bpy.context.object.name = muscle_name #set the name
+            obj = bpy.data.objects[muscle_name] #get a direct link to the newly named object
+            curve = obj.data #get the curve
+            curve.dimensions = '3D' #just in case, make it a 3D curve. Should already be 3D
+            curve.splines.remove(curve.splines[0]) #remove the bezier spline
+            spline = curve.splines.new(type='POLY') #add a poly spline
                 
             ## define MuSkeMo type
             obj['MuSkeMo_type'] = 'MUSCLE'    #to inform the user what type is created
@@ -94,7 +104,10 @@ class AddMusclepointOperator(Operator):
             ### add texture here
 
 
-            
+            ## set point location
+
+            spline.points[0].co = bpy.context.scene.cursor.location.to_4d()
+
             ### hook point to body
             
             curve = bpy.data.objects[muscle_name]
