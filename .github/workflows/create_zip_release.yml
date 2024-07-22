@@ -11,7 +11,7 @@ jobs:
     - name: Prepare MuSkeMo Directory
       run: |
         mkdir -p MuSkeMo
-        cp -r __init__.py scripts README.md utilities MuSkeMo/ 
+        cp -r __init__.py scripts README.md "MuSkeMo utilities" MuSkeMo/ 
     - name: Archive Release
       uses: thedoctor0/zip-release@0.7.6
       with:
