@@ -59,7 +59,31 @@ for obj in joints:
     if 'loc_in_parent_frame' in obj:        
         obj['pos_in_parent_frame'] = obj['loc_in_parent_frame']
         del obj['loc_in_parent_frame']   
+
+    ## add global pos and or
+
+    obj['pos_in_global'] = [nan]*3
+    obj.id_properties_ui('pos_in_global').update(description='Joint position in the global reference frame (x, y, z, in meters). Optional.')
+
+    obj['or_in_global_XYZeuler'] = [nan]*3
+    obj.id_properties_ui('or_in_global_XYZeuler').update(description='Joint orientation XYZ-Euler angles in the global reference frame (x, y, z, in rad). Optional.')
+
+    obj['or_in_global_quat'] = [nan]*4
+    obj.id_properties_ui('or_in_global_quat').update(description='Joint orientation quaternion decomposition in the global reference frame (w, x, y, z). Optional.')
+        
     
+    ## instantiate the orientations but don't copy them over.
+    
+    if 'rot_child_frame' in obj:
+        obj['or_in_child_frame_XYZeuler'] = [nan]*3
+        obj['or_in_child_frame_quat'] = [nan]*4
+        del obj['rot_child_frame']
+        
+    if 'rot_parent_frame' in obj:        
+        obj['or_in_parent_frame_XYZeuler'] = [nan]*3
+        obj['or_in_parent_frame_quat'] = [nan]*4
+        del obj['rot_parent_frame']       
+
         
         
 for obj in contacts:
@@ -69,6 +93,10 @@ for obj in contacts:
     if 'loc_in_parent_frame' in obj:
         obj['pos_in_parent_frame'] = obj['loc_in_parent_frame']
         del obj['loc_in_parent_frame']
+
+    if 'loc_parent_frame' in obj:
+        obj['pos_in_parent_frame'] = obj['loc_parent_frame']
+        del obj['loc_parent_frame']    
         
 for obj in frames:
     if obj['parent_body'] == 'not yet assigned':

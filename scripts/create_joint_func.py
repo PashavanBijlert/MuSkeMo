@@ -59,7 +59,7 @@ def create_joint(name, radius, is_global = True,
     
     
     ## Set global or & pos
-    
+   
     obj['pos_in_global'] = pos_in_global
     obj.id_properties_ui('pos_in_global').update(description='Joint position in the global reference frame (x, y, z, in meters). Optional.')
 
@@ -68,7 +68,7 @@ def create_joint(name, radius, is_global = True,
 
     obj['or_in_global_quat'] = or_in_global_quat
     obj.id_properties_ui('or_in_global_quat').update(description='Joint orientation quaternion decomposition in the global reference frame (w, x, y, z). Optional.')
-
+    
        
     ## parent frame data
     
@@ -139,7 +139,7 @@ def create_joint(name, radius, is_global = True,
     
     if not is_global:
         
-        
+
         #error check for existing frames
         #check if we use quats or euler
         #do the same for both parent and child

@@ -82,13 +82,13 @@ def create_body(name, size, is_global = True, mass=nan,
     obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
     
     ### set the correct display position
-    if is_global and COM is not None:#if is_global is True and COM is defined
+    if is_global and COM != [nan]*3:#if is_global is True and COM is defined
         
         obj.matrix_world.translation = COM
       
       
       
-    if not is_global and COM_local is not None:#if is_global is False and COM is defined
+    if not is_global and COM_local != [nan]*3:#if is_global is False and COM is defined
         
         print('local body creation not implemented yet')
         ### get frame location and set obj location wrt frame
