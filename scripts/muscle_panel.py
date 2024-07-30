@@ -254,7 +254,7 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         row = self.layout.row()
         row.label(text = 'Shift + right click moves the 3D cursor to your mouse location')
         row = self.layout.row()
-        row.label(text = 'Hover over the buttons for an extra tooltip')
+        row.label(text = 'You must select a body before attempting to add a muscle point')
         
         
             
@@ -281,7 +281,7 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         self.layout.row()
         self.layout.row()
         row = self.layout.row()
-        row.operator("muscle.reflect_rightside_muscles", text="Reflect right-side muscles")
+        row.operator("muscle.reflect_rightside_muscles", text="Reflect right-side muscles (experimental)")
         
         
         
