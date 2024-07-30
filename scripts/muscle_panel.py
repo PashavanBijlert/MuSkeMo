@@ -34,158 +34,63 @@ class AddMusclepointOperator(Operator):
         #Make sure the "Muscles" collection is active
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
 
-        active_obj = bpy.context.active_object  #should be the body that you want to parent the point to
+        active_obj = bpy.context.active_object
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
 
 
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one body to parent the muscle point to")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one body to parent the muscle point to")
+            return {'FINISHED'}
+        
+        body = sel_obj[0]
+        body_name = body.name
+
+        if 'MuSkeMo_type' in body:
+            if 'BODY' != bpy.data.objects[body_name]['MuSkeMo_type']:
+                self.report({'ERROR'}, "Selected object '" + body_name + "' is not a BODY. Muscle point addition cancelled")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Selected object '" + body_name + "' was not an object created by MuSkeMo. Muscle point addition cancelled")
+            return {'FINISHED'}      
+        
+        
+
         for obj in sel_obj:
             obj.select_set(False)
-            
-          
+
+        from .create_muscle_func import create_muscle  #import muscle creation function
+
+        point_position = bpy.context.scene.cursor.location
+        create_muscle(muscle_name = muscle_name, point_position = point_position,
+                          body_name = body_name)
+        
+        '''
         try: bpy.data.objects[muscle_name]  #throws an error if the muscle doesn't exist, creates it under except
+
+        
 
         except:
             
-            '''curve = bpy.data.curves.new(muscle_name,'CURVE')
-            curve.dimensions = '3D'
-            spline = curve.splines.new(type='POLY')
             
-            obj = bpy.data.objects.new(muscle_name, curve)
-            bpy.data.collections[colname].objects.link(obj)'''
+            point_position = bpy.context.scene.cursor.location
+            create_muscle(muscle_name = muscle_name, point_position = point_position,
+                          body_name = body_name)
 
-            #Add a bezier curve primitive, delete the spline, and replace the spline with a poly curve.
-            #By doing it this way, it gets added to the active collection, which enables me to deal with collection allocation outside of the muscle creation function
-            
-            #add a bezier curve
-            bpy.ops.curve.primitive_bezier_curve_add(align='WORLD', location=(0, 0, 0), rotation=(0, 0, 0), scale=(0, 0, 0)) 
-            bpy.context.object.name = muscle_name #set the name
-            obj = bpy.data.objects[muscle_name] #get a direct link to the newly named object
-            curve = obj.data #get the curve
-            curve.dimensions = '3D' #just in case, make it a 3D curve. Should already be 3D
-            curve.splines.remove(curve.splines[0]) #remove the bezier spline
-            spline = curve.splines.new(type='POLY') #add a poly spline
-                
-            ## define MuSkeMo type
-            obj['MuSkeMo_type'] = 'MUSCLE'    #to inform the user what type is created
-            obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
-
-
-            ##
-            obj['F_max'] = 0    #In Newtons
-            obj.id_properties_ui('F_max').update(description = "Maximal isometric force of the muscle fiber (in N)")
-
-            obj['pennation_angle'] = 0    #In degrees
-            obj.id_properties_ui('pennation_angle').update(description = "Pennation angle (in degrees)")
-
-            obj['optimal_fiber_length'] = 0    #In meters
-            obj.id_properties_ui('optimal_fiber_length').update(description = "Optimal fiber length (in m)")
-
-            obj['tendon_slack_length'] = 0    #In meters
-            obj.id_properties_ui('tendon_slack_length').update(description = "Tendon slack length (in m)")
-
-            
-
-            ## add visualization radius via bevel, and driver 
-
-            
-            driver = obj.data.driver_add('bevel_depth').driver  #this adds a driver to obj.data.bevel_depth
-            
-            var = driver.variables.new()        #make a new variable
-            var.name = 'viz_rad_var'            #give the variable a name
-
-            var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-            
-            var.targets[0].id = bpy.data.scenes['Scene']  #set the id to the active scene
-            var.targets[0].data_path = "muskemo.muscle_visualization_radius" #get the driving property
-
-            driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
-            obj.data.use_fill_caps = True 
-
-            ### add texture here
-
-
-            ## set point location
-
-            spline.points[0].co = bpy.context.scene.cursor.location.to_4d()
-
-            ### hook point to body
-            
-            curve = bpy.data.objects[muscle_name]
-            curve.select_set(True)
-            bpy.context.view_layer.objects.active = curve  #make curve the active object
-                
-                    
-            modname = 'hook' + str(0) + '_' + active_obj.name  #remember that active_obj is the body, not the current active object that was changed above within this script
-            obj = curve
-                    
-            obj.modifiers.new(name=modname, type='HOOK')
-            obj.modifiers[modname].object = active_obj #remember that active_obj is the body, not the current active object that was changed above within this script       
-            
-            
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.curve.select_all(action='DESELECT') 
-            
-            curve.data.splines[0].points[0].select = True
-            
-          
-            bpy.ops.object.hook_assign(modifier = modname)
-            
-            bpy.ops.curve.select_all(action='DESELECT') 
-            
-            #for point in spline.points:
-            #    point.select = False
-            
-            
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.object.select_all(action='DESELECT')
-            
-            
         else: #if the muscle does exist, add a point at the end
             
-                    
-            curve = bpy.data.objects[muscle_name]
-            
-            curve.select_set(True)
-            bpy.context.view_layer.objects.active = curve  #make curve the active object
-            
-            
 
-            spline = curve.data.splines[0]
-            spline.points.add(1) 
-
-            last_point =  len(spline.points)-1
-
-            spline.points[last_point].co = bpy.context.scene.cursor.location.to_4d()  ## change to user input using mouse
+            
+            point_position = bpy.context.scene.cursor.location
+            create_muscle(muscle_name = muscle_name, point_position = point_position,
+                          body_name = body_name.name)    
                 
-            ### hook point to body
-                
-            modname = 'hook' + str(last_point) + '_' + active_obj.name #remember that active_obj is the body, not the current active object that was changed above within this script
-            obj = curve
-                    
-            obj.modifiers.new(name=modname, type='HOOK')
-            obj.modifiers[modname].object = active_obj        
-            
-            
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.curve.select_all(action='DESELECT') 
-            
-            curve.data.splines[0].points[last_point].select = True
-            
-          
-            bpy.ops.object.hook_assign(modifier = modname)
-            
-            #bpy.ops.curve.select_all(action='DESELECT') 
-            
-            for point in spline.points:
-                point.select = False
-            
-            
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.object.select_all(action='DESELECT')
-            
-                
-                
-                
+        '''        
         # restore saved state of selection
         bpy.context.view_layer.objects.active = active_obj
         for obj in sel_obj:
@@ -239,6 +144,27 @@ class InsertMusclePointOperator(Operator):
         active_obj = bpy.context.active_object  #should be the body that you want to parent the point to
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
 
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one body to parent the muscle point to")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one body to parent the muscle point to")
+            return {'FINISHED'}
+        
+        body = sel_obj[0]
+        body_name = body.name
+
+        if 'MuSkeMo_type' in body:
+            if 'BODY' != bpy.data.objects[body_name]['MuSkeMo_type']:
+                self.report({'ERROR'}, "Selected object '" + body_name + "' is not a BODY. Muscle point addition cancelled")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Selected object '" + body_name + "' was not an object created by MuSkeMo. Muscle point addition cancelled")
+            return {'FINISHED'}      
+
 
         for obj in sel_obj:
             obj.select_set(False)
@@ -265,14 +191,14 @@ class InsertMusclePointOperator(Operator):
         modnamelist = [x.name for x in obj.modifiers]
         
         p_number = 1                    
-        modname = 'hook' + '_ins_point_' + str(p_number) + '_' + active_obj.name
+        modname = 'hook' + '_ins_point_' + str(p_number) + '_' + body_name
         while modname in modnamelist:
             p_number = p_number+1
-            modname = 'hook' + '_ins_point_' + str(p_number) + '_' + active_obj.name
+            modname = 'hook' + '_ins_point_' + str(p_number) + '_' + body_name
         
                 
         obj.modifiers.new(name=modname, type='HOOK')
-        obj.modifiers[modname].object = active_obj        
+        obj.modifiers[modname].object = body        
 
 
         bpy.ops.object.mode_set(mode='EDIT')
