@@ -33,7 +33,7 @@ class CreateContactOperator(Operator):
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
         
         ## create the actual contact
-        target_pos = bpy.context.scene.cursor.location  #3D cursor location
+        target_pos = bpy.context.scene.cursor.location  #3D cursor location is the target position of the contact
         
         from .create_contact_func import create_contact
 
@@ -59,7 +59,7 @@ class AssignContactParentOperator(Operator):
         try: bpy.data.objects[contact_name]  #check if the contact exists
         
         except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Joint with the name '" + contact_name + "' does not exist yet, create it first")
+            self.report({'ERROR'}, "Contact with the name '" + contact_name + "' does not exist yet, create it first")
             return {'FINISHED'}
         
         
