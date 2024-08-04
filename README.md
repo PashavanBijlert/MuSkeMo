@@ -1,10 +1,10 @@
 # **MuSkeMo**
 
-Build and visualize musculoskeletal models in Blender.
+Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in versions between 3.0-4.1.
 
 To download: Click on the latest release on the right, and download "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
-To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark.
+To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, you may need to use the legacy installer.
 
 **Check out the [video tutorial on YouTube](https://www.youtube.com/watch?v=9eMm9YalXtg)**
 
@@ -65,6 +65,6 @@ This is in development, and will be part of v0.7.0
 
 # **MuSkeMo utilities**
 
-This folder is in the MuSkeMo.zip release. It contains several utility scripts, including a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. 
+The MuSkeMo.zip release contains a folder with MuSkeMo utlities. This includes a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. You must have the [OpenSim Matlab API](https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab) installed. 
 
-It also contains an updater (Python) script to update older MuSkeMo scenes to v0.6.2 and up. To run this, open the python script in the Blender script editor and run it. Back up your work first.
+It also contains an updater (Python) script to update older MuSkeMo scenes to v0.6.3 and up. To run this, open the python script in the Blender script editor and run it. Back up your work first.
