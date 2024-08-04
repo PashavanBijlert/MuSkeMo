@@ -104,7 +104,7 @@ class ConstructARFOperator(Operator):
         refframe_name = bpy.context.scene.muskemo.framename
         colname = bpy.context.scene.muskemo.frame_collection  #target collection
 
-        rad = bpy.context.scene.muskemo.ARF_axes_size
+        size = bpy.context.scene.muskemo.ARF_axes_size
 
         #check if the collection name exists, and if not create it
         if colname not in bpy.data.collections:
@@ -143,42 +143,10 @@ class ConstructARFOperator(Operator):
 
         #print(gRl)
 
-        ### construct the transformation matrix
-        worldMat = Matrix(gRl).to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
-
-        for i in range(len(origin)):
-            
-            worldMat[i][3] = origin[i]  #set the fourth column as the location
-
-
-        name = refframe_name #name of the object
+        from .create_frame_func import create_frame
+        create_frame(name=refframe_name, size = size, pos_in_global = origin, gRb = gRl, parent_body = 'not_assigned',)
         
-
-        bpy.ops.object.empty_add(type='ARROWS', radius=rad, align='WORLD')
-        bpy.context.object.name = name #set the name
-        #bpy.context.object.data.name = name #set the name of the object data
-
-        bpy.context.object.rotation_mode = 'ZYX'    #change rotation sequence
-
-        #
-        bpy.context.object.matrix_world = worldMat  #set the transformation matrix
-
-        ## it's possible to calculate euler decomposition, but this is prone to gimbal lock.
-        # phi_y = np.arcsin(gRl[0,2]) #alternative: phi_y = np.arctan2(gRl[0,2], math.sqrt(1 - (gRl[0,2])**2)) 
-        # phi_x = np.arctan2(-gRl[1,2],gRl[2,2])    #angle alpha in wiki
-        # phi_z = np.arctan2(-gRl[0,1],gRl[0,0])    #angle gamma in wiki
-
-        #print('Manually computed XYZ Euler angles =')
-        #print([phi_x, phi_y, phi_z])
-        #bpy.context.object.rotation_euler = [phi_x, phi_y, phi_z]
-        #bpy.context.object.location = origin
-
-        bpy.context.object['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
-        bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
-
-        bpy.context.object['parent_body'] = 'not_assigned'    #to inform the user what type is created
-        bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this frame")  
-
+        
         return {'FINISHED'}
 
 
