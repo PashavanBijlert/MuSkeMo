@@ -13,7 +13,7 @@ from bpy.props import (StringProperty,   #it appears to matter whether you impor
 
 from math import nan
 
-from bpy_extras.io_utils import ExportHelper
+#from bpy_extras.io_utils import ExportHelper
 import numpy as np
 import os
 
