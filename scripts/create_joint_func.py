@@ -1,5 +1,7 @@
 import bpy
 from math import nan
+#from .euler_XYZ_body import euler_XYZbody_from_matrix
+from .quaternions import matrix_from_quaternion
 
 def create_joint(name, radius, is_global = True,
                  parent_body='not_assigned', child_body='not_assigned', 
@@ -125,17 +127,35 @@ def create_joint(name, radius, is_global = True,
     
     if is_global: #if user wants to define using global coordinates
     
+        
+        
+        if or_in_global_quat !=[nan]*4:  #if a global orientation is supplied
+            [gRb, bRg] = matrix_from_quaternion(or_in_global_quat)
+            obj.matrix_world = gRb.to_4x4()
+
         if pos_in_global !=[nan]*3:  #if a global position is supplied
-            obj.matrix_world.translation = pos_in_global
+            obj.matrix_world.translation = pos_in_global    
         
-        if or_in_global_XYZeuler !=[nan]*3:  #if a global orientation is supplied
+        if parent_body in bpy.data.objects: #if the parent body exists
+            parent_body_obj = bpy.data.objects[parent_body]
+
+            if 'BODY' in parent_body_obj['MuSkeMo_type']: #if it's a MuSkeMo body
+                
+                obj.parent = parent_body_obj
+                obj.matrix_parent_inverse = parent_body_obj.matrix_world.inverted()                      
+
+
         
-            print('error I have to add this in')
-        
-        #if same for quat
-        
-        #if statement for if the parent body exists already, parent it
-        #if statement for if the child body exists already, parent it
+        if child_body in bpy.data.objects: #if the child body exists
+            child_body_obj = bpy.data.objects[child_body]
+
+            if 'BODY' in child_body_obj['MuSkeMo_type']: #if it's a MuSkeMo body
+                
+                child_body_obj.parent = obj
+                child_body_obj.matrix_parent_inverse = obj.matrix_world.inverted()
+
+        #if local frame is assigned, then you can assign the local orientation and position
+        #otherwise give warning that it's ignored
     
     if not is_global:
         
