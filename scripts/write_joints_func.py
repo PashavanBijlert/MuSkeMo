@@ -6,7 +6,7 @@ def write_joints(context, filepath, collection_name, delimiter, number_format):
 
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     
-    header = ('joint_name' + delimiter  + 'parent_body' + delimiter  + 'child_body' + delimiter + 
+    header = ('JOINT_name' + delimiter  + 'parent_body' + delimiter  + 'child_body' + delimiter + 
             'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter   +
             'or_x_in_global(XYZeuler_rad)' + delimiter + 'or_y_in_global(XYZeuler)' + delimiter + 'or_z_in_global(XYZeuler)' + delimiter + 
             'or_w_in_global(quat)' + delimiter + 'or_x_in_global(quat)' + delimiter + 'or_y_in_global(quat)' + delimiter + 'or_z_in_global(quat)' + delimiter + 
