@@ -419,6 +419,85 @@ class ImportContactsOperator(Operator, ImportHelperCustom):  #inherits from Impo
 
 
         return {'FINISHED'}    
+    
+## import contacts
+
+
+class ImportFramesOperator(Operator, ImportHelperCustom):  #inherits from ImportHelperCustom class
+    bl_description = "Import a MuSkeMo-created frames file"
+    bl_idname = "import.import_frames"
+    bl_label = "Import frames"
+
+    
+       
+    def execute(self, context):
+        
+        # Call the custom superclass method read_CSV_data to read the CSV data
+        data = self.read_csv_data(context)
+
+        headers = data[0]
+        data = data[1:]
+        
+        # throw an error if BODY not in the headers     
+        if 'FRAME' not in headers[0] and 'frame' not in headers[0]:
+            self.report({'ERROR'}, "The loaded file does not appear to be a 'frames' file created by MuSkeMo")
+            return {'FINISHED'}
+
+
+        colname = bpy.context.scene.muskemo.frame_collection #name for the collection
+        
+        #check if the collection name exists, and if not create it
+        if colname not in bpy.data.collections:
+            bpy.data.collections.new(colname)
+            
+        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
+
+        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+            bpy.context.scene.collection.children.link(coll)     #add it to the scene
+        
+        #Make sure the "frames" collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
+
+        from .create_frame_func import create_frame
+        from .quaternions import matrix_from_quaternion
+
+        size = bpy.context.scene.muskemo.ARF_axes_size # in meters
+
+        for row in data:
+            
+            name = row[0]
+            parent_body = row[1]
+            pos_in_global = [float(x) for x in row[2:5]]
+            or_in_global_quat = [float(x) for x in row[5:9]]
+            
+            [gRb, bRg] = matrix_from_quaternion(or_in_global_quat)
+
+
+            ## check if parent body and frame exist, and if not give a warning
+            if parent_body in bpy.data.objects: #if the parent body exists
+                parent_body_obj = bpy.data.objects[parent_body]
+
+                if 'BODY' in parent_body_obj['MuSkeMo_type']: #if it's a MuSkeMo body
+
+                    if parent_body_obj['local_frame']!= name: #if there is a mismatch between parent body's local frame and contact's parent frame
+                        
+                        self.report({'WARNING'}, "Parent BODY with the name " + parent_body + " has a different local frame assigned than the " + name + " frame in the imported file. This frame will not be parented to that body during import, clear and reassign the parent manually if you want this frame assigned to a body.")
+                        parent_body = 'not_assigned'
+                        
+                else:
+                    self.report({'WARNING'}, "No BODY with the name " + parent_body + " exists. " + name + " frame will not have a parent in Blender, but the parent body property will be saved for export.")
+                
+            else:
+                self.report({'WARNING'}, "No object with the name " + parent_body + " exists. " + name + " frame will not have a parent in Blender, but the parent body property will be saved for export.")
+            
+            create_frame(name = name, size = size, 
+                         parent_body=parent_body, 
+                         pos_in_global = pos_in_global, 
+                         gRb = gRb, 
+                         )
+
+
+        return {'FINISHED'}        
 ### The panels
 
 ## Main export panel
