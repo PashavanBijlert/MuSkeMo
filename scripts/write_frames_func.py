@@ -8,7 +8,7 @@ def write_frames(context, filepath, collection_name, delimiter,number_format):
 
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     
-    header = ('frame_name' + delimiter  + 'parent_body' + delimiter + 'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter + 
+    header = ('FRAME_name' + delimiter  + 'parent_body' + delimiter + 'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter + 
               'quaternion_w' +  delimiter  + 'quaternion_x'  + delimiter  + 'quaternion_y' +  delimiter  + 'quaternion_z'  + delimiter  + 
                'Euler_XYZ_x(rad)' +  delimiter  + 'Euler_XYZ_y' +  delimiter  + 'Euler_XYZ_z')
     

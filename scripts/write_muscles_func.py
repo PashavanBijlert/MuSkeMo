@@ -10,7 +10,7 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
     
     coll = bpy.data.collections[collection_name]   
     
-    header = ('muscle_point_name' + delimiter  + 'parent_body_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter + #headers
+    header = ('MUSCLE_point_name' + delimiter  + 'parent_body_name' + delimiter  + 'pos_x_in_global(m)' + delimiter  + 'pos_y_in_global' + delimiter  + 'pos_z_in_global' + delimiter + #headers
     'parent_frame_name' + delimiter + 'pos_x_in_local(m)' + delimiter + 'pos_y_in_local' + delimiter + 'pos_z_in_local' + delimiter + 
     'optimal_fiber_length(m)' + delimiter + 'tendon_slack_length(m)' + delimiter + 'F_max(N)' + delimiter + 'pennation_angle(deg)' )
     

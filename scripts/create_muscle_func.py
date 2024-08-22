@@ -56,8 +56,9 @@ def create_muscle (muscle_name, point_position, body_name,
 
 
         ## add visualization radius via bevel, and driver 
+        #adding drivers like this works, but causes instability / crashes.
 
-
+        '''
         driver = obj.data.driver_add('bevel_depth').driver  #this adds a driver to obj.data.bevel_depth
 
         var = driver.variables.new()        #make a new variable
@@ -69,6 +70,8 @@ def create_muscle (muscle_name, point_position, body_name,
         var.targets[0].data_path = "muskemo.muscle_visualization_radius" #get the driving property
 
         driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
+        '''
+        obj.data.bevel_depth = bpy.context.scene.muskemo.muscle_visualization_radius
         obj.data.use_fill_caps = True 
 
         ### add texture here

@@ -228,7 +228,21 @@ class InsertMusclePointOperator(Operator):
         
         return {'FINISHED'}    
     
-    
+class UpdateMuscleVizRadius(Operator):
+    bl_idname = "muscle.update_muscle_viz_radius"
+    bl_label = "Update the muscle visualization radius of the muscle line segments (not the volumetric muscles)"
+    bl_description = "Update the muscle visualization radius of the muscle line segments (not the volumetric muscles)"
+
+    def execute(self, context):
+
+        MuSkeMo_objects = [x for x in bpy.data.objects if 'MuSkeMo_type' in x]
+        muscles = [x for x in MuSkeMo_objects if x['MuSkeMo_type']=='MUSCLE']
+        
+
+        for muscle in muscles:
+            muscle.data.bevel_depth = bpy.context.scene.muskemo.muscle_visualization_radius
+
+        return {'FINISHED'}
     
 
 class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
@@ -276,6 +290,7 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         row = self.layout.row()
        
         row.prop(muskemo, "muscle_visualization_radius")
+        row.operator("muscle.update_muscle_viz_radius", text = "Update visualization radius")
 
 
         self.layout.row()

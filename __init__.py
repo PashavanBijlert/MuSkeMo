@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (3, 0, 0),
-    "version" : (0, 6, 4),
+    "version" : (0, 6, 5),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
@@ -65,7 +65,8 @@ from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJoint
 
 #### muscle panel
 from .scripts.muscle_panel import (AddMusclepointOperator, ReflectRightsideMusclesOperator,
-                                      InsertMusclePointOperator, VIEW3D_PT_muscle_panel,)
+                                      InsertMusclePointOperator, UpdateMuscleVizRadius,
+                                      VIEW3D_PT_muscle_panel,)
 
 
 #### inertial properties panel
@@ -91,7 +92,7 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
 #### import panel
 
 from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_modelcomponents_subpanel,
-                                   ImportBodiesOperator,ImportJointsOperator,
+                                   ImportBodiesOperator,ImportJointsOperator,ImportMusclesOperator,
                                    )
 
 #### Anatomical (local) reference frame panel
@@ -140,7 +141,8 @@ classes = (  #Inertial properties panel
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 
                                     AddMusclepointOperator, ReflectRightsideMusclesOperator,
-                                      InsertMusclePointOperator, VIEW3D_PT_muscle_panel,
+                                      InsertMusclePointOperator, UpdateMuscleVizRadius,
+                                      VIEW3D_PT_muscle_panel,
             #export panel
                                     VIEW3D_PT_export_panel, VIEW3D_PT_export_bodies_subpanel,
                                     VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
@@ -156,7 +158,7 @@ classes = (  #Inertial properties panel
 
             #import panel
                                   VIEW3D_PT_import_panel,  VIEW3D_PT_import_modelcomponents_subpanel,
-                                  ImportBodiesOperator, ImportJointsOperator,
+                                  ImportBodiesOperator, ImportJointsOperator, ImportMusclesOperator,
 
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_arf_panel,

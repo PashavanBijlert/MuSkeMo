@@ -99,7 +99,7 @@ if ~isempty(muscles_file)% if the muscles file is not empty
     muscle_data = readtable([model_dir '/' muscles_file],'VariableNamingRule','preserve');
     
     %%% post process muscle data
-    muscle_point_names = muscle_data.muscle_point_name;
+    muscle_point_names = muscle_data{:,1};
     
     % Use regular expression to remove the suffix (_or, _ins, _via#)
     pattern = '_or|_ins|_via\d+';
@@ -270,7 +270,10 @@ end
 %% Joint loop
 for j = 1:height(joint_data)
     
-    joint_name = joint_data.joint_name{j};
+
+    
+    %joint_name = joint_data.JOINT_name{j};
+    joint_name = joint_data{j,1};
     
     % orientation and position
     if strcmp(global_or_local,'global')

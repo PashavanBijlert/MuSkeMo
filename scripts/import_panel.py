@@ -17,6 +17,7 @@ from math import nan
 import numpy as np
 import os
 import csv
+import re
 
 from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 
@@ -237,6 +238,109 @@ class ImportJointsOperator(Operator, ImportHelperCustom):  #inherits from Import
 
         return {'FINISHED'}
 
+## import muscles
+
+
+class ImportMusclesOperator(Operator, ImportHelperCustom):  #inherits from ImportHelperCustom class
+    bl_description = "Import a MuSkeMo-created muscles file"
+    bl_idname = "import.import_muscles"
+    bl_label = "Import muscles"
+
+    
+       
+    def execute(self, context):
+        
+        # Call the custom superclass method read_CSV_data to read the CSV data
+        data = self.read_csv_data(context)
+
+        headers = data[0]
+        data = data[1:]
+        
+        # throw an error if BODY not in the headers     
+        if 'MUSCLE' not in headers[0] and 'muscle' not in headers[0]:
+            self.report({'ERROR'}, "The loaded file does not appear to be a 'muscles' file created by MuSkeMo")
+            return {'FINISHED'}
+
+
+        colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the hulls
+        
+        #check if the collection name exists, and if not create it
+        if colname not in bpy.data.collections:
+            bpy.data.collections.new(colname)
+            
+        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
+
+        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+            bpy.context.scene.collection.children.link(coll)     #add it to the scene
+        
+        #Make sure the "muscles" collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
+
+        from .create_muscle_func import create_muscle
+
+
+        ### get unique muscle names               
+        # Extract the first column (muscle point names)
+        muscle_point_names = [row[0] for row in data]
+
+        # Define the pattern to remove suffixes (_or, _ins, _via#)
+        pattern = r'_or|_ins|_via\d+'
+
+        # Apply the regex pattern to remove the suffixes and maintain original order
+        muscle_names = []
+        seen = set()
+
+        for name in muscle_point_names:
+            clean_name = re.sub(pattern, '', name)
+            if clean_name not in seen:
+                seen.add(clean_name)
+                muscle_names.append(clean_name)
+        
+
+        #muscle_names = muscle_names[0]
+        for muscle_name in muscle_names:
+
+            data_onemusc = [x for x in data if x[0].startswith(muscle_name)] #data rows of a single muscle
+            
+
+            for point_row in data_onemusc:  #each row of data_onemusc contains data for one muscle point
+                parent_body_name = point_row[1]
+                
+                #error checks for if the object is a valid BODY to parent the muscle point to
+                if parent_body_name not in bpy.data.objects:
+                    self.report({'ERROR'}, "The " + muscle_name + " MUSCLE has a point that is attached to a body that does not exist yet. Operation cancelled.")
+                    return {'FINISHED'}
+                
+                if 'MuSkeMo_type' not in bpy.data.objects[parent_body_name]:
+                    self.report({'ERROR'}, "You are attempting to attach a point of the " + muscle_name + " MUSCLE to " + parent_body_name + ", which is not an object created by MuSkeMo. Operation cancelled.")
+                    return {'FINISHED'}
+                
+                if bpy.data.objects[parent_body_name]['MuSkeMo_type']!='BODY':
+                    self.report({'ERROR'}, "You are attempting to attach a point of the " + muscle_name + " MUSCLE to " + parent_body_name + ", which is not a BODY. Operation cancelled.")
+                    return {'FINISHED'}
+        
+            
+                point_position = [float(x) for x in point_row[2:5]]
+
+                #parent_frame_name = point_row[5]
+                #point_position_loc = [float(x) for x in point_row[6:9]]
+
+                optimal_fiber_length = float(point_row[9])
+                tendon_slack_length  = float(point_row[10])
+                F_max                = float(point_row[11])
+                pennation_angle      = float(point_row[12])
+                
+                create_muscle(muscle_name = muscle_name, 
+                              is_global =True, 
+                              body_name = parent_body_name,
+                              point_position = point_position,
+                              optimal_fiber_length=optimal_fiber_length,
+                              tendon_slack_length=tendon_slack_length,
+                              F_max = F_max,
+                              pennation_angle = pennation_angle)
+                
+
+        return {'FINISHED'}
 ### The panels
 
 ## Main export panel
@@ -270,9 +374,14 @@ class VIEW3D_PT_import_modelcomponents_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cl
         scene = context.scene
         muskemo = scene.muskemo
         row = layout.row()
-        #row.prop(muskemo, "body_collection")
+        row.prop(muskemo, "body_collection")
         row.operator("import.import_bodies",text = 'Import bodies')
         row = layout.row()
-        #row.prop(muskemo, "body_collection")
+        row.prop(muskemo, "joint_collection")
         row.operator("import.import_joints",text = 'Import joints')
+        row = layout.row()
+        row.prop(muskemo, "muscle_collection")
+        row.operator("import.import_muscles",text = 'Import muscles')
+
+
         return      
