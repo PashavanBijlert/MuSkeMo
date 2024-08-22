@@ -341,6 +341,84 @@ class ImportMusclesOperator(Operator, ImportHelperCustom):  #inherits from Impor
                 
 
         return {'FINISHED'}
+    
+
+## import contacts
+
+
+class ImportContactsOperator(Operator, ImportHelperCustom):  #inherits from ImportHelperCustom class
+    bl_description = "Import a MuSkeMo-created contacts file"
+    bl_idname = "import.import_contacts"
+    bl_label = "Import contacts"
+
+    
+       
+    def execute(self, context):
+        
+        # Call the custom superclass method read_CSV_data to read the CSV data
+        data = self.read_csv_data(context)
+
+        headers = data[0]
+        data = data[1:]
+        
+        # throw an error if BODY not in the headers     
+        if 'CONTACT' not in headers[0]:
+            self.report({'ERROR'}, "The loaded file does not appear to be a 'contacts' file created by MuSkeMo")
+            return {'FINISHED'}
+
+
+        colname = bpy.context.scene.muskemo.contact_collection #name for the collection
+        
+        #check if the collection name exists, and if not create it
+        if colname not in bpy.data.collections:
+            bpy.data.collections.new(colname)
+            
+        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
+
+        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+            bpy.context.scene.collection.children.link(coll)     #add it to the scene
+        
+        #Make sure the "contacts" collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
+
+        from .create_contact_func import create_contact
+
+        radius = bpy.context.scene.muskemo.contact_radius # in meters
+
+        for row in data:
+            
+            name = row[0]
+            pos_in_global = [float(x) for x in row[1:4]]
+            parent_body = row[4]
+            parent_frame_name = row[5]
+            pos_in_parent_frame = [float(x) for x in row[6:9]]
+            
+            ## check if parent body and frame exist, and if not give a warning
+            if parent_body in bpy.data.objects: #if the parent body exists
+                parent_body_obj = bpy.data.objects[parent_body]
+
+                if 'BODY' in parent_body_obj['MuSkeMo_type']: #if it's a MuSkeMo body
+
+                    if parent_body_obj['local_frame']!= parent_frame_name: #if there is a mismatch between parent body's local frame and contact's parent frame
+                        
+                        self.report({'WARNING'}, "Parent BODY with the name " + parent_body + " has a different local frame assigned than defined for the " + name + " contact in the imported file. Local transformations will be ignored during import, clear and reassign the parent manually if you need local transformations for this contact.")
+                        pos_in_parent_frame   = [nan]*3
+                        
+                else:
+                    self.report({'WARNING'}, "No BODY with the name " + parent_body + " exists. " + name + " contact will not have a parent in Blender, but the parent body property will be saved for export.")
+                
+            else:
+                self.report({'WARNING'}, "No object with the name " + parent_body + " exists. " + name + " contact will not have a parent in Blender, but the parent body property will be saved for export.")
+            
+            create_contact(name = name, radius = radius, 
+                         is_global = True,
+                         parent_body=parent_body, 
+                         pos_in_global = pos_in_global, 
+                         pos_in_parent_frame = pos_in_parent_frame, 
+                         )
+
+
+        return {'FINISHED'}    
 ### The panels
 
 ## Main export panel
@@ -376,12 +454,21 @@ class VIEW3D_PT_import_modelcomponents_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cl
         row = layout.row()
         row.prop(muskemo, "body_collection")
         row.operator("import.import_bodies",text = 'Import bodies')
+
         row = layout.row()
         row.prop(muskemo, "joint_collection")
         row.operator("import.import_joints",text = 'Import joints')
+
         row = layout.row()
         row.prop(muskemo, "muscle_collection")
         row.operator("import.import_muscles",text = 'Import muscles')
 
+        row = layout.row()
+        row.prop(muskemo, "contact_collection")
+        row.operator("import.import_contacts",text = 'Import contacts')
+
+        row = layout.row()
+        row.prop(muskemo, "frame_collection")
+        row.operator("import.import_frames",text = 'Import frames')
 
         return      

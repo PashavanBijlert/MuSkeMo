@@ -28,6 +28,15 @@ def create_contact(name, radius, pos_in_global = [nan]*3,
         if pos_in_global != [nan]*3: #if the specified position is not [nan, nan, nan]
             obj.matrix_world.translation = pos_in_global
 
+        #if the body exists, parent the contact to it
+        if parent_body in bpy.data.objects: #if the parent body exists
+            parent_body_obj = bpy.data.objects[parent_body]
+
+            if 'BODY' in parent_body_obj['MuSkeMo_type']: #if it's a MuSkeMo body
+                
+                obj.parent = parent_body_obj
+                obj.matrix_parent_inverse = parent_body_obj.matrix_world.inverted()      
+
         
     #if statement for if the parent body exists already, parent it
     #error check for existing frames        #do the same for both parent and child
