@@ -61,7 +61,7 @@ Under export options, it is possible to configure other text-based filetypes for
 
 # **Import panel**
 
-This is in development, and will be part of v0.7.0
+You can currently import bodies, joints, muscles, frames, and contacts. Planned additions are: OpenSim model import, Gaitsym model import, and a trajectory importer to visualize simulations.
 
 # **MuSkeMo utilities**
 
