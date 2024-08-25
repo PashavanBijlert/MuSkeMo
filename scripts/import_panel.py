@@ -17,7 +17,7 @@ from math import nan
 import numpy as np
 import os
 import csv
-import re
+import re  #regular expressions
 
 from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 
@@ -497,7 +497,12 @@ class ImportFramesOperator(Operator, ImportHelperCustom):  #inherits from Import
                          )
 
 
-        return {'FINISHED'}        
+        return {'FINISHED'}   
+
+## import OpenSim model
+
+from .import_opensim_model import ImportOpenSimModel
+
 ### The panels
 
 ## Main export panel
@@ -551,3 +556,24 @@ class VIEW3D_PT_import_modelcomponents_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cl
         row.operator("import.import_frames",text = 'Import frames')
 
         return      
+    
+## Import full model
+class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+    bl_idname = 'VIEW3D_PT_import_full_model_subpanel'
+    bl_parent_id = 'VIEW3D_PT_import_panel'  #have to define this if you use multiple panels
+    bl_label = "Import full model"  # found at the top of the Panel
+    bl_options = {'DEFAULT_CLOSED'} 
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        row = layout.row()
+        row.operator("import.import_opensim_model",text = 'Import OpenSim model')
+
+
+        row = layout.row()
+        row.prop(muskemo, "model_import_style")
+
+
+        return          

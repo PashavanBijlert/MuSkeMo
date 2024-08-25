@@ -235,6 +235,18 @@ class MuSkeMoProperties(PropertyGroup):
         default = "g",
         )
 
+#### import
+
+    model_import_style: EnumProperty(
+        name="Model import style",
+        description="Import your model assuming global or local definitions",
+        items=[ ('glob', "Global definitions", ""),
+                ('loc', "Local definitions", ""),
+                ],
+        default = "loc",
+        )
+
+
 #### anatomical (local) reference frame panel
 
     framename: StringProperty(

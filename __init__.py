@@ -92,8 +92,10 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
 #### import panel
 
 from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_modelcomponents_subpanel,
+                                   VIEW3D_PT_import_full_model_subpanel,
                                    ImportBodiesOperator,ImportJointsOperator,ImportMusclesOperator,
                                    ImportContactsOperator,ImportFramesOperator,
+                                   ImportOpenSimModel, #this is a separate script
                                    )
 
 #### Anatomical (local) reference frame panel
@@ -152,15 +154,17 @@ classes = (  #Inertial properties panel
                                     VIEW3D_PT_geometry_folder_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
-                                   ExportMusclesOperator, ExportMeshInPropsOperator,
-                                   ExportFramesOperator, ExportLandmarksOperator,
-                                   ExportContactsOperator, ExportGeometryFolderOperator,
-                                   SelectModelExportDirectoryOperator,
+                                    ExportMusclesOperator, ExportMeshInPropsOperator,
+                                    ExportFramesOperator, ExportLandmarksOperator,
+                                    ExportContactsOperator, ExportGeometryFolderOperator,
+                                    SelectModelExportDirectoryOperator,
 
             #import panel
                                   VIEW3D_PT_import_panel,  VIEW3D_PT_import_modelcomponents_subpanel,
+                                  VIEW3D_PT_import_full_model_subpanel,
                                   ImportBodiesOperator, ImportJointsOperator, ImportMusclesOperator,
                                   ImportContactsOperator,ImportFramesOperator,
+                                  ImportOpenSimModel, #this is a separate script
 
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_arf_panel,
