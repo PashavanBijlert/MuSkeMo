@@ -116,13 +116,103 @@ class ImportOpenSimModel(Operator):
             return body_data
 
 
+        
+
+        def get_joint_data(model):
+            joint_set = model.find('JointSet')
+            joints = joint_set.find('objects')
+
+            joint_data = []
+            for joint in joints:
+                joint_name = joint.get('name')
+                joint_type = joint.tag
+
+                # Extract parent and child frames
+                parent_frame = joint.find('socket_parent_frame').text.strip()
+                child_frame = joint.find('socket_child_frame').text.strip()
+
+                # Initialize parent_body and child_body to None
+                parent_body = None
+                child_body = None
+
+                # Extract frames within the joint
+                frames_data = []
+                frames = joint.find('frames')
+                if frames is not None:
+                    for frame in frames.findall('PhysicalOffsetFrame'):
+                        frame_name = frame.get('name')
+                        translation = tuple(map(float, frame.find('translation').text.split()))
+                        orientation = tuple(map(float, frame.find('orientation').text.split()))
+                        socket_parent = frame.find('socket_parent').text.strip()
+
+                        # Match parent_frame with frame_name to get parent_body
+                        if frame_name == parent_frame:
+                            parent_body = socket_parent.split('/bodyset/')[-1]
+                        # Match child_frame with frame_name to get child_body
+                        if frame_name == child_frame:
+                            child_body = socket_parent.split('/bodyset/')[-1]
+
+                        frames_data.append({
+                            'frame_name': frame_name,
+                            'translation': translation,
+                            'orientation': orientation,
+                            'socket_parent': socket_parent
+                        })
+
+                # Extract coordinates if any
+                coordinates = []
+                coords_element = joint.find('coordinates')
+                if coords_element is not None:
+                    for coord in coords_element.findall('Coordinate'):
+                        coordinates.append(coord.get('name'))
+
+                # Extract spatial transform data if present
+                spatial_transform = []
+                spatial_transform_element = joint.find('SpatialTransform')
+                if spatial_transform_element is not None:
+                    for axis in spatial_transform_element.findall('TransformAxis'):
+                        axis_name = axis.get('name')
+                        axis_coordinates = axis.find('coordinates').text.strip() if axis.find('coordinates') is not None else None
+                        axis_vector = tuple(map(float, axis.find('axis').text.split()))
+                        transform_function = axis.find('LinearFunction')
+                        
+                        coefficients = None
+                        if transform_function is not None:
+                            coeff_values = tuple(map(float, transform_function.find('coefficients').text.split()))
+                            if coeff_values != (1.0, 0.0):  # Only include if coefficients are not "1 0"
+                                coefficients = coeff_values
+
+                        spatial_transform.append({
+                            'axis_name': axis_name,
+                            'axis_coordinates': axis_coordinates,
+                            'axis_vector': axis_vector,
+                            'coefficients': coefficients
+                        })
+
+                joint_data.append({
+                    'joint_name': joint_name,
+                    'joint_type': joint_type,
+                    'parent_frame': parent_frame,
+                    'child_frame': child_frame,
+                    'parent_body': parent_body,
+                    'child_body': child_body,
+                    'frames_data': frames_data,
+                    'coordinates': coordinates,
+                    'spatial_transform': spatial_transform
+                })
+
+            return joint_data
+
+
+       
         # Extract body data from the model
         body_data = get_body_data(model)
-       
 
+        #### create bodies
         from .create_body_func import create_body
 
-        rad = bpy.context.scene.muskemo.axes_size #axis length, in meters
+        body_colname = bpy.context.scene.muskemo.body_collection #name for the collection that will contain the hulls
+        size = bpy.context.scene.muskemo.axes_size #axis length, in meters
 
 
         for body in body_data:
@@ -141,10 +231,67 @@ class ImportOpenSimModel(Operator):
                 geometry_string = 'no geometry'
 
             # Call create_body with the prepared geometry string
-            create_body(name=name, is_global = True, size = rad,
-                        mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string)
+            create_body(name=name, is_global = True, size = size,
+                        mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string, collection_name=body_colname)
             
 
+        # Extract joint data from the model
+        joint_data = get_joint_data(model)
 
+        #### create joints
+        from .create_joint_func import create_joint
+
+        joint_colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the joints
+        rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius
+
+        for joint in joint_data:
+
+            name = joint['joint_name']
+            parent_body = joint['parent_body']
+            child_body = joint['child_body']
+
+            frames_dict = {frame['frame_name']: frame for frame in joint['frames_data']} #dictionary for easier access
+
+            parent_frame_name = joint['parent_frame']
+            child_frame_name = joint['child_frame']
+
+            translation_in_parent_frame = frames_dict[parent_frame_name]['translation']
+            orientation_in_parent_frame = frames_dict[parent_frame_name]['orientation']
+
+            translation_in_child_frame = frames_dict[child_frame_name]['translation']
+            orientation_in_child_frame = frames_dict[child_frame_name]['orientation']
+
+            # if is_global
+
+            pos_in_global = translation_in_parent_frame
+            or_in_global_XYZeuler = orientation_in_parent_frame
+
+            create_joint(name = name, radius = rad, 
+                         is_global = True,
+                         parent_body=parent_body, 
+                         child_body=child_body,
+                         pos_in_global = pos_in_global, 
+                        or_in_global_XYZeuler = or_in_global_XYZeuler,
+            )
+                        #or_in_global_quat= or_in_global_quat,
+                        #pos_in_parent_frame = pos_in_parent_frame, 
+                        #or_in_parent_frame_XYZeuler = or_in_parent_frame_XYZeuler,
+                        #or_in_parent_frame_quat= or_in_parent_frame_quat,
+                        #pos_in_child_frame = pos_in_child_frame, 
+                        #or_in_child_frame_XYZeuler = or_in_child_frame_XYZeuler,
+                        #or_in_child_frame_quat= or_in_child_frame_quat,
+                        #coordinate_Tx = coordinate_Tx,
+                        #coordinate_Ty = coordinate_Ty,
+                        #coordinate_Tz = coordinate_Tz,
+                        #coordinate_Rx = coordinate_Rx,
+                        #coordinate_Ry = coordinate_Ry,
+                        #coordinate_Rz = coordinate_Rz,'''
+                         
+
+
+
+
+
+       
 
         return {'FINISHED'}

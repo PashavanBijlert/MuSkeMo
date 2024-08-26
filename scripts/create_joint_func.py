@@ -2,6 +2,7 @@ import bpy
 from math import nan
 #from .euler_XYZ_body import euler_XYZbody_from_matrix
 from .quaternions import matrix_from_quaternion
+from .euler_XYZ_body import matrix_from_euler_XYZbody
 
 def create_joint(name, radius, is_global = True,
                  parent_body='not_assigned', child_body='not_assigned', 
@@ -129,9 +130,19 @@ def create_joint(name, radius, is_global = True,
     
         
         
-        if or_in_global_quat !=[nan]*4:  #if a global orientation is supplied
+        if or_in_global_quat !=[nan]*4:  #if a global orientation is supplied as a quaternion
             [gRb, bRg] = matrix_from_quaternion(or_in_global_quat)
             obj.matrix_world = gRb.to_4x4()
+
+        
+        if or_in_global_quat == [nan]*4 and or_in_global_XYZeuler != [nan]*3:
+
+            [gRb, bRg] = matrix_from_euler_XYZbody(or_in_global_XYZeuler)
+            obj.matrix_world = gRb.to_4x4()
+
+
+
+
 
         if pos_in_global !=[nan]*3:  #if a global position is supplied
             obj.matrix_world.translation = pos_in_global    

@@ -5,7 +5,7 @@ from math import nan
 def create_body(name, size, is_global = True, mass=nan,
                 inertia_COM= [nan]*6, COM=[nan]*3, 
                 inertia_COM_local=[nan]*6, COM_local=[nan]*3, 
-                Geometry='no geometry', local_frame='not_assigned'):
+                Geometry='no geometry', local_frame='not_assigned', collection_name = 'Bodies'):
     
     '''
     # Creates a MuSkeMo BODY in the blender scene.
@@ -20,6 +20,7 @@ def create_body(name, size, is_global = True, mass=nan,
     # COM_local (list of 3 floats, optional) - Center of mass (in m) in the local frame
     # Geometry (string, optional). List of attached geometry (including the subfolder and the filetype).
     # local frame (string, optional). Name of the local (anatomical) reference frame.
+    # collection_name (string, optional). Name of the collection where the bodies will be placed. Default = 'Bodies'
     
     # Default behavior is that none of the properties are known and filled with nan or a string, unless user-specified.
     # is_global is only used during model import, and determines whether global coordinates can be used, or if the model should be imported using local coordinates.
@@ -35,10 +36,26 @@ def create_body(name, size, is_global = True, mass=nan,
     geometry=,
     local_frame=,
     is_global=  # Explicitly specify True or False for is_global
+    collection_name =,
     )
     
     '''
     
+      
+    #check if the collection name exists, and if not create it
+    if collection_name not in bpy.data.collections:
+        bpy.data.collections.new(collection_name)
+        
+    coll = bpy.data.collections[collection_name] #Collection which will recieve the scaled  hulls
+
+    if collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+        bpy.context.scene.collection.children.link(coll)     #add it to the scene
+    
+    #Make sure the "bodies" collection is active
+    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
+
+
+
     bpy.ops.object.empty_add(type='ARROWS', radius=size, align='WORLD',location = (0,0,0))
     bpy.context.object.name  = name #set the name
         

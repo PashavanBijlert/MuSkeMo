@@ -75,17 +75,7 @@ class ImportBodiesOperator(Operator, ImportHelperCustom):  #inherits from Import
 
         colname = bpy.context.scene.muskemo.body_collection #name for the collection that will contain the hulls
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
-        
-        #Make sure the "bodies" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
+       
 
         from .create_body_func import create_body
                        
@@ -106,7 +96,7 @@ class ImportBodiesOperator(Operator, ImportHelperCustom):  #inherits from Import
 
             create_body(name = name, size = rad, is_global =True, mass =mass, COM=COM,
                         inertia_COM = inertia_COM, Geometry = geometry, local_frame = local_frame_name,
-                         COM_local = COM_local, inertia_COM_local = inertia_COM_local )
+                         COM_local = COM_local, inertia_COM_local = inertia_COM_local , collection_name=colname)
 
 
         return {'FINISHED'}

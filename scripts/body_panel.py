@@ -35,26 +35,14 @@ class CreateNewBodyOperator(Operator):
         
         colname = bpy.context.scene.muskemo.body_collection #name for the collection that will contain the hulls
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
-        
-        #Make sure the "bodies" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-        
-        
+                
         try: bpy.data.objects[name] #try out if an object with the new body's name already exists
         
         except: #if not, create the new body
             
             from .create_body_func import create_body
                        
-            create_body(name = name, size = rad, is_global =True)
+            create_body(name = name, size = rad, is_global =True, collection_name=colname)
 
         
         else: #if it already exists, throw an error
@@ -775,7 +763,6 @@ class DetachVizGeometryOperator(Operator):
                 geom.matrix_world = parented_worldmatrix
 
                 
-                
 
             else: 
                 
@@ -832,6 +819,8 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         row = self.layout.row()
         row.operator("body.create_new_body", text="Create new body")
         row = self.layout.row()
+        row.prop(muskemo, "axes_size")
+        
                 
         
         ## compute inertial properties from other meshes
