@@ -132,17 +132,18 @@ class ImportOpenSimModel(Operator):
             inertia_COM = list(body['inertia'])  # Convert tuple to list
             geometries = body['geometries']  # This will be a list of dictionaries or empty list
 
-            if geometries:
-                # Corrected: Access 'mesh_file' directly from the dictionary
-                geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries])
 
-                # Call create_body with the concatenated geometry string
-                create_body(name=name, is_global = True, size = rad, mass=mass, COM=COM,
-                            inertia_COM=inertia_COM, Geometry=geometry_string)
+            # If geometries exist, join them with semicolons, otherwise set a default string
+            if geometries:
+                geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
+
             else:
-                # Call create_body without Geometry if no geometries are present
-                create_body(name=name, is_global = True, size = rad, mass=mass, COM=COM,
-                            inertia_COM=inertia_COM)
+                geometry_string = 'no geometry'
+
+            # Call create_body with the prepared geometry string
+            create_body(name=name, is_global = True, size = rad,
+                        mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string)
+            
 
 
 
