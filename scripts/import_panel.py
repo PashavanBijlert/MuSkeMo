@@ -74,12 +74,37 @@ class ImportBodiesOperator(Operator, ImportHelperCustom):  #inherits from Import
 
 
         colname = bpy.context.scene.muskemo.body_collection #name for the collection that will contain the hulls
+        rad = bpy.context.scene.muskemo.axes_size #axis length, in meters
+        geometry_parent_dir = os.path.dirname(self.filepath)
+        import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
+
         
-       
+        
+        if import_geometry: #if the user wants imported geometry, we check if the folder exists
+
+            # Loop through the data to find the first valid geometry path
+            for row in data:
+                geometry = row[11]  # Column 11 contains the geometry paths
+                
+                if 'no geometry' not in geometry.lower():#set lowercase when checking
+                    # Split the geometry string by ';' and take the first path
+                    first_geometry_path = geometry.split(';')[0]
+                    
+                    # Extract the folder name from the first path
+                    geometry_dir = first_geometry_path.split('/')[0]
+                    
+                    folder_path = geometry_parent_dir + '/' + geometry_dir
+                    if not os.path.exists(folder_path) or not os.path.isdir(folder_path):#if the path doesn't exist or isn't a folder
+                        import_geometry = False
+                        self.report({'WARNING'}, "The geometry folder '" + geometry_dir + "' specified in the bodies file does not appear to be in the same directory. Skipping geometry import.")
+
+                    # Break the loop as we've found the first valid geometry path
+                    break
+  
 
         from .create_body_func import create_body
                        
-        rad = bpy.context.scene.muskemo.axes_size #axis length, in meters
+        
 
         for row in data:
             
@@ -96,7 +121,9 @@ class ImportBodiesOperator(Operator, ImportHelperCustom):  #inherits from Import
 
             create_body(name = name, size = rad, is_global =True, mass =mass, COM=COM,
                         inertia_COM = inertia_COM, Geometry = geometry, local_frame = local_frame_name,
-                         COM_local = COM_local, inertia_COM_local = inertia_COM_local , collection_name=colname)
+                         COM_local = COM_local, inertia_COM_local = inertia_COM_local , collection_name=colname,
+                         import_geometry = import_geometry, #the bool property
+                            geometry_parent_dir = geometry_parent_dir)
 
 
         return {'FINISHED'}
@@ -528,6 +555,8 @@ class VIEW3D_PT_import_modelcomponents_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cl
         row = layout.row()
         row.prop(muskemo, "body_collection")
         row.operator("import.import_bodies",text = 'Import bodies')
+        row = layout.row()
+        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
 
         row = layout.row()
         row.prop(muskemo, "joint_collection")
@@ -559,11 +588,13 @@ class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         scene = context.scene
         muskemo = scene.muskemo
         row = layout.row()
-        row.operator("import.import_opensim_model",text = 'Import OpenSim model')
+        #row.operator("import.import_opensim_model",text = 'Import OpenSim model')
 
 
         row = layout.row()
         row.prop(muskemo, "model_import_style")
+        row = layout.row()
+        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
 
 
         return          

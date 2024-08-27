@@ -245,6 +245,12 @@ class MuSkeMoProperties(PropertyGroup):
                 ],
         default = "loc",
         )
+    
+    import_visual_geometry: BoolProperty(
+        name = 'Import visual geometry',
+        description='Should visual geometry meshes attached to bodies be imported? Geometries are placed in a new collection with the name as specified in the bodies file',
+        default = True,
+    )
 
 
 #### anatomical (local) reference frame panel

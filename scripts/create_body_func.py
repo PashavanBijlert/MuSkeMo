@@ -1,11 +1,15 @@
 import bpy
 from math import nan
+import os
 
 
 def create_body(name, size, is_global = True, mass=nan,
                 inertia_COM= [nan]*6, COM=[nan]*3, 
                 inertia_COM_local=[nan]*6, COM_local=[nan]*3, 
-                Geometry='no geometry', local_frame='not_assigned', collection_name = 'Bodies'):
+                Geometry='no geometry', local_frame='not_assigned', 
+                collection_name = 'Bodies', import_geometry = False,
+                geometry_collection_name = 'Geometry',
+                geometry_parent_dir = ''):
     
     '''
     # Creates a MuSkeMo BODY in the blender scene.
@@ -21,7 +25,11 @@ def create_body(name, size, is_global = True, mass=nan,
     # Geometry (string, optional). List of attached geometry (including the subfolder and the filetype).
     # local frame (string, optional). Name of the local (anatomical) reference frame.
     # collection_name (string, optional). Name of the collection where the bodies will be placed. Default = 'Bodies'
-    
+    # import_geometry (boolean, optional). Do you want visual geometries to be imported and parented to the bodies?
+    # geometry_collection_name (string, optional). Name of the collection where the geometries will be placed. Default = 'Geometry'
+    # geometry_parent_dir (string, mandatory if importing geometry). Path to parent directory which contains the 'Geometry' directory
+
+
     # Default behavior is that none of the properties are known and filled with nan or a string, unless user-specified.
     # is_global is only used during model import, and determines whether global coordinates can be used, or if the model should be imported using local coordinates.
     call looks like this:
@@ -37,6 +45,9 @@ def create_body(name, size, is_global = True, mass=nan,
     local_frame=,
     is_global=  # Explicitly specify True or False for is_global
     collection_name =,
+    import_geometry = ,
+    geometry_collection_name = ,
+    geometry_parent_dir,
     )
     
     '''
@@ -109,10 +120,67 @@ def create_body(name, size, is_global = True, mass=nan,
         
         print('local body creation not implemented yet')
         ### get frame location and set obj location wrt frame
+
+    bpy.ops.object.select_all(action='DESELECT')    
+
+    if import_geometry and Geometry != 'no geometry':  #if import_geometry is true
         
+        geometry_collection_name = Geometry.split('/')[0]  #This splits the string according to /, and should result in the name of the geometry folder.
         
-    
-    
-    bpy.ops.object.select_all(action='DESELECT')
+        bpy.context.scene.muskemo.geometry_collection = geometry_collection_name #update this MuSkeMo property
+
+
+        #check if the collection name exists, and if not create it
+        if geometry_collection_name not in bpy.data.collections:
+            bpy.data.collections.new(geometry_collection_name)
+            
+
+        coll = bpy.data.collections[geometry_collection_name] #Collection which will recieve the scaled  hulls
+
+        if geometry_collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+            bpy.context.scene.collection.children.link(coll)     #add it to the scene
+        
+        #Make sure the geom collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[geometry_collection_name]
+        
+        geo_paths = Geometry.split(';')
+
+        geo_paths = [path for path in geo_paths if path] #remove empty strings after splitting
+
+        for path in geo_paths:
+
+            if bpy.app.version[0] <4: #if blender version is below 4
+                                        
+        
+                bpy.ops.import_scene.obj(filepath= geometry_parent_dir + '/' + path, axis_forward = 'Y', axis_up = 'Z')
+                    
+            else: #if blender version is above 4:    
+                    
+                    bpy.ops.wm.obj_import(filepath= geometry_parent_dir + '/' + path, forward_axis = 'Y', up_axis = 'Z')
+
+
+            
+            # Split the path to get the file name without the extension
+            file_name_with_extension = os.path.basename(path)  # e.g. 'Humerus.001.obj'
+            mesh_name, extension = os.path.splitext(file_name_with_extension)  # e.g. 'Humerus.001', '.obj'    
+            bpy.context.selected_objects[0].name =  mesh_name            
+            bpy.ops.object.select_all(action='DESELECT')
+            
+            geom_obj = bpy.data.objects[mesh_name]
+            
+            geom_obj.parent = obj #parent a mesh to a body, but this moves it
+            geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
+            geom_obj.data.materials.clear()
+            #geom_obj.data.materials.append(mat)
+
+            ## Assign a MuSkeMo_type
+   
+            geom_obj['MuSkeMo_type'] = 'GEOMETRY'    #to inform the user what type is created
+            geom_obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
+
+            geom_obj['Attached to'] = obj.name
+            geom_obj.id_properties_ui('Attached to').update(description = "The body that this geometry is attached to")
+            
+
     
     
