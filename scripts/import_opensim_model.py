@@ -1,4 +1,3 @@
-#This can use errors for if the collections are empty
 import bpy
 from mathutils import Vector
 

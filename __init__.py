@@ -92,10 +92,10 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
 #### import panel
 
 from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_modelcomponents_subpanel,
-                                   VIEW3D_PT_import_full_model_subpanel,
+                                   VIEW3D_PT_import_full_model_subpanel, VIEW3D_PT_import_trajectory_subpanel,
                                    ImportBodiesOperator,ImportJointsOperator,ImportMusclesOperator,
                                    ImportContactsOperator,ImportFramesOperator,
-                                   ImportOpenSimModel, #this is a separate script
+                                   ImportOpenSimModel, ImportTrajectorySTO,#these are separate scripts
                                    )
 
 #### Anatomical (local) reference frame panel
@@ -161,10 +161,11 @@ classes = (  #Inertial properties panel
 
             #import panel
                                   VIEW3D_PT_import_panel,  VIEW3D_PT_import_modelcomponents_subpanel,
-                                  VIEW3D_PT_import_full_model_subpanel,
+                                  VIEW3D_PT_import_full_model_subpanel, VIEW3D_PT_import_trajectory_subpanel,
                                   ImportBodiesOperator, ImportJointsOperator, ImportMusclesOperator,
                                   ImportContactsOperator,ImportFramesOperator,
-                                  ImportOpenSimModel, #this is a separate script
+
+                                  ImportOpenSimModel, ImportTrajectorySTO,#these are separate scripts
 
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_arf_panel,
