@@ -164,22 +164,26 @@ class ImportOpenSimModel(Operator):
                 if coords_element is not None:
                     for coord in coords_element.findall('Coordinate'):
                         coordinates.append(coord.get('name'))
-
+                
+                
                 # Extract spatial transform data if present
                 spatial_transform = []
                 spatial_transform_element = joint.find('SpatialTransform')
                 if spatial_transform_element is not None:
                     for axis in spatial_transform_element.findall('TransformAxis'):
-                        axis_name = axis.get('name')
-                        axis_coordinates = axis.find('coordinates').text.strip() if axis.find('coordinates') is not None else None
-                        axis_vector = tuple(map(float, axis.find('axis').text.split()))
-                        transform_function = axis.find('LinearFunction')
+                        axis_name = axis.get('name') #e.g. rotation 3
+                        axis_coordinates_element = axis.find('coordinates')
+                        axis_coordinates = axis_coordinates_element.text.strip() if axis_coordinates_element is not None and axis_coordinates_element.text is not None else None
+                        axis_vector = tuple(map(float, axis.find('axis').text.split())) #eg (0, 0, 1) if z-axis
+                        transform_function = axis.find('LinearFunction') #if it's a linear function
                         
                         coefficients = None
                         if transform_function is not None:
                             coeff_values = tuple(map(float, transform_function.find('coefficients').text.split()))
+                            coefficients = coeff_values
                             if coeff_values != (1.0, 0.0):  # Only include if coefficients are not "1 0"
-                                coefficients = coeff_values
+                                self.report({'WARNING'}, "Joint with the name '" + joint_name + "' specified in the model file has a transform function that is not supported by MuSkeMo. It will be treated like a regular joint.")
+
 
                         spatial_transform.append({
                             'axis_name': axis_name,
@@ -187,7 +191,7 @@ class ImportOpenSimModel(Operator):
                             'axis_vector': axis_vector,
                             'coefficients': coefficients
                         })
-
+                
                 joint_data.append({
                     'joint_name': joint_name,
                     'joint_type': joint_type,
@@ -233,7 +237,7 @@ class ImportOpenSimModel(Operator):
                     first_geometry_path = geometry_string.split(';')[0]
                     
                     # Extract the folder name from the first path
-                    geometry_dir = first_geometry_path.split('/')[0]
+                    geometry_dir = os.path.dirname(first_geometry_path)
                     
                     folder_path = geometry_parent_dir + '/' + geometry_dir
                     if not os.path.exists(folder_path) or not os.path.isdir(folder_path): #if the path doesn't exist or isn't a folder
@@ -293,10 +297,49 @@ class ImportOpenSimModel(Operator):
             translation_in_child_frame = frames_dict[child_frame_name]['translation']
             orientation_in_child_frame = frames_dict[child_frame_name]['orientation']
 
+            ## coordinates
+
+            coordinate_Tx = ''
+            coordinate_Ty = ''
+            coordinate_Tz = ''
+            coordinate_Rx = ''
+            coordinate_Ry = ''
+            coordinate_Rz = ''
+
+            # Loop through each transform axis in the joint's spatial_transform data
+            for transform in joint['spatial_transform']:
+                axis_vector = transform['axis_vector']
+                coordinates = transform['axis_coordinates']
+
+                
+                if coordinates: #if coordinates aren't none
+                # Check which axis the transform corresponds to and assign the coordinate accordingly
+                    if axis_vector == (1, 0, 0):  # X-axis
+                        if 'rotation' in transform['axis_name']:
+                            coordinate_Rx = coordinates
+                        elif 'translation' in transform['axis_name']:
+                            coordinate_Tx = coordinates
+                    elif axis_vector == (0, 1, 0):  # Y-axis
+                        if 'rotation' in transform['axis_name']:
+                            coordinate_Ry = coordinates
+                        elif 'translation' in transform['axis_name']:
+                            coordinate_Ty = coordinates
+                    elif axis_vector == (0, 0, 1):  # Z-axis
+                        if 'rotation' in transform['axis_name']:
+                            coordinate_Rz = coordinates
+                        elif 'translation' in transform['axis_name']:
+                            coordinate_Tz = coordinates
+            
             # if is_global
+
+            
 
             pos_in_global = translation_in_parent_frame
             or_in_global_XYZeuler = orientation_in_parent_frame
+
+            
+
+
 
             create_joint(name = name, radius = rad, 
                          is_global = True,
@@ -304,6 +347,12 @@ class ImportOpenSimModel(Operator):
                          child_body=child_body,
                          pos_in_global = pos_in_global, 
                         or_in_global_XYZeuler = or_in_global_XYZeuler,
+                        coordinate_Tx = coordinate_Tx,
+                        coordinate_Ty = coordinate_Ty,
+                        coordinate_Tz = coordinate_Tz,
+                        coordinate_Rx = coordinate_Rx,
+                        coordinate_Ry = coordinate_Ry,
+                        coordinate_Rz = coordinate_Rz,
             )
                         #or_in_global_quat= or_in_global_quat,
                         #pos_in_parent_frame = pos_in_parent_frame, 
@@ -312,12 +361,7 @@ class ImportOpenSimModel(Operator):
                         #pos_in_child_frame = pos_in_child_frame, 
                         #or_in_child_frame_XYZeuler = or_in_child_frame_XYZeuler,
                         #or_in_child_frame_quat= or_in_child_frame_quat,
-                        #coordinate_Tx = coordinate_Tx,
-                        #coordinate_Ty = coordinate_Ty,
-                        #coordinate_Tz = coordinate_Tz,
-                        #coordinate_Rx = coordinate_Rx,
-                        #coordinate_Ry = coordinate_Ry,
-                        #coordinate_Rz = coordinate_Rz,'''
+                        
                          
 
 

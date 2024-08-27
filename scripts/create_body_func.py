@@ -125,8 +125,10 @@ def create_body(name, size, is_global = True, mass=nan,
 
     if import_geometry and Geometry != 'no geometry':  #if import_geometry is true
         
-        geometry_collection_name = Geometry.split('/')[0]  #This splits the string according to /, and should result in the name of the geometry folder.
-        
+        geo_paths = Geometry.split(';') #This splits the string according to ;, and should result in the separate geometry paths
+        # Extract the folder name from the first path
+        geometry_collection_name = os.path.dirname(geo_paths[0])
+
         bpy.context.scene.muskemo.geometry_collection = geometry_collection_name #update this MuSkeMo property
 
 

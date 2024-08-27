@@ -92,7 +92,7 @@ class ImportBodiesOperator(Operator, ImportHelperCustom):  #inherits from Import
                     first_geometry_path = geometry.split(';')[0]
                     
                     # Extract the folder name from the first path
-                    geometry_dir = first_geometry_path.split('/')[0]
+                    geometry_dir = os.path.dirname(first_geometry_path)
                     
                     folder_path = geometry_parent_dir + '/' + geometry_dir
                     if not os.path.exists(folder_path) or not os.path.isdir(folder_path):#if the path doesn't exist or isn't a folder
@@ -591,7 +591,7 @@ class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         scene = context.scene
         muskemo = scene.muskemo
         row = layout.row()
-        #row.operator("import.import_opensim_model",text = 'Import OpenSim model')
+        row.operator("import.import_opensim_model",text = 'Import OpenSim model')
 
 
         row = layout.row()
