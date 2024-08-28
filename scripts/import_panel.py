@@ -155,18 +155,7 @@ class ImportJointsOperator(Operator, ImportHelperCustom):  #inherits from Import
 
         colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the hulls
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
         
-        #Make sure the correct collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-
         from .create_joint_func import create_joint
                        
         rad = bpy.context.scene.muskemo.jointsphere_size #axis length, in meters
@@ -233,6 +222,7 @@ class ImportJointsOperator(Operator, ImportHelperCustom):  #inherits from Import
             
             create_joint(name = name, radius = rad, 
                          is_global = True,
+                         collection_name=colname,
                          parent_body=parent_body, 
                          child_body=child_body,
                          pos_in_global = pos_in_global, 

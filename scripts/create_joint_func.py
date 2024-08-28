@@ -4,7 +4,7 @@ from math import nan
 from .quaternions import matrix_from_quaternion
 from .euler_XYZ_body import matrix_from_euler_XYZbody
 
-def create_joint(name, radius, is_global = True,
+def create_joint(name, radius, is_global = True, collection_name = 'Joint centers',
                  parent_body='not_assigned', child_body='not_assigned', 
                  pos_in_global=[nan] * 3, or_in_global_XYZeuler=[nan] * 3, 
                  or_in_global_quat=[nan] * 4,
@@ -22,6 +22,7 @@ def create_joint(name, radius, is_global = True,
     - name (string) - Mandatory. Name of the joint.
     - radius (float) - Mandatory. Radius of the display geometry (in meters)
     - is_global (boolean) - Optional. Whether the joint should be defined using global coordinates
+    - collection_name (string, optional) - Name of the collection (blender folder) where the joints will be placed      
     - parent_body (string, optional) - Name of the parent body. Default is 'not_assigned'.
     - child_body (string, optional) - Name of the child body. Default is 'not_assigned'.
     - pos_in_global (list of 3 floats, optional) - Joint position in the global frame (in meters).
@@ -45,6 +46,18 @@ def create_joint(name, radius, is_global = True,
     # is_global is only used during model import, and determines whether global coordinates can be used, or if the model should be imported using local coordinates.
     
     """
+
+    #check if the collection name exists, and if not create it
+    if collection_name not in bpy.data.collections:
+        bpy.data.collections.new(collection_name)
+        
+    coll = bpy.data.collections[collection_name] #Collection which will recieve the joints
+
+    if collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+        bpy.context.scene.collection.children.link(coll)     #add it to the scene
+    
+    #Make sure the "joints" collection is active
+    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
     
     # Create a sphere and set the name
     bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, enter_editmode=False, align='WORLD', location=(0, 0, 0))

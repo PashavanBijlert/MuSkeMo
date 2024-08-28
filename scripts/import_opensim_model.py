@@ -342,6 +342,7 @@ class ImportOpenSimModel(Operator):
 
 
             create_joint(name = name, radius = rad, 
+                         collection_name=joint_colname,
                          is_global = True,
                          parent_body=parent_body, 
                          child_body=child_body,

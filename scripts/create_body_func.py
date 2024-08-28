@@ -158,7 +158,7 @@ def create_body(name, size, is_global = True, mass=nan,
                     
             else: #if blender version is above 4:    
                     
-                    bpy.ops.wm.obj_import(filepath= geometry_parent_dir + '/' + path, forward_axis = 'Y', up_axis = 'Z')
+                bpy.ops.wm.obj_import(filepath= geometry_parent_dir + '/' + path, forward_axis = 'Y', up_axis = 'Z')
 
 
             

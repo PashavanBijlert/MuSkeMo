@@ -27,17 +27,7 @@ class CreateNewJointOperator(Operator):
         
         colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the hulls
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
         
-        #Make sure the "joints" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
         
         
         try: bpy.data.objects[name] #check if the joint exists
@@ -45,7 +35,7 @@ class CreateNewJointOperator(Operator):
         except:  #if not, create it
             from .create_joint_func import create_joint
                        
-            create_joint(name = name, radius = rad)
+            create_joint(name = name, radius = rad, collection_name = colname,)
             
         else:
             
