@@ -2,11 +2,25 @@ import bpy
 from mathutils import Vector
 
 def create_muscle (muscle_name, point_position, body_name,
+                   collection_name = 'Muscles',
                    is_global=True, F_max = 0, pennation_angle = 0, 
                    optimal_fiber_length = 0, tendon_slack_length = 0,):
     
     #inputs should be name, isglobal, point loc,(so I can remove the 4d thing) and body
     #point position can be list, array or Vector. It gets cast to a Vector().to_4d() within the script
+
+    if collection_name not in bpy.data.collections:
+            bpy.data.collections.new(collection_name)
+            
+    coll = bpy.data.collections[collection_name] #Collection which will recieve the scaled  hulls
+
+    if collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+        bpy.context.scene.collection.children.link(coll)     #add it to the scene
+        
+    #Make sure the "Muscles" collection is active
+    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
+
+
 
     body = bpy.data.objects[body_name]     
 

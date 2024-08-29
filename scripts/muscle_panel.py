@@ -23,17 +23,7 @@ class AddMusclepointOperator(Operator):
 
         colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the hulls
 
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
-            
-        #Make sure the "Muscles" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-
+        
         active_obj = bpy.context.active_object
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
 
@@ -67,7 +57,8 @@ class AddMusclepointOperator(Operator):
         from .create_muscle_func import create_muscle  #import muscle creation function
 
         point_position = bpy.context.scene.cursor.location
-        create_muscle(muscle_name = muscle_name, point_position = point_position,
+        create_muscle(muscle_name = muscle_name, point_position = point_position, 
+                      collection_name=colname,
                           body_name = body_name)
         
         '''

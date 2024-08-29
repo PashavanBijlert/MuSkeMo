@@ -10,6 +10,7 @@ from bpy.props import (StringProperty,   #it appears to matter whether you impor
 
 import xml.etree.ElementTree as ET
 
+
 from math import nan
 
 
@@ -206,7 +207,67 @@ class ImportOpenSimModel(Operator):
 
             return joint_data
 
+        def get_muscle_data(model):
+            muscle_data = []
 
+            # Locate the ForceSet in the model
+            forceset = model.find('ForceSet')
+            if forceset is not None:
+                # Locate all muscle objects (assuming they end with 'Muscle')
+                muscles = forceset.find('objects')
+                if muscles is not None:
+                    for muscle in muscles:
+                        if muscle.tag.endswith('Muscle'):
+                            muscle_name = muscle.get('name')
+                            muscle_type = muscle.tag
+
+                            # Initialize variables with default values
+                            tendon_slack_length = 0.0
+                            max_isometric_force = 0.0
+                            optimal_fiber_length = 0.0
+                            pennation_angle = 0.0
+
+                            # Extract specific muscle properties if they exist
+                            if muscle.find('tendon_slack_length') is not None:
+                                tendon_slack_length = float(muscle.find('tendon_slack_length').text)
+                            if muscle.find('max_isometric_force') is not None:
+                                max_isometric_force = float(muscle.find('max_isometric_force').text)
+                            if muscle.find('optimal_fiber_length') is not None:
+                                optimal_fiber_length = float(muscle.find('optimal_fiber_length').text)
+                            if muscle.find('pennation_angle_at_optimal') is not None:
+                                pennation_angle = np.rad2deg(float(muscle.find('pennation_angle_at_optimal').text))
+
+                            # Extract GeometryPath information
+                            geometry_path = muscle.find('GeometryPath')
+                            path_points_data = []
+                            if geometry_path is not None:
+                                path_point_set = geometry_path.find('PathPointSet')
+                                if path_point_set is not None:
+                                    path_points = path_point_set.find('objects')
+                                    if path_points is not None:
+                                        for point in path_points.findall('PathPoint'):
+                                            point_name = point.get('name')
+                                            parent_frame = point.find('socket_parent_frame').text.strip()
+                                            location = tuple(map(float, point.find('location').text.split()))
+
+                                            path_points_data.append({
+                                                'point_name': point_name,
+                                                'parent_frame': parent_frame,
+                                                'location': location
+                                            })
+
+                            # Add the extracted data to the muscle_data list
+                            muscle_data.append({
+                                'muscle_name': muscle_name,
+                                'muscle_type': muscle_type,
+                                'tendon_slack_length': tendon_slack_length,
+                                'F_max': max_isometric_force,
+                                'optimal_fiber_length': optimal_fiber_length,
+                                'pennation_angle': pennation_angle,
+                                'path_points_data': path_points_data
+                            })
+
+            return muscle_data
        
         # Extract body data from the model
         body_data = get_body_data(model)
@@ -363,11 +424,40 @@ class ImportOpenSimModel(Operator):
                         #or_in_child_frame_XYZeuler = or_in_child_frame_XYZeuler,
                         #or_in_child_frame_quat= or_in_child_frame_quat,
                         
-                         
+        # Extract muscle data from the model
+        muscle_data = get_muscle_data(model)
 
+        #### create muscles
+        from .create_muscle_func import create_muscle
 
+        muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the joints
+        #rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius                         
 
+        for muscle in muscle_data:
 
+            muscle_name = muscle['muscle_name']
+            F_max = muscle['F_max']
+            optimal_fiber_length = muscle['optimal_fiber_length']
+            tendon_slack_length = muscle['tendon_slack_length']
+            pennation_angle = muscle['pennation_angle']
+
+            for point in muscle['path_points_data']:
+
+                parent_frame = point['parent_frame']
+                parent_body_name = parent_frame.split('/bodyset/')[-1]  #this assumes the muscle points are always expressed in the parent body frame, not an offset frame
+                point_position = point['location']
+                
+
+                create_muscle(muscle_name = muscle_name, 
+                              is_global =True, 
+                              body_name = parent_body_name,
+                              point_position = point_position,
+                              collection_name=muscle_colname,
+                              optimal_fiber_length=optimal_fiber_length,
+                              tendon_slack_length=tendon_slack_length,
+                              F_max = F_max,
+                              pennation_angle = pennation_angle)
+         
 
        
 

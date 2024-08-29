@@ -272,17 +272,7 @@ class ImportMusclesOperator(Operator, ImportHelperCustom):  #inherits from Impor
 
         colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the hulls
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
         
-        #Make sure the "muscles" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
 
         from .create_muscle_func import create_muscle
 
@@ -342,6 +332,7 @@ class ImportMusclesOperator(Operator, ImportHelperCustom):  #inherits from Impor
                               is_global =True, 
                               body_name = parent_body_name,
                               point_position = point_position,
+                              collection_name=colname,
                               optimal_fiber_length=optimal_fiber_length,
                               tendon_slack_length=tendon_slack_length,
                               F_max = F_max,
