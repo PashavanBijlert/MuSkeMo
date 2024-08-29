@@ -130,14 +130,47 @@ class ImportTrajectorySTO(Operator):
         ## get the muscle activations in the trajectory
 
         #### MAKE INTO USER SWITCHES
-        number_of_repeats = 0 # number of strides. Should be a user switch. Assumes final state is equal to initial state, except pelvis x translation, so a full stride.
+        number_of_repeats = 9 # number of strides. Should be a user switch. Assumes final state is equal to initial state, except pelvis x translation, so a full stride.
         fps = 60 #set to 60 if you want 50% slow motion (for a run)
         root_joint_name = 'groundPelvis'
-        
+        forward_progression_coordinate = 'coordinate_Tx'
+
+
+        root_joint_ind = [i for i,x in enumerate(traj_joints) if root_joint_name == x.name]#these column indices have root joint data in coordinate_trajectories
+        root_progression_ind = [x for x in root_joint_ind if traj_model_coordinate_types[x]==forward_progression_coordinate] #this is the index to the coordinate that indicates forward progression (usually pelvis Tx)
+
+
+
         if number_of_repeats >0:
             print('work in progress, only one repeat for now')
-            #fix time = time[0:-2]*(number_of_repeats+1)
-            # fix pelvis progression
+            
+            # Initialize the new time array with the original time array
+            time_repeated = time.copy()
+            coordinate_trajectories[:,root_progression_ind] = coordinate_trajectories[:,root_progression_ind] - coordinate_trajectories[0,root_progression_ind]
+            coordinate_trajectories_repeated = coordinate_trajectories.copy() 
+
+            
+
+            # Add the repeated sections
+            for i in range(1, number_of_repeats + 1):
+                time_shifted = time[1:] + time[-1] * i  # Shift the time values by time(end) each repeat
+                time_repeated = np.concatenate((time_repeated, time_shifted))
+
+                # Initialize a shifted version of coordinate trajectories for this repeat
+                coordinate_trajectories_shifted = coordinate_trajectories[1:, :].copy()
+
+                # Shift only the specified column by its final value from the previous repeat
+                shift_value = coordinate_trajectories[-1, root_progression_ind] * i
+                coordinate_trajectories_shifted[:, root_progression_ind] += shift_value
+
+
+                coordinate_trajectories_repeated  = np.concatenate((coordinate_trajectories_repeated, coordinate_trajectories_shifted))
+            
+
+            time = time_repeated
+            coordinate_trajectories = coordinate_trajectories_repeated
+
+            
             # fix all other data (coordinates, and muscle activations)
   
         n_times = len(time)
