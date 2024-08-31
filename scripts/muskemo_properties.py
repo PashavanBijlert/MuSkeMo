@@ -351,3 +351,41 @@ class MuSkeMoProperties(PropertyGroup):
         max = 100,
         precision = 5,
         )
+    
+#### visualization panel
+
+    number_of_repetitions: IntProperty(
+        name = "Number of repetitions",
+        description="The number of times you would like to repeat the trajectory (useful for looping strides in an animation)",
+        default = 0,
+        min = 0,
+        max = 100
+    )   
+
+    fps :  IntProperty(
+        name = "Frames per second",
+        description="Target frames per second for the rendered animation. If you want slow-motion, input double the desired playback framerate",
+        default = 60,
+        min = 1,
+        max = 300
+    )   
+
+    root_joint_name: StringProperty(
+        name = "Root joint name",
+        description="Name of the root joint (required if you want to ensure the model progresses with each looped stride)",
+        default = "groundPelvis",
+        maxlen = 1024,
+        )
+    
+    forward_progression_coordinate: EnumProperty(
+        name="Forward progression coordinate",
+        description="Name of the coordinate that should progress forward with each stride (required if you want to loop several strides)",
+        items=[ ('coordinate_Tx', "coordinate_Tx", ""),
+                ('coordinate_Ty', "coordinate_Ty", ""),
+                ('coordinate_Tz', "coordinate_Tz", ""),
+                ('coordinate_Rx', "coordinate_Rx", ""),
+                ('coordinate_Ry', "coordinate_Ry", ""),
+                ('coordinate_Rz', "coordinate_Rz", ""),
+              ],
+        default = "coordinate_Tx",
+        )

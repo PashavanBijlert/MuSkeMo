@@ -92,12 +92,17 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
 #### import panel
 
 from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_modelcomponents_subpanel,
-                                   VIEW3D_PT_import_full_model_subpanel, VIEW3D_PT_import_trajectory_subpanel,
+                                   VIEW3D_PT_import_full_model_subpanel, 
                                    ImportBodiesOperator,ImportJointsOperator,ImportMusclesOperator,
                                    ImportContactsOperator,ImportFramesOperator,
-                                   ImportOpenSimModel, ImportTrajectorySTO,#these are separate scripts
+                                   ImportOpenSimModel, 
                                    )
 
+#### visualization panel
+
+from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel,
+                                    ImportTrajectorySTO,#these are separate scripts)
+                                    )
 #### Anatomical (local) reference frame panel
 from .scripts.ARF_panel import (VIEW3D_PT_arf_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
@@ -161,11 +166,16 @@ classes = (  #Inertial properties panel
 
             #import panel
                                   VIEW3D_PT_import_panel,  VIEW3D_PT_import_modelcomponents_subpanel,
-                                  VIEW3D_PT_import_full_model_subpanel, VIEW3D_PT_import_trajectory_subpanel,
+                                  VIEW3D_PT_import_full_model_subpanel, 
                                   ImportBodiesOperator, ImportJointsOperator, ImportMusclesOperator,
                                   ImportContactsOperator,ImportFramesOperator,
 
-                                  ImportOpenSimModel, ImportTrajectorySTO,#these are separate scripts
+                                  ImportOpenSimModel, #these are separate scripts
+
+            # visualization panel
+                                VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel, 
+
+                                ImportTrajectorySTO, # separate script
 
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_arf_panel,

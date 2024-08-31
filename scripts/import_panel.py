@@ -583,24 +583,3 @@ class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
 
         return      
 
-    ## Import Trajectory
-class VIEW3D_PT_import_trajectory_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
-    bl_idname = 'VIEW3D_PT_import_trajectory_subpanel'
-    bl_parent_id = 'VIEW3D_PT_import_panel'  #have to define this if you use multiple panels
-    bl_label = "Import trajectory"  # found at the top of the Panel
-    bl_options = {'DEFAULT_CLOSED'} 
-    
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        muskemo = scene.muskemo
-        row = self.layout.row()
-        row.label(text = "Imported trajectories are stored as keyframe animations.")
-        row = self.layout.row()
-        row.label(text = "Do not import trajectories into your main .blend file, make a backup first.")
-        row = layout.row()
-        row.operator("import.import_trajectory_sto",text = 'Import .sto trajectory')
-
-
-        
-        return    

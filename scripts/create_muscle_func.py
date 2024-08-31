@@ -88,9 +88,39 @@ def create_muscle (muscle_name, point_position, body_name,
         obj.data.bevel_depth = bpy.context.scene.muskemo.muscle_visualization_radius
         obj.data.use_fill_caps = True 
 
-        ### add texture here
+        ### seperate materials for each muscle so that they can be individually animated
+        bpy.data.materials.new(name = muscle_name)
+        
+        mat = bpy.data.materials[muscle_name]
+        mat.use_nodes = True
+        
+        matnode_tree =mat.node_tree
+        matnode_tree.nodes["Principled BSDF"].inputs['Roughness'].default_value = 0
+        matnode_tree.nodes.new(type = "ShaderNodeHueSaturation")
+        
+        #if blender type >4
 
-        ### add geonode 
+        if bpy.app.version[0] <4: #if blender version is below 4
+        
+            nodename = 'Hue Saturation Value'
+
+        else: #if blender version is above 4:  
+            
+            nodename = 'Hue/Saturation/Value'
+
+        
+        
+        #the name should be different depending on Blender 3.0 or 4.0
+        matnode_tree.nodes[nodename].inputs['Color'].default_value = (0.22, 0.00, 0.02, 1)
+        matnode_tree.nodes[nodename].inputs['Saturation'].default_value = 1
+        matnode_tree.links.new(matnode_tree.nodes["Hue/Saturation/Value"].outputs['Color'], matnode_tree.nodes["Principled BSDF"].inputs['Base Color'])
+        
+        obj.data.materials.append(mat)
+
+        ### viewport display color
+
+        obj.active_material.diffuse_color = (0.22, 0.00, 0.02, 1)
+
 
 
     #Get the curve and the spline

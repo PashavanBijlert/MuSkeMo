@@ -17,10 +17,11 @@ import os
 import csv
 
 
+
 class ImportTrajectorySTO(Operator):
-    bl_description = "Import a trajectory in .sto file format"
-    bl_idname = "import.import_trajectory_sto"
-    bl_label = "Import .sto strajectory"
+    bl_description = "Import a trajectory in .sto file format to create an animation"
+    bl_idname = "visualization.import_trajectory_sto"
+    bl_label = "Import .sto strajectory to create an animation"
 
 
     # This section is based on importhelper
@@ -74,19 +75,18 @@ class ImportTrajectorySTO(Operator):
         traj_data = np.array(traj_data)
         time = traj_data[:,0] #time is the first column
 
+        #### First we get the joint parameters in the model. Because a joint can have multiple coordinates, this is slightly involved
 
-        # get the joint coordinates in the model
+        # get the joints and associated joint coordinates in the model
         joint_col = bpy.data.collections[bpy.context.scene.muskemo.joint_collection]
         joints = [x for x in joint_col.objects if 'MuSkeMo_type' in x and x['MuSkeMo_type']=='JOINT']
 
         coordinate_types = ['coordinate_Rx', 'coordinate_Ry', 'coordinate_Rz', 'coordinate_Tx', 'coordinate_Ty', 'coordinate_Tz'] #the six possibilities
         model_coordinates = [] #the actual coordinate names in the model
         model_coordinate_types = [] #the corresponding coordinate type (eg Rz)
-        model_coordinate_joints = [] #the joints that own the coordinates
+        model_coordinate_joints = [] #the joints that own the coordinates (because one joint can have multiple coordinates)
 
         
-        
-
         for joint in joints:
             
             for coordinate_type in coordinate_types:
@@ -94,7 +94,6 @@ class ImportTrajectorySTO(Operator):
                     model_coordinates.append(joint[coordinate_type])
                     model_coordinate_types.append(coordinate_type)
                     model_coordinate_joints.append(joint)
-
 
 
         # get the joint coordinates in the trajectory
@@ -126,19 +125,57 @@ class ImportTrajectorySTO(Operator):
 
         coordinate_trajectories = traj_data[:,traj_coordinate_ind]
 
+            
+
         ## get the muscles in the model
+        # get the joints and associated joint coordinates in the model
+        muscle_col = bpy.data.collections[bpy.context.scene.muskemo.muscle_collection]
+        muscles = [x for x in muscle_col.objects if 'MuSkeMo_type' in x and x['MuSkeMo_type']=='MUSCLE']
+
         ## get the muscle activations in the trajectory
 
-        #### MAKE INTO USER SWITCHES
-        number_of_repeats = 9 # number of strides. Should be a user switch. Assumes final state is equal to initial state, except pelvis x translation, so a full stride.
-        fps = 60 #set to 60 if you want 50% slow motion (for a run)
-        root_joint_name = 'groundPelvis'
-        forward_progression_coordinate = 'coordinate_Tx'
+        traj_muscle_act_headers = [] #trajectory headers of the muscle activations
+        traj_muscle_act_ind = [] #column indices to the respective muscle activations
+        traj_muscles = [] #model muscles actually in the trajectory activations
 
+        for idx, muscle in enumerate(muscles):
+            
+            ind = [i for i, x in enumerate(column_headers) if ('/' + muscle.name + '/' +'activation' in x) or (muscle.name + '.activation' in x)] #indices of the activations. #OpenSim delimits with '/', hyfydy with '.'
+            traj_act = [x for i, x in enumerate(column_headers) if ('/' + muscle.name + '/' +'activation' in x) or (muscle.name + '.activation' in x)] #headers of the activation data
+
+            if not traj_act:
+                self.report({'WARNING'}, "Activations for model muscle '" + muscle.name + "' were not found in the imported trajectory. This muscle will be skipped during trajectory import, and hidden during the visualizations")
+                muscle.hide_set(True)
+                muscle.hide_render = True
+
+
+            elif len(traj_act)>1:
+                self.report({'WARNING'}, "Model muscle '" + muscle.name + "' has a non-unique mapping in the trajectory data activations. This muscle will be skipped during trajectory import, and hidden during the visualizations")
+                muscle.hide_set(True)
+                muscle.hide_render = True
+
+            else: 
+                traj_muscle_act_headers.append(traj_act[0])
+                traj_muscle_act_ind.append(ind[0])
+                traj_muscles.append(muscle)
+
+        activation_trajectories = traj_data[:,traj_muscle_act_ind]
+
+        #### MAKE INTO USER SWITCHES
+        number_of_repeats = bpy.context.scene.muskemo.number_of_repetitions # number of strides. Should be a user switch. Assumes final state is equal to initial state, except pelvis x translation, so a full stride.
+        fps = bpy.context.scene.muskemo.fps #set to 60 if you want 50% slow motion (for a run)
+        root_joint_name = bpy.context.scene.muskemo.root_joint_name
+        forward_progression_coordinate = bpy.context.scene.muskemo.forward_progression_coordinate
+
+
+        ## IF ROOT_JOINT_NAME DOESN'T EXIST, SET N_REPEATS TO 0.    
 
         root_joint_ind = [i for i,x in enumerate(traj_joints) if root_joint_name == x.name]#these column indices have root joint data in coordinate_trajectories
         root_progression_ind = [x for x in root_joint_ind if traj_model_coordinate_types[x]==forward_progression_coordinate] #this is the index to the coordinate that indicates forward progression (usually pelvis Tx)
-
+        print(root_joint_ind)
+        print(traj_model_coordinate_types)
+        print(forward_progression_coordinate)
+        print(root_progression_ind)
 
 
         if number_of_repeats >0:
@@ -149,7 +186,7 @@ class ImportTrajectorySTO(Operator):
             coordinate_trajectories[:,root_progression_ind] = coordinate_trajectories[:,root_progression_ind] - coordinate_trajectories[0,root_progression_ind]
             coordinate_trajectories_repeated = coordinate_trajectories.copy() 
 
-            
+            activation_trajectories_repeated = activation_trajectories.copy()
 
             # Add the repeated sections
             for i in range(1, number_of_repeats + 1):
@@ -162,13 +199,16 @@ class ImportTrajectorySTO(Operator):
                 # Shift only the specified column by its final value from the previous repeat
                 shift_value = coordinate_trajectories[-1, root_progression_ind] * i
                 coordinate_trajectories_shifted[:, root_progression_ind] += shift_value
-
-
+                
                 coordinate_trajectories_repeated  = np.concatenate((coordinate_trajectories_repeated, coordinate_trajectories_shifted))
-            
+
+                # Repeat the  ctivation trajectories
+                
+                activation_trajectories_repeated = np.concatenate((activation_trajectories_repeated, activation_trajectories[1:, :].copy()))
 
             time = time_repeated
             coordinate_trajectories = coordinate_trajectories_repeated
+            activation_trajectories = activation_trajectories_repeated
 
             
             # fix all other data (coordinates, and muscle activations)
@@ -187,9 +227,7 @@ class ImportTrajectorySTO(Operator):
         x = np.linspace(1,n_frames+1,n_times)  # a vector from 1 to n_frames, with length equal to n_times
         x_query = np.arange(1, n_frames+2) #vector from 1 n_frames+1, in steps of 1. These will be the query points for the interpolation. We interpolate between 1 and n_frames+1, adding another +1 because arange clips the last one
 
-        
-        #n_cols = (len(data[0])) #number of columns
-
+      
         ### resample the time vector
         time_rs = np.interp(x_query, x,time) #resampled time using numpy interpolation. This is 1 longer than n_frames
         
@@ -201,7 +239,12 @@ class ImportTrajectorySTO(Operator):
         for i in range(coordinate_trajectories.shape[1]):
             coordinate_trajectories_rs[:, i] = np.interp(x_query, x, coordinate_trajectories[:, i])
                       
+        ## resample activation trajectories
+        activation_trajectories_rs = np.zeros((len(x_query), activation_trajectories.shape[1]))  # n_frames+1 x n_activations
 
+        # Loop through each column (each coordinate trajectory)
+        for i in range(activation_trajectories.shape[1]):
+            activation_trajectories_rs[:, i] = np.interp(x_query, x, activation_trajectories[:, i])
         
         
         ##### start adding keyframes
@@ -225,6 +268,25 @@ class ImportTrajectorySTO(Operator):
 
 
         ## same for muscles
+
+        for muscle in traj_muscles:
+            muscle_name = muscle.name
+
+            mat = bpy.data.materials[muscle_name]   #get the right material
+            node_tree = mat.node_tree
+
+
+            if bpy.app.version[0] <4: #if blender version is below 4
+                nodename = 'Hue Saturation Value'
+            else: #if blender version is above 4:
+                nodename = 'Hue/Saturation/Value'
+
+            
+            node_tree.nodes[nodename].inputs['Saturation'].default_value = 1
+            node_tree.nodes[nodename].inputs['Saturation'].keyframe_insert('default_value', frame = frame_number) #insert a keyframe
+
+
+
 
         ##### start inserting keyframes per time point
 
@@ -278,7 +340,32 @@ class ImportTrajectorySTO(Operator):
                 joint.keyframe_insert('rotation_euler', frame = frame_number)
                 joint.keyframe_insert('location', frame = frame_number)
 
+            activation_traj_row = activation_trajectories_rs[i,:] #row i of the resampled coordinate trajectory
+            
+
+            for muscle_ind, muscle in enumerate(traj_muscles):
+                muscle_name = muscle.name
+
+                mat = bpy.data.materials[muscle_name]   #get the right material
+                node_tree = mat.node_tree
+
+
+                if bpy.app.version[0] <4: #if blender version is below 4
+                    nodename = 'Hue Saturation Value'
+                else: #if blender version is above 4:
+                    nodename = 'Hue/Saturation/Value'
+
+                activation = activation_traj_row[muscle_ind] #assign the right data point, using the k'th ind_act
                 
+                #if scale_activations_to_highest == 'yes': #scales the intensity of the activation colours (useful for simulations where muscle activations are low)
+                #    activation = activation/data[:,ind_act].max()
+                
+                #if activation < 0.2:
+                #    activation = 0.2
+                    
+                node_tree.nodes[nodename].inputs['Saturation'].default_value = activation
+                node_tree.nodes[nodename].inputs['Saturation'].keyframe_insert('default_value', frame = frame_number) #insert a keyframe
+                    
 
         return {'FINISHED'}
 
