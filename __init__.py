@@ -101,6 +101,8 @@ from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_mode
 #### visualization panel
 
 from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel,
+                                          VIEW3D_PT_visualization_options_subpanel,
+                                          CreateGroundPlaneOperator,
                                     ImportTrajectorySTO,#these are separate scripts)
                                     )
 #### Anatomical (local) reference frame panel
@@ -174,6 +176,8 @@ classes = (  #Inertial properties panel
 
             # visualization panel
                                 VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel, 
+                                VIEW3D_PT_visualization_options_subpanel,
+                                CreateGroundPlaneOperator,
 
                                 ImportTrajectorySTO, # separate script
 
