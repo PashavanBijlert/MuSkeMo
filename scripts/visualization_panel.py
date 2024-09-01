@@ -68,6 +68,70 @@ class CreateGroundPlaneOperator(Operator):
 
         return {"FINISHED"}
 
+class SetCompositorBackgroundGradient(Operator):
+    bl_idname = "visualization.set_compositor_background_gradient"
+    bl_label = "Add nodes to the compositor to add a distance-based black gradient to de-emphasize the background."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Add nodes to the compositor to add a distance-based black gradient to de-emphasize the background."
+    
+    def execute(self, context):
+        
+        bpy.context.scene.view_layers["ViewLayer"].use_pass_mist = True
+
+        bpy.context.scene.use_nodes = True
+
+        nodes = bpy.data.scenes['Scene'].node_tree.nodes
+
+        nodes.new("CompositorNodeInvert")
+
+        if bpy.app.version[0] <4: #if blender version is below 4
+        
+            inv_nodename = 'Invert color'
+
+        else: #if blender version is above 4:  
+            
+            inv_nodename = 'Invert Color'
+
+        nodes[inv_nodename].location = Vector((0,500))
+
+        nodes.new("CompositorNodeMixRGB")
+        nodes["Mix"].blend_type = "MULTIPLY"
+        nodes["Mix"].location = Vector((300, -200))
+
+        nodes.new("CompositorNodeViewer")
+        nodes['Viewer'].location = Vector((500,-700))
+
+
+
+        input = nodes[inv_nodename].inputs['Color']
+        output =  nodes["Render Layers"].outputs['Mist']
+
+
+        bpy.data.scenes['Scene'].node_tree.links.new(input,output)
+
+
+        input = nodes["Mix"].inputs[1]
+        output = nodes["Render Layers"].outputs['Image']
+        bpy.data.scenes['Scene'].node_tree.links.new(input,output)
+
+
+
+
+        input = nodes["Mix"].inputs[2]
+        output = nodes[inv_nodename].outputs['Color']
+        bpy.data.scenes['Scene'].node_tree.links.new(input,output)
+
+
+        input = nodes["Composite"].inputs['Image']
+        output = nodes["Mix"].outputs['Image']
+        bpy.data.scenes['Scene'].node_tree.links.new(input,output)
+
+
+        input = nodes["Viewer"].inputs['Image']
+        bpy.data.scenes['Scene'].node_tree.links.new(input,output)
+
+        return {'FINISHED'}
+
+
 from .. import VIEW3D_PT_MuSkeMo  #the super class in which all panels will be placed
 
 from .import_trajectory import ImportTrajectorySTO
@@ -116,7 +180,7 @@ class VIEW3D_PT_visualization_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cla
         row.operator("visualization.set_recommended_render_settings", text = 'Set recommended render settings')
 
         row = self.layout.row()
-        row.operator("visualization.set_compositor_fallof", text = 'Set visual falloff distance in renders')
+        row.operator("visualization.set_compositor_background_gradient", text = 'Set black background gradient for renders')
 
 
 
