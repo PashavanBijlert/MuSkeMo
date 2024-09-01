@@ -54,14 +54,22 @@ Similar to muscle points, contacts are added to the 3D cursor location. Contacts
 
 You can export all the user-created datatypes via this panel. The individual exporters export all the data types from the user-designated collections (folders) in Blender. It is possible to export all the visual geometry to a subfolder.
 
-MuSkeMo exports all the data with respect to both the global reference frame (origin), and body-fixed local reference frames. Orientations are exported as XYZ-Euler angle decompositions, and as quaternion decompositions, of the rotation matrix that rotates the object in question to the local frame.
+MuSkeMo exports all the data with respect to both the global reference frame (origin), and body-fixed local reference frames. Orientations are exported as XYZ-Euler angle decompositions, and as quaternion decompositions.
 
 Under export options, it is possible to configure other text-based filetypes for export (e.g., txt, bat), configure custom delimiters, and choose the number formatting in the exported files.
 
 
 # **Import panel**
 
-You can currently import bodies, joints, muscles, frames, and contacts. Planned additions are: OpenSim model import, Gaitsym model import, and a trajectory importer to visualize simulations.
+You can currently import bodies, joints, muscles, frames, and contacts, if they are MuSkeMo-created CSV files.
+
+MuSkeMo also provides an OpenSim importer. Currently, this only works with OpenSim models that were created using the MuSkeMo_to_OpenSim utility script (see below), using global-coordinates. A more generic OpenSim importer is planned for version 0.8.0.
+
+Future updates will also support Gaitsym and Hyfydy model import.
+
+# **Visualization panel**
+
+MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. This panel features a trajectory importer (currently OpenSim .sto format only) that has the optional feature to repeat the trajectory in a loop while progressing the forward translation coordinate (useful for simulations of a single stride). This panel also includes several convenience tools to aid users who are new to animations in Blender. 
 
 # **MuSkeMo utilities**
 
