@@ -85,7 +85,7 @@ class SetCompositorBackgroundGradient(Operator):
 
         if bpy.app.version[0] <4: #if blender version is below 4
         
-            inv_nodename = 'Invert color'
+            inv_nodename = 'Invert'
 
         else: #if blender version is above 4:  
             
