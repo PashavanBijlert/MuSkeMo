@@ -65,11 +65,15 @@ You can currently import bodies, joints, muscles, frames, and contacts, if they 
 
 MuSkeMo also provides an OpenSim importer. Currently, this only works with OpenSim models that were created using the MuSkeMo_to_OpenSim utility script (see below), using global-coordinates. A more generic OpenSim importer is planned for version 0.8.0.
 
-Future updates will also support Gaitsym and Hyfydy model import.
+As of version 0.7.1, development for a Gaitsym (2019) importer has been started. It is currently not fully-featured.
+
+Future updates will also support Hyfydy model import.
 
 # **Visualization panel**
 
 MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. This panel features a trajectory importer (currently OpenSim .sto format only) that has the optional feature to repeat the trajectory in a loop while progressing the forward translation coordinate (useful for simulations of a single stride). This panel also includes several convenience tools to aid users who are new to animations in Blender. 
+
+Users are able to define their desired default colors in this panel (currently only muscle color has been exposed to the user).
 
 # **MuSkeMo utilities**
 
