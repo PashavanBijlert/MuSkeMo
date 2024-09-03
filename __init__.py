@@ -95,7 +95,7 @@ from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_mode
                                    VIEW3D_PT_import_full_model_subpanel, 
                                    ImportBodiesOperator,ImportJointsOperator,ImportMusclesOperator,
                                    ImportContactsOperator,ImportFramesOperator,
-                                   ImportOpenSimModel, 
+                                   ImportOpenSimModel, ImportGaitsymModel,
                                    )
 
 #### visualization panel
@@ -172,7 +172,7 @@ classes = (  #Inertial properties panel
                                   ImportBodiesOperator, ImportJointsOperator, ImportMusclesOperator,
                                   ImportContactsOperator,ImportFramesOperator,
 
-                                  ImportOpenSimModel, #these are separate scripts
+                                  ImportOpenSimModel, ImportGaitsymModel, #these are separate scripts
 
             # visualization panel
                                 VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel, 

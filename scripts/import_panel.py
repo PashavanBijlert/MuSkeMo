@@ -502,7 +502,9 @@ class ImportFramesOperator(Operator, ImportHelperCustom):  #inherits from Import
 
 from .import_opensim_model import ImportOpenSimModel
 
-from .import_trajectory import ImportTrajectorySTO
+## import Gaitsym model
+
+from .import_gaitsym_model import ImportGaitsymModel
 
 ### The panels
 
@@ -573,6 +575,9 @@ class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         muskemo = scene.muskemo
         row = layout.row()
         row.operator("import.import_opensim_model",text = 'Import OpenSim model')
+
+        row = layout.row()
+        row.operator("import.import_gaitsym_model",text = 'Import Gaitsym 2019 model (experimental)')
 
 
         row = layout.row()
