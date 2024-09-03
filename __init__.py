@@ -101,7 +101,7 @@ from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_mode
 #### visualization panel
 
 from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel,
-                                          VIEW3D_PT_visualization_options_subpanel,
+                                          VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                           CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
                                     ImportTrajectorySTO,#these are separate scripts)
                                     )
@@ -176,7 +176,7 @@ classes = (  #Inertial properties panel
 
             # visualization panel
                                 VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel, 
-                                VIEW3D_PT_visualization_options_subpanel,
+                                VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                 CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
 
                                 ImportTrajectorySTO, # separate script

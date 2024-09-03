@@ -219,8 +219,21 @@ class VIEW3D_PT_import_trajectory_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row = layout.row()
         row.prop(muskemo, "forward_progression_coordinate")
 
-
-        
+               
         return    
     
 
+   ## Default colors
+class VIEW3D_PT_default_colors_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+    bl_idname = 'VIEW3D_PT_default_colors_subpanel'
+    bl_parent_id = 'VIEW3D_PT_visualization_panel'  #have to define this if you use multiple panels
+    bl_label = "Default colors"  # found at the top of the Panel
+    bl_options = {'DEFAULT_CLOSED'} 
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        
+        row = layout.row()
+        row.prop(muskemo, "muscle_color")

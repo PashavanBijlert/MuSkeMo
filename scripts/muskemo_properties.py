@@ -6,6 +6,7 @@ from bpy.props import (StringProperty,
                          FloatProperty,
                          BoolProperty,
                          EnumProperty,
+                         FloatVectorProperty,
                          )
 from bpy.types import (PropertyGroup,
                         )
@@ -388,4 +389,59 @@ class MuSkeMoProperties(PropertyGroup):
                 ('coordinate_Rz', "coordinate_Rz", ""),
               ],
         default = "coordinate_Tx",
+        )
+    
+    muscle_color: FloatVectorProperty(
+                 name = "Default muscle color",
+                 subtype = "COLOR",
+                 size = 4,
+                 min = 0.0,
+                 max = 1.0,
+                 default = (0.22, 0.00, 0.02, 1)
+        )
+    
+
+    joint_color: FloatVectorProperty(
+                 name = "Default joint color",
+                 subtype = "COLOR",
+                 size = 4,
+                 min = 0.0,
+                 max = 1.0,
+                 default = (0.22, 0.00, 0.02, 1)
+        )
+    
+    bone_color: FloatVectorProperty(
+                 name = "Default bone color",
+                 subtype = "COLOR",
+                 size = 4,
+                 min = 0.0,
+                 max = 1.0,
+                 default = (0.22, 0.00, 0.02, 1)
+        )
+    
+    contact_color: FloatVectorProperty(
+                 name = "Default contact color",
+                 subtype = "COLOR",
+                 size = 4,
+                 min = 0.0,
+                 max = 1.0,
+                 default = (0.22, 0.00, 0.02, 1)
+        )
+    
+    marker_color: FloatVectorProperty(
+                 name = "Default marker color",
+                 subtype = "COLOR",
+                 size = 4,
+                 min = 0.0,
+                 max = 1.0,
+                 default = (0.22, 0.00, 0.02, 1)
+        )
+    
+    geom_primitive_color: FloatVectorProperty(
+                 name = "Geometric primitive color",
+                 subtype = "COLOR",
+                 size = 4,
+                 min = 0.0,
+                 max = 1.0,
+                 default = (0.22, 0.00, 0.02, 1)
         )
