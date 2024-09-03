@@ -112,7 +112,7 @@ def create_muscle (muscle_name, point_position, body_name,
         
         #the name should be different depending on Blender 3.0 or 4.0
 
-        muscle_color = bpy.context.scene.muskemo.muscle_color
+        muscle_color = tuple(bpy.context.scene.muskemo.muscle_color)
         matnode_tree.nodes[nodename].inputs['Color'].default_value = muscle_color
         matnode_tree.nodes[nodename].inputs['Saturation'].default_value = 1
         matnode_tree.links.new(matnode_tree.nodes[nodename].outputs['Color'], matnode_tree.nodes["Principled BSDF"].inputs['Base Color'])
