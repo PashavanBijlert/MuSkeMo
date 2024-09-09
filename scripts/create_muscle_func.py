@@ -67,12 +67,12 @@ def create_muscle (muscle_name, point_position, body_name,
         obj['tendon_slack_length'] = tendon_slack_length    #In meters
         obj.id_properties_ui('tendon_slack_length').update(description = "Tendon slack length (in m)")
 
-
+        '''
 
         ## add visualization radius via bevel, and driver 
         #adding drivers like this works, but causes instability / crashes.
 
-        '''
+        
         driver = obj.data.driver_add('bevel_depth').driver  #this adds a driver to obj.data.bevel_depth
 
         var = driver.variables.new()        #make a new variable
@@ -122,6 +122,7 @@ def create_muscle (muscle_name, point_position, body_name,
         ### viewport display color
 
         obj.active_material.diffuse_color = muscle_color
+        
 
 
 
@@ -158,9 +159,9 @@ def create_muscle (muscle_name, point_position, body_name,
 
     bpy.ops.object.hook_assign(modifier = modname)
 
-
-    for point in spline.points:
-        point.select = False
+    curve.data.splines[0].points[last_point].select = True
+    #for point in spline.points:
+    #   point.select = False
 
 
     bpy.ops.object.mode_set(mode='OBJECT')

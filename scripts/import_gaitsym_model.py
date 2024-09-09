@@ -312,13 +312,22 @@ class ImportGaitsymModel(Operator):
         #rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius                         
 
         for muscle in muscle_data:
-            
 
             muscle_name = muscle['ID']
 
-            #IT'S UNCLEAR FOR NOW IF THESE ALWAYS EXIST
-            F_max = muscle['PCA']*muscle['ForcePerUnitArea']
-            optimal_fiber_length = muscle['FibreLength']
+        
+            
+        
+            if "DampedSpring" in muscle['Type']: #if it's a spring (i.e., a ligament)
+                self.report({'WARNING'}, "Ligaments are currently not supported by MuSkeMo yet. DampedSpring '" + muscle_name + "' will be imported as a muscle.")
+                F_max = 0
+                optimal_fiber_length = 0
+
+            else: #if it's a muscle
+
+                F_max = muscle['PCA']*muscle['ForcePerUnitArea']
+                optimal_fiber_length = muscle['FibreLength']
+
 
             strapID = muscle['StrapID']
 
@@ -339,10 +348,6 @@ class ImportGaitsymModel(Operator):
                 [points_ID_list.append(x) for x in strap['ViaPointMarkerIDList'].split()]
                 points_ID_list.append(strap['InsertionMarkerID'])
 
-
-
-            
-
             for point in points_ID_list:
 
                 #parent_frame = point['parent_frame']
@@ -351,17 +356,18 @@ class ImportGaitsymModel(Operator):
                 parent_body_name = marker['BodyID']
                 point_position = [float(x) for x in marker['WorldPosition'].split()]
                 
+                
 
                 create_muscle(muscle_name = muscle_name, 
-                              is_global =True, 
-                              body_name = parent_body_name,
-                              point_position = point_position,
-                              collection_name=muscle_colname,
-                              optimal_fiber_length=optimal_fiber_length,
-                              #tendon_slack_length=tendon_slack_length,
-                              F_max = F_max,
-                              #pennation_angle = pennation_angle
-                              )
+                            is_global =True, 
+                            body_name = parent_body_name,
+                            point_position = point_position,
+                            collection_name=muscle_colname,
+                            optimal_fiber_length=optimal_fiber_length,
+                            #tendon_slack_length=tendon_slack_length,
+                            F_max = F_max,
+                            #pennation_angle = pennation_angle
+                            )
          
 
        
