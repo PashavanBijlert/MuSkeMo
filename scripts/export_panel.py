@@ -347,15 +347,20 @@ class ExportGeometryFolderOperator(Operator):
         for obj in objects:
             obj.select_set(True)
 
+            name = obj.name
+
+            if not name.endswith('.obj'):
+                name = name + '.obj'
+
             if bpy.app.version[0] <4: #if blender version is below 4
                                         
-                bpy.ops.export_scene.obj(filepath= os.path.join(output_path, obj.name + '.obj'), use_selection = True, axis_forward = 'Y', axis_up = 'Z',use_materials = False)
+                bpy.ops.export_scene.obj(filepath= os.path.join(output_path, name), use_selection = True, axis_forward = 'Y', axis_up = 'Z',use_materials = False)
             else: #if blender version is above 4:
 
-                bpy.ops.wm.obj_export(filepath= os.path.join(output_path, obj.name + '.obj'), export_selected_objects = True, forward_axis = 'Y', up_axis = 'Z',export_materials = False)
+                bpy.ops.wm.obj_export(filepath= os.path.join(output_path, name), export_selected_objects = True, forward_axis = 'Y', up_axis = 'Z',export_materials = False)
 
             
-            self.report({'INFO'}, "Exported geometry with the name '" + obj.name + "' to the '" + geo_folder + "' subdirectory")
+            self.report({'INFO'}, "Exported geometry with the name '" + name + "' to the '" + geo_folder + "' subdirectory")
                         
             obj.select_set(False)    
 

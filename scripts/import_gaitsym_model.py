@@ -169,7 +169,7 @@ class ImportGaitsymModel(Operator):
                 
             else:
                 self.report({'WARNING'}, "Gaitsym models don't specify where the geometry meshes are located. If you want to import visual geometry, you must ensure they're in a subdirectory of the model, and you must type in the directory name under 'Gaitsym geometry folder'. Skipping geometry import.")
-             
+                import_geometry = False
 
 
         for body in body_data:

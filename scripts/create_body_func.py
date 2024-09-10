@@ -158,7 +158,8 @@ def create_body(name, size, is_global = True, mass=nan,
                     
             else: #if blender version is above 4:    
                     
-                bpy.ops.wm.obj_import(filepath= geometry_parent_dir + '/' + path, forward_axis = 'Y', up_axis = 'Z' )
+                bpy.ops.wm.obj_import(filepath= geometry_parent_dir + '/' + path, forward_axis = 'Y', up_axis = 'Z' ,
+                                      use_split_objects = False,)
 
 
             
@@ -168,7 +169,7 @@ def create_body(name, size, is_global = True, mass=nan,
             bpy.context.selected_objects[0].name =  file_name_with_extension            
             bpy.ops.object.select_all(action='DESELECT')
             
-            geom_obj = bpy.data.objects[mesh_name]
+            geom_obj = bpy.data.objects[file_name_with_extension]
             
             geom_obj.parent = obj #parent a mesh to a body, but this moves it
             geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
