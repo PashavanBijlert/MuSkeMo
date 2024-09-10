@@ -164,8 +164,8 @@ def create_body(name, size, is_global = True, mass=nan,
             
             # Split the path to get the file name without the extension
             file_name_with_extension = os.path.basename(path)  # e.g. 'Humerus.001.obj'
-            mesh_name, extension = os.path.splitext(file_name_with_extension)  # e.g. 'Humerus.001', '.obj'    
-            bpy.context.selected_objects[0].name =  mesh_name            
+            #mesh_name, extension = os.path.splitext(file_name_with_extension)  # e.g. 'Humerus.001', '.obj'    
+            bpy.context.selected_objects[0].name =  file_name_with_extension            
             bpy.ops.object.select_all(action='DESELECT')
             
             geom_obj = bpy.data.objects[mesh_name]

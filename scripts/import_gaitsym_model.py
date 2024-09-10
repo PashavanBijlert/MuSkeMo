@@ -154,34 +154,22 @@ class ImportGaitsymModel(Operator):
         size = bpy.context.scene.muskemo.axes_size #axis length, in meters
         geometry_parent_dir = os.path.dirname(self.filepath)
         import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
+        gaitsym_geo_folder = bpy.context.scene.muskemo.gaitsym_geometry_folder
 
         if import_geometry: #if the user wants imported geometry, we check if the folder exists
 
-            # Loop through the data to find the first valid geometry path
-            for body in body_data:
-                geometries = body['geometries']  # list of dictionaries
+            if gaitsym_geo_folder:  #if the user filled in the subfolder name
+
+                                
+                folder_path = geometry_parent_dir + '/' + gaitsym_geo_folder
+                if not os.path.exists(folder_path) or not os.path.isdir(folder_path): #if the path doesn't exist or isn't a folder
+                    import_geometry = False
+                    self.report({'WARNING'}, "The Gaitsym geometry folder '" + gaitsym_geo_folder + "' specified in the model file does not appear to be in the model directory. Skipping geometry import.")
+
                 
-                # If geometries exist, join them with semicolons, otherwise set a default string
-                if geometries:
-                    geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
-
-                else:
-                    geometry_string = 'no geometry'
-
-                if 'no geometry' not in geometry_string.lower(): #set lowercase when checking
-                    # Split the geometry string by ';' and take the first path
-                    first_geometry_path = geometry_string.split(';')[0]
-                    
-                    # Extract the folder name from the first path
-                    geometry_dir = os.path.dirname(first_geometry_path)
-                    
-                    folder_path = geometry_parent_dir + '/' + geometry_dir
-                    if not os.path.exists(folder_path) or not os.path.isdir(folder_path): #if the path doesn't exist or isn't a folder
-                        import_geometry = False
-                        self.report({'WARNING'}, "The geometry folder '" + geometry_dir + "' specified in the model file does not appear to be in the same directory. Skipping geometry import.")
-
-                    # Break the loop as we've found the first valid geometry path
-                    break
+            else:
+                self.report({'WARNING'}, "Gaitsym models don't specify where the geometry meshes are located. If you want to import visual geometry, you must ensure they're in a subdirectory of the model, and you must type in the directory name under 'Gaitsym geometry folder'. Skipping geometry import.")
+             
 
 
         for body in body_data:
@@ -189,15 +177,15 @@ class ImportGaitsymModel(Operator):
             mass = body['Mass']
             COM = list(body['ConstructionPosition'])  # Convert tuple to list
             inertia_COM = list(body['MOI'])  # Convert tuple to list
-            geometries = '' #body['geometries']  # This will be a list of dictionaries or empty list
-
-
+            geometries = [body[x] for x in body if 'GraphicFile' in x]  # list of geometry names
+                
             # If geometries exist, join them with semicolons, otherwise set a default string
             if geometries:
-                geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
+                geometry_string = ';'.join([gaitsym_geo_folder + '/' + geometry for geometry in geometries]) + ';' 
 
             else:
                 geometry_string = 'no geometry'
+
 
             # Call create_body with the prepared geometry string
             create_body(name=name, is_global = True, size = size,

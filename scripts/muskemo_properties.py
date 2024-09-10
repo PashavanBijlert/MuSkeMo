@@ -253,6 +253,13 @@ class MuSkeMoProperties(PropertyGroup):
         default = True,
     )
 
+    gaitsym_geometry_folder: StringProperty(
+        name = 'Gaitsym geometry folder',
+        description="Name of the directory that contains the Gaitsym model's visual geometry. Must be a subdirectory of the model directory",
+        default = '',
+        maxlen = 256,
+    )
+
 
 #### anatomical (local) reference frame panel
 

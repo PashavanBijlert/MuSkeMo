@@ -577,6 +577,8 @@ class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row.operator("import.import_opensim_model",text = 'Import OpenSim model')
 
         row = layout.row()
+        row = layout.row()
+        row = layout.row()
         row.operator("import.import_gaitsym_model",text = 'Import Gaitsym 2019 model (experimental)')
 
 
@@ -584,7 +586,8 @@ class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row.prop(muskemo, "model_import_style")
         row = layout.row()
         row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
-
+        row = layout.row()
+        row.prop(muskemo, "gaitsym_geometry_folder")
 
         return      
 
