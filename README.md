@@ -65,7 +65,7 @@ You can currently import bodies, joints, muscles, frames, and contacts, if they 
 
 MuSkeMo also provides an OpenSim importer. Currently, this only works with OpenSim models that were created using the MuSkeMo_to_OpenSim utility script (see below), using global-coordinates. A more generic OpenSim importer is planned for version 0.8.0.
 
-As of version 0.7.1, development for a Gaitsym (2019) importer has been started. It is currently not fully-featured.
+As of version 0.7.2, MuSkeMo includes a Gaitsym (2019) importer. It is currently not fully-featured, but imports bodies, joints, and muscles (DampedSpring elements are treated as muscles). Muscles that include wrapping are currently not supported, and contact geometry is ignored. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory.
 
 Future updates will also support Hyfydy model import.
 
