@@ -35,19 +35,25 @@ def create_muscle (muscle_name, point_position, body_name,
 
     if new_musc:  #if new_musc is true, we first create a new muscle
 
-        #Add a bezier curve primitive, delete the spline, and replace the spline with a poly curve.
-        #By doing it this way, it gets added to the active collection, which enables me to deal with collection allocation outside of the muscle creation function
-                
+       
+        
+        bpy.data.curves.new(muscle_name, type='CURVE') #create new curve data
+        curve = bpy.data.curves[muscle_name] #direct reference to the curve
 
-        bpy.ops.curve.primitive_bezier_curve_add(align='WORLD', location=(0, 0, 0), rotation=(0, 0, 0), scale=(0, 0, 0)) 
-        bpy.context.object.name = muscle_name #set the name
+        #create a new object using the curve data
+        bpy.data.objects.new(muscle_name, curve)
+        
         obj = bpy.data.objects[muscle_name] #get a direct link to the newly named object
-        curve = obj.data #get the curve
-        curve.dimensions = '3D' #just in case, make it a 3D curve. Should already be 3D
-        curve.use_path = False #new bezier curves automatically have path animations enabled. This triggers blender warnings for some reason
-        curve.splines.remove(curve.splines[0]) #remove the bezier spline
+        coll.objects.link(obj)
+
+        curve.dimensions = '3D' #make it a 3D curve.
+        curve.use_path = False #unnecessary but just in case
         spline = curve.splines.new(type='POLY') #add a poly spline
         
+        
+
+             
+
 
         ## define MuSkeMo type
         obj['MuSkeMo_type'] = 'MUSCLE'    #to inform the user what type is created
@@ -141,31 +147,11 @@ def create_muscle (muscle_name, point_position, body_name,
     spline.points[last_point].co = Vector(point_position).to_4d()  ## co has has input a 4d vector (x,y,z,1).
 
     ### hook point to body
-    curve.select_set(True)
-    bpy.context.view_layer.objects.active = curve  #make curve the active object
-
     modname = 'hook' + str(last_point) + '_' + body.name #
     obj = curve
             
     obj.modifiers.new(name=modname, type='HOOK')
+    obj.modifiers[modname].vertex_indices_set([last_point])#setting this only updates if you either toggle in and out of edit mode (slow) or add the body afterwards
     obj.modifiers[modname].object = body  #      
 
-
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.curve.select_all(action='DESELECT') 
-
-    curve.data.splines[0].points[last_point].select = True
-
-
-    bpy.ops.object.hook_assign(modifier = modname)
-
-    curve.data.splines[0].points[last_point].select = True
-    #for point in spline.points:
-    #   point.select = False
-
-
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.select_all(action='DESELECT')
-
-    
   

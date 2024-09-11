@@ -17,6 +17,7 @@ from math import nan
 import numpy as np
 import os
 
+import time
 
 
 class ImportGaitsymModel(Operator):
@@ -49,7 +50,7 @@ class ImportGaitsymModel(Operator):
         filepath = self.filepath
         tree = ET.parse(filepath)
         root = tree.getroot()    
-                
+        time1 = time.time()        
     
         def get_body_data(root):
             """Extracts data from each <BODY> element in the XML root."""
@@ -358,6 +359,8 @@ class ImportGaitsymModel(Operator):
                             )
          
 
-       
+        time2 = time.time()
+
+        print('Elapsed time = ' + str(time2-time1) + ' seconds')
 
         return {'FINISHED'}
