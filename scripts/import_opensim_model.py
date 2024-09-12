@@ -148,6 +148,9 @@ class ImportOpenSimModel(Operator):
                         # Match parent_frame with frame_name to get parent_body
                         if frame_name == parent_frame:
                             parent_body = socket_parent.split('/bodyset/')[-1]
+
+                            if parent_body == '/ground':
+                                parent_body = 'ground'
                         # Match child_frame with frame_name to get child_body
                         if frame_name == child_frame:
                             child_body = socket_parent.split('/bodyset/')[-1]

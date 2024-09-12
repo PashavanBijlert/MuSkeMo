@@ -178,8 +178,21 @@ class ExportJointsOperator(Operator, ExportHelperCustom): #inherits from ExportH
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         joint_colname = bpy.context.scene.muskemo.joint_collection
         
-        
-        
+        joints = [obj for obj in bpy.data.collections[joint_colname].objects]
+
+        for joint in joints:
+            if 'MuSkeMo_type' not in joint:
+                self.report({'ERROR'}, "Object with the name '" + joint.name + "' in the '" + joint_colname +  "' collection was not created by MuSkeMo, remove it from the collection first. Operation cancelled")
+                return{'FINISHED'}
+            
+            if joint['MuSkeMo_type'] != 'JOINT':
+                self.report({'ERROR'}, "Object with the name '" + joint.name + "' in the '" + joint_colname +  "' collection is not a JOINT, remove it from the collection first. Operation cancelled")
+                return{'FINISHED'}
+
+            if joint['parent_body'] == 'not_assigned':
+                self.report({'WARNING'}, "Joint with the name '" + joint.name + "' has no parent body assigned. If this is intended as the root joint, manually type in 'ground' for OpenSim or 'World' for Gaitsym (without quotation marks)")
+                
+
         write_joints(context, self.filepath, joint_colname, delimiter, self.number_format)
         return {'FINISHED'}
 

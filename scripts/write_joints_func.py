@@ -78,6 +78,10 @@ def write_joints(context, filepath, collection_name, delimiter, number_format):
         ### parent frame and pos and or in parent frame
         if joint['parent_body'] == 'not_assigned':
             file.write('not_assigned' + delimiter) #if there is no parent body, there is no parent frame assigned
+        
+        elif (joint['parent_body'] == 'ground') or (joint['parent_body'] == 'World'):
+            file.write('not_assigned' + delimiter) #if there is no parent body, there is no parent frame assigned
+    
         else:
             parent = bpy.data.objects[joint['parent_body']]
             file.write(parent['local_frame'] + delimiter) #parent frame name
