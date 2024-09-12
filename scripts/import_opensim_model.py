@@ -56,7 +56,7 @@ class ImportOpenSimModel(Operator):
             body_set = model.find('BodySet')
             bodies = body_set.find('objects')
             
-            body_data = []
+            body_data = {}
             for body in bodies.findall('Body'):
                 name = body.get('name')
                 mass = float(body.find('mass').text)
@@ -105,13 +105,12 @@ class ImportOpenSimModel(Operator):
                                 # No translation or orientation since it's directly attached to the body
                             })
 
-                body_data.append({
-                    'name': name,
+                body_data[name] ={ #body_data dictionary
                     'mass': mass,
                     'mass_center': mass_center,
                     'inertia': inertia,
                     'geometries': geometries
-                })
+                }
 
             return body_data
 
@@ -122,7 +121,7 @@ class ImportOpenSimModel(Operator):
             joint_set = model.find('JointSet')
             joints = joint_set.find('objects')
 
-            joint_data = []
+            joint_data = {}
             for joint in joints:
                 joint_name = joint.get('name')
                 joint_type = joint.tag
@@ -196,8 +195,7 @@ class ImportOpenSimModel(Operator):
                             'coefficients': coefficients
                         })
                 
-                joint_data.append({
-                    'joint_name': joint_name,
+                joint_data[joint_name] = { #joint_data dictionary
                     'joint_type': joint_type,
                     'parent_frame': parent_frame,
                     'child_frame': child_frame,
@@ -206,12 +204,12 @@ class ImportOpenSimModel(Operator):
                     'frames_data': frames_data,
                     'coordinates': coordinates,
                     'spatial_transform': spatial_transform
-                })
+                }
 
             return joint_data
 
         def get_muscle_data(model):
-            muscle_data = []
+            muscle_data = {}
 
             # Locate the ForceSet in the model
             forceset = model.find('ForceSet')
@@ -259,34 +257,30 @@ class ImportOpenSimModel(Operator):
                                                 'location': location
                                             })
 
-                            # Add the extracted data to the muscle_data list
-                            muscle_data.append({
-                                'muscle_name': muscle_name,
+                            # Add the extracted data to the muscle_data dict
+                            muscle_data[muscle_name] = {
                                 'muscle_type': muscle_type,
                                 'tendon_slack_length': tendon_slack_length,
                                 'F_max': max_isometric_force,
                                 'optimal_fiber_length': optimal_fiber_length,
                                 'pennation_angle': pennation_angle,
                                 'path_points_data': path_points_data
-                            })
+                            }
 
             return muscle_data
        
-        # Extract body data from the model
+        # Extract body data from the model, and check if geometry folder exists
         body_data = get_body_data(model)
-
-        #### create bodies
-        from .create_body_func import create_body
-
+        
         body_colname = bpy.context.scene.muskemo.body_collection #name for the collection that will contain the hulls
-        size = bpy.context.scene.muskemo.axes_size #axis length, in meters
+        body_axes_size = bpy.context.scene.muskemo.axes_size #axis length, in meters
         geometry_parent_dir = os.path.dirname(self.filepath)
         import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
 
         if import_geometry: #if the user wants imported geometry, we check if the folder exists
 
             # Loop through the data to find the first valid geometry path
-            for body in body_data:
+            for body in body_data.values():
                 geometries = body['geometries']  # list of dictionaries
                 
                 # If geometries exist, join them with semicolons, otherwise set a default string
@@ -312,8 +306,22 @@ class ImportOpenSimModel(Operator):
                     break
 
 
-        for body in body_data:
-            name = body['name']
+        # Extract joint data from the model
+        joint_data = get_joint_data(model)
+
+        joint_colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the joints
+        joint_rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius
+
+        # Extract muscle data from the model
+        muscle_data = get_muscle_data(model)
+        muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the joints
+        
+        #### create bodies
+        from .create_body_func import create_body
+
+
+        for body_name, body in body_data.items():
+            name = body_name
             mass = body['mass']
             COM = list(body['mass_center'])  # Convert tuple to list
             inertia_COM = list(body['inertia'])  # Convert tuple to list
@@ -328,25 +336,19 @@ class ImportOpenSimModel(Operator):
                 geometry_string = 'no geometry'
 
             # Call create_body with the prepared geometry string
-            create_body(name=name, is_global = True, size = size,
+            create_body(name=name, is_global = True, size = body_axes_size,
                         mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string, 
                         collection_name=body_colname,  
                         import_geometry = import_geometry, #the bool property
                             geometry_parent_dir = geometry_parent_dir)
             
 
-        # Extract joint data from the model
-        joint_data = get_joint_data(model)
-
         #### create joints
         from .create_joint_func import create_joint
 
-        joint_colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the joints
-        rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius
+        for joint_name, joint in joint_data.items():
 
-        for joint in joint_data:
-
-            name = joint['joint_name']
+            name = joint_name
             parent_body = joint['parent_body']
             child_body = joint['child_body']
 
@@ -401,11 +403,7 @@ class ImportOpenSimModel(Operator):
             pos_in_global = translation_in_parent_frame
             or_in_global_XYZeuler = orientation_in_parent_frame
 
-            
-
-
-
-            create_joint(name = name, radius = rad, 
+            create_joint(name = name, radius = joint_rad, 
                          collection_name=joint_colname,
                          is_global = True,
                          parent_body=parent_body, 
@@ -427,18 +425,14 @@ class ImportOpenSimModel(Operator):
                         #or_in_child_frame_XYZeuler = or_in_child_frame_XYZeuler,
                         #or_in_child_frame_quat= or_in_child_frame_quat,
                         
-        # Extract muscle data from the model
-        muscle_data = get_muscle_data(model)
+       
 
         #### create muscles
         from .create_muscle_func import create_muscle
 
-        muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the joints
-        #rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius                         
+        for muscle_name, muscle in muscle_data.items():
 
-        for muscle in muscle_data:
-
-            muscle_name = muscle['muscle_name']
+            
             F_max = muscle['F_max']
             optimal_fiber_length = muscle['optimal_fiber_length']
             tendon_slack_length = muscle['tendon_slack_length']
