@@ -129,7 +129,14 @@ def create_body(name, size, is_global = True, mass=nan,
         # Extract the folder name from the first path
         geometry_collection_name = os.path.dirname(geo_paths[0])
 
-        bpy.context.scene.muskemo.geometry_collection = geometry_collection_name #update this MuSkeMo property
+        if geometry_collection_name: #if the collection name is nonempty (i.e., if the body has a designated geometry folder)
+            bpy.context.scene.muskemo.geometry_collection = geometry_collection_name #update this MuSkeMo property
+
+        else: #get whatever is the default or user-modified value in MuSkeMo
+
+            geometry_collection_name = bpy.context.scene.muskemo.geometry_collection 
+
+
 
 
         #check if the collection name exists, and if not create it
@@ -151,39 +158,43 @@ def create_body(name, size, is_global = True, mass=nan,
 
         for path in geo_paths:
 
-            if bpy.app.version[0] <4: #if blender version is below 4
-                                        
-        
-                bpy.ops.import_scene.obj(filepath= geometry_parent_dir + '/' + path, axis_forward = 'Y', axis_up = 'Z', use_image_search = False)
-                    
-            else: #if blender version is above 4:    
-                    
-                bpy.ops.wm.obj_import(filepath= geometry_parent_dir + '/' + path, forward_axis = 'Y', up_axis = 'Z' ,
-                                      use_split_objects = False,)
+            filepath = geometry_parent_dir + '/' + path
+
+            if not os.path.exists(filepath): #if the above filepath doesn't exist, add Geometry/ in front of it. This accounts for OpenSim models where the Geometry subdirectory is not explicitly named
+                filepath = geometry_parent_dir + '/Geometry/' + path
+            
+            if os.path.exists(filepath) and filepath.endswith('.obj'): #if the file exists, and it is an obj file
+
+                if bpy.app.version[0] <4: #if blender version is below 4
+                    bpy.ops.import_scene.obj(filepath= filepath, axis_forward = 'Y', axis_up = 'Z', use_image_search = False)
+                        
+                else: #if blender version is above 4:    
+                    bpy.ops.wm.obj_import(filepath= filepath, forward_axis = 'Y', up_axis = 'Z' ,
+                                        use_split_objects = False,)
 
 
             
-            # Split the path to get the file name without the extension
-            file_name_with_extension = os.path.basename(path)  # e.g. 'Humerus.001.obj'
-            #mesh_name, extension = os.path.splitext(file_name_with_extension)  # e.g. 'Humerus.001', '.obj'    
-            bpy.context.selected_objects[0].name =  file_name_with_extension            
-            bpy.ops.object.select_all(action='DESELECT')
-            
-            geom_obj = bpy.data.objects[file_name_with_extension]
-            
-            geom_obj.parent = obj #parent a mesh to a body, but this moves it
-            geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
-            geom_obj.data.materials.clear()
-            #geom_obj.data.materials.append(mat)
+                # Include the extension in the newly created object's name, to prevent potential naming conflicts
+                file_name_with_extension = os.path.basename(path)  # e.g. 'Humerus.001.obj'
+                #mesh_name, extension = os.path.splitext(file_name_with_extension)  # e.g. 'Humerus.001', '.obj'    
+                bpy.context.selected_objects[0].name =  file_name_with_extension            
+                bpy.ops.object.select_all(action='DESELECT')
+                
+                geom_obj = bpy.data.objects[file_name_with_extension]
+                
+                geom_obj.parent = obj #parent a mesh to a body, but this moves it
+                geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
+                geom_obj.data.materials.clear()
+                #geom_obj.data.materials.append(mat)
 
-            ## Assign a MuSkeMo_type
-   
-            geom_obj['MuSkeMo_type'] = 'GEOMETRY'    #to inform the user what type is created
-            geom_obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
+                ## Assign a MuSkeMo_type
+    
+                geom_obj['MuSkeMo_type'] = 'GEOMETRY'    #to inform the user what type is created
+                geom_obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
 
-            geom_obj['Attached to'] = obj.name
-            geom_obj.id_properties_ui('Attached to').update(description = "The body that this geometry is attached to")
-            
+                geom_obj['Attached to'] = obj.name
+                geom_obj.id_properties_ui('Attached to').update(description = "The body that this geometry is attached to")
+                
 
     
     

@@ -297,10 +297,17 @@ class ImportOpenSimModel(Operator):
                     geometry_dir = os.path.dirname(first_geometry_path)
                     
                     folder_path = geometry_parent_dir + '/' + geometry_dir
-                    if not os.path.exists(folder_path) or not os.path.isdir(folder_path): #if the path doesn't exist or isn't a folder
-                        import_geometry = False
-                        self.report({'WARNING'}, "The geometry folder '" + geometry_dir + "' specified in the model file does not appear to be in the same directory. Skipping geometry import.")
+                    
+                    if geometry_dir: #if there is a geometry folder specified
+                        
+                        if not os.path.exists(folder_path) or not os.path.isdir(folder_path): #if the path doesn't exist or isn't a folder
+                            import_geometry = False
+                            self.report({'WARNING'}, "The geometry folder '" + geometry_dir + "' specified in the model file does not appear to be in the same directory. Skipping geometry import.")
 
+                    else: #no geometry folder specified
+                        self.report({'WARNING'}, "The model does not specify a geometry (sub)directory. If the geometries are not in the model directory or in a subdirectory named 'Geometry', they will be skipped during import.")
+
+                    
                     # Break the loop as we've found the first valid geometry path
                     break
                    

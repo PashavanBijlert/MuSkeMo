@@ -106,20 +106,7 @@ class ConstructARFOperator(Operator):
 
         size = bpy.context.scene.muskemo.ARF_axes_size
 
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
-
-        #make sure the collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-        
-
-
+       
         origin = bpy.data.objects[origin_landmark_name].location
         y_axis = bpy.data.objects[ydir_landmark_name].location - origin
         z_axis_temp = bpy.data.objects[yzplane_landmark_name].location - origin
@@ -144,7 +131,10 @@ class ConstructARFOperator(Operator):
         #print(gRl)
 
         from .create_frame_func import create_frame
-        create_frame(name=refframe_name, size = size, pos_in_global = origin, gRb = gRl, parent_body = 'not_assigned',)
+        create_frame(name=refframe_name, size = size, 
+                     pos_in_global = origin, gRb = gRl,
+                     collection_name = colname,
+                     parent_body = 'not_assigned',)
         
         
         return {'FINISHED'}
@@ -320,7 +310,6 @@ class AssignARFParentBodyOperator(Operator):
             contact_pos_in_parent = bRg @ (contact_pos_g - frame_or_g) #location in parent of contact
             contact['pos_in_parent_frame'] = contact_pos_in_parent
                
-
 
 
         #loop through attached contacts
