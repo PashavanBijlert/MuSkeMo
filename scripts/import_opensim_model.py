@@ -1,7 +1,5 @@
 import bpy
 from mathutils import Vector
-
-
 from bpy.types import (Operator,
                         )
 
@@ -9,14 +7,10 @@ from bpy.props import (StringProperty,   #it appears to matter whether you impor
                        BoolProperty)
 
 import xml.etree.ElementTree as ET
-
-
 from math import nan
-
-
 import numpy as np
 import os
-
+import pprint
 
 
 class ImportOpenSimModel(Operator):
@@ -304,7 +298,7 @@ class ImportOpenSimModel(Operator):
 
                     # Break the loop as we've found the first valid geometry path
                     break
-
+                   
 
         # Extract joint data from the model
         joint_data = get_joint_data(model)
@@ -316,145 +310,267 @@ class ImportOpenSimModel(Operator):
         muscle_data = get_muscle_data(model)
         muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the joints
         
-        #### create bodies
+        #### import the component creation functions
+
         from .create_body_func import create_body
-
-
-        for body_name, body in body_data.items():
-            name = body_name
-            mass = body['mass']
-            COM = list(body['mass_center'])  # Convert tuple to list
-            inertia_COM = list(body['inertia'])  # Convert tuple to list
-            geometries = body['geometries']  # This will be a list of dictionaries or empty list
-
-
-            # If geometries exist, join them with semicolons, otherwise set a default string
-            if geometries:
-                geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
-
-            else:
-                geometry_string = 'no geometry'
-
-            # Call create_body with the prepared geometry string
-            create_body(name=name, is_global = True, size = body_axes_size,
-                        mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string, 
-                        collection_name=body_colname,  
-                        import_geometry = import_geometry, #the bool property
-                            geometry_parent_dir = geometry_parent_dir)
-            
-
-        #### create joints
         from .create_joint_func import create_joint
-
-        for joint_name, joint in joint_data.items():
-
-            name = joint_name
-            parent_body = joint['parent_body']
-            child_body = joint['child_body']
-
-            frames_dict = {frame['frame_name']: frame for frame in joint['frames_data']} #dictionary for easier access
-
-            parent_frame_name = joint['parent_frame']
-            child_frame_name = joint['child_frame']
-
-            translation_in_parent_frame = frames_dict[parent_frame_name]['translation']
-            orientation_in_parent_frame = frames_dict[parent_frame_name]['orientation']
-
-            translation_in_child_frame = frames_dict[child_frame_name]['translation']
-            orientation_in_child_frame = frames_dict[child_frame_name]['orientation']
-
-            ## coordinates
-
-            coordinate_Tx = ''
-            coordinate_Ty = ''
-            coordinate_Tz = ''
-            coordinate_Rx = ''
-            coordinate_Ry = ''
-            coordinate_Rz = ''
-
-            # Loop through each transform axis in the joint's spatial_transform data
-            for transform in joint['spatial_transform']:
-                axis_vector = transform['axis_vector']
-                coordinates = transform['axis_coordinates']
-
-                
-                if coordinates: #if coordinates aren't none
-                # Check which axis the transform corresponds to and assign the coordinate accordingly
-                    if axis_vector == (1, 0, 0):  # X-axis
-                        if 'rotation' in transform['axis_name']:
-                            coordinate_Rx = coordinates
-                        elif 'translation' in transform['axis_name']:
-                            coordinate_Tx = coordinates
-                    elif axis_vector == (0, 1, 0):  # Y-axis
-                        if 'rotation' in transform['axis_name']:
-                            coordinate_Ry = coordinates
-                        elif 'translation' in transform['axis_name']:
-                            coordinate_Ty = coordinates
-                    elif axis_vector == (0, 0, 1):  # Z-axis
-                        if 'rotation' in transform['axis_name']:
-                            coordinate_Rz = coordinates
-                        elif 'translation' in transform['axis_name']:
-                            coordinate_Tz = coordinates
-            
-            # if is_global
-
-            
-
-            pos_in_global = translation_in_parent_frame
-            or_in_global_XYZeuler = orientation_in_parent_frame
-
-            create_joint(name = name, radius = joint_rad, 
-                         collection_name=joint_colname,
-                         is_global = True,
-                         parent_body=parent_body, 
-                         child_body=child_body,
-                         pos_in_global = pos_in_global, 
-                        or_in_global_XYZeuler = or_in_global_XYZeuler,
-                        coordinate_Tx = coordinate_Tx,
-                        coordinate_Ty = coordinate_Ty,
-                        coordinate_Tz = coordinate_Tz,
-                        coordinate_Rx = coordinate_Rx,
-                        coordinate_Ry = coordinate_Ry,
-                        coordinate_Rz = coordinate_Rz,
-            )
-                        #or_in_global_quat= or_in_global_quat,
-                        #pos_in_parent_frame = pos_in_parent_frame, 
-                        #or_in_parent_frame_XYZeuler = or_in_parent_frame_XYZeuler,
-                        #or_in_parent_frame_quat= or_in_parent_frame_quat,
-                        #pos_in_child_frame = pos_in_child_frame, 
-                        #or_in_child_frame_XYZeuler = or_in_child_frame_XYZeuler,
-                        #or_in_child_frame_quat= or_in_child_frame_quat,
-                        
-       
-
-        #### create muscles
         from .create_muscle_func import create_muscle
+        from .create_frame_func import create_frame
 
-        for muscle_name, muscle in muscle_data.items():
-
+        # Frame metatdata
+        frame_colname = bpy.context.scene.muskemo.frame_collection
+        frame_size = bpy.context.scene.muskemo.ARF_axes_size
+        
+        if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions
             
-            F_max = muscle['F_max']
-            optimal_fiber_length = muscle['optimal_fiber_length']
-            tendon_slack_length = muscle['tendon_slack_length']
-            pennation_angle = muscle['pennation_angle']
+            #### create bodies
+            for body_name, body in body_data.items():
+                
+                mass = body['mass']
+                COM = list(body['mass_center'])  # Convert tuple to list
+                inertia_COM = list(body['inertia'])  # Convert tuple to list
+                geometries = body['geometries']  # This will be a list of dictionaries or empty list
 
-            for point in muscle['path_points_data']:
 
-                parent_frame = point['parent_frame']
-                parent_body_name = parent_frame.split('/bodyset/')[-1]  #this assumes the muscle points are always expressed in the parent body frame, not an offset frame
-                point_position = point['location']
+                # If geometries exist, join them with semicolons, otherwise set a default string
+                if geometries:
+                    geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
+
+                else:
+                    geometry_string = 'no geometry'
+
+                # Call create_body with the prepared geometry string
+                create_body(name=body_name, is_global = True, size = body_axes_size,
+                            mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string, 
+                            collection_name=body_colname,  
+                            import_geometry = import_geometry, #the bool property
+                                geometry_parent_dir = geometry_parent_dir)
                 
 
-                create_muscle(muscle_name = muscle_name, 
-                              is_global =True, 
-                              body_name = parent_body_name,
-                              point_position = point_position,
-                              collection_name=muscle_colname,
-                              optimal_fiber_length=optimal_fiber_length,
-                              tendon_slack_length=tendon_slack_length,
-                              F_max = F_max,
-                              pennation_angle = pennation_angle)
+            #### create joints
+            
+
+            for joint_name, joint in joint_data.items():
+
+                
+                parent_body = joint['parent_body']
+                child_body = joint['child_body']
+
+                frames_dict = {frame['frame_name']: frame for frame in joint['frames_data']} #dictionary for easier access
+
+                parent_frame_name = joint['parent_frame']
+                child_frame_name = joint['child_frame']
+
+                translation_in_parent_frame = frames_dict[parent_frame_name]['translation']
+                orientation_in_parent_frame = frames_dict[parent_frame_name]['orientation']
+
+                translation_in_child_frame = frames_dict[child_frame_name]['translation']
+                orientation_in_child_frame = frames_dict[child_frame_name]['orientation']
+
+                ## coordinates
+
+                coordinate_Tx = ''
+                coordinate_Ty = ''
+                coordinate_Tz = ''
+                coordinate_Rx = ''
+                coordinate_Ry = ''
+                coordinate_Rz = ''
+
+                # Loop through each transform axis in the joint's spatial_transform data
+                for transform in joint['spatial_transform']:
+                    axis_vector = transform['axis_vector']
+                    coordinates = transform['axis_coordinates']
+
+                    
+                    if coordinates: #if coordinates aren't none
+                    # Check which axis the transform corresponds to and assign the coordinate accordingly
+                        if axis_vector == (1, 0, 0):  # X-axis
+                            if 'rotation' in transform['axis_name']:
+                                coordinate_Rx = coordinates
+                            elif 'translation' in transform['axis_name']:
+                                coordinate_Tx = coordinates
+                        elif axis_vector == (0, 1, 0):  # Y-axis
+                            if 'rotation' in transform['axis_name']:
+                                coordinate_Ry = coordinates
+                            elif 'translation' in transform['axis_name']:
+                                coordinate_Ty = coordinates
+                        elif axis_vector == (0, 0, 1):  # Z-axis
+                            if 'rotation' in transform['axis_name']:
+                                coordinate_Rz = coordinates
+                            elif 'translation' in transform['axis_name']:
+                                coordinate_Tz = coordinates
+                
+                # if is_global
+
+                
+
+                pos_in_global = translation_in_parent_frame
+                or_in_global_XYZeuler = orientation_in_parent_frame
+
+                create_joint(name = joint_name, radius = joint_rad, 
+                            collection_name=joint_colname,
+                            is_global = True,
+                            parent_body=parent_body, 
+                            child_body=child_body,
+                            pos_in_global = pos_in_global, 
+                            or_in_global_XYZeuler = or_in_global_XYZeuler,
+                            coordinate_Tx = coordinate_Tx,
+                            coordinate_Ty = coordinate_Ty,
+                            coordinate_Tz = coordinate_Tz,
+                            coordinate_Rx = coordinate_Rx,
+                            coordinate_Ry = coordinate_Ry,
+                            coordinate_Rz = coordinate_Rz,
+                )
+                            #or_in_global_quat= or_in_global_quat,
+                            #pos_in_parent_frame = pos_in_parent_frame, 
+                            #or_in_parent_frame_XYZeuler = or_in_parent_frame_XYZeuler,
+                            #or_in_parent_frame_quat= or_in_parent_frame_quat,
+                            #pos_in_child_frame = pos_in_child_frame, 
+                            #or_in_child_frame_XYZeuler = or_in_child_frame_XYZeuler,
+                            #or_in_child_frame_quat= or_in_child_frame_quat,
+                            
+        
+
+            #### create muscles
+            
+            for muscle_name, muscle in muscle_data.items():
+
+                
+                F_max = muscle['F_max']
+                optimal_fiber_length = muscle['optimal_fiber_length']
+                tendon_slack_length = muscle['tendon_slack_length']
+                pennation_angle = muscle['pennation_angle']
+
+                for point in muscle['path_points_data']:
+
+                    parent_frame = point['parent_frame']
+                    parent_body_name = parent_frame.split('/bodyset/')[-1]  #this assumes the muscle points are always expressed in the parent body frame, not an offset frame
+                    point_position = point['location']
+                    
+
+                    create_muscle(muscle_name = muscle_name, 
+                                is_global =True, 
+                                body_name = parent_body_name,
+                                point_position = point_position,
+                                collection_name=muscle_colname,
+                                optimal_fiber_length=optimal_fiber_length,
+                                tendon_slack_length=tendon_slack_length,
+                                F_max = F_max,
+                                pennation_angle = pennation_angle)
          
+        else: #if using local definitions
+            
+            from .quaternions import (matrix_from_quaternion, quat_from_matrix)
+            from .euler_XYZ_body import (matrix_from_euler_XYZbody, euler_XYZbody_from_matrix)
+
+            def build_joint_tree(joint_data, parent_body):
+                # Find all joints where the parent_body is the current body
+                child_joints = {}
+                
+                for joint_name, joint in joint_data.items():
+                    if joint['parent_body'] == parent_body:
+                        # Recursively build the tree for this joint's child body
+                        child_body = joint['child_body']
+                        child_joints[joint_name] = build_joint_tree(joint_data, child_body)
+                
+                return child_joints
+
+            # Get the entire joint topology as a tree structure
+            joint_tree = build_joint_tree(joint_data, 'ground') #this assumes ground is always the parent body of the model
+
+            # Pretty print the resulting tree structure
+            pprint.pprint(joint_tree)
+
+            #iterate through the joint_tree and create the joints, frames, and child bodies
+            # Initialize the stack with the root joints
+            stack = list(joint_tree.items())
+            frames = {} #initialize a frames dict
+            while stack:
+                # Get the current joint and its child tree
+                joint_name, joint_childtree = stack.pop()
+
+                # joint data
+                joint = joint_data[joint_name]
+                
+                parent_body_name = joint['parent_body']
+                child_body_name = joint['child_body']
+
+                frames_dict = {frame['frame_name']: frame for frame in joint['frames_data']} #dictionary for easier access
+
+                parent_frame_name = joint['parent_frame']
+                child_frame_name = joint['child_frame']
+
+                translation_in_parent_frame = frames_dict[parent_frame_name]['translation']
+                orientation_in_parent_frame = frames_dict[parent_frame_name]['orientation']
+
+                translation_in_child_frame = frames_dict[child_frame_name]['translation']
+                orientation_in_child_frame = frames_dict[child_frame_name]['orientation']
+
+                if parent_body_name == 'ground':
+
+                    pos_in_global = translation_in_parent_frame 
+                    or_in_global_XYZeuler = orientation_in_parent_frame
+
+                else:
+                    
+                    parent_frame = frames[parent_frame_name]  #this calls the dictionary that is created earlier. Since we start at root, this is populated by the time we get here
+
+                    gRp = parent_frame['gRf'] #parent frame orientation in global
+                    pRj, jRp = matrix_from_euler_XYZbody(orientation_in_parent_frame) #p is parent frame, j is joint
+                    gRj =  gRp @ pRj  #parent frame in global times orientation in parent. Results in joint orientation in global frame
+                    
+                    or_in_global_XYZeuler = euler_XYZbody_from_matrix(gRj) #MAYBE CONVERT IT ALL TO QUATS?
+
+                    #   position in global = gRp @ loc_p + par_frame_loc_g   (joint translation in parent frame must be rotated to global, and then added to the parent frame global position)                    
+                    pos_in_global = gRp @ Vector(translation_in_parent_frame) + parent_frame['frame_pos_in_global']
+                    
+                    
+
+                #### construct child frame
+                gRj, jRg = matrix_from_euler_XYZbody(or_in_global_XYZeuler) # g is global frame, j is joint
+
+                cRj, jRc = matrix_from_euler_XYZbody(orientation_in_child_frame) #c is child frame, j is joint
+
+                gRc = gRj @ jRc  #child frame orientation in global
+
+                frame_pos_in_global = Vector(pos_in_global) - gRc @ Vector(translation_in_child_frame)
+
+                
+                frames[child_frame_name] = {'frame_pos_in_global': frame_pos_in_global,
+                                            'gRf': gRc, # frame orientation in global
+                                            }
+                
+                create_frame(name = child_frame_name, size = frame_size , 
+                             pos_in_global=frame_pos_in_global,
+                        gRb = gRc, 
+                        parent_body = 'not_assigned',) ### ASSIGN PARENT BODY NOT YET SUPPORTED!
+
+
+
+
+                #### construct child body
+
+
+
+                #### construct joint
+
+                
+
+
+                create_joint(name = joint_name, radius = joint_rad, is_global = True,
+                             pos_in_global = pos_in_global, or_in_global_XYZeuler = or_in_global_XYZeuler)
+
+
+                # Add child joints to the stack to be processed
+                for child_joint_name, child_childtree in joint_childtree.items():
+                    stack.append((child_joint_name, child_childtree))
+                
+
+        print('hoi')
+            
+            
+           
+            
 
        
 
