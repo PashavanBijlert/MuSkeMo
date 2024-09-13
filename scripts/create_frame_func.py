@@ -4,8 +4,11 @@ from mathutils import (Matrix)
 
 
 
-def create_frame(name, size, pos_in_global,
-                   gRb, parent_body = 'not_assigned',):
+def create_frame(name, size,
+                 pos_in_global,
+                   gRb, 
+                    collection_name = 'Frames',
+                    parent_body = 'not_assigned',):
     
     '''
     inputs:
@@ -13,9 +16,22 @@ def create_frame(name, size, pos_in_global,
     size
     pos_in_global (n x 3 list or vector) of the frame origin position in global
     gRb: 3x3 Matrix or np.array. Rotation matrix from body-fixed to global frame
+    collection_name (string, optional. Name of the collection where the frames will be stored)
     parent_body = name of the parent body. Optional
     '''
+    #check if the collection name exists, and if not create it
+    if collection_name not in bpy.data.collections:
+        bpy.data.collections.new(collection_name)
+        
+    coll = bpy.data.collections[collection_name] #Collection which will recieve the frames
+
+    if collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+        bpy.context.scene.collection.children.link(coll)     #add it to the scene
     
+    #Make sure the collection is active
+    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
+
+
     worldMat = Matrix(gRb).to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
 
     for i in range(len(pos_in_global)):

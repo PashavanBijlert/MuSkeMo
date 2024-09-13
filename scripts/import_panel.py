@@ -445,18 +445,7 @@ class ImportFramesOperator(Operator, ImportHelperCustom):  #inherits from Import
 
         colname = bpy.context.scene.muskemo.frame_collection #name for the collection
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
-        
-        #Make sure the "frames" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-
+      
         from .create_frame_func import create_frame
         from .quaternions import matrix_from_quaternion
 
@@ -493,6 +482,7 @@ class ImportFramesOperator(Operator, ImportHelperCustom):  #inherits from Import
                          parent_body=parent_body, 
                          pos_in_global = pos_in_global, 
                          gRb = gRb, 
+                         collection_name = colname,
                          )
 
 

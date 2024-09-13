@@ -1,5 +1,5 @@
 import bpy
-from mathutils import Vector
+from mathutils import (Vector, Matrix)
 from bpy.types import (Operator,
                         )
 
@@ -45,6 +45,8 @@ class ImportOpenSimModel(Operator):
         root = tree.getroot()    
         model = root.find('Model')
         
+        from .quaternions import (matrix_from_quaternion, quat_from_matrix)
+        from .euler_XYZ_body import (matrix_from_euler_XYZbody, euler_XYZbody_from_matrix)
     
         def get_body_data(model):
             body_set = model.find('BodySet')
@@ -271,6 +273,9 @@ class ImportOpenSimModel(Operator):
         geometry_parent_dir = os.path.dirname(self.filepath)
         import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
 
+
+
+
         if import_geometry: #if the user wants imported geometry, we check if the folder exists
 
             # Loop through the data to find the first valid geometry path
@@ -400,10 +405,7 @@ class ImportOpenSimModel(Operator):
                             elif 'translation' in transform['axis_name']:
                                 coordinate_Tz = coordinates
                 
-                # if is_global
-
-                
-
+                #because we're importing a model constructed with global definitions
                 pos_in_global = translation_in_parent_frame
                 or_in_global_XYZeuler = orientation_in_parent_frame
 
@@ -414,6 +416,7 @@ class ImportOpenSimModel(Operator):
                             child_body=child_body,
                             pos_in_global = pos_in_global, 
                             or_in_global_XYZeuler = or_in_global_XYZeuler,
+                            or_in_global_quat = quat_from_matrix(matrix_from_euler_XYZbody(or_in_global_XYZeuler)[0]),
                             coordinate_Tx = coordinate_Tx,
                             coordinate_Ty = coordinate_Ty,
                             coordinate_Tz = coordinate_Tz,
@@ -430,39 +433,10 @@ class ImportOpenSimModel(Operator):
                             #or_in_child_frame_quat= or_in_child_frame_quat,
                             
         
-
-            #### create muscles
-            
-            for muscle_name, muscle in muscle_data.items():
-
-                
-                F_max = muscle['F_max']
-                optimal_fiber_length = muscle['optimal_fiber_length']
-                tendon_slack_length = muscle['tendon_slack_length']
-                pennation_angle = muscle['pennation_angle']
-
-                for point in muscle['path_points_data']:
-
-                    parent_frame = point['parent_frame']
-                    parent_body_name = parent_frame.split('/bodyset/')[-1]  #this assumes the muscle points are always expressed in the parent body frame, not an offset frame
-                    point_position = point['location']
-                    
-
-                    create_muscle(muscle_name = muscle_name, 
-                                is_global =True, 
-                                body_name = parent_body_name,
-                                point_position = point_position,
-                                collection_name=muscle_colname,
-                                optimal_fiber_length=optimal_fiber_length,
-                                tendon_slack_length=tendon_slack_length,
-                                F_max = F_max,
-                                pennation_angle = pennation_angle)
          
         else: #if using local definitions
             
-            from .quaternions import (matrix_from_quaternion, quat_from_matrix)
-            from .euler_XYZ_body import (matrix_from_euler_XYZbody, euler_XYZbody_from_matrix)
-
+            
             def build_joint_tree(joint_data, parent_body):
                 # Find all joints where the parent_body is the current body
                 child_joints = {}
@@ -489,7 +463,7 @@ class ImportOpenSimModel(Operator):
                 # Get the current joint and its child tree
                 joint_name, joint_childtree = stack.pop()
 
-                # joint data
+                # unpack some of the joint data
                 joint = joint_data[joint_name]
                 
                 parent_body_name = joint['parent_body']
@@ -510,6 +484,7 @@ class ImportOpenSimModel(Operator):
 
                     pos_in_global = translation_in_parent_frame 
                     or_in_global_XYZeuler = orientation_in_parent_frame
+                    or_in_global_quat = quat_from_matrix(matrix_from_euler_XYZbody(or_in_global_XYZeuler)[0])
 
                 else:
                     
@@ -517,6 +492,8 @@ class ImportOpenSimModel(Operator):
 
                     gRp = parent_frame['gRf'] #parent frame orientation in global
                     pRj, jRp = matrix_from_euler_XYZbody(orientation_in_parent_frame) #p is parent frame, j is joint
+                    or_in_parent_frame_quat = quat_from_matrix(pRj)
+                    
                     gRj =  gRp @ pRj  #parent frame in global times orientation in parent. Results in joint orientation in global frame
                     
                     or_in_global_XYZeuler = euler_XYZbody_from_matrix(gRj) #MAYBE CONVERT IT ALL TO QUATS?
@@ -524,51 +501,194 @@ class ImportOpenSimModel(Operator):
                     #   position in global = gRp @ loc_p + par_frame_loc_g   (joint translation in parent frame must be rotated to global, and then added to the parent frame global position)                    
                     pos_in_global = gRp @ Vector(translation_in_parent_frame) + parent_frame['frame_pos_in_global']
                     
-                    
+                    or_in_global_quat= quat_from_matrix(gRj)
 
-                #### construct child frame
+                #### reconstruct the child frame
                 gRj, jRg = matrix_from_euler_XYZbody(or_in_global_XYZeuler) # g is global frame, j is joint
-
                 cRj, jRc = matrix_from_euler_XYZbody(orientation_in_child_frame) #c is child frame, j is joint
 
+                or_in_child_frame_quat= quat_from_matrix(cRj)
+
                 gRc = gRj @ jRc  #child frame orientation in global
+                
 
                 frame_pos_in_global = Vector(pos_in_global) - gRc @ Vector(translation_in_child_frame)
 
-                
+                #add to the frames dictionary
                 frames[child_frame_name] = {'frame_pos_in_global': frame_pos_in_global,
                                             'gRf': gRc, # frame orientation in global
                                             }
                 
+
+                #### construct child body
+                
+                body = body_data[child_body_name]
+
+                mass = body['mass']
+                COM_local = list(body['mass_center'])  # Convert tuple to list, COM in child body frame
+                inertia_COM_local = list(body['inertia'])  # Convert tuple to list, COM in child body frame (c frame)
+
+                COM_global = gRc @ Vector(COM_local) + frame_pos_in_global #gRc is child body frame orientation in global
+                
+                MOI_c_matrix = Matrix(((inertia_COM_local[0], inertia_COM_local[3], inertia_COM_local[4]), #MOI tensor about COM in global
+                        (inertia_COM_local[3],inertia_COM_local[1],inertia_COM_local[5]),
+                        (inertia_COM_local[4],inertia_COM_local[5],inertia_COM_local[2])))
+                
+                cRg = gRc.copy() #copy the gRc matrix
+                cRg.transpose() #transpose it so that it becomes cRg
+
+                MOI_g_matrix = gRc @ MOI_c_matrix @ cRg
+
+                inertia_COM_global =   [MOI_g_matrix[0][0],  #Ixx, about COM, in global frame
+                                        MOI_g_matrix[1][1],  #Iyy
+                                        MOI_g_matrix[2][2],  #Izz
+                                        MOI_g_matrix[0][1],  #Ixy
+                                        MOI_g_matrix[0][2],  #Ixz
+                                        MOI_g_matrix[1][2]]  #Iyz
+
+                geometries = body['geometries']  # This will be a list of dictionaries or empty list
+
+
+                # If geometries exist, join them with semicolons, otherwise set a default string
+                if geometries:
+                    geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
+
+                else:
+                    geometry_string = 'no geometry'
+
+                # Call create_body with the prepared geometry string
+                create_body(name=child_body_name, is_global = True, size = body_axes_size,
+                            mass=mass, 
+                            COM = COM_global, inertia_COM = inertia_COM_global,
+                            COM_local=COM_local,  inertia_COM_local=inertia_COM_local,
+                            local_frame = child_frame_name, 
+                            Geometry=geometry_string, 
+                            collection_name=body_colname,  
+                            import_geometry = import_geometry, #the bool property
+                            geometry_parent_dir = geometry_parent_dir)
+
+
+                #### construct child frame
+
                 create_frame(name = child_frame_name, size = frame_size , 
                              pos_in_global=frame_pos_in_global,
                         gRb = gRc, 
-                        parent_body = 'not_assigned',) ### ASSIGN PARENT BODY NOT YET SUPPORTED!
-
-
-
-
-                #### construct child body
+                        parent_body = 'not_assigned',
+                        collection_name = frame_colname) ### ASSIGN PARENT BODY NOT YET SUPPORTED!
 
 
 
                 #### construct joint
 
+                ## create coordinates
+
+                coordinate_Tx = ''
+                coordinate_Ty = ''
+                coordinate_Tz = ''
+                coordinate_Rx = ''
+                coordinate_Ry = ''
+                coordinate_Rz = ''
+
+                # Loop through each transform axis in the joint's spatial_transform data
+                for transform in joint['spatial_transform']:
+                    axis_vector = transform['axis_vector']
+                    coordinates = transform['axis_coordinates']
+
+                    
+                    if coordinates: #if coordinates aren't none
+                    # Check which axis the transform corresponds to and assign the coordinate accordingly
+                        if axis_vector == (1, 0, 0):  # X-axis
+                            if 'rotation' in transform['axis_name']:
+                                coordinate_Rx = coordinates
+                            elif 'translation' in transform['axis_name']:
+                                coordinate_Tx = coordinates
+                        elif axis_vector == (0, 1, 0):  # Y-axis
+                            if 'rotation' in transform['axis_name']:
+                                coordinate_Ry = coordinates
+                            elif 'translation' in transform['axis_name']:
+                                coordinate_Ty = coordinates
+                        elif axis_vector == (0, 0, 1):  # Z-axis
+                            if 'rotation' in transform['axis_name']:
+                                coordinate_Rz = coordinates
+                            elif 'translation' in transform['axis_name']:
+                                coordinate_Tz = coordinates
                 
+                if parent_body_name == 'ground': #set position and orientation in parent to nan, since these are equal to global.
+                    #I'm assuming ground never has a rotation or orientation.
+                    pos_in_parent_frame = [nan]*3 
+                    or_in_parent_frame_XYZeuler = [nan]*3
+                    or_in_parent_frame_quat= [nan]*4
 
 
-                create_joint(name = joint_name, radius = joint_rad, is_global = True,
-                             pos_in_global = pos_in_global, or_in_global_XYZeuler = or_in_global_XYZeuler)
 
+
+                create_joint(name = joint_name, radius = joint_rad, 
+                            collection_name=joint_colname,
+                            is_global = True,
+                            parent_body=parent_body_name, 
+                            child_body=child_body_name,
+                            pos_in_global = pos_in_global, 
+                            or_in_global_XYZeuler = or_in_global_XYZeuler,
+                            or_in_global_quat= or_in_global_quat,
+                            pos_in_parent_frame = translation_in_parent_frame, 
+                            or_in_parent_frame_XYZeuler = orientation_in_parent_frame,
+                            or_in_parent_frame_quat= or_in_parent_frame_quat,
+                            pos_in_child_frame = translation_in_child_frame, 
+                            or_in_child_frame_XYZeuler = orientation_in_child_frame,
+                            or_in_child_frame_quat= or_in_child_frame_quat,
+                            coordinate_Tx = coordinate_Tx,
+                            coordinate_Ty = coordinate_Ty,
+                            coordinate_Tz = coordinate_Tz,
+                            coordinate_Rx = coordinate_Rx,
+                            coordinate_Ry = coordinate_Ry,
+                            coordinate_Rz = coordinate_Rz,
+                )
+                            
+                            
 
                 # Add child joints to the stack to be processed
                 for child_joint_name, child_childtree in joint_childtree.items():
                     stack.append((child_joint_name, child_childtree))
                 
-
+        #### outside 
         print('hoi')
             
+        #### create muscles
             
+        for muscle_name, muscle in muscle_data.items():
+
+            
+            F_max = muscle['F_max']
+            optimal_fiber_length = muscle['optimal_fiber_length']
+            tendon_slack_length = muscle['tendon_slack_length']
+            pennation_angle = muscle['pennation_angle']
+
+            for point in muscle['path_points_data']:
+
+                socket_parent_frame_name = point['parent_frame']
+                mp_parent_body_name = socket_parent_frame_name.split('/bodyset/')[-1]  #this assumes the muscle points are always expressed in the parent body frame, not an offset frame
+                               
+                muscle_point_position = point['location']
+                
+                if bpy.context.scene.muskemo.model_import_style == 'loc':  #if importing a model using local definitions, muscle points are provided wrt parent frame
+                    
+                    mp_parent_body = bpy.data.objects[mp_parent_body_name] ## this assumes muscle point parent frames are always expressed in a body, thus in the /bodyset/
+                    mp_parent_frame = frames[mp_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
+
+                    gRp = mp_parent_frame['gRf']  #global orientation of parent frame
+                    parent_frame_pos_in_glob = mp_parent_frame['frame_pos_in_global']
+
+                    muscle_point_position = parent_frame_pos_in_glob + gRp @ Vector(muscle_point_position)
+
+                create_muscle(muscle_name = muscle_name, 
+                            is_global =True, 
+                            body_name = mp_parent_body_name,
+                            point_position = muscle_point_position,
+                            collection_name=muscle_colname,
+                            optimal_fiber_length=optimal_fiber_length,
+                            tendon_slack_length=tendon_slack_length,
+                            F_max = F_max,
+                            pennation_angle = pennation_angle)    
            
             
 
