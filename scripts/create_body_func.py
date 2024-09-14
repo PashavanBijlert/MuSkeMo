@@ -9,7 +9,7 @@ def create_body(name, size, self,
                 inertia_COM_local=[nan]*6, COM_local=[nan]*3, 
                 Geometry='no geometry', local_frame='not_assigned', 
                 collection_name = 'Bodies', import_geometry = False,
-                geometry_collection_name = 'Geometry',
+                geometry_collection_name = '',
                 geometry_parent_dir = ''):
     
     '''
@@ -17,6 +17,7 @@ def create_body(name, size, self,
     # Inputs:
     # name (string) - Mandatory. Name of the target body.
     # size (float) - Mandatory. Size of the display geometry (in meters)
+    # self - Mandatory. The 'self' parameter of the Operator from which this function is called.
     # is_global (boolean, optional). Whether to use the global COM location for display. Default is global
     # mass (float, optional) - Mass in kg.
     # inertia_COM (list of 6 floats, optional) - Moment of inertia (in kg m^2) about the COM, in the global frame.
@@ -27,7 +28,7 @@ def create_body(name, size, self,
     # local frame (string, optional). Name of the local (anatomical) reference frame.
     # collection_name (string, optional). Name of the collection where the bodies will be placed. Default = 'Bodies'
     # import_geometry (boolean, optional). Do you want visual geometries to be imported and parented to the bodies?
-    # geometry_collection_name (string, optional). Name of the collection where the geometries will be placed. Default = 'Geometry'
+    # geometry_collection_name (string, optional). Name of the collection where the geometries will be placed. Gets overwritten with the MuSkeMo property "geometry collection" if empty, or overwritten by the subdirectory defined in the body
     # geometry_parent_dir (string, mandatory if importing geometry). Path to parent directory which contains the 'Geometry' directory
 
 
