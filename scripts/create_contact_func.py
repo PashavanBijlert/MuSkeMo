@@ -1,10 +1,23 @@
 import bpy
 from math import nan
 
-def create_contact(name, radius, pos_in_global = [nan]*3,
+def create_contact(name, radius, collection_name,
+                    pos_in_global = [nan]*3,
                   is_global = True, 
                  parent_body = 'not_assigned', pos_in_parent_frame = [nan]*3):
     
+
+    #check if the collection name exists, and if not create it
+    if collection_name not in bpy.data.collections:
+        bpy.data.collections.new(collection_name)
+        
+    coll = bpy.data.collections[collection_name] #Collection which will recieve the scaled contacts
+
+    if collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+        bpy.context.scene.collection.children.link(coll)     #add it to the scene
+    
+    #Make sure the "contacts" collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
 
 
     bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, enter_editmode=False, align='WORLD', location = (0,0,0)) #create a sphere

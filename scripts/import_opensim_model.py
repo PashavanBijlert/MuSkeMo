@@ -265,6 +265,52 @@ class ImportOpenSimModel(Operator):
 
             return muscle_data
        
+        def get_contact_data(model):
+            contact_data = {}
+
+            # Locate the ContactGeometrySet in the model
+            contact_geometry_set = model.find('ContactGeometrySet')
+            if contact_geometry_set is not None:
+                # Locate all contact geometry objects
+                contact_objects = contact_geometry_set.find('objects')
+                if contact_objects is not None:
+                    for contact_geometry in contact_objects:
+                        geometry_name = contact_geometry.get('name')
+                        geometry_type = contact_geometry.tag
+
+                        # Initialize variables with default values
+                        socket_frame = None
+                        location = (0.0, 0.0, 0.0)
+                        orientation = (0.0, 0.0, 0.0)
+                        radius = None  # Not all geometries will have a radius
+
+                        # Extract frame, location, and orientation
+                        if contact_geometry.find('socket_frame') is not None:
+                            socket_frame = contact_geometry.find('socket_frame').text.strip()
+
+                        if contact_geometry.find('location') is not None:
+                            location = tuple(map(float, contact_geometry.find('location').text.split()))
+
+                        if contact_geometry.find('orientation') is not None:
+                            orientation = tuple(map(float, contact_geometry.find('orientation').text.split()))
+
+                        # Extract radius if it's a sphere
+                        if geometry_type == 'ContactSphere' and contact_geometry.find('radius') is not None:
+                            radius = float(contact_geometry.find('radius').text)
+
+                        # Add the extracted data to the contact_data dict
+                        contact_data[geometry_name] = {
+                            'geometry_type': geometry_type,
+                            'socket_frame': socket_frame,
+                            'location': location,
+                            'orientation': orientation,
+                            'radius': radius  # Will be None for geometries without a radius
+                        }
+
+            return contact_data
+
+
+
         # Extract body data from the model, and check if geometry folder exists
         body_data = get_body_data(model)
         
@@ -272,9 +318,6 @@ class ImportOpenSimModel(Operator):
         body_axes_size = bpy.context.scene.muskemo.axes_size #axis length, in meters
         geometry_parent_dir = os.path.dirname(self.filepath)
         import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
-
-
-
 
         if import_geometry: #if the user wants imported geometry, we check if the folder exists
 
@@ -320,8 +363,14 @@ class ImportOpenSimModel(Operator):
 
         # Extract muscle data from the model
         muscle_data = get_muscle_data(model)
-        muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the joints
+        muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the muscles
         
+        # Extract the contact data from the model
+        contact_data = get_contact_data(model)
+        contact_colname =  bpy.context.scene.muskemo.contact_collection #name for the collection that will contain the contacts
+
+
+
         #### import the component creation functions
 
         from .create_body_func import create_body
@@ -329,7 +378,7 @@ class ImportOpenSimModel(Operator):
         from .create_muscle_func import create_muscle
         from .create_frame_func import create_frame
 
-        # Frame metatdata
+        # Frame related user inputs
         frame_colname = bpy.context.scene.muskemo.frame_collection
         frame_size = bpy.context.scene.muskemo.ARF_axes_size
         

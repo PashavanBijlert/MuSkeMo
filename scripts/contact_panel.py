@@ -20,24 +20,14 @@ class CreateContactOperator(Operator):
         
         colname = bpy.context.scene.muskemo.contact_collection #name for the collection that will contain the contacts
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled contacts
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
-        
-        #Make sure the "contacts" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-        
+                
         ## create the actual contact
         target_pos = bpy.context.scene.cursor.location  #3D cursor location is the target position of the contact
         
         from .create_contact_func import create_contact
 
-        create_contact(name = name, radius = rad, pos_in_global = target_pos)
+        create_contact(name = name, radius = rad, collection_name = colname,
+                        pos_in_global = target_pos)
         
         return {'FINISHED'}
 

@@ -369,18 +369,7 @@ class ImportContactsOperator(Operator, ImportHelperCustom):  #inherits from Impo
 
         colname = bpy.context.scene.muskemo.contact_collection #name for the collection
         
-        #check if the collection name exists, and if not create it
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the scaled  hulls
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
         
-        #Make sure the "contacts" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-
         from .create_contact_func import create_contact
 
         radius = bpy.context.scene.muskemo.contact_radius # in meters
@@ -411,6 +400,7 @@ class ImportContactsOperator(Operator, ImportHelperCustom):  #inherits from Impo
                 self.report({'WARNING'}, "No object with the name " + parent_body + " exists. " + name + " contact will not have a parent in Blender, but the parent body property will be saved for export.")
             
             create_contact(name = name, radius = radius, 
+                           collection_name = colname,
                          is_global = True,
                          parent_body=parent_body, 
                          pos_in_global = pos_in_global, 
