@@ -195,19 +195,34 @@ def create_body(name, size, self,
             geom_obj = bpy.data.objects[file_name_with_extension]
 
         elif filepath.endswith('.vtp'):
-            
-            self.report({'WARNING'}, "VTP import not supported yet")
-            continue
+            from .import_vtp import load_vtp_as_mesh
+            geom_obj = load_vtp_as_mesh(filepath)
+
 
         elif filepath.endswith('.stl'):
+
+            if bpy.app.version[0] <4: #if blender version is below 4
+
+                bpy.ops.import_mesh.stl(filepath=filepath, axis_forward='Y', axis_up='Z')
             
-            self.report({'WARNING'}, "STL import not supported yet")
-            continue
+            else: #if blender version is above 4:    
+                bpy.ops.wm.stl_import(filepath= filepath, forward_axis = 'Y', up_axis = 'Z' ,)
+
+            # Include the extension in the newly created object's name, to prevent potential naming conflicts
+            file_name_with_extension = os.path.basename(path)  # e.g. 'Humerus.001.obj'
+            #mesh_name, extension = os.path.splitext(file_name_with_extension)  # e.g. 'Humerus.001', '.obj'    
+            bpy.context.selected_objects[0].name =  file_name_with_extension            
+            bpy.ops.object.select_all(action='DESELECT')
+            
+            geom_obj = bpy.data.objects[file_name_with_extension]    
 
         else: #if it's not an obj, vtp, or stl
 
             self.report({'WARNING'}, "Only obj, stl, or vtp formats are supported for geometry import. Geometry '" + path + "' skipped")
             continue  
+        
+        geom_obj.rotation_mode = 'ZYX'  
+
 
         geom_obj.parent = obj #parent a mesh to a body, but this moves it
         geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
