@@ -17,7 +17,7 @@ def create_frame(name, size,
     pos_in_global (n x 3 list or vector) of the frame origin position in global
     gRb: 3x3 Matrix or np.array. Rotation matrix from body-fixed to global frame
     collection_name (string, optional. Name of the collection where the frames will be stored)
-    parent_body = name of the parent body. Optional
+    parent_body = name of the parent body. Optional, to be filled in when importing models
     '''
     #check if the collection name exists, and if not create it
     if collection_name not in bpy.data.collections:
@@ -42,11 +42,11 @@ def create_frame(name, size,
     bpy.ops.object.empty_add(type='ARROWS', radius=size, align='WORLD')
     bpy.context.object.name = name #set the name
     #bpy.context.object.data.name = name #set the name of the object data
-
-    bpy.context.object.rotation_mode = 'ZYX'    #change rotation sequence
+    obj = bpy.data.objects[name]
+    obj.rotation_mode = 'ZYX'    #change rotation sequence
 
     #
-    bpy.context.object.matrix_world = worldMat  #set the transformation matrix
+    obj.matrix_world = worldMat  #set the transformation matrix
 
     ## it's possible to calculate euler decomposition, but this is prone to gimbal lock.
     # phi_y = np.arcsin(gRl[0,2]) #alternative: phi_y = np.arctan2(gRl[0,2], math.sqrt(1 - (gRl[0,2])**2)) 
@@ -58,15 +58,19 @@ def create_frame(name, size,
     #bpy.context.object.rotation_euler = [phi_x, phi_y, phi_z]
     #bpy.context.object.location = origin
 
-    bpy.context.object['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
-    bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
+    obj['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
+    obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")
 
-    bpy.context.object['parent_body'] = parent_body    #to inform the user what type is created
-    bpy.context.object.id_properties_ui('parent_body').update(description = "The parent body of this frame")  
+    obj['parent_body'] = parent_body    #to inform the user what type is created
+    obj.id_properties_ui('parent_body').update(description = "The parent body of this frame")  
 
-    if parent_body != 'not_assigned':
+    if parent_body != 'not_assigned' and parent_body in bpy.data.objects: #if a parent body is assigned and it exists in the scene, parent it
 
-        #insert code for actually parenting the object
-        print('not written yet')
+        parent_body = bpy.data.objects[parent_body]
+        obj.parent = parent_body
+            
+        #this undoes the transformation after parenting
+        obj.matrix_parent_inverse = parent_body.matrix_world.inverted()
 
+        
     return

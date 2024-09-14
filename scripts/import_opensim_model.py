@@ -582,8 +582,8 @@ class ImportOpenSimModel(Operator):
                 create_frame(name = child_frame_name, size = frame_size , 
                              pos_in_global=frame_pos_in_global,
                         gRb = gRc, 
-                        parent_body = 'not_assigned',
-                        collection_name = frame_colname) ### ASSIGN PARENT BODY NOT YET SUPPORTED!
+                        parent_body = child_body_name,
+                        collection_name = frame_colname) 
 
 
 
