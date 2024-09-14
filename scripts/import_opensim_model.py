@@ -377,6 +377,8 @@ class ImportOpenSimModel(Operator):
         from .create_joint_func import create_joint
         from .create_muscle_func import create_muscle
         from .create_frame_func import create_frame
+        from .create_contact_func import create_contact
+
 
         # Frame related user inputs
         frame_colname = bpy.context.scene.muskemo.frame_collection
@@ -709,7 +711,7 @@ class ImportOpenSimModel(Operator):
                     stack.append((child_joint_name, child_childtree))
                 
         #### outside 
-        print('hoi')
+       
             
         #### create muscles
             
@@ -749,6 +751,44 @@ class ImportOpenSimModel(Operator):
                             pennation_angle = pennation_angle)    
            
             
+        for contact_name, contact in contact_data.items():
+
+            if contact['geometry_type'] == 'ContactSphere':# if it's a Sphere
+
+                contact_radius = contact['radius']
+                
+                c_socket_parent_frame_name = contact['socket_frame']
+                contact_parent_body_name = c_socket_parent_frame_name.split('/bodyset/')[-1]  #this assumes the contacts are always expressed in the parent body frame, not an offset frame
+                contact_position = contact['location']
+                contact_pos_in_global = [nan]*3
+                contact_pos_in_parent_frame = [nan]*3
+
+                if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions, the location corresponds to global location
+                    
+                    contact_pos_in_global = contact_position
+
+                elif bpy.context.scene.muskemo.model_import_style == 'loc':  #
+
+                    contact_pos_in_parent_frame = contact_position
+                    contact_parent_body = bpy.data.objects[contact_parent_body_name] ## this assumes contact parent frames are always expressed in a body, thus in the /bodyset/
+                    contact_parent_frame = frames[contact_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
+
+                    gRp = contact_parent_frame['gRf']  #global orientation of parent frame
+                    parent_frame_pos_in_glob = contact_parent_frame['frame_pos_in_global']
+
+                    contact_pos_in_global = parent_frame_pos_in_glob + gRp @ Vector(contact_position)
+                
+                create_contact(name = contact_name,
+                               radius = contact_radius,
+                               collection_name = contact_colname,
+                               pos_in_global = contact_pos_in_global,
+                               parent_body = contact_parent_body_name,
+                               pos_in_parent_frame=contact_pos_in_parent_frame,
+                               is_global = True,
+                               )
+
+
+
 
        
 
