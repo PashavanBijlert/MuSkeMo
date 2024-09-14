@@ -42,7 +42,7 @@ class CreateNewBodyOperator(Operator):
             
             from .create_body_func import create_body
                        
-            create_body(name = name, size = rad, is_global =True, collection_name=colname)
+            create_body(name = name, self= self, size = rad, is_global =True, collection_name=colname)
 
         
         else: #if it already exists, throw an error

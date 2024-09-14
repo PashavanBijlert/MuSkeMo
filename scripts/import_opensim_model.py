@@ -352,7 +352,8 @@ class ImportOpenSimModel(Operator):
                     geometry_string = 'no geometry'
 
                 # Call create_body with the prepared geometry string
-                create_body(name=body_name, is_global = True, size = body_axes_size,
+                create_body(name=body_name, self=self,
+                             is_global = True, size = body_axes_size,
                             mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string, 
                             collection_name=body_colname,  
                             import_geometry = import_geometry, #the bool property
@@ -564,7 +565,8 @@ class ImportOpenSimModel(Operator):
                     geometry_string = 'no geometry'
 
                 # Call create_body with the prepared geometry string
-                create_body(name=child_body_name, is_global = True, size = body_axes_size,
+                create_body(name=child_body_name, self = self,
+                            is_global = True, size = body_axes_size,
                             mass=mass, 
                             COM = COM_global, inertia_COM = inertia_COM_global,
                             COM_local=COM_local,  inertia_COM_local=inertia_COM_local,

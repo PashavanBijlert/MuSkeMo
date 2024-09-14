@@ -189,7 +189,8 @@ class ImportGaitsymModel(Operator):
 
 
             # Call create_body with the prepared geometry string
-            create_body(name=name, is_global = True, size = size,
+            create_body(name=name, self = self,
+                         is_global = True, size = size,
                         mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string, 
                         collection_name=body_colname,  
                         import_geometry = import_geometry, #the bool property

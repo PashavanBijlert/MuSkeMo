@@ -120,7 +120,8 @@ class ImportBodiesOperator(Operator, ImportHelperCustom):  #inherits from Import
 
 
 
-            create_body(name = name, size = rad, is_global =True, mass =mass, COM=COM,
+            create_body(name = name, self= self,
+                        size = rad, is_global =True, mass =mass, COM=COM,
                         inertia_COM = inertia_COM, Geometry = geometry, local_frame = local_frame_name,
                          COM_local = COM_local, inertia_COM_local = inertia_COM_local , collection_name=colname,
                          import_geometry = import_geometry, #the bool property
