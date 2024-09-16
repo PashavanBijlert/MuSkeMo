@@ -10,7 +10,9 @@ def create_body(name, size, self,
                 Geometry='no geometry', local_frame='not_assigned', 
                 collection_name = 'Bodies', import_geometry = False,
                 geometry_collection_name = '',
-                geometry_parent_dir = ''):
+                geometry_parent_dir = '',
+                geometry_pos_in_glob = '',
+                geometry_or_in_glob = ''):
     
     '''
     # Creates a MuSkeMo BODY in the blender scene.
@@ -30,7 +32,9 @@ def create_body(name, size, self,
     # import_geometry (boolean, optional). Do you want visual geometries to be imported and parented to the bodies?
     # geometry_collection_name (string, optional). Name of the collection where the geometries will be placed. Gets overwritten with the MuSkeMo property "geometry collection" if empty, or overwritten by the subdirectory defined in the body
     # geometry_parent_dir (string, mandatory if importing geometry). Path to parent directory which contains the 'Geometry' directory
-
+    # geometry_pos_in_glob (list of vectors, one for each distinct geometry, optional). Global position of the visual geometry
+    # geometry_or_in_glob = (list of gRb rotation matrices, one for each distinct geometry, optional). Global orientation of the visual geometry
+    
 
     # Default behavior is that none of the properties are known and filled with nan or a string, unless user-specified.
     # is_global is only used during model import, and determines whether global coordinates can be used, or if the model should be imported using local coordinates.
@@ -164,7 +168,7 @@ def create_body(name, size, self,
 
     geo_paths = [path for path in geo_paths if path] #remove empty strings after splitting
 
-    for path in geo_paths:
+    for ind, path in enumerate(geo_paths):
 
         filepath = geometry_parent_dir + '/' + path
 
@@ -224,7 +228,11 @@ def create_body(name, size, self,
         
         geom_obj.rotation_mode = 'ZYX'  
 
+        if geometry_or_in_glob:
+            geom_obj.matrix_world = geometry_or_in_glob[ind].to_4x4()
+            geom_obj.location = geometry_pos_in_glob[ind]
 
+        #geom_obj.matrix_world = 
         geom_obj.parent = obj #parent a mesh to a body, but this moves it
         geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
         geom_obj.data.materials.clear()

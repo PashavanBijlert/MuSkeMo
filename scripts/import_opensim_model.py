@@ -611,9 +611,35 @@ class ImportOpenSimModel(Operator):
                 # If geometries exist, join them with semicolons, otherwise set a default string
                 if geometries:
                     geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
+                    
+                    geometry_pos_in_glob = []
+                    geometry_or_in_glob = []
+                    for geometry in geometries: 
+                        #if body has geometries attached
+                        if 'translation' in geometry: #if translation is in a geometry, it was attached to an offsetframe wrt the body local frame (see the get_body_data function). We need to account for this during geometry import
+                                                      
+                            #c = child body frame, o = offset frame wrt child frame
+                            [cRo, oRc] = matrix_from_euler_XYZbody([float(x) for x in geometry['orientation'].split()]) 
+                            
+                            gRo = gRc@cRo #rotation matrix from offset frame to global
+                            geometry_or_in_glob.append(gRo)
+                            
+                            #child frame here means child body of the joint. It is actually the parent of the offest frame!
+                            offset_pos_in_child_frame = Vector([float(x) for x in geometry['translation'].split()])
+                            geometry_pos_in_glob.append(frame_pos_in_global + gRc @ offset_pos_in_child_frame)
+
+                        else:#geometry is directly attached to body frame     
+                            geometry_pos_in_glob.append(frame_pos_in_global)
+                            geometry_or_in_glob.append(gRc)
+
+                    
+
+
 
                 else:
                     geometry_string = 'no geometry'
+                    geometry_pos_in_glob = ''
+                    geometry_or_in_glob = ''
 
                 # Call create_body with the prepared geometry string
                 create_body(name=child_body_name, self = self,
@@ -625,7 +651,10 @@ class ImportOpenSimModel(Operator):
                             Geometry=geometry_string, 
                             collection_name=body_colname,  
                             import_geometry = import_geometry, #the bool property
-                            geometry_parent_dir = geometry_parent_dir)
+                            geometry_parent_dir = geometry_parent_dir,
+                            geometry_pos_in_glob = geometry_pos_in_glob,
+                            geometry_or_in_glob = geometry_or_in_glob,
+                            )
 
 
                 #### construct child frame
