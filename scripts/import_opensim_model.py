@@ -84,10 +84,21 @@ class ImportOpenSimModel(Operator):
                                 mesh_file = mesh.find('mesh_file').text.strip()
                                 translation = offset_frame.find('translation').text
                                 orientation = offset_frame.find('orientation').text
+
+                                # Check for scale_factors
+                                scale_elem = mesh.find('scale_factors')
+                                if scale_elem is not None:
+                                    # Parse the scale factors into a list of floats
+                                    scale_factors = list(map(float, scale_elem.text.strip().split()))
+                                else:
+                                    # Default scale if no scale_factors element is present
+                                    scale_factors = [1.0, 1.0, 1.0]
+
                                 geometries.append({
                                     'mesh_file': mesh_file,
                                     'translation': translation,
-                                    'orientation': orientation
+                                    'orientation': orientation,
+                                    'scale_factors': scale_factors,
                                 })
 
                 # If no PhysicalOffsetFrame exists, check directly within the Body
@@ -96,11 +107,24 @@ class ImportOpenSimModel(Operator):
                     if attached_geometry is not None:
                         for mesh in attached_geometry.findall('Mesh'):
                             mesh_file = mesh.find('mesh_file').text.strip()
+                            
+                            # Check for scale_factors
+                            scale_elem = mesh.find('scale_factors')
+                            if scale_elem is not None:
+                                # Parse the scale factors into a list of floats
+                                scale_factors = list(map(float, scale_elem.text.strip().split()))
+                            else:
+                                # Default scale if no scale_factors element is present
+                                scale_factors = [1.0, 1.0, 1.0]
+
+                            # Add the mesh and its scale factors to the list
                             geometries.append({
-                                'mesh_file': mesh_file
+                                'mesh_file': mesh_file,
+                                'scale_factors': scale_factors
                                 # No translation or orientation since it's directly attached to the body
                             })
-
+                            
+                            
                 body_data[name] ={ #body_data dictionary
                     'mass': mass,
                     'mass_center': mass_center,
@@ -614,6 +638,7 @@ class ImportOpenSimModel(Operator):
                     
                     geometry_pos_in_glob = []
                     geometry_or_in_glob = []
+                    geom_scale = []
                     for geometry in geometries: 
                         #if body has geometries attached
                         if 'translation' in geometry: #if translation is in a geometry, it was attached to an offsetframe wrt the body local frame (see the get_body_data function). We need to account for this during geometry import
@@ -627,12 +652,13 @@ class ImportOpenSimModel(Operator):
                             #child frame here means child body of the joint. It is actually the parent of the offest frame!
                             offset_pos_in_child_frame = Vector([float(x) for x in geometry['translation'].split()])
                             geometry_pos_in_glob.append(frame_pos_in_global + gRc @ offset_pos_in_child_frame)
+                            
 
                         else:#geometry is directly attached to body frame     
                             geometry_pos_in_glob.append(frame_pos_in_global)
                             geometry_or_in_glob.append(gRc)
 
-                    
+                        geom_scale.append(Vector(geometry['scale_factors']))
 
 
 
@@ -654,6 +680,7 @@ class ImportOpenSimModel(Operator):
                             geometry_parent_dir = geometry_parent_dir,
                             geometry_pos_in_glob = geometry_pos_in_glob,
                             geometry_or_in_glob = geometry_or_in_glob,
+                            geometry_scale = geom_scale,
                             )
 
 

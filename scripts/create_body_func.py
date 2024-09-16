@@ -12,7 +12,8 @@ def create_body(name, size, self,
                 geometry_collection_name = '',
                 geometry_parent_dir = '',
                 geometry_pos_in_glob = '',
-                geometry_or_in_glob = ''):
+                geometry_or_in_glob = '',
+                geometry_scale = ''):
     
     '''
     # Creates a MuSkeMo BODY in the blender scene.
@@ -34,6 +35,7 @@ def create_body(name, size, self,
     # geometry_parent_dir (string, mandatory if importing geometry). Path to parent directory which contains the 'Geometry' directory
     # geometry_pos_in_glob (list of vectors, one for each distinct geometry, optional). Global position of the visual geometry
     # geometry_or_in_glob = (list of gRb rotation matrices, one for each distinct geometry, optional). Global orientation of the visual geometry
+    # geometry_scale = (list of scale vectors, one for each distinct geometry, optional). 3D scale factors of the geometry files
     
 
     # Default behavior is that none of the properties are known and filled with nan or a string, unless user-specified.
@@ -231,7 +233,8 @@ def create_body(name, size, self,
         if geometry_or_in_glob:
             geom_obj.matrix_world = geometry_or_in_glob[ind].to_4x4()
             geom_obj.location = geometry_pos_in_glob[ind]
-
+        
+        geom_obj.scale = geometry_scale[ind]
         #geom_obj.matrix_world = 
         geom_obj.parent = obj #parent a mesh to a body, but this moves it
         geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
