@@ -219,7 +219,7 @@ class ImportGaitsymModel(Operator):
                 
             # If geometries exist, join them with semicolons, otherwise set a default string
             if geometries:
-                geometry_string = ';'.join([gaitsym_geo_folder + '/' + geometry for geometry in geometries]) + ';' 
+                geometry_string = ';'.join([gaitsym_geo_folder + '/' + geometry for geometry in geometries if geometry]) + ';' 
                 geometry_or_in_glob = [import_gRi for geometry in geometries]#pass the rotation matrix for create_body_func
 
             else:
@@ -268,9 +268,9 @@ class ImportGaitsymModel(Operator):
             pos_in_global = list(pos_in_global) #joint func expects a list
 
             or_in_import_quat = [float(x) for x in body1_marker['WorldQuaternion'].split()]
-
+            
             [joint_iRb, joint_bRi] = matrix_from_quaternion(or_in_import_quat)
-            or_in_global = import_gRi @ joint_iRb
+            or_in_global = import_gRi @ joint_iRb #THIS NEEDS FIXING
             or_in_global_quat = list(quat_from_matrix(or_in_global)) #joint func expects a list
 
             ## coordinates
@@ -383,6 +383,13 @@ class ImportGaitsymModel(Operator):
 
                 [points_ID_list.append(x) for x in strap['ViaPointMarkerIDList'].split()]
                 points_ID_list.append(strap['InsertionMarkerID'])
+
+
+            elif strapType == 'CylinderWrap':
+                points_ID_list.append(strap['OriginMarkerID'])
+                points_ID_list.append(strap['InsertionMarkerID'])
+
+                self.report({'WARNING'},'Wrapping is currently not supported by MuSkeMo. Skipping the wrapping surface in ' + strapID)    
 
             for point in points_ID_list:
 
