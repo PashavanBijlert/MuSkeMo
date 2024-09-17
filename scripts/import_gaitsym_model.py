@@ -144,6 +144,27 @@ class ImportGaitsymModel(Operator):
                 muscles.append(muscle_data)
             return muscles
 
+        def get_geom_data(root):
+            """Extracts data from each <GEOM> element in the XML root"""
+            geoms = []
+            for geom_elem in root.findall('GEOM'):
+                geom_data = {}
+                for attr_name, attr_value in geom_elem.items():
+                    # Try converting to float if possible
+                    try:
+                        # Split the attribute value by spaces
+                        values = list(map(float, attr_value.split()))
+                        # If it's a single value, store it as a float, otherwise as a tuple
+                        geom_data[attr_name] = values[0] if len(values) == 1 else tuple(values)
+                    except ValueError:
+                        # If conversion to float fails, store it as a string (e.g., "Type")
+                        geom_data[attr_name] = attr_value
+                geoms.append(geom_data)
+            
+            return geoms
+
+
+
         # Check for model import rotation 
         
         import_gRi = Matrix(((1.0, 0.0, 0.0),  #import gRi and iRg are identity matrices by default, so no rotation. From import frame to global
@@ -270,7 +291,7 @@ class ImportGaitsymModel(Operator):
             or_in_import_quat = [float(x) for x in body1_marker['WorldQuaternion'].split()]
             
             [joint_iRb, joint_bRi] = matrix_from_quaternion(or_in_import_quat)
-            or_in_global = import_gRi @ joint_iRb  @ import_iRg #THIS NEEDS FIXING
+            or_in_global = import_gRi @ joint_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI
             or_in_global_quat = list(quat_from_matrix(or_in_global)) #joint func expects a list
 
             ## coordinates
@@ -352,8 +373,6 @@ class ImportGaitsymModel(Operator):
             muscle_name = muscle['ID']
 
         
-            
-        
             if "DampedSpring" in muscle['Type']: #if it's a spring (i.e., a ligament)
                 self.report({'WARNING'}, "Ligaments are currently not supported by MuSkeMo yet. DampedSpring '" + muscle_name + "' will be imported as a muscle.")
                 F_max = 0
@@ -412,7 +431,71 @@ class ImportGaitsymModel(Operator):
                             F_max = F_max,
                             #pennation_angle = pennation_angle
                             )
-         
+
+        #### create contacts
+        contact_data = get_geom_data(root)
+        from .create_contact_func import create_contact
+
+        contact_colname = bpy.context.scene.muskemo.contact_collection #name for the collection that will contain the contacts
+
+        for contact in contact_data:
+            
+            contact_name = contact['ID']
+            
+            if contact['Type'] != 'Sphere':
+                self.report({'WARNING'},"Contact geometry '" + strapID + "' is not a Sphere. Other objects are currently not yet supported in MuSkeMo. Skipping this contact geometry object.")    
+                continue
+            
+            contact_markerID = contact['MarkerID']
+            contact_marker = marker_data[contact_markerID]
+            contact_rad = contact['Radius']
+            
+            contact_pbody_name = contact_marker['BodyID']
+           
+            contact_pos_in_import = [float(x) for x in contact_marker['WorldPosition'].split()]
+            contact_pos_in_global = import_gRi@(Vector(contact_pos_in_import)) #import rotation
+            contact_pos_in_global = list(contact_pos_in_global) #joint func expects a list    
+
+
+            create_contact(name = contact_name, radius = contact_rad, 
+                        collection_name = contact_colname,
+                        pos_in_global = contact_pos_in_global,
+                        is_global = True, 
+                        parent_body = contact_pbody_name)
+            
+
+        if bpy.context.scene.muskemo.import_gaitsym_markers_as_frames: #if the user selected yes
+            from .create_frame_func import create_frame
+            
+            frame_colname = bpy.context.scene.muskemo.frame_collection
+            frame_size = bpy.context.scene.muskemo.ARF_axes_size
+
+            self.report({'WARNING'},"When importing Markers as Frames, the frames will not be parented to bodies, because in MuSkeMo, a frame can have only one local frame.")    
+                
+
+            for marker_name, marker in marker_data.items():
+
+                marker_pos_in_import = [float(x) for x in marker['WorldPosition'].split()]
+                marker_pos_in_global = import_gRi@(Vector(marker_pos_in_import)) #import rotation
+                marker_pos_in_global = list(marker_pos_in_global) #frame func expects a list
+
+                marker_or_in_import_quat = [float(x) for x in marker['WorldQuaternion'].split()]
+                
+                [marker_iRb, marker_bRi] = matrix_from_quaternion(marker_or_in_import_quat)
+                marker_or_in_global = import_gRi @ marker_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI
+                marker_or_in_global_quat = list(quat_from_matrix(marker_or_in_global)) #frame func expects a list
+
+                create_frame(name = marker_name, 
+                             size = frame_size,
+                             pos_in_global = marker_pos_in_global,
+                             gRb = marker_or_in_global,
+                             collection_name = frame_colname,
+                             )
+
+
+        else:
+            self.report({'WARNING'},"Gaitsym Markers can currently only be imported as frames, not as MuSkeMo landmarks.")    
+            
 
         time2 = time.time()
 

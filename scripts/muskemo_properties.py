@@ -263,11 +263,17 @@ class MuSkeMoProperties(PropertyGroup):
 
 
     rotate_gaitsym_on_import: IntVectorProperty(
-        name = 'Gaitsym import rotation (experimental)',
+        name = 'Gaitsym import rotation',
         description='XYZ-Body fixed Euler angles (in degrees) for the import rotation of a Gaitsym model. Rotate -90 degrees about X to go from Z-up to Y-up',
         default = (0,0,0),
         min = -90,
         max = 90,
+    )
+
+    import_gaitsym_markers_as_frames: BoolProperty(
+        name = 'Import Markers as Frames',
+        description = 'Markers in Gaitsym models can function both as markers (that define positions) and reference frames (also specifying orientations)',
+        default = False,
     )
 
 #### anatomical (local) reference frame panel
