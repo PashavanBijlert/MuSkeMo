@@ -42,13 +42,13 @@ from .scripts.muskemo_properties import (MuSkeMoProperties)          ## all prop
 
 #### body panel
 from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_PT_vizgeometry_subpanel,
-                                 VIEW3D_PT_body_utilities_subpanel, 
-                                    CreateNewBodyOperator,
-                                      ReflectBilateralBodiesOperator, AssignInertialPropertiesOperator,
-                                      ComputeInertialPropertiesOperator,UpdateLocationFromCOMOperator,
-                                      AttachVizGeometryOperator, DetachVizGeometryOperator,
+                                VIEW3D_PT_body_utilities_subpanel, 
+                                CreateNewBodyOperator,
+                                ReflectBilateralBodiesOperator, AssignInertialPropertiesOperator,
+                                ComputeInertialPropertiesOperator,UpdateLocationFromCOMOperator,
+                                AttachVizGeometryOperator, DetachVizGeometryOperator,
                                       
-                                      )
+                                )
 
 #### joint panel
 from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJointsOperator, 
@@ -77,15 +77,15 @@ from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel, VI
 
 #### export panel
 from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bodies_subpanel,
-                                   VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
-                                     VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
+                                    VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
+                                    VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
                                     VIEW3D_PT_export_landmarks_subpanel, VIEW3D_PT_export_contacts_subpanel,
                                     VIEW3D_PT_geometry_folder_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
                                     ExportMusclesOperator,ExportMeshInPropsOperator,
-                                   ExportFramesOperator, ExportLandmarksOperator,
-                                   ExportContactsOperator, ExportGeometryFolderOperator,
+                                    ExportFramesOperator, ExportLandmarksOperator,
+                                    ExportContactsOperator, ExportGeometryFolderOperator,
                                     SelectModelExportDirectoryOperator,
                                     )
 
@@ -141,7 +141,7 @@ classes = (  #Inertial properties panel
             #joint panel
                                       CreateNewJointOperator, ReflectRightsideJointsOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,
-                                       ClearParentBodyOperator,ClearChildBodyOperator,
+                                      ClearParentBodyOperator,ClearChildBodyOperator,
                                       UpdateCoordinateNamesOperator,
                                       FitSphereGeomOperator,FitSphereLSOperator,
                                       FitCylinderOperator, FitEllipsoidOperator,
@@ -151,8 +151,8 @@ classes = (  #Inertial properties panel
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 
                                     AddMusclepointOperator, ReflectRightsideMusclesOperator,
-                                      InsertMusclePointOperator, UpdateMuscleVizRadius,
-                                      VIEW3D_PT_muscle_panel,
+                                    InsertMusclePointOperator, UpdateMuscleVizRadius,
+                                    VIEW3D_PT_muscle_panel,
             #export panel
                                     VIEW3D_PT_export_panel, VIEW3D_PT_export_bodies_subpanel,
                                     VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
