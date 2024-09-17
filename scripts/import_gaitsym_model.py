@@ -270,7 +270,7 @@ class ImportGaitsymModel(Operator):
             or_in_import_quat = [float(x) for x in body1_marker['WorldQuaternion'].split()]
             
             [joint_iRb, joint_bRi] = matrix_from_quaternion(or_in_import_quat)
-            or_in_global = import_gRi @ joint_iRb #THIS NEEDS FIXING
+            or_in_global = import_gRi @ joint_iRb  @ import_iRg #THIS NEEDS FIXING
             or_in_global_quat = list(quat_from_matrix(or_in_global)) #joint func expects a list
 
             ## coordinates
