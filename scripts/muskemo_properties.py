@@ -7,6 +7,7 @@ from bpy.props import (StringProperty,
                          BoolProperty,
                          EnumProperty,
                          FloatVectorProperty,
+                         IntVectorProperty,
                          )
 from bpy.types import (PropertyGroup,
                         )
@@ -260,6 +261,14 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen = 256,
     )
 
+
+    rotate_gaitsym_on_import: IntVectorProperty(
+        name = 'Gaitsym import rotation (experimental)',
+        description='XYZ-Body fixed Euler angles (in degrees) for the import rotation of a Gaitsym model. Rotate -90 degrees about X to go from Z-up to Y-up',
+        default = (0,0,0),
+        min = -90,
+        max = 90,
+    )
 
 #### anatomical (local) reference frame panel
 

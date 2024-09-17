@@ -230,11 +230,14 @@ def create_body(name, size, self,
         
         geom_obj.rotation_mode = 'ZYX'  
 
-        if geometry_or_in_glob:
+        if geometry_or_in_glob: #if the user passed an orientation
             geom_obj.matrix_world = geometry_or_in_glob[ind].to_4x4()
+
+        if geometry_pos_in_glob:    #if the user passed a position 
             geom_obj.location = geometry_pos_in_glob[ind]
         
-        geom_obj.scale = geometry_scale[ind]
+        if geometry_scale: #if the user passed a geometry scale
+            geom_obj.scale = geometry_scale[ind]
         #geom_obj.matrix_world = 
         geom_obj.parent = obj #parent a mesh to a body, but this moves it
         geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back

@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (3, 0, 0),
-    "version" : (0, 7, 6),
+    "version" : (0, 7, 7),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
@@ -92,7 +92,7 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
 #### import panel
 
 from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_modelcomponents_subpanel,
-                                   VIEW3D_PT_import_full_model_subpanel, 
+                                   VIEW3D_PT_import_OpenSim_model_subpanel, VIEW3D_PT_import_Gaitsym_model_subpanel, 
                                    ImportBodiesOperator,ImportJointsOperator,ImportMusclesOperator,
                                    ImportContactsOperator,ImportFramesOperator,
                                    ImportOpenSimModel, ImportGaitsymModel,
@@ -168,7 +168,7 @@ classes = (  #Inertial properties panel
 
             #import panel
                                   VIEW3D_PT_import_panel,  VIEW3D_PT_import_modelcomponents_subpanel,
-                                  VIEW3D_PT_import_full_model_subpanel, 
+                                  VIEW3D_PT_import_OpenSim_model_subpanel, VIEW3D_PT_import_Gaitsym_model_subpanel, 
                                   ImportBodiesOperator, ImportJointsOperator, ImportMusclesOperator,
                                   ImportContactsOperator,ImportFramesOperator,
 

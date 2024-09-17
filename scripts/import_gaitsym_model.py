@@ -1,5 +1,6 @@
 import bpy
-from mathutils import Vector
+from mathutils import (Vector,
+                       Matrix)
 
 
 from bpy.types import (Operator,
@@ -143,6 +144,23 @@ class ImportGaitsymModel(Operator):
                 muscles.append(muscle_data)
             return muscles
 
+        # Check for model import rotation 
+        
+        import_gRi = Matrix(((1.0, 0.0, 0.0),  #import gRi and iRg are identity matrices by default, so no rotation. From import frame to global
+                            (0.0, 1.0, 0.0),
+                            (0.0, 0.0, 1.0)))
+        
+        import_iRg = import_gRi
+
+        gaitsym_import_euler = bpy.context.scene.muskemo.rotate_gaitsym_on_import
+        gaitsym_import_euler = (gaitsym_import_euler[0],gaitsym_import_euler[1],gaitsym_import_euler[2])
+
+        from .quaternions import (matrix_from_quaternion, quat_from_matrix)
+        from .euler_XYZ_body import matrix_from_euler_XYZbody
+        if gaitsym_import_euler != (0,0,0): #if not zero rotation, we set up an import rotation matrix
+            
+            [import_gRi, import_iRg] = matrix_from_euler_XYZbody(np.deg2rad(gaitsym_import_euler))
+
 
 
         # Extract body data from the model
@@ -176,13 +194,33 @@ class ImportGaitsymModel(Operator):
         for body in body_data:
             name = body['ID']
             mass = body['Mass']
-            COM = list(body['ConstructionPosition'])  # Convert tuple to list
-            inertia_COM = list(body['MOI'])  # Convert tuple to list
+            COM = import_gRi @ Vector(body['ConstructionPosition'])  # tuple to vector, premultiply by rot matrix
+            COM = list(COM) #body func expects a list
+
+            inertia_COM_import = body['MOI']  # Tuple, inertia about COM as a 6 element long vector 
+
+            MOI_i = Matrix(((inertia_COM_import[0], inertia_COM_import[3], inertia_COM_import[4]), #MOI tensor about COM in b (which is import frame)
+                        (inertia_COM_import[3],inertia_COM_import[1],inertia_COM_import[5]),
+                        (inertia_COM_import[4],inertia_COM_import[5],inertia_COM_import[2])))
+        
+            MOI_g = import_gRi @ MOI_i @ import_iRg #rotated
+
+            inertia_COM_global = [MOI_g[0][0],  #Ixx, about COM, in global frame
+                     MOI_g[1][1],  #Iyy
+                     MOI_g[2][2],  #Izz
+                     MOI_g[0][1],  #Ixy
+                     MOI_g[0][2],  #Ixz
+                     MOI_g[1][2]]  #Iyz
+            
+            inertia_COM_global = list(inertia_COM_global) #create_body_func expects a list
+
+
             geometries = [body[x] for x in body if 'GraphicFile' in x]  # list of geometry names
                 
             # If geometries exist, join them with semicolons, otherwise set a default string
             if geometries:
                 geometry_string = ';'.join([gaitsym_geo_folder + '/' + geometry for geometry in geometries]) + ';' 
+                geometry_or_in_glob = [import_gRi for geometry in geometries]#pass the rotation matrix for create_body_func
 
             else:
                 geometry_string = 'no geometry'
@@ -191,10 +229,11 @@ class ImportGaitsymModel(Operator):
             # Call create_body with the prepared geometry string
             create_body(name=name, self = self,
                          is_global = True, size = size,
-                        mass=mass, COM=COM,  inertia_COM=inertia_COM, Geometry=geometry_string, 
+                        mass=mass, COM=COM,  inertia_COM=inertia_COM_global, Geometry=geometry_string, 
                         collection_name=body_colname,  
                         import_geometry = import_geometry, #the bool property
-                            geometry_parent_dir = geometry_parent_dir)
+                            geometry_parent_dir = geometry_parent_dir,
+                            geometry_or_in_glob = geometry_or_in_glob)
             
 
         # Extract joint data from the model
@@ -224,8 +263,15 @@ class ImportGaitsymModel(Operator):
             parent_body = body1_marker['BodyID']
             child_body = body2_marker['BodyID']
 
-            pos_in_global = [float(x) for x in body1_marker['WorldPosition'].split()]
-            or_in_global_quat = [float(x) for x in body1_marker['WorldQuaternion'].split()]
+            pos_in_import = [float(x) for x in body1_marker['WorldPosition'].split()]
+            pos_in_global = import_gRi@(Vector(pos_in_import)) #import rotation
+            pos_in_global = list(pos_in_global) #joint func expects a list
+
+            or_in_import_quat = [float(x) for x in body1_marker['WorldQuaternion'].split()]
+
+            [joint_iRb, joint_bRi] = matrix_from_quaternion(or_in_import_quat)
+            or_in_global = import_gRi @ joint_iRb
+            or_in_global_quat = list(quat_from_matrix(or_in_global)) #joint func expects a list
 
             ## coordinates
 
@@ -344,14 +390,15 @@ class ImportGaitsymModel(Operator):
                 marker = marker_data[point]
 
                 parent_body_name = marker['BodyID']
-                point_position = [float(x) for x in marker['WorldPosition'].split()]
+                point_position = Vector([float(x) for x in marker['WorldPosition'].split()])
+                point_position_glob = list(import_gRi @ point_position)
                 
                 
 
                 create_muscle(muscle_name = muscle_name, 
                             is_global =True, 
                             body_name = parent_body_name,
-                            point_position = point_position,
+                            point_position = point_position_glob,
                             collection_name=muscle_colname,
                             optimal_fiber_length=optimal_fiber_length,
                             #tendon_slack_length=tendon_slack_length,

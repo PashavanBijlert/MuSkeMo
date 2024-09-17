@@ -543,11 +543,11 @@ class VIEW3D_PT_import_modelcomponents_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cl
 
         return      
     
-## Import full model
-class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
-    bl_idname = 'VIEW3D_PT_import_full_model_subpanel'
+## Import OpenSim model
+class VIEW3D_PT_import_OpenSim_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+    bl_idname = 'VIEW3D_PT_import_OpenSim_model_subpanel'
     bl_parent_id = 'VIEW3D_PT_import_panel'  #have to define this if you use multiple panels
-    bl_label = "Import full model"  # found at the top of the Panel
+    bl_label = "Import OpenSim model"  # found at the top of the Panel
     bl_options = {'DEFAULT_CLOSED'} 
     
     def draw(self, context):
@@ -558,17 +558,39 @@ class VIEW3D_PT_import_full_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row.operator("import.import_opensim_model",text = 'Import OpenSim model')
 
         row = layout.row()
-        row = layout.row()
-        row = layout.row()
-        row.operator("import.import_gaitsym_model",text = 'Import Gaitsym 2019 model (experimental)')
-
-
-        row = layout.row()
         row.prop(muskemo, "model_import_style")
         row = layout.row()
         row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
+        
+        return   
+
+
+    ## Import full model
+class VIEW3D_PT_import_Gaitsym_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+    bl_idname = 'VIEW3D_PT_import_gaitsym_model_subpanel'
+    bl_parent_id = 'VIEW3D_PT_import_panel'  #have to define this if you use multiple panels
+    bl_label = "Import Gaitsym model"  # found at the top of the Panel
+    bl_options = {'DEFAULT_CLOSED'} 
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        row = layout.row()
+        row.label(text = 'Importing currently skips contact spheres')
+        row = layout.row()
+        row.operator("import.import_gaitsym_model",text = 'Import Gaitsym 2019 model')
+
+        row = layout.row()
+        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
+        
+        row = layout.row()
         row = layout.row()
         row.prop(muskemo, "gaitsym_geometry_folder")
 
-        return      
+        row = layout.row()
+        row = layout.row()
+        row.prop(muskemo, "rotate_gaitsym_on_import")
+
+        return         
 
