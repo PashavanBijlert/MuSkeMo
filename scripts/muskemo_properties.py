@@ -173,6 +173,13 @@ class MuSkeMoProperties(PropertyGroup):
         step = 0.0025,
         )
     
+    wrap_geom_collection: StringProperty(
+        name = "Wrap Geometry collection",
+        description="Name of the collection (ie. folder) that contains the wrap geometry",
+        default = "Wrapping geometry",
+        maxlen = 1024,
+        ) 
+
 
 #### Inertial properties panel
 
@@ -461,6 +468,15 @@ class MuSkeMoProperties(PropertyGroup):
     
     geom_primitive_color: FloatVectorProperty(
                  name = "Geometric primitive color",
+                 subtype = "COLOR",
+                 size = 4,
+                 min = 0.0,
+                 max = 1.0,
+                 default = (0.22, 0.00, 0.02, 1)
+        )
+    
+    wrap_geom_color: FloatVectorProperty(
+                 name = "Wrapping geometry color",
                  subtype = "COLOR",
                  size = 4,
                  min = 0.0,

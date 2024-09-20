@@ -51,7 +51,7 @@ class ImportOpenSimModel(Operator):
         def get_body_data(model):
             body_set = model.find('BodySet')
             bodies = body_set.find('objects')
-            
+
             body_data = {}
             for body in bodies.findall('Body'):
                 name = body.get('name')
@@ -62,7 +62,7 @@ class ImportOpenSimModel(Operator):
                 if mass_center_element is not None:
                     mass_center = tuple(map(float, mass_center_element.text.split()))
                 else:
-                    mass_center = (0, 0, 0)  #
+                    mass_center = (0, 0, 0)
 
                 # Check if inertia exists
                 inertia_element = body.find('inertia')
@@ -88,10 +88,8 @@ class ImportOpenSimModel(Operator):
                                 # Check for scale_factors
                                 scale_elem = mesh.find('scale_factors')
                                 if scale_elem is not None:
-                                    # Parse the scale factors into a list of floats
                                     scale_factors = list(map(float, scale_elem.text.strip().split()))
                                 else:
-                                    # Default scale if no scale_factors element is present
                                     scale_factors = [1.0, 1.0, 1.0]
 
                                 geometries.append({
@@ -102,7 +100,7 @@ class ImportOpenSimModel(Operator):
                                 })
 
                 # If no PhysicalOffsetFrame exists, check directly within the Body
-                if not geometries:  # Only do this if no geometries found via PhysicalOffsetFrame
+                if not geometries:
                     attached_geometry = body.find('attached_geometry')
                     if attached_geometry is not None:
                         for mesh in attached_geometry.findall('Mesh'):
@@ -111,28 +109,69 @@ class ImportOpenSimModel(Operator):
                             # Check for scale_factors
                             scale_elem = mesh.find('scale_factors')
                             if scale_elem is not None:
-                                # Parse the scale factors into a list of floats
                                 scale_factors = list(map(float, scale_elem.text.strip().split()))
                             else:
-                                # Default scale if no scale_factors element is present
                                 scale_factors = [1.0, 1.0, 1.0]
 
-                            # Add the mesh and its scale factors to the list
                             geometries.append({
                                 'mesh_file': mesh_file,
                                 'scale_factors': scale_factors
-                                # No translation or orientation since it's directly attached to the body
                             })
-                            
-                            
-                body_data[name] ={ #body_data dictionary
+
+                # Wrap Object Set (handle any wrap object type)
+                wrap_objects = []
+                wrap_object_set = body.find('WrapObjectSet')
+                if wrap_object_set is not None:
+                    for wrap_object in wrap_object_set.find('objects').findall('*'):  # Get all wrap object types
+                        wrap_data = {
+                            'type': wrap_object.tag,  # Save the type of the wrap object (e.g., WrapCylinder, WrapSphere, etc.)
+                            'name': wrap_object.get('name')
+                        }
+
+                        # Collect all child elements of the wrap object dynamically
+                        for child in wrap_object:
+                            # Handle scalar and vector types
+                            value = child.text.strip() if child.text else None
+                            if value is not None:
+                                if value.lower() in ['true', 'false']:  # Handle boolean values
+                                    wrap_data[child.tag] = value.lower() == 'true'
+                                else:
+                                    try:
+                                        # Try to convert to float (for numbers)
+                                        wrap_data[child.tag] = float(value)
+                                    except ValueError:
+                                        # If it cannot be converted, store it as a string or tuple
+                                        if ' ' in value:
+                                            wrap_data[child.tag] = tuple(map(float, value.split()))  # Handle vectors
+                                        else:
+                                            wrap_data[child.tag] = value  # Store as string if it's not a number
+
+                            # Special case for Appearance
+                            if child.tag == 'Appearance':
+                                appearance = {}
+                                for appearance_child in child:
+                                    if appearance_child.tag == 'color':
+                                        appearance['color'] = tuple(map(float, appearance_child.text.split()))
+                                    elif appearance_child.tag == 'opacity':
+                                        appearance['opacity'] = float(appearance_child.text)
+                                    elif appearance_child.tag == 'SurfaceProperties':
+                                        appearance['representation'] = appearance_child.find('representation').text
+                                wrap_data['appearance'] = appearance
+
+                        wrap_objects.append(wrap_data)
+
+                # Add body data to dictionary
+                body_data[name] = {
                     'mass': mass,
                     'mass_center': mass_center,
                     'inertia': inertia,
-                    'geometries': geometries
+                    'geometries': geometries,
+                    'wrap_objects': wrap_objects  # Modular wrap object data
                 }
 
             return body_data
+
+
 
 
         
@@ -343,6 +382,8 @@ class ImportOpenSimModel(Operator):
         geometry_parent_dir = os.path.dirname(self.filepath)
         import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
 
+        wrap_colname = bpy.context.scene.muskemo.wrap_geom_collection
+
         if import_geometry: #if the user wants imported geometry, we check if the folder exists
 
             # Loop through the data to find the first valid geometry path
@@ -402,6 +443,7 @@ class ImportOpenSimModel(Operator):
         from .create_muscle_func import create_muscle
         from .create_frame_func import create_frame
         from .create_contact_func import create_contact
+        from .create_wrapgeom_func import create_wrapgeom
 
 
         # Frame related user inputs
@@ -806,7 +848,8 @@ class ImportOpenSimModel(Operator):
                             F_max = F_max,
                             pennation_angle = pennation_angle)    
            
-            
+
+        ### create contacts    
         for contact_name, contact in contact_data.items():
 
             if contact['geometry_type'] == 'ContactSphere':# if it's a Sphere
@@ -843,6 +886,66 @@ class ImportOpenSimModel(Operator):
                                is_global = True,
                                )
 
+        ### create wrapping
+        for body_name, body in body_data.items():
+                if body['wrap_objects']:  # Check if the body has wrap objects
+                    wrap_parent_body = bpy.data.objects.get(body_name)
+
+                    for wrap_obj in body['wrap_objects']:
+                        wrap_name = wrap_obj['name']
+                        wrap_type = wrap_obj['type']
+                        wrap_position = wrap_obj.get('translation', [float('nan')] * 3)  # Translation in parent frame
+                        wrap_orientation = wrap_obj.get('xyz_body_rotation', [0] * 3)  # Orientation in parent frame
+                        dimensions = {}  # Collect dimensions based on the type of wrap geometry
+
+                        if wrap_type == 'WrapCylinder':
+                            dimensions['radius'] = wrap_obj.get('radius', float('nan'))
+                            dimensions['height'] = wrap_obj.get('length', float('nan'))
+                            geomtype = 'Cylinder'
+
+                        elif wrap_type == 'WrapSphere':
+                            dimensions['radius'] = wrap_obj.get('radius', float('nan'))
+                            geomtype = 'Sphere'
+
+                        # Fill in global position/orientation if importing globally
+                        wrap_pos_in_global = [float('nan')] * 3
+                        wrap_or_in_global_XYZeuler = [float('nan')] * 3
+                        wrap_or_in_global_quat = [float('nan')] * 4
+
+                        wrap_pos_in_parent_frame = [float('nan')] * 3
+                        wrap_or_in_parent_frame_XYZeuler = [float('nan')] * 3
+                        wrap_or_in_parent_frame_quat = [float('nan')] * 4
+
+                        if bpy.context.scene.muskemo.model_import_style == 'glob':  # Global import
+                            wrap_pos_in_global = wrap_position
+                            wrap_or_in_global_XYZeuler = wrap_orientation  # Assuming you want the euler angles in global coordinates
+
+                        elif bpy.context.scene.muskemo.model_import_style == 'loc':  # Local import
+                            wrap_parent_frame = frames[wrap_parent_body['local_frame']]
+                            gRp = wrap_parent_frame['gRf']  # Global orientation of parent frame
+                            parent_frame_pos_in_glob = wrap_parent_frame['frame_pos_in_global']
+
+                            wrap_pos_in_global = parent_frame_pos_in_glob + gRp @ Vector(wrap_position)
+                            wrap_pos_in_parent_frame = wrap_position
+                            
+                            [wrap_pRb, wrap_bRp ] = matrix_from_euler_XYZbody(wrap_orientation)
+                            wrap_or_in_global_quat = quat_from_matrix(gRp @ wrap_pRb)
+                            wrap_or_in_parent_frame_XYZeuler = wrap_orientation
+                            wrap_or_in_parent_frame_quat = quat_from_matrix(wrap_pRb)
+
+                        # Create the wrap geometry using create_wrapgeom
+                        create_wrapgeom(name=wrap_name,
+                                        geomtype=geomtype,
+                                        collection_name=wrap_colname,
+                                        parent_body=body_name,
+                                        pos_in_global=wrap_pos_in_global,
+                                        or_in_global_XYZeuler=wrap_or_in_global_XYZeuler,
+                                        or_in_global_quat=wrap_or_in_global_quat,
+                                        pos_in_parent_frame=wrap_pos_in_parent_frame,
+                                        or_in_parent_frame_XYZeuler=wrap_or_in_parent_frame_XYZeuler,
+                                        or_in_parent_frame_quat = wrap_or_in_parent_frame_quat,
+                                        dimensions=dimensions
+                                    )
 
 
 
