@@ -772,6 +772,11 @@ class ImportOpenSimModel(Operator):
                             elif 'translation' in transform['axis_name']:
                                 coordinate_Tz = coordinates
                 
+                if joint['joint_type'] == 'PinJoint': #if the joint type is a pinjoint, manually set the coordinate
+                    coordinate_Rz = joint['coordinates'][0]
+
+
+
                 if parent_body_name == 'ground': #set position and orientation in parent to nan, since these are equal to global.
                     #I'm assuming ground never has a rotation or orientation.
                     pos_in_parent_frame = [nan]*3 
