@@ -242,7 +242,27 @@ def create_body(name, size, self,
         geom_obj.parent = obj #parent a mesh to a body, but this moves it
         geom_obj.matrix_parent_inverse = obj.matrix_world.inverted() #move it back
         geom_obj.data.materials.clear()
-        #geom_obj.data.materials.append(mat)
+        
+
+        matname = 'visual_geometry_material'
+        bone_color = tuple(bpy.context.scene.muskemo.bone_color)
+
+        ##### Assign a material
+        ## if not exists bone material
+        if matname not in bpy.data.materials:  
+            bpy.data.materials.new(name = matname)
+            mat = bpy.data.materials[matname]
+            mat.use_nodes = True
+            matnode_tree =mat.node_tree
+            #matnode_tree.nodes["Principled BSDF"].inputs['Roughness'].default_value = 0
+            matnode_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = bone_color
+
+        mat = bpy.data.materials[matname]
+        geom_obj.data.materials.append(mat)
+
+        ### viewport display color
+
+        geom_obj.active_material.diffuse_color = bone_color
 
         ## Assign a MuSkeMo_type
 
@@ -253,5 +273,5 @@ def create_body(name, size, self,
         geom_obj.id_properties_ui('Attached to').update(description = "The body that this geometry is attached to")
             
 
-    
+        
     

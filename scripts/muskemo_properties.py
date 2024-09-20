@@ -445,7 +445,7 @@ class MuSkeMoProperties(PropertyGroup):
                  size = 4,
                  min = 0.0,
                  max = 1.0,
-                 default = (0.22, 0.00, 0.02, 1)
+                 default = (1, 0.85, 0.85, 1)
         )
     
     contact_color: FloatVectorProperty(

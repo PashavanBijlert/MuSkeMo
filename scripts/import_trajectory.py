@@ -16,7 +16,7 @@ import numpy as np
 import os
 import csv
 
-
+import colorsys
 
 class ImportTrajectorySTO(Operator):
     bl_description = "Import a trajectory in .sto file format to create an animation"
@@ -365,7 +365,8 @@ class ImportTrajectorySTO(Operator):
                     
                 node_tree.nodes[nodename].inputs['Saturation'].default_value = activation
                 node_tree.nodes[nodename].inputs['Saturation'].keyframe_insert('default_value', frame = frame_number) #insert a keyframe
-                    
+
+                
 
         return {'FINISHED'}
 

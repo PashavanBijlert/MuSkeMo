@@ -237,3 +237,6 @@ class VIEW3D_PT_default_colors_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class nami
         
         row = layout.row()
         row.prop(muskemo, "muscle_color")
+
+        row = layout.row()
+        row.prop(muskemo, "bone_color")

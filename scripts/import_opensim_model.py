@@ -206,9 +206,9 @@ class ImportOpenSimModel(Operator):
                         # Match parent_frame with frame_name to get parent_body
                         if frame_name == parent_frame:
                             parent_body = socket_parent.split('/bodyset/')[-1]
-
                             if parent_body == '/ground':
                                 parent_body = 'ground'
+
                         # Match child_frame with frame_name to get child_body
                         if frame_name == child_frame:
                             child_body = socket_parent.split('/bodyset/')[-1]
@@ -226,26 +226,25 @@ class ImportOpenSimModel(Operator):
                 if coords_element is not None:
                     for coord in coords_element.findall('Coordinate'):
                         coordinates.append(coord.get('name'))
-                
-                
+
                 # Extract spatial transform data if present
                 spatial_transform = []
                 spatial_transform_element = joint.find('SpatialTransform')
                 if spatial_transform_element is not None:
                     for axis in spatial_transform_element.findall('TransformAxis'):
-                        axis_name = axis.get('name') #e.g. rotation 3
+                        axis_name = axis.get('name')
                         axis_coordinates_element = axis.find('coordinates')
                         axis_coordinates = axis_coordinates_element.text.strip() if axis_coordinates_element is not None and axis_coordinates_element.text is not None else None
-                        axis_vector = tuple(map(float, axis.find('axis').text.split())) #eg (0, 0, 1) if z-axis
-                        transform_function = axis.find('LinearFunction') #if it's a linear function
-                        
+                        axis_vector = tuple(map(float, axis.find('axis').text.split()))
+
+                        # Check if the transform axis has a LinearFunction and extract its coefficients
+                        transform_function = axis.find('LinearFunction')
                         coefficients = None
                         if transform_function is not None:
                             coeff_values = tuple(map(float, transform_function.find('coefficients').text.split()))
                             coefficients = coeff_values
-                            if coeff_values != (1.0, 0.0):  # Only include if coefficients are not "1 0"
-                                self.report({'WARNING'}, "Joint with the name '" + joint_name + "' specified in the model file has a transform function that is not supported by MuSkeMo. It will be treated like a regular joint.")
-
+                            if coeff_values != (1.0, 0.0):
+                                print(f"Warning: Joint '{joint_name}' has a transform function that MuSkeMo may not support. Treating as regular joint.")
 
                         spatial_transform.append({
                             'axis_name': axis_name,
@@ -253,8 +252,9 @@ class ImportOpenSimModel(Operator):
                             'axis_vector': axis_vector,
                             'coefficients': coefficients
                         })
-                
-                joint_data[joint_name] = { #joint_data dictionary
+
+                # Store the extracted joint data in the dictionary
+                joint_data[joint_name] = {
                     'joint_type': joint_type,
                     'parent_frame': parent_frame,
                     'child_frame': child_frame,
@@ -266,6 +266,7 @@ class ImportOpenSimModel(Operator):
                 }
 
             return joint_data
+
 
         def get_muscle_data(model):
             muscle_data = {}

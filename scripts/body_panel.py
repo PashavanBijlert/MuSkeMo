@@ -678,7 +678,22 @@ class AttachVizGeometryOperator(Operator):
 
             geom['Attached to'] = body.name
             geom.id_properties_ui('Attached to').update(description = "The body that this geometry is attached to")
+            
+            ##### Assign a material
+            ## if not exists bone material
+            matname = 'visual_geometry_material'
+            bone_color = tuple(bpy.context.scene.muskemo.bone_color)
 
+            if matname not in bpy.data.materials:  
+                bpy.data.materials.new(name = matname)
+                mat = bpy.data.materials[matname]
+                mat.use_nodes = True
+                matnode_tree =mat.node_tree
+                #matnode_tree.nodes["Principled BSDF"].inputs['Roughness'].default_value = 0
+                matnode_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = bone_color
+
+            mat = bpy.data.materials[matname]
+            geom.data.materials.append(mat)
 
         geom_delimiter = ';'
 
