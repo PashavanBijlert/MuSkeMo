@@ -436,7 +436,7 @@ class MuSkeMoProperties(PropertyGroup):
                  size = 4,
                  min = 0.0,
                  max = 1.0,
-                 default = (0.22, 0.00, 0.02, 1)
+                 default = (0.00, 0.15, 1, 1)
         )
     
     bone_color: FloatVectorProperty(
@@ -454,7 +454,7 @@ class MuSkeMoProperties(PropertyGroup):
                  size = 4,
                  min = 0.0,
                  max = 1.0,
-                 default = (0.22, 0.00, 0.02, 1)
+                 default = (0.2, 0.00, 1, 1)
         )
     
     marker_color: FloatVectorProperty(
@@ -463,16 +463,16 @@ class MuSkeMoProperties(PropertyGroup):
                  size = 4,
                  min = 0.0,
                  max = 1.0,
-                 default = (0.22, 0.00, 0.02, 1)
+                 default = (0.0, 0.1, 0.01, 1)
         )
     
     geom_primitive_color: FloatVectorProperty(
-                 name = "Geometric primitive color",
+                 name = "Default geometric primitive color",
                  subtype = "COLOR",
                  size = 4,
                  min = 0.0,
                  max = 1.0,
-                 default = (0.22, 0.00, 0.02, 1)
+                 default = (0.55, 0.175, 0.0, 1)
         )
     
     wrap_geom_color: FloatVectorProperty(
@@ -481,5 +481,6 @@ class MuSkeMoProperties(PropertyGroup):
                  size = 4,
                  min = 0.0,
                  max = 1.0,
-                 default = (0.22, 0.00, 0.02, 1)
+                 default = (0.0, 0.0, 0.1, 1)
         )
+    

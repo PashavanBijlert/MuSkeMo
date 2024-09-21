@@ -240,3 +240,20 @@ class VIEW3D_PT_default_colors_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class nami
 
         row = layout.row()
         row.prop(muskemo, "bone_color")
+
+        row = layout.row()
+        row.prop(muskemo, "joint_color")
+
+        row = layout.row()
+        row.prop(muskemo, "contact_color")
+
+        row = layout.row()
+        row.prop(muskemo, "marker_color")
+
+        row = layout.row()
+        row.prop(muskemo, "geom_primitive_color")
+
+        row = layout.row()
+        row.prop(muskemo, "wrap_geom_color")
+
+        

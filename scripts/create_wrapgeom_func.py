@@ -99,8 +99,24 @@ def create_wrapgeom(name, geomtype, collection_name,
             obj.parent = parent_body_obj
             obj.matrix_parent_inverse = parent_body_obj.matrix_world.inverted()     
     
-        
-        
+    #####
+    #     
+    matname = 'wrap_geom_material'
+    color = tuple(bpy.context.scene.muskemo.wrap_geom_color)
+    transparency = 0.5
+
+    ##### Assign a material
+    
+    if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+        from .create_transparent_material_func import create_transparent_material
+        create_transparent_material(matname, color, transparency)
+
+    mat = bpy.data.materials[matname]
+    obj.data.materials.append(mat)
+
+    ### viewport display color
+
+    obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)    
         
         
         

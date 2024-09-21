@@ -50,6 +50,20 @@ def create_contact(name, radius, collection_name,
                 obj.parent = parent_body_obj
                 obj.matrix_parent_inverse = parent_body_obj.matrix_world.inverted()      
 
+
+    matname = 'contact_material'
+    color = tuple(bpy.context.scene.muskemo.contact_color)
+    transparency = 0.5
         
-    #if statement for if the parent body exists already, parent it
-    #error check for existing frames        #do the same for both parent and child
+    ##### Assign a material
+    
+    if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+        from .create_transparent_material_func import create_transparent_material
+        create_transparent_material(matname, color, transparency)
+
+    mat = bpy.data.materials[matname]
+    obj.data.materials.append(mat)
+
+    ### viewport display color
+
+    obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)

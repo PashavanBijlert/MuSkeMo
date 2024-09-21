@@ -58,26 +58,42 @@ class CreateLandmarkOperator(Operator):
         bpy.context.object.name = landmark_name #set the name
         bpy.context.object.data.name = landmark_name #set the name of the object data
         
-
+        landmark_name = bpy.context.object.name ### because duplicate names get automatically numbered in Blender
         bpy.context.object['MuSkeMo_type'] = 'LANDMARK'    #to inform the user what type is created
         bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
         
         bpy.ops.object.select_all(action='DESELECT')
 
+
+
+        obj = bpy.data.objects[landmark_name]
         
-        bpy.data.objects[landmark_name].parent = target_mesh
+        obj.parent = target_mesh
         
         #this undoes the transformation after parenting
-        bpy.data.objects[landmark_name].matrix_parent_inverse = target_mesh.matrix_world.inverted()
+        obj.matrix_parent_inverse = target_mesh.matrix_world.inverted()
 
 
         #restore selection status
         target_mesh.select_set(True)
                     
 
+        ##### Assign a material
+        matname = 'marker_material'
+        color = tuple(bpy.context.scene.muskemo.marker_color)
+        transparency = 0.5
+            
+               
+        if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+            from .create_transparent_material_func import create_transparent_material
+            create_transparent_material(matname, color, transparency)
 
+        mat = bpy.data.materials[matname]
+        obj.data.materials.append(mat)
 
+        ### viewport display color
 
+        obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
         
         
         

@@ -533,12 +533,33 @@ class FitSphereGeomOperator(Operator):
         fit_obj_name = obj_name + '_SphereGeoFit'
         bpy.context.active_object.name = fit_obj_name
 
-        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+        obj = bpy.data.objects[fit_obj_name]
 
-        bpy.data.objects[fit_obj_name]['sphere_radius'] =  Radius   #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('sphere_radius').update(description = "Radius of the fitted sphere (in m)") 
+        obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        obj['sphere_radius'] =  Radius   #to inform the user what type is created
+        obj.id_properties_ui('sphere_radius').update(description = "Radius of the fitted sphere (in m)") 
         
+
+        ##### Assign a material
+        matname = 'geom_primitive_material'
+        color = tuple(bpy.context.scene.muskemo.geom_primitive_color)
+        transparency = 0.5
+            
+               
+        if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+            from .create_transparent_material_func import create_transparent_material
+            create_transparent_material(matname, color, transparency)
+
+        mat = bpy.data.materials[matname]
+        obj.data.materials.append(mat)
+
+        ### viewport display color
+
+        obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
+
+
         return {'FINISHED'}
 
 class FitSphereLSOperator(Operator):
@@ -617,12 +638,31 @@ class FitSphereLSOperator(Operator):
         fit_obj_name = obj_name + '_SphereLSFit'
         bpy.context.active_object.name = fit_obj_name
 
-        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+        obj = bpy.data.objects[fit_obj_name]
 
-        bpy.data.objects[fit_obj_name]['sphere_radius'] =  Radius   #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('sphere_radius').update(description = "Radius of the fitted sphere (in m)") 
+        obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
 
+        obj['sphere_radius'] =  Radius   #to inform the user what type is created
+        obj.id_properties_ui('sphere_radius').update(description = "Radius of the fitted sphere (in m)") 
+
+
+        ##### Assign a material
+        matname = 'geom_primitive_material'
+        color = tuple(bpy.context.scene.muskemo.geom_primitive_color)
+        transparency = 0.5
+            
+               
+        if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+            from .create_transparent_material_func import create_transparent_material
+            create_transparent_material(matname, color, transparency)
+
+        mat = bpy.data.materials[matname]
+        obj.data.materials.append(mat)
+
+        ### viewport display color
+
+        obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)    
 
         return {'FINISHED'}
 
@@ -724,15 +764,34 @@ class FitCylinderOperator(Operator):
         bpy.context.active_object.name = fit_obj_name
         bpy.context.active_object.matrix_world = worldMat
 
-        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+        obj = bpy.data.objects[fit_obj_name]
 
-        bpy.data.objects[fit_obj_name]['cylinder_radius'] =  Radius   #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('cylinder_radius').update(description = "Radius of the fitted cylinder (in m)")
+        obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
 
-        bpy.data.objects[fit_obj_name]['cylinder_height'] =  cylinder_height  #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('cylinder_height').update(description = "Height of the fitted cylinder (in m)")  
+        obj['cylinder_radius'] =  Radius   #to inform the user what type is created
+        obj.id_properties_ui('cylinder_radius').update(description = "Radius of the fitted cylinder (in m)")
 
+        obj['cylinder_height'] =  cylinder_height  #to inform the user what type is created
+        obj.id_properties_ui('cylinder_height').update(description = "Height of the fitted cylinder (in m)")  
+
+
+        ##### Assign a material
+        matname = 'geom_primitive_material'
+        color = tuple(bpy.context.scene.muskemo.geom_primitive_color)
+        transparency = 0.5
+            
+               
+        if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+            from .create_transparent_material_func import create_transparent_material
+            create_transparent_material(matname, color, transparency)
+
+        mat = bpy.data.materials[matname]
+        obj.data.materials.append(mat)
+
+        ### viewport display color
+
+        obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
         return {'FINISHED'}
 
 class FitEllipsoidOperator(Operator):
@@ -899,14 +958,31 @@ class FitEllipsoidOperator(Operator):
         bpy.context.active_object.scale = Vector(radii)  #initial radius of sphere is 1. radii is xyz radius in meters. Ellipsoid scale factor is radii[r]/sphere_radius, so each radius can just be set as the scale factor
         bpy.ops.object.transform_apply(scale=True)
 
-       
-        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
-
-        bpy.data.objects[fit_obj_name]['ellipsoid_radii'] =  radii   #Ellipsoid radii
-        bpy.data.objects[fit_obj_name].id_properties_ui('ellipsoid_radii').update(description = "Radii of the fitted ellipsoid (x, y, z, in m)")
+        obj = bpy.data.objects[fit_obj_name]
 
         
+        obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        obj['ellipsoid_radii'] =  radii   #Ellipsoid radii
+        obj.id_properties_ui('ellipsoid_radii').update(description = "Radii of the fitted ellipsoid (x, y, z, in m)")
+
+        ##### Assign a material
+        matname = 'geom_primitive_material'
+        color = tuple(bpy.context.scene.muskemo.geom_primitive_color)
+        transparency = 0.5
+            
+               
+        if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+            from .create_transparent_material_func import create_transparent_material
+            create_transparent_material(matname, color, transparency)
+
+        mat = bpy.data.materials[matname]
+        obj.data.materials.append(mat)
+
+        ### viewport display color
+
+        obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
         return {'FINISHED'}
 
 class FitPlaneOperator(Operator):
@@ -1012,13 +1088,30 @@ class FitPlaneOperator(Operator):
 
         bpy.ops.object.transform_apply(scale=True)
 
-        bpy.data.objects[fit_obj_name]['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
-        bpy.data.objects[fit_obj_name].id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+        obj = bpy.data.objects[fit_obj_name]
 
-        bpy.data.objects[fit_obj_name]['plane_dimensions'] =  [plane_x_dim, plane_y_dim]   #Ellipsoid radii
-        bpy.data.objects[fit_obj_name].id_properties_ui('plane_dimensions').update(description = "Dimensions of the fitted plane (x and y, in m)")
+        obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
+        obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
+
+        obj['plane_dimensions'] =  [plane_x_dim, plane_y_dim]   #Ellipsoid radii
+        obj.id_properties_ui('plane_dimensions').update(description = "Dimensions of the fitted plane (x and y, in m)")
         
+        ##### Assign a material
+        matname = 'geom_primitive_material'
+        color = tuple(bpy.context.scene.muskemo.geom_primitive_color)
+        transparency = 0.5
+            
+               
+        if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+            from .create_transparent_material_func import create_transparent_material
+            create_transparent_material(matname, color, transparency)
 
+        mat = bpy.data.materials[matname]
+        obj.data.materials.append(mat)
+
+        ### viewport display color
+
+        obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
         return {'FINISHED'}
     
 class MatchOrientationOperator(Operator):

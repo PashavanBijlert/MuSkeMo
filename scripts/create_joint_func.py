@@ -191,7 +191,24 @@ def create_joint(name, radius, is_global = True, collection_name = 'Joint center
         
             print('local joint creation not implemented yet')
         ### get frame location and set obj location wrt frame    
+    
 
+    matname = 'joint_material'
+    color = tuple(bpy.context.scene.muskemo.joint_color)
+    transparency = 0.5
 
+    ##### Assign a material
+    
+    if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+        from .create_transparent_material_func import create_transparent_material
+        create_transparent_material(matname, color, transparency)
 
+    mat = bpy.data.materials[matname]
+    obj.data.materials.append(mat)
+
+    ### viewport display color
+
+    obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
+
+    
     bpy.ops.object.select_all(action='DESELECT')

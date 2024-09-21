@@ -173,9 +173,6 @@ class ImportOpenSimModel(Operator):
 
 
 
-
-        
-
         def get_joint_data(model):
             joint_set = model.find('JointSet')
             joints = joint_set.find('objects')
