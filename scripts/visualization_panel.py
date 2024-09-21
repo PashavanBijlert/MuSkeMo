@@ -131,6 +131,31 @@ class SetCompositorBackgroundGradient(Operator):
 
         return {'FINISHED'}
 
+class SetRecommendedBlenderSettingsOperator(Operator):
+    bl_idname = "muskemo.set_recommended_blender_settings"
+    bl_label = "Set recommended Blender settings for using MuSkeMo. Sets view rotation to trackball, rotate around selected, and turns off object children filter in the outliner."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Set recommended Blender settings for using MuSkeMo. Sets view rotation to trackball, rotate around selected, and turns off object children filter in the outliner."
+    
+    def execute(self, context):
+
+        bpy.context.preferences.inputs.view_rotate_method = 'TRACKBALL' #set rotation method to trackball
+        bpy.context.preferences.inputs.use_rotate_around_active = True  #set rotate around selected
+        
+        bpy.ops.wm.save_userpref() #save these settings
+
+        #Toggle object children filter off in all outliners
+        for screen in bpy.data.screens:
+            # Loop through all the areas in each screen
+            for area in screen.areas:
+                if area.type == 'OUTLINER':  # Check if the area is an Outliner
+                    for space in area.spaces:
+                        if space.type == 'OUTLINER':
+                            # Set 'use_filter_children' to False
+                            space.use_filter_children = False
+
+        return {'FINISHED'}
+        
+
 
 from .. import VIEW3D_PT_MuSkeMo  #the super class in which all panels will be placed
 
@@ -178,6 +203,10 @@ class VIEW3D_PT_visualization_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cla
 
         row = self.layout.row()
         row.operator("visualization.set_recommended_render_settings", text = 'Set recommended render settings')
+
+        row = self.layout.row()
+        row.operator("muskemo.set_recommended_blender_settings", text = 'Set recommended Blender settings')
+
 
         row = self.layout.row()
         row.operator("visualization.set_compositor_background_gradient", text = 'Set black background gradient for renders')

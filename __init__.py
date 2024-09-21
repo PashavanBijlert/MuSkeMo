@@ -103,6 +103,7 @@ from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_mode
 from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel,
                                           VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                           CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
+                                          SetRecommendedBlenderSettingsOperator,
                                     ImportTrajectorySTO,#these are separate scripts)
                                     )
 #### Anatomical (local) reference frame panel
@@ -178,6 +179,7 @@ classes = (  #Inertial properties panel
                                 VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel, 
                                 VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                 CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
+                                SetRecommendedBlenderSettingsOperator,
 
                                 ImportTrajectorySTO, # separate script
 
