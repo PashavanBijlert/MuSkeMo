@@ -12,6 +12,7 @@ import numpy as np
 import os
 import pprint
 
+import time
 
 class ImportOpenSimModel(Operator):
     bl_description = "Import an OpenSim 4.0+ model"
@@ -45,6 +46,9 @@ class ImportOpenSimModel(Operator):
         root = tree.getroot()    
         model = root.find('Model')
         
+        time1 = time.time()        
+    
+
         from .quaternions import (matrix_from_quaternion, quat_from_matrix)
         from .euler_XYZ_body import (matrix_from_euler_XYZbody, euler_XYZbody_from_matrix)
     
@@ -265,6 +269,8 @@ class ImportOpenSimModel(Operator):
             return joint_data
 
 
+        
+
         def get_muscle_data(model):
             muscle_data = {}
 
@@ -298,7 +304,9 @@ class ImportOpenSimModel(Operator):
                             # Extract GeometryPath information
                             geometry_path = muscle.find('GeometryPath')
                             path_points_data = []
+                            path_wrap_data = []
                             if geometry_path is not None:
+                                # Handle PathPointSet
                                 path_point_set = geometry_path.find('PathPointSet')
                                 if path_point_set is not None:
                                     path_points = path_point_set.find('objects')
@@ -314,6 +322,20 @@ class ImportOpenSimModel(Operator):
                                                 'location': location
                                             })
 
+                                # Handle PathWrapSet
+                                path_wrap_set = geometry_path.find('PathWrapSet')
+                                if path_wrap_set is not None:
+                                    wrap_objects = path_wrap_set.find('objects')
+                                    if wrap_objects is not None:
+                                        for wrap in wrap_objects.findall('PathWrap'):
+                                            wrap_name = wrap.get('name')
+                                            wrap_object = wrap.find('wrap_object').text.strip()
+
+                                            path_wrap_data.append({
+                                                'wrap_name': wrap_name,
+                                                'wrap_object': wrap_object
+                                            })
+
                             # Add the extracted data to the muscle_data dict
                             muscle_data[muscle_name] = {
                                 'muscle_type': muscle_type,
@@ -321,10 +343,12 @@ class ImportOpenSimModel(Operator):
                                 'F_max': max_isometric_force,
                                 'optimal_fiber_length': optimal_fiber_length,
                                 'pennation_angle': pennation_angle,
-                                'path_points_data': path_points_data
+                                'path_points_data': path_points_data,
+                                'path_wrap_data': path_wrap_data  # Add path wrap data here
                             }
 
             return muscle_data
+
        
         def get_contact_data(model):
             contact_data = {}
@@ -812,82 +836,25 @@ class ImportOpenSimModel(Operator):
                     stack.append((child_joint_name, child_childtree))
                 
         #### outside 
-       
-            
-        #### create muscles
-            
-        for muscle_name, muscle in muscle_data.items():
 
-            
-            F_max = muscle['F_max']
-            optimal_fiber_length = muscle['optimal_fiber_length']
-            tendon_slack_length = muscle['tendon_slack_length']
-            pennation_angle = muscle['pennation_angle']
 
-            for point in muscle['path_points_data']:
+        #### Wrapping
+        # import the wrapping node template
+        enable_wrapping = bpy.context.scene.muskemo.enable_wrapping_on_import #does the user want to enable wrapping?
 
-                socket_parent_frame_name = point['parent_frame']
-                mp_parent_body_name = socket_parent_frame_name.split('/bodyset/')[-1]  #this assumes the muscle points are always expressed in the parent body frame, not an offset frame
-                               
-                muscle_point_position = point['location']
-                
-                if bpy.context.scene.muskemo.model_import_style == 'loc':  #if importing a model using local definitions, muscle points are provided wrt parent frame
-                    
-                    mp_parent_body = bpy.data.objects[mp_parent_body_name] ## this assumes muscle point parent frames are always expressed in a body, thus in the /bodyset/
-                    mp_parent_frame = frames[mp_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
+        if enable_wrapping: #if the user wants wrapping
+            self.report({'WARNING'}, "Wrapping support is currently still very experimental. If your model has a lot of wrapping surfaces, you will currently likely achieve better visualization results by adding via points manually")
 
-                    gRp = mp_parent_frame['gRf']  #global orientation of parent frame
-                    parent_frame_pos_in_glob = mp_parent_frame['frame_pos_in_global']
+            wrap_nodefilename = 'muscle_wrapper_experimental_v1.blend'
+            directory = os.path.dirname(os.path.realpath(__file__)) + '\\'
 
-                    muscle_point_position = parent_frame_pos_in_glob + gRp @ Vector(muscle_point_position)
+            with bpy.data.libraries.load(directory + wrap_nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file
+                data_to.node_groups = data_from.node_groups
 
-                create_muscle(muscle_name = muscle_name, 
-                            is_global =True, 
-                            body_name = mp_parent_body_name,
-                            point_position = muscle_point_position,
-                            collection_name=muscle_colname,
-                            optimal_fiber_length=optimal_fiber_length,
-                            tendon_slack_length=tendon_slack_length,
-                            F_max = F_max,
-                            pennation_angle = pennation_angle)    
-           
+            wrap_node_group_name =   'MuscleWrapNodeGroupShellExperimental' #this is used later in the script. Can update when new versions of the wrap node are made  
+            wrap_node_tree_template = [x for x in data_to.node_groups if wrap_node_group_name in x.name][0] #node tree template
 
-        ### create contacts    
-        for contact_name, contact in contact_data.items():
-
-            if contact['geometry_type'] == 'ContactSphere':# if it's a Sphere
-
-                contact_radius = contact['radius']
-                
-                c_socket_parent_frame_name = contact['socket_frame']
-                contact_parent_body_name = c_socket_parent_frame_name.split('/bodyset/')[-1]  #this assumes the contacts are always expressed in the parent body frame, not an offset frame
-                contact_position = contact['location']
-                contact_pos_in_global = [nan]*3
-                contact_pos_in_parent_frame = [nan]*3
-
-                if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions, the location corresponds to global location
-                    
-                    contact_pos_in_global = contact_position
-
-                elif bpy.context.scene.muskemo.model_import_style == 'loc':  #
-
-                    contact_pos_in_parent_frame = contact_position
-                    contact_parent_body = bpy.data.objects[contact_parent_body_name] ## this assumes contact parent frames are always expressed in a body, thus in the /bodyset/
-                    contact_parent_frame = frames[contact_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
-
-                    gRp = contact_parent_frame['gRf']  #global orientation of parent frame
-                    parent_frame_pos_in_glob = contact_parent_frame['frame_pos_in_global']
-
-                    contact_pos_in_global = parent_frame_pos_in_glob + gRp @ Vector(contact_position)
-                
-                create_contact(name = contact_name,
-                               radius = contact_radius,
-                               collection_name = contact_colname,
-                               pos_in_global = contact_pos_in_global,
-                               parent_body = contact_parent_body_name,
-                               pos_in_parent_frame=contact_pos_in_parent_frame,
-                               is_global = True,
-                               )
+        wrap_objects = {}
 
         ### create wrapping
         for body_name, body in body_data.items():
@@ -896,6 +863,10 @@ class ImportOpenSimModel(Operator):
 
                     for wrap_obj in body['wrap_objects']:
                         wrap_name = wrap_obj['name']
+                        
+                        wrap_objects[wrap_name] = wrap_obj  #add to the dict of wrappers
+                        
+
                         wrap_type = wrap_obj['type']
                         wrap_position = wrap_obj.get('translation', [float('nan')] * 3)  # Translation in parent frame
                         wrap_orientation = wrap_obj.get('xyz_body_rotation', [0] * 3)  # Orientation in parent frame
@@ -909,6 +880,12 @@ class ImportOpenSimModel(Operator):
                         elif wrap_type == 'WrapSphere':
                             dimensions['radius'] = wrap_obj.get('radius', float('nan'))
                             geomtype = 'Sphere'
+
+
+                        else:
+                            
+                            self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' is of the type '" + wrap_type + "', which is not yet supported. Skipping this wrapping geom.")
+
 
                         # Fill in global position/orientation if importing globally
                         wrap_pos_in_global = [float('nan')] * 3
@@ -950,8 +927,132 @@ class ImportOpenSimModel(Operator):
                                         dimensions=dimensions
                                     )
 
+                        ### create a geometry nodegroup for the wrapper using the template
+                        if enable_wrapping: 
+                            wrap_node_tree_new = wrap_node_tree_template.copy()
+                            wrap_node_tree_new.name = wrap_node_group_name + '_' + wrap_name
+                            wrap_node_tree_new.nodes['Object Info'].inputs['Object'].default_value = bpy.data.objects[wrap_name] #the wrap geometry
+            
+                                                    
+                            proj_or_angle = 0 #projection orientation z-angle. An Euler angle for which way to project the wrapping. 0 means in positive x direction.
+                            if wrap_obj['quadrant'] == '+x' or wrap_obj['quadrant'] == 'x' :
+                                proj_or_angle = 0
 
+                            elif wrap_obj['quadrant'] == '+y':
+                                proj_or_angle = 90
+                            
+                            elif wrap_obj['quadrant'] == '-x':
+                                proj_or_angle = 180
+
+                            elif wrap_obj['quadrant'] == '-y':
+                                proj_or_angle = 270
+
+                            else:
+
+                                self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
+
+
+                            wrap_node_tree_new.interface.items_tree['Projection orientation Z-angle (deg)'].default_value = np.deg2rad(proj_or_angle)
+
+
+                         
+
+
+            
+        #### create muscles
+            
+        for muscle_name, muscle in muscle_data.items():
+
+            
+            F_max = muscle['F_max']
+            optimal_fiber_length = muscle['optimal_fiber_length']
+            tendon_slack_length = muscle['tendon_slack_length']
+            pennation_angle = muscle['pennation_angle']
+
+            for point in muscle['path_points_data']:
+
+                socket_parent_frame_name = point['parent_frame']
+                mp_parent_body_name = socket_parent_frame_name.split('/bodyset/')[-1]  #this assumes the muscle points are always expressed in the parent body frame, not an offset frame
+                               
+                muscle_point_position = point['location']
+                
+                if bpy.context.scene.muskemo.model_import_style == 'loc':  #if importing a model using local definitions, muscle points are provided wrt parent frame
+                    
+                    mp_parent_body = bpy.data.objects[mp_parent_body_name] ## this assumes muscle point parent frames are always expressed in a body, thus in the /bodyset/
+                    mp_parent_frame = frames[mp_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
+
+                    gRp = mp_parent_frame['gRf']  #global orientation of parent frame
+                    parent_frame_pos_in_glob = mp_parent_frame['frame_pos_in_global']
+
+                    muscle_point_position = parent_frame_pos_in_glob + gRp @ Vector(muscle_point_position)
+
+                create_muscle(muscle_name = muscle_name, 
+                            is_global =True, 
+                            body_name = mp_parent_body_name,
+                            point_position = muscle_point_position,
+                            collection_name=muscle_colname,
+                            optimal_fiber_length=optimal_fiber_length,
+                            tendon_slack_length=tendon_slack_length,
+                            F_max = F_max,
+                            pennation_angle = pennation_angle)    
+
+            
+            if (enable_wrapping and muscle['path_wrap_data']): #if wrapping is enabled and the muscle has wrapping
+                
+                
+                for pathwrap in muscle['path_wrap_data']: #for each wrap in the muscle
+                    
+                    wrap_objname = pathwrap['wrap_object']
+                    if wrap_objname in bpy.data.objects: #if the wrapping object actually exists
+                        muscle_obj = bpy.data.objects[muscle_name]
+                        #create a new geometry node for the curve, and set the node tree we just made
+                        geonode = muscle_obj.modifiers.new(name = muscle_name + '_wrap' + wrap_objname, type = 'NODES') #add modifier to curve
+                        geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_objname]
+                        #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
+
+
+        ### create contacts    
+        for contact_name, contact in contact_data.items():
+
+            if contact['geometry_type'] == 'ContactSphere':# if it's a Sphere
+
+                contact_radius = contact['radius']
+                
+                c_socket_parent_frame_name = contact['socket_frame']
+                contact_parent_body_name = c_socket_parent_frame_name.split('/bodyset/')[-1]  #this assumes the contacts are always expressed in the parent body frame, not an offset frame
+                contact_position = contact['location']
+                contact_pos_in_global = [nan]*3
+                contact_pos_in_parent_frame = [nan]*3
+
+                if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions, the location corresponds to global location
+                    
+                    contact_pos_in_global = contact_position
+
+                elif bpy.context.scene.muskemo.model_import_style == 'loc':  #
+
+                    contact_pos_in_parent_frame = contact_position
+                    contact_parent_body = bpy.data.objects[contact_parent_body_name] ## this assumes contact parent frames are always expressed in a body, thus in the /bodyset/
+                    contact_parent_frame = frames[contact_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
+
+                    gRp = contact_parent_frame['gRf']  #global orientation of parent frame
+                    parent_frame_pos_in_glob = contact_parent_frame['frame_pos_in_global']
+
+                    contact_pos_in_global = parent_frame_pos_in_glob + gRp @ Vector(contact_position)
+                
+                create_contact(name = contact_name,
+                               radius = contact_radius,
+                               collection_name = contact_colname,
+                               pos_in_global = contact_pos_in_global,
+                               parent_body = contact_parent_body_name,
+                               pos_in_parent_frame=contact_pos_in_parent_frame,
+                               is_global = True,
+                               )
 
        
+
+       
+        time2 = time.time()
+
+        print('Elapsed time = ' + str(time2-time1) + ' seconds')
 
         return {'FINISHED'}

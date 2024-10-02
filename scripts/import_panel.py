@@ -562,6 +562,9 @@ class VIEW3D_PT_import_OpenSim_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
         row = layout.row()
         row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
         
+        row = layout.row()
+        row.prop(muskemo, "enable_wrapping_on_import") #boolean, yes or no
+        
         return   
 
 

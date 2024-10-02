@@ -41,8 +41,8 @@ def create_wrapgeom(name, geomtype, collection_name,
         bpy.context.object.data.name = name #set the name of the object data
         obj = bpy.data.objects[name]
 
-        obj['wrap_type'] = 'WRAP'    #to inform the user what type is created
-        obj.id_properties_ui('wrap_type').update(description = "The object type. Warning: don't modify this!")
+        obj['wrap_type'] = geomtype   #to inform the user what type is created
+        obj.id_properties_ui('wrap_type').update(description = "The type of wrapping object")
 
 
         obj['cylinder_radius'] = dimensions['radius']    #to inform the user what type is created

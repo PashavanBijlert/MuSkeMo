@@ -261,6 +261,12 @@ class MuSkeMoProperties(PropertyGroup):
         default = True,
     )
 
+    enable_wrapping_on_import: BoolProperty(
+        name = 'Enable wrapping during import (experimental)',
+        description='Enable wrapping for imported muscles. Currently experimental, it is currently advised to manually add extra viapoints instead for visualization.',
+        default = False,
+    )
+
     gaitsym_geometry_folder: StringProperty(
         name = 'Gaitsym geometry folder',
         description="Name of the directory that contains the Gaitsym model's visual geometry. Must be a subdirectory of the model directory",
