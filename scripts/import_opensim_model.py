@@ -955,6 +955,7 @@ class ImportOpenSimModel(Operator):
                             wrap_node_tree_new.interface.items_tree['Projection orientation Z-angle (deg)'].default_value = np.deg2rad(proj_or_angle)
 
 
+
                          
 
 
@@ -1009,6 +1010,11 @@ class ImportOpenSimModel(Operator):
                         geonode = muscle_obj.modifiers.new(name = muscle_name + '_wrap' + wrap_objname, type = 'NODES') #add modifier to curve
                         geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_objname]
                         #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
+
+                        #Ensure the last two modifiers are always the Visualization and then the bevel modifier
+                        n_modifiers = len(muscle_obj.modifiers)
+                        muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-3) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
+
 
 
         ### create contacts    

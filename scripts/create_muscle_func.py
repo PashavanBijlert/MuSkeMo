@@ -1,5 +1,6 @@
 import bpy
 from mathutils import Vector
+import numpy as np
 
 def create_muscle (muscle_name, point_position, body_name,
                    collection_name = 'Muscles',
@@ -90,10 +91,12 @@ def create_muscle (muscle_name, point_position, body_name,
         var.targets[0].data_path = "muskemo.muscle_visualization_radius" #get the driving property
 
         driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
-        '''
+       
+        
+        ### adding it as curve depth works nicely, but turns the curve into geometry, which doesn't work with geometry nodes wrapping
         obj.data.bevel_depth = bpy.context.scene.muskemo.muscle_visualization_radius
         obj.data.use_fill_caps = True 
-
+        '''
         ### seperate materials for each muscle so that they can be individually animated
         bpy.data.materials.new(name = muscle_name)
         
@@ -129,6 +132,27 @@ def create_muscle (muscle_name, point_position, body_name,
 
         obj.active_material.diffuse_color = muscle_color
         
+        ### add simple muscle visualization modifier
+        if "SimpleMuscleNode" not in bpy.data.node_groups:
+            from .simple_muscle_viz_node import (create_simple_muscle_node_group, add_simple_muscle_node)
+            create_simple_muscle_node_group() #create the node group
+            
+
+        else:
+            from .simple_muscle_viz_node import add_simple_muscle_node
+
+        add_simple_muscle_node(muscle_name)    
+
+
+
+        ### add bevel modifier
+
+      
+        obj.modifiers.new(muscle_name + '_bevelmod','BEVEL')
+        modifier = obj.modifiers[muscle_name + '_bevelmod']
+        modifier.segments = 5
+        modifier.angle_limit = np.deg2rad(50)
+
 
 
 
@@ -153,5 +177,10 @@ def create_muscle (muscle_name, point_position, body_name,
     obj.modifiers.new(name=modname, type='HOOK')
     obj.modifiers[modname].vertex_indices_set([last_point])#setting this only updates if you either toggle in and out of edit mode (slow) or add the body afterwards
     obj.modifiers[modname].object = body  #      
+
+    #Ensure the last two modifiers are always the Visualization and then the bevel modifier
+    n_modifiers = len(obj.modifiers)
+    obj.modifiers.move(n_modifiers-1, last_point) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
+
 
   

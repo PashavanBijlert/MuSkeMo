@@ -191,6 +191,7 @@ class InsertMusclePointOperator(Operator):
         obj.modifiers.new(name=modname, type='HOOK')
         obj.modifiers[modname].object = body        
 
+        
 
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.curve.select_all(action='DESELECT') 
@@ -209,7 +210,9 @@ class InsertMusclePointOperator(Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
                         
-
+        #Ensure the last two modifiers are always the Visualization and then the bevel modifier
+        n_modifiers = len(obj.modifiers)
+        obj.modifiers.move(n_modifiers-1, insert_after) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
 
         ### restore selection state
         bpy.context.view_layer.objects.active = active_obj
@@ -229,10 +232,15 @@ class UpdateMuscleVizRadius(Operator):
         MuSkeMo_objects = [x for x in bpy.data.objects if 'MuSkeMo_type' in x]
         muscles = [x for x in MuSkeMo_objects if x['MuSkeMo_type']=='MUSCLE']
         
+        muscle_visualization_radius = bpy.context.scene.muskemo.muscle_visualization_radius
 
         for muscle in muscles:
-            muscle.data.bevel_depth = bpy.context.scene.muskemo.muscle_visualization_radius
-
+            muscle.modifiers[muscle.name + '_SimpleMuscleViz']['Socket_1']=  muscle_visualization_radius
+            muscle.modifiers[muscle.name + '_SimpleMuscleViz'].node_group.interface_update(bpy.context)
+        
+        #update the merge by distance value based on the desired radius
+        bpy.data.node_groups['SimpleMuscleNode'].nodes['Merge by Distance'].inputs['Distance'].default_value = muscle_visualization_radius * 0.13
+        
         return {'FINISHED'}
     
 
