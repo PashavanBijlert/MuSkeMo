@@ -416,7 +416,7 @@ if ~isempty(muscles_file)% if the muscles file is not empty
         muscle = DeGrooteFregly2016Muscle();
         muscle.setName(muscle_name);
         
-        muscle_ind = find(startsWith(muscle_data.muscle_point_name,muscle_name)); %all indices of muscle points of the current muscle
+        muscle_ind = find(startsWith(muscle_data.MUSCLE_point_name,muscle_name)); %all indices of muscle points of the current muscle
         
         %set the opensim muscle inputs from the muscle_data file
         muscle.setMaxIsometricForce(muscle_data.("F_max(N)")(muscle_ind(1))); %
@@ -445,7 +445,7 @@ if ~isempty(muscles_file)% if the muscles file is not empty
             else k == n_mpts ; %%% last point is the insertion
                 name = strjoin([muscle_names(i) '_ins'],''); %joins together without a space
             end
-            ind =  strcmp(muscle_data.muscle_point_name,name); %index of the muscle origin
+            ind =  strcmp(muscle_data.MUSCLE_point_name,name); %index of the muscle origin
             body_name = [muscle_data.parent_body_name{ind}]; %this is the body that the viapoints get attached to
             
             if strcmp(global_or_local,'global')
