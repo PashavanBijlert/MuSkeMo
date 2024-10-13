@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.9.14)  14 OCT 2024 00:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.9.14)  14 OCT 2024 00:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -730,12 +730,12 @@ Package epstopdf Info: Source file: <figures/panels_coll_props.eps>
 (epstopdf)                    date: 2024-10-13 17:43:58
 (epstopdf)                    size: 361390 bytes
 (epstopdf)             Command: <repstopdf --outfile=figures/panels_coll_props-eps-converted-to.pdf figures/panels_coll_props.eps>
-(epstopdf)             \includegraphics on input line 148.
+(epstopdf)             \includegraphics on input line 128.
 Package epstopdf Info: Output file is already uptodate.
 <figures/panels_coll_props-eps-converted-to.pdf, id=264, 572.1375pt x 548.0475pt>
 File: figures/panels_coll_props-eps-converted-to.pdf Graphic file (type pdf)
 <use figures/panels_coll_props-eps-converted-to.pdf>
-Package pdftex.def Info: figures/panels_coll_props-eps-converted-to.pdf  used on input line 148.
+Package pdftex.def Info: figures/panels_coll_props-eps-converted-to.pdf  used on input line 128.
 (pdftex.def)             Requested size: 450.69417pt x 431.72348pt.
 
 
@@ -781,7 +781,7 @@ Here is how much of TeX's memory you used:
  319 hyphenation exceptions out of 8191
  79i,11n,93p,1287b,1307s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <c:/Users/3827658/.texlive2024/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600pk><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/latxfont/line10.pfb>
-Output written on "MuSkeMo manual.pdf" (15 pages, 2420514 bytes).
+Output written on "MuSkeMo manual.pdf" (15 pages, 2420520 bytes).
 PDF statistics:
  486 PDF objects out of 1000 (max. 8388607)
  421 compressed objects within 5 object streams

@@ -120,26 +120,6 @@ Orientations are represented as XYZ body-fixed Euler angles (see Appendix \ref{s
 MuSkeMo lives in \href{https://docs.blender.org/manual/en/latest/interface/window_system/tabs_panels.html}{Blender panels} (Fig. \ref{fig:MuSkeMoUI}A). Panels can be interactively resized and collapsed, which can be useful depending on your screen size. Although Blender does support using a trackpad, it is substantially more intuitive to navigate with a mouse, and a keyboard with a separate numberpad. There are also certain settings that make navigation easier (see Section \ref{sec:MSM_glob_settings}).
 
 
-% \begin{wrapfigure}{l}{0.5\textwidth} % 'r' for right alignment
-%     \vspace{-15pt}
-%     \centering
-%     \includegraphics[width=\linewidth]{figures/panels.png} % Add image
-%     %\captionsetup{width=0.5\linewidth}
-%     \caption{MuSkeMo's panels. Panels can be interactively resized and collapsed}
-%     \label{fig:panels}
-%     \vspace{-25pt}
-% \end{wrapfigure}
-
-% \begin{wrapfigure}{r}{0.4\textwidth} % 'r' for right alignment
-%     \vspace{-45pt}
-%     \centering
-%     \includegraphics[width=\linewidth]{figures/collections.png} % Add image
-%     %\captionsetup{width=0.5\linewidth}
-%     \caption{Model components are stored in Blender collections. If child objects are not visible, turn off object children in the outliner filter (see Section \ref{sec:MSM_glob_settings}}.
-%     \label{fig:collections}
-%     \vspace{-100pt}
-% \end{wrapfigure}
-
 \textbf{WARNING:} Ensure that 3D meshes (visual geometry and tissue outlines) have all their transformations applied before you start constructing the model. To do this, select the object, press \texttt{Control + A}, and select “All transforms”. This accounts for the way that Blender stores local transformations. When you move, rotate, and/or scale 3D models in Blender, these transformations are initially stored only locally in the object’s data (an extra storage layer in Blender). This means that the object’s position has not changed in 3D space, you have defined an extra local transformation that can easily be undone. Some of the functions in MuSkeMo may behave unpredictably unless transformations have first been applied.
 
 \begin{figure}[htbp]
@@ -155,17 +135,6 @@ All the model components and other user-created objects are stored in Blender \h
 
 For each model component, data created by MuSkeMo are stored in Blender as \href{https://docs.blender.org/manual/en/latest/files/custom_properties.html}{Custom Properties} assigned to each object in question (Fig. \ref{fig:MuSkeMoUI}C, see also Section \ref{sec:DataTypes} on MuSkeMo Data Types).
 
-
-
-% \begin{wrapfigure}{r}{0.5\textwidth} % 'r' for right alignment
-%     %\vspace{-15pt}
-%     \centering
-%     \includegraphics[width=\linewidth]{figures/custom_properties.png} % Add image
-%     %\captionsetup{width=0.5\linewidth}
-%     \caption{After creating or importing model components, they are stored in Blender's collections. If child objects are not visible, turn off object children in the outliner filter (see Section \ref{sec:MSM_glob_settings}}.
-%     \label{fig:custom_properties}
-%     %\vspace{-15pt}
-% \end{wrapfigure}
 
 \subsection{Blender Auto Save}
 
