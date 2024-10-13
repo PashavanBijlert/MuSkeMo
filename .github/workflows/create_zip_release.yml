@@ -18,7 +18,7 @@ jobs:
         type: 'zip'
         filename: 'MuSkeMo.zip'
         path: 'MuSkeMo'
-        exclusions: '*.git* /*node_modules/* .editorconfig'
+        exclusions: '*.git* /*node_modules/* .editorconfig "MuSkeMo manual/**"'
     - name: Upload Release
       uses: ncipollo/release-action@v1.14.0
       with:

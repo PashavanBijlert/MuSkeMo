@@ -1,0 +1,44 @@
+\contentsline {section}{\numberline {1}Introduction}{3}{section.1}%
+\contentsline {section}{\numberline {2}Installation instructions}{3}{section.2}%
+\contentsline {section}{\numberline {3}Units}{3}{section.3}%
+\contentsline {section}{\numberline {4}A Note on Precision}{4}{section.4}%
+\contentsline {section}{\numberline {5}Orientations}{4}{section.5}%
+\contentsline {section}{\numberline {6}Using MuSkeMo}{4}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Where MuSkeMo stores model data}{4}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Blender Auto Save}{4}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}MuSkeMo Global Settings Panel}{5}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Inertial properties panel}{6}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Body panel}{6}{subsection.6.5}%
+\contentsline {subsection}{\numberline {6.6}Joint panel}{6}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}Muscle panel}{6}{subsection.6.7}%
+\contentsline {subsection}{\numberline {6.8}Anatomical \& local reference frames panel}{6}{subsection.6.8}%
+\contentsline {subsection}{\numberline {6.9}Landmark \& marker panel}{7}{subsection.6.9}%
+\contentsline {subsection}{\numberline {6.10}Contact panel}{7}{subsection.6.10}%
+\contentsline {subsection}{\numberline {6.11}Export panel}{7}{subsection.6.11}%
+\contentsline {subsection}{\numberline {6.12}Import panel}{7}{subsection.6.12}%
+\contentsline {subsubsection}{\numberline {6.12.1}OpenSim model import}{7}{subsubsection.6.12.1}%
+\contentsline {subsubsection}{\numberline {6.12.2}Gaitsym 2019 model import}{7}{subsubsection.6.12.2}%
+\contentsline {subsubsection}{\numberline {6.12.3}Other simulators}{7}{subsubsection.6.12.3}%
+\contentsline {subsection}{\numberline {6.13}Visualization panel}{8}{subsection.6.13}%
+\contentsline {subsubsection}{\numberline {6.13.1}Trajectory import}{8}{subsubsection.6.13.1}%
+\contentsline {subsubsection}{\numberline {6.13.2}Visualization options}{8}{subsubsection.6.13.2}%
+\contentsline {subsubsection}{\numberline {6.13.3}Default colors}{8}{subsubsection.6.13.3}%
+\contentsline {subsection}{\numberline {6.14}MuSkeMo utilities}{8}{subsection.6.14}%
+\contentsline {subsubsection}{\numberline {6.14.1}OpenSim conversion}{8}{subsubsection.6.14.1}%
+\contentsline {subsubsection}{\numberline {6.14.2}Fitting muscle lines of action}{9}{subsubsection.6.14.2}%
+\contentsline {subsubsection}{\numberline {6.14.3}MuSkeMo version updater}{9}{subsubsection.6.14.3}%
+\contentsline {section}{\numberline {7}MuSkeMo Data Types}{9}{section.7}%
+\contentsline {subsection}{\numberline {7.1}BODY}{9}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}GEOMETRY}{10}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}MUSCLE}{10}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}JOINT}{10}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}LANDMARK}{11}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}CONTACT}{11}{subsection.7.6}%
+\contentsline {subsection}{\numberline {7.7}FRAME}{11}{subsection.7.7}%
+\contentsline {subsection}{\numberline {7.8}GEOM\_PRIMITIVE}{12}{subsection.7.8}%
+\contentsline {subsection}{\numberline {7.9}WRAP}{12}{subsection.7.9}%
+\contentsline {section}{\numberline {A}Euler angles}{12}{appendix.A}%
+\contentsline {subsection}{\numberline {A.1}Conventions used by MuSkeMo}{12}{subsection.A.1}%
+\contentsline {subsection}{\numberline {A.2}Understanding decomposed successive rotations}{13}{subsection.A.2}%
+\contentsline {section}{\numberline {B}Rotation quaternions}{15}{appendix.B}%
+\contentsline {section}{References}{15}{section*.10}%
