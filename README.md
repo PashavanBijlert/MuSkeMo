@@ -6,9 +6,11 @@ To download: Click on the latest release on the right, and download "MuSkeMo.zip
 
 To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, you may need to use the legacy installer.
 
-**Check out the [video tutorial on YouTube](https://www.youtube.com/watch?v=9eMm9YalXtg)**
+# **How to use**
 
-This README gives an overview of the functionalities, but is not a full documentation. A complete documentation will be created in due course.
+**Check out the [video tutorial on YouTube](https://www.youtube.com/watch?v=9eMm9YalXtg)** More videos and updated tutorials will be added in the near future.
+
+**Download the [MuSkeMo user manual](https://github.com/PashavanBijlert/MuSkeMo/blob/main/MuSkeMo%20manual/MuSkeMo%20manual.pdf)**. This document is being updated and extended in preparation for the first full release (v1.0).
 
 # **Inertial properties panel**
 
