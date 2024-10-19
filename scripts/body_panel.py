@@ -2,6 +2,7 @@
 import bpy
 
 import mathutils
+from mathutils import (Vector, Matrix)
 
 from bpy.types import (Panel,
                         Operator,
@@ -298,7 +299,47 @@ class AssignInertialPropertiesOperator(Operator):
             target_body['COM'] = COM
             target_body['mass'] = mass
             target_body['inertia_COM'] = inertia_COM
+
+
+        ## Check whether a local frame is attached to the body, and if so, compute the local frame attributes
+
+        if target_body['local_frame'] != 'not_assigned': #if the target body has a local frame assigned
+
+
+            frame = bpy.data.objects[target_body['local_frame']] #get the frame
             
+            ### COM extra properties COM_local, inertia_COM_local
+
+            gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+            bRg = gRb.copy()
+            bRg.transpose()
+            
+            frame_or_g = frame.matrix_world.translation   #frame origin in global frame
+            COM_g = Vector(target_body['COM'])  #COM loc in global frame
+
+            relCOM_g = COM_g - frame_or_g  #Relative COM location from the local frame origin, aligned in global frame
+            relCOM_b = bRg @ relCOM_g #COM of the body, expressed in the local frame
+
+            target_body['COM_local'] = list(relCOM_b)  #set COM in local frame
+
+            MOI_glob_vec = target_body['inertia_COM']  #vector of MOI about COM, in global frame. Ixx Iyy Izz Ixy Ixz Iyz
+            MOI_g = Matrix(((MOI_glob_vec[0], MOI_glob_vec[3], MOI_glob_vec[4]), #MOI tensor about COM in global
+                            (MOI_glob_vec[3],MOI_glob_vec[1],MOI_glob_vec[5]),
+                            (MOI_glob_vec[4],MOI_glob_vec[5],MOI_glob_vec[2])))
+            
+            MOI_b = bRg @ MOI_g @ gRb #Vallery & Schwab, Advanced Dynamics 2018, eq. 5.53
+
+            MOI_b_vec = [MOI_b[0][0],  #Ixx, about COM, in local frame
+                        MOI_b[1][1],  #Iyy
+                        MOI_b[2][2],  #Izz
+                        MOI_b[0][1],  #Ixy
+                        MOI_b[0][2],  #Ixz
+                        MOI_b[1][2]]  #Iyz
+
+
+            target_body['inertia_COM_local'] = MOI_b_vec  #add moment of inertia in local frame to the body
+
+
         ## update the location of the body so that it matches the new COM
         
                             
@@ -315,7 +356,7 @@ class AssignInertialPropertiesOperator(Operator):
                 #chil.matrix_world = global_transform
             
             pos_old = target_body.location.copy()
-            target_body.location = COM
+            target_body.location = target_body['COM']
             
             difference = target_body.location-pos_old
             
@@ -499,7 +540,45 @@ class ComputeInertialPropertiesOperator(Operator):
             target_body['COM'] = COM
             target_body['mass'] = mass
             target_body['inertia_COM'] = inertia_COM
+
+         ## Check whether a local frame is attached to the body, and if so, compute the local frame attributes
+
+        if target_body['local_frame'] != 'not_assigned': #if the target body has a local frame assigned
+
+
+            frame = bpy.data.objects[target_body['local_frame']] #get the frame
             
+            ### COM extra properties COM_local, inertia_COM_local
+
+            gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+            bRg = gRb.copy()
+            bRg.transpose()
+            
+            frame_or_g = frame.matrix_world.translation   #frame origin in global frame
+            COM_g = Vector(target_body['COM'])  #COM loc in global frame
+
+            relCOM_g = COM_g - frame_or_g  #Relative COM location from the local frame origin, aligned in global frame
+            relCOM_b = bRg @ relCOM_g #COM of the body, expressed in the local frame
+
+            target_body['COM_local'] = list(relCOM_b)  #set COM in local frame
+
+            MOI_glob_vec = target_body['inertia_COM']  #vector of MOI about COM, in global frame. Ixx Iyy Izz Ixy Ixz Iyz
+            MOI_g = Matrix(((MOI_glob_vec[0], MOI_glob_vec[3], MOI_glob_vec[4]), #MOI tensor about COM in global
+                            (MOI_glob_vec[3],MOI_glob_vec[1],MOI_glob_vec[5]),
+                            (MOI_glob_vec[4],MOI_glob_vec[5],MOI_glob_vec[2])))
+            
+            MOI_b = bRg @ MOI_g @ gRb #Vallery & Schwab, Advanced Dynamics 2018, eq. 5.53
+
+            MOI_b_vec = [MOI_b[0][0],  #Ixx, about COM, in local frame
+                        MOI_b[1][1],  #Iyy
+                        MOI_b[2][2],  #Izz
+                        MOI_b[0][1],  #Ixy
+                        MOI_b[0][2],  #Ixz
+                        MOI_b[1][2]]  #Iyz
+
+
+            target_body['inertia_COM_local'] = MOI_b_vec  #add moment of inertia in local frame to the body
+    
         ## update the location of the body so that it matches the new COM
         
         children = target_body.children
