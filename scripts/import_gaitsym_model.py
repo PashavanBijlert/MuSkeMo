@@ -291,7 +291,7 @@ class ImportGaitsymModel(Operator):
             or_in_import_quat = [float(x) for x in body1_marker['WorldQuaternion'].split()]
             
             [joint_iRb, joint_bRi] = matrix_from_quaternion(or_in_import_quat)
-            or_in_global = import_gRi @ joint_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI
+            or_in_global = import_gRi @ joint_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI. This is called a similarity transformation.
             or_in_global_quat = list(quat_from_matrix(or_in_global)) #joint func expects a list
 
             ## coordinates
@@ -482,7 +482,7 @@ class ImportGaitsymModel(Operator):
                 marker_or_in_import_quat = [float(x) for x in marker['WorldQuaternion'].split()]
                 
                 [marker_iRb, marker_bRi] = matrix_from_quaternion(marker_or_in_import_quat)
-                marker_or_in_global = import_gRi @ marker_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI
+                marker_or_in_global = import_gRi @ marker_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI. This is called a similarity transformation.
                 marker_or_in_global_quat = list(quat_from_matrix(marker_or_in_global)) #frame func expects a list
 
                 create_frame(name = marker_name, 

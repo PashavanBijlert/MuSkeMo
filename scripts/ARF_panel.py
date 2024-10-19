@@ -96,15 +96,16 @@ class ConstructARFOperator(Operator):
     
     def execute(self, context):
         
+        muskemo = bpy.context.scene.muskemo
 
-        origin_landmark_name =  bpy.context.scene.muskemo.or_landmark_name
-        ydir_landmark_name = bpy.context.scene.muskemo.ydir_landmark_name
-        yzplane_landmark_name = bpy.context.scene.muskemo.yz_plane_landmark_name  #landmark to define YZ plane
+        origin_landmark_name =  muskemo.or_landmark_name
+        ydir_landmark_name = muskemo.ydir_landmark_name
+        yzplane_landmark_name = muskemo.yz_plane_landmark_name  #landmark to define YZ plane
 
-        refframe_name = bpy.context.scene.muskemo.framename
-        colname = bpy.context.scene.muskemo.frame_collection  #target collection
+        refframe_name = muskemo.framename
+        colname = muskemo.frame_collection  #target collection
 
-        size = bpy.context.scene.muskemo.ARF_axes_size
+        size = muskemo.ARF_axes_size
 
        
         origin = bpy.data.objects[origin_landmark_name].location
