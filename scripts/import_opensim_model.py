@@ -684,7 +684,7 @@ class ImportOpenSimModel(Operator):
                 cRg = gRc.copy() #copy the gRc matrix
                 cRg.transpose() #transpose it so that it becomes cRg
 
-                MOI_g_matrix = gRc @ MOI_c_matrix @ cRg
+                MOI_g_matrix = gRc @ MOI_c_matrix @ cRg #Vallery & Schwab, Advanced Dynamics 2018, eq. 5.53
 
                 inertia_COM_global =   [MOI_g_matrix[0][0],  #Ixx, about COM, in global frame
                                         MOI_g_matrix[1][1],  #Iyy

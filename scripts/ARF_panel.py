@@ -227,7 +227,7 @@ class AssignARFParentBodyOperator(Operator):
                         (MOI_glob_vec[3],MOI_glob_vec[1],MOI_glob_vec[5]),
                         (MOI_glob_vec[4],MOI_glob_vec[5],MOI_glob_vec[2])))
         
-        MOI_b = bRg @ MOI_g @ gRb
+        MOI_b = bRg @ MOI_g @ gRb #Vallery & Schwab, Advanced Dynamics 2018, eq. 5.53
 
         MOI_b_vec = [MOI_b[0][0],  #Ixx, about COM, in local frame
                      MOI_b[1][1],  #Iyy
