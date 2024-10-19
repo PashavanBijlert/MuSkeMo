@@ -103,6 +103,33 @@ class ConstructARFOperator(Operator):
         yzplane_landmark_name = muskemo.yz_plane_landmark_name  #landmark to define YZ plane
 
         refframe_name = muskemo.framename
+
+        #Check if everything exists
+
+        for x,y in zip ([origin_landmark_name, ydir_landmark_name, yzplane_landmark_name, refframe_name],
+                        ["n Origin marker"," Y direction marker", " YZ plane marker"," Frame name"]):
+            if not x:
+                
+                self.report({'ERROR'}, "You did not input a" + y + ". Type in a frame name, and assign three unique markers to create a new frame. Operation cancelled.")
+                return {'FINISHED'}
+            
+
+        #Check if the markers are unique
+
+        if origin_landmark_name == ydir_landmark_name:
+            self.report({'ERROR'}, "Origin and Y direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if origin_landmark_name == yzplane_landmark_name:
+            self.report({'ERROR'}, "Origin and YZ plane direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if ydir_landmark_name == yzplane_landmark_name:
+            self.report({'ERROR'}, "Y direction and YZ plane direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+            return {'FINISHED'}
+
+
+
         colname = muskemo.frame_collection  #target collection
 
         size = muskemo.ARF_axes_size
