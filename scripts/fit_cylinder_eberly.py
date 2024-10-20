@@ -1,7 +1,9 @@
 import numpy as np
 import math
-
+# Based on Psuedocode implementation written by David Eberly
 # From: https://www.geometrictools.com/Documentation/LeastSquaresFitting.pdf
+# Shared under the following license: https://creativecommons.org/licenses/by/4.0/
+# Implemented into Blender/Python by Pasha van Bijlert
 
 def preprocess(n, points):
     average = np.zeros(3)

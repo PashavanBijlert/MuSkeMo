@@ -96,15 +96,43 @@ class ConstructARFOperator(Operator):
     
     def execute(self, context):
         
+        muskemo = bpy.context.scene.muskemo
 
-        origin_landmark_name =  bpy.context.scene.muskemo.or_landmark_name
-        ydir_landmark_name = bpy.context.scene.muskemo.ydir_landmark_name
-        yzplane_landmark_name = bpy.context.scene.muskemo.yz_plane_landmark_name  #landmark to define YZ plane
+        origin_landmark_name =  muskemo.or_landmark_name
+        ydir_landmark_name = muskemo.ydir_landmark_name
+        yzplane_landmark_name = muskemo.yz_plane_landmark_name  #landmark to define YZ plane
 
-        refframe_name = bpy.context.scene.muskemo.framename
-        colname = bpy.context.scene.muskemo.frame_collection  #target collection
+        refframe_name = muskemo.framename
 
-        size = bpy.context.scene.muskemo.ARF_axes_size
+        #Check if everything exists
+
+        for x,y in zip ([origin_landmark_name, ydir_landmark_name, yzplane_landmark_name, refframe_name],
+                        ["n Origin marker"," Y direction marker", " YZ plane marker"," Frame name"]):
+            if not x:
+                
+                self.report({'ERROR'}, "You did not input a" + y + ". Type in a frame name, and assign three unique markers to create a new frame. Operation cancelled.")
+                return {'FINISHED'}
+            
+
+        #Check if the markers are unique
+
+        if origin_landmark_name == ydir_landmark_name:
+            self.report({'ERROR'}, "Origin and Y direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if origin_landmark_name == yzplane_landmark_name:
+            self.report({'ERROR'}, "Origin and YZ plane direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if ydir_landmark_name == yzplane_landmark_name:
+            self.report({'ERROR'}, "Y direction and YZ plane direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+            return {'FINISHED'}
+
+
+
+        colname = muskemo.frame_collection  #target collection
+
+        size = muskemo.ARF_axes_size
 
        
         origin = bpy.data.objects[origin_landmark_name].location
@@ -227,7 +255,7 @@ class AssignARFParentBodyOperator(Operator):
                         (MOI_glob_vec[3],MOI_glob_vec[1],MOI_glob_vec[5]),
                         (MOI_glob_vec[4],MOI_glob_vec[5],MOI_glob_vec[2])))
         
-        MOI_b = bRg @ MOI_g @ gRb
+        MOI_b = bRg @ MOI_g @ gRb #Vallery & Schwab, Advanced Dynamics 2018, eq. 5.53
 
         MOI_b_vec = [MOI_b[0][0],  #Ixx, about COM, in local frame
                      MOI_b[1][1],  #Iyy
