@@ -28,6 +28,25 @@ import numpy as np
 from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 #from .. import inertial_properties #the rigid body parameters function
 
+### Small helper functions
+
+def copy_object(object, new_name): ## inputs: object (with a mesh) to be copied, string of the desired name
+    object_copy = object.copy() #copy the object
+    object_copy.name = new_name
+    object_copy.data = object_copy.data.copy() #originally the data is linked to the original object. Here we give the copy its own instance of object data
+    return object_copy
+    
+
+def convex_hull(object): ## inputs: object (with a mesh)
+    bm = bmesh.new()
+    bm.from_mesh(object.data) # create a bmesh using mesh data
+    bmesh.ops.delete(bm, geom=bm.edges[:] + bm.faces[:], context='EDGES_FACES')
+    ch = bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=False)
+    bmesh.ops.delete(bm, geom=ch["geom_interior"], context='VERTS')
+    bm.to_mesh(object.data)
+    bm.free()
+
+
 ### the operators
 
 class SelMeshesInertialProperties(Operator):
@@ -197,6 +216,48 @@ class CollectionMeshInertialProperties(Operator):
 
         return {'FINISHED'}
 
+class CollectionConvexHull(Operator):
+    bl_idname = "inprop.convex_hull_collection"
+    bl_label = "Generate a minimal convex hull around each mesh in the skeletal mesh collection. Convex hulls get placed in a new collection."
+    bl_description = "Generate a minimal convex hull around each mesh in the skeletal mesh collection. Convex hulls get placed in a new collection"
+   
+    def execute(self, context):
+        muskemo = bpy.context.scene.muskemo
+
+
+        skel_colname = muskemo.skeletal_mesh_collection #Collection that contains the skeletal meshes
+        CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
+
+         #check if the collection name exists, and if not create it
+        if CH_colname not in bpy.data.collections:
+            bpy.data.collections.new(CH_colname)
+            
+        CH_coll = bpy.data.collections[CH_colname] #Collection which will recieve the scaled  hulls
+
+        if CH_colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+            bpy.context.scene.collection.children.link(CH_coll)     #add it to the scene
+        
+        #Make sure the collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[CH_colname]
+
+        skel_coll = bpy.data.collections[skel_colname]
+        
+        meshes = [x for x in skel_coll.objects if 'MESH' in x.id_data.type] #get the objects in target coll, if the data type is a 'MESH'
+        ##### Generate minimal convex hulls #####
+
+        for mesh in meshes:   # loop through each mesh 
+            
+            CH_name = mesh.name + "_CH"
+
+            if CH_name not in bpy.data.objects: #check that the convex hull doesn't already exist
+                mesh_copy = copy_object(mesh, CH_name) #copy the mesh
+                CH_coll.objects.link(mesh_copy)  #add the new mesh to the CH collection
+                convex_hull(mesh_copy)
+        
+        return {'FINISHED'}
+
+
+
 
 
 ### The panels
@@ -211,44 +272,54 @@ class VIEW3D_PT_inertial_prop_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming c
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        return
 
-
-## Compute from 3D mesh panel
-class VIEW3D_PT_inertial_prop_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
-    bl_idname = 'VIEW3D_PT_inertial_prop_subpanel'
-    bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
-    bl_label = "Compute from 3D mesh (eg. from CT-based segmentation)"  # found at the top of the Panel
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    
-    def draw(self, context):
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
         
-        ## user input body name    
+        ## user segment density   
         layout.prop(muskemo, "segment_density")
         row = self.layout.row()
         row.label(text ="Compute inertial properties")
-                
-        ## Create new body
+
+        ## compute for selected mesh
         row = self.layout.row()
         row.operator("inprop.inertial_properties_selected_meshes", text="Compute for selected meshes")
+        
+        #compute for entire collection
         row = self.layout.row()
         row.prop(muskemo, "source_object_collection")
         row.operator("inprop.inertial_properties_collection", text="Compute for all meshes in collection")
-        return          
+
+        return
+
+
 
 
 ## Generate Convex Hull panel
 class VIEW3D_PT_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
     bl_idname = 'VIEW3D_PT_convex_hull_subpanel'
     bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
-    bl_label = "Generate convex hulls"  # found at the top of the Panel
+    bl_label = "Generate minimal convex hulls"  # found at the top of the Panel
     bl_options = {'DEFAULT_CLOSED'} 
     
     def draw(self, context):
         #self.layout.label(text="Also Small Class")
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+        #### skeletal mesh collection
+        row = self.layout.row()
+        row.prop(muskemo, "skeletal_mesh_collection")
+
+        #### convex hull collection
+        row = self.layout.row()
+        row.prop(muskemo, "convex_hull_collection")
+
+        #### create convex hulls
+        row = layout.row()
+        row.operator("inprop.convex_hull_collection", text="Generate convex hulls")
+
         return          
               

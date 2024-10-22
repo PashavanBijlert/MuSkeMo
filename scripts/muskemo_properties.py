@@ -197,6 +197,21 @@ class MuSkeMoProperties(PropertyGroup):
         description="Name of the collection (ie. folder) that contains the soft tissue geometry (meshes)",
         default = "",
         maxlen = 1024,
+        )
+
+
+    skeletal_mesh_collection: StringProperty(
+        name = "Skeletal mesh collection",
+        description="Name of the collection (ie. folder) that contains the skeletal meshes that you would like to generate convex hulls for",
+        default = "Geometry",
+        maxlen = 1024,
+        ) 
+    
+    convex_hull_collection: StringProperty(
+        name = "Convex hull collection",
+        description="Name of the collection (ie. folder) that contains (or will contain) convex hulls based on the skeleton",
+        default = "Convex hulls",
+        maxlen = 1024,
         ) 
     
 

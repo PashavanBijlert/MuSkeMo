@@ -70,9 +70,10 @@ from .scripts.muscle_panel import (AddMusclepointOperator, ReflectRightsideMuscl
 
 
 #### inertial properties panel
-from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel, VIEW3D_PT_inertial_prop_subpanel,
+from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel, 
                                                   VIEW3D_PT_convex_hull_subpanel,
                                                   SelMeshesInertialProperties, CollectionMeshInertialProperties,
+                                                  CollectionConvexHull,
                                                   )
 
 #### export panel
@@ -129,9 +130,10 @@ from .scripts.inertialproperties_func import (inertial_properties)  ## This func
 
 
 classes = (  #Inertial properties panel 
-                                    VIEW3D_PT_inertial_prop_panel, VIEW3D_PT_inertial_prop_subpanel,
+                                    VIEW3D_PT_inertial_prop_panel, 
                                     VIEW3D_PT_convex_hull_subpanel, 
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
+                                    CollectionConvexHull,
             #body_panel
                                     VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,
                                     VIEW3D_PT_body_utilities_subpanel,
