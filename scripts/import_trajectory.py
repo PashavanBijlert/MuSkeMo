@@ -206,6 +206,15 @@ class ImportTrajectorySTO(Operator):
 
         ## IF ROOT_JOINT_NAME DOESN'T EXIST, SET N_REPEATS TO 0.    
 
+        if root_joint_name in bpy.data.objects:
+            root_joint = bpy.data.objects[root_joint_name]
+            
+        else:
+            if number_of_repeats >0:
+                self.report({'WARNING'}, "Root joint '" + root_joint_name + "' does not exist. Default is groundPelvis, but did you type in the correct joint name? The trajectory won't be repeated")
+                number_of_repeats = 0
+                bpy.context.scene.muskemo.number_of_repetitions = 0
+      
         root_joint_ind = [i for i,x in enumerate(traj_joints) if root_joint_name == x.name]#these column indices have root joint data in coordinate_trajectories
         root_progression_ind = [x for x in root_joint_ind if traj_model_coordinate_types[x]==forward_progression_coordinate] #this is the index to the coordinate that indicates forward progression (usually pelvis Tx)
         print(root_joint_ind)
@@ -287,14 +296,7 @@ class ImportTrajectorySTO(Operator):
 
         frame_number = 0
 
-        if root_joint_name in bpy.data.objects:
-            root_joint = bpy.data.objects[root_joint_name]
-            
-        else:
-            self.report({'ERROR'}, "Root joint '" + root_joint_name + "' does not exist. Default is groundPelvis, but did you type in the correct joint name? Trajectory import cancelled")
-            return {'FINISHED'}
-                
-            
+   
         
         
         unique_joints_in_traj = list(set(traj_joints)) #unique joints used in the trajectory 
