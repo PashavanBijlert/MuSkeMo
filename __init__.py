@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (3, 0, 0),
-    "version" : (0, 8, 31),
+    "version" : (0, 8, 4),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
@@ -72,8 +72,13 @@ from .scripts.muscle_panel import (AddMusclepointOperator, ReflectRightsideMuscl
 #### inertial properties panel
 from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel, 
                                                   VIEW3D_PT_convex_hull_subpanel,
+                                                  VIEW3D_PT_expand_convex_hulls_subpanel,
                                                   SelMeshesInertialProperties, CollectionMeshInertialProperties,
-                                                  CollectionConvexHull,
+                                                  CollectionConvexHull, 
+                                                  SegmentParameterInputItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
+                                                  AddSegmentInputOperator, RemoveSegmentInputOperator,
+                                                  
+                                                  update_expansion_mode, #this function doesn't need to be registered, just needs to be run once to initialize the panel
                                                   )
 
 #### export panel
@@ -132,8 +137,12 @@ from .scripts.inertialproperties_func import (inertial_properties)  ## This func
 classes = (  #Inertial properties panel 
                                     VIEW3D_PT_inertial_prop_panel, 
                                     VIEW3D_PT_convex_hull_subpanel, 
+                                    VIEW3D_PT_expand_convex_hulls_subpanel,
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                     CollectionConvexHull,
+                                    SegmentParameterInputItem, #MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES
+                                    AddSegmentInputOperator, RemoveSegmentInputOperator,
+
             #body_panel
                                     VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,
                                     VIEW3D_PT_body_utilities_subpanel,
@@ -222,3 +231,7 @@ def unregister():
     
 if __name__ == "__main__":
     register()
+
+    # Initialize with default Arithmetic options
+    bpy.context.scene.muskemo.expansion_mode = 'Arithmetic'
+    update_expansion_mode(None, bpy.context)

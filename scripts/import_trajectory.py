@@ -52,7 +52,19 @@ class ImportTrajectorySTO(Operator):
             data = []
             is_data = False #remains false until we've looped through the file_header rows
 
+            in_degrees = 'not_defined'
+
             for row in reader:
+                if 'inDegrees' in row[0]: #if it's defined in the header, we set the muskemo prop
+                    if 'no' in row[0]:
+                        in_degrees = False
+
+                    elif 'yes' in row[0]:
+                        in_degrees = True
+
+                    bpy.context.scene.muskemo.in_degrees = in_degrees
+                
+
                 if 'endheader' in row:
                     is_data = True
                     continue
@@ -61,9 +73,13 @@ class ImportTrajectorySTO(Operator):
                     if not column_headers:  # The first row after endheader contains the column headers
                         column_headers = row
                     else:
-                        data.append([float(x) for x in row])
+                        data.append([float(x) for x in row if x.strip() != ''])
                 else:
                     file_header.append(row)
+
+            if in_degrees == 'not_defined': #if it's not defined, throw a warning
+                self.report({'WARNING'}, "Your .sto file does not have an 'inDegrees' line in the header. Default behavior is to assume radians, if you want degrees, specify so below before import.")
+    
         
         return column_headers, data
     
@@ -103,18 +119,17 @@ class ImportTrajectorySTO(Operator):
         traj_model_coordinates = [] #model coordinates actually used in the traj
         traj_model_coordinate_types = [] #model coordinate types used in the traj
 
-
+        model_coor_not_found = [] #for skip reporting later on
+        model_coor_non_unique = []
         for idx, coordinate in enumerate(model_coordinates):
             
             ind = [i for i, x in enumerate(column_headers) if coordinate in x and ('value' in x or coordinate==x)] #indices of the joint angles. #OpenSim outputs have /value at the end, Hyfydy outputs simply have only the coordinate as the header
             traj_coor = [x for i, x in enumerate(column_headers) if coordinate in x and ('value' in x or coordinate==x)] #coordinate name in the trajectory data
 
             if not traj_coor:
-                self.report({'WARNING'}, "Model coordinate '" + coordinate + "' was not found in the imported trajectory. This coordinate will be skipped during trajectory import")
-
+                model_coor_not_found.append(coordinate)
             elif len(traj_coor)>1:
-                self.report({'WARNING'}, "Model coordinate '" + coordinate + "' has a non-unique mapping in the trajectory data. This coordinate will be skipped during trajectory import")
-                
+                model_coor_non_unique.append(coordinate)
             else:
                 traj_coordinate_headers.append(traj_coor[0])
                 traj_coordinate_ind.append(ind[0])
@@ -122,6 +137,15 @@ class ImportTrajectorySTO(Operator):
                 traj_model_coordinates.append(coordinate)
                 traj_model_coordinate_types.append(model_coordinate_types[idx])
 
+        #skip reporting
+        if model_coor_not_found:
+            model_coor_nf_str = ', '.join(model_coor_not_found)
+            self.report({'WARNING'}, "Model coordinate '" + model_coor_nf_str + "' was not found in the imported trajectory. This coordinate will be skipped during trajectory import")
+        
+        if model_coor_non_unique:
+            model_coor_nu_str = ', '.join(model_coor_non_unique)   
+            self.report({'WARNING'}, "Model coordinate '" + model_coor_nu_str + "' has a non-unique mapping in the trajectory data. This coordinate will be skipped during trajectory import")
+                
 
         coordinate_trajectories = traj_data[:,traj_coordinate_ind]
 
@@ -137,6 +161,9 @@ class ImportTrajectorySTO(Operator):
         traj_muscle_act_headers = [] #trajectory headers of the muscle activations
         traj_muscle_act_ind = [] #column indices to the respective muscle activations
         traj_muscles = [] #model muscles actually in the trajectory activations
+        
+        musnames_not_found = [] #for skip reporting later on
+        musnames_non_unique = [] #for skip reporting later on
 
         for idx, muscle in enumerate(muscles):
             
@@ -144,20 +171,29 @@ class ImportTrajectorySTO(Operator):
             traj_act = [x for i, x in enumerate(column_headers) if ('/' + muscle.name + '/' +'activation' in x) or (muscle.name + '.activation' in x)] #headers of the activation data
 
             if not traj_act:
-                self.report({'WARNING'}, "Activations for model muscle '" + muscle.name + "' were not found in the imported trajectory. This muscle will be skipped during trajectory import, and hidden during the visualizations")
                 muscle.hide_set(True)
                 muscle.hide_render = True
-
+                musnames_not_found.append(muscle.name)
 
             elif len(traj_act)>1:
-                self.report({'WARNING'}, "Model muscle '" + muscle.name + "' has a non-unique mapping in the trajectory data activations. This muscle will be skipped during trajectory import, and hidden during the visualizations")
                 muscle.hide_set(True)
                 muscle.hide_render = True
+                musnames_non_unique.append(muscle.name)
 
             else: 
                 traj_muscle_act_headers.append(traj_act[0])
                 traj_muscle_act_ind.append(ind[0])
                 traj_muscles.append(muscle)
+        #skip reporting
+        if musnames_not_found:
+            musnames_nf_str = ', '.join(musnames_not_found)
+            self.report({'WARNING'}, "Activations for model muscle(s) '" + musnames_nf_str + "' were not found in the imported trajectory. This muscle will be skipped during trajectory import, and hidden during the visualizations")
+                
+        if musnames_non_unique:
+            musnames_nu_str = ', '.join(musnames_not_found)
+            self.report({'WARNING'}, "Model muscle(s) '" + musnames_nu_str + "' have a non-unique mapping in the trajectory data activations. This muscle will be skipped during trajectory import, and hidden during the visualizations")
+                
+
 
         activation_trajectories = traj_data[:,traj_muscle_act_ind]
 
@@ -179,8 +215,7 @@ class ImportTrajectorySTO(Operator):
 
 
         if number_of_repeats >0:
-            print('work in progress, only one repeat for now')
-            
+                        
             # Initialize the new time array with the original time array
             time_repeated = time.copy()
             coordinate_trajectories[:,root_progression_ind] = coordinate_trajectories[:,root_progression_ind] - coordinate_trajectories[0,root_progression_ind]
@@ -202,7 +237,7 @@ class ImportTrajectorySTO(Operator):
                 
                 coordinate_trajectories_repeated  = np.concatenate((coordinate_trajectories_repeated, coordinate_trajectories_shifted))
 
-                # Repeat the  ctivation trajectories
+                # Repeat the  activation trajectories
                 
                 activation_trajectories_repeated = np.concatenate((activation_trajectories_repeated, activation_trajectories[1:, :].copy()))
 
@@ -252,7 +287,15 @@ class ImportTrajectorySTO(Operator):
 
         frame_number = 0
 
-        root_joint = bpy.data.objects[root_joint_name]
+        if root_joint_name in bpy.data.objects:
+            root_joint = bpy.data.objects[root_joint_name]
+            
+        else:
+            self.report({'ERROR'}, "Root joint '" + root_joint_name + "' does not exist. Default is groundPelvis, but did you type in the correct joint name? Trajectory import cancelled")
+            return {'FINISHED'}
+                
+            
+        
         
         unique_joints_in_traj = list(set(traj_joints)) #unique joints used in the trajectory 
 
@@ -289,7 +332,7 @@ class ImportTrajectorySTO(Operator):
 
 
         ##### start inserting keyframes per time point
-
+        in_degrees = bpy.context.scene.muskemo.in_degrees
 
         for i in range(n_frames):                     
             frame_number = i+1 
@@ -322,13 +365,22 @@ class ImportTrajectorySTO(Operator):
                         Tz = coordinate_traj_row[idx]  
                         
                     if traj_model_coordinate_types[idx] == 'coordinate_Rx':
-                        Rx = coordinate_traj_row[idx]
-                    
+                        if in_degrees:
+                            Rx = np.deg2rad(coordinate_traj_row[idx])
+                        else:
+                            Rx =coordinate_traj_row[idx]
+
                     if traj_model_coordinate_types[idx] == 'coordinate_Ry':
-                        Ry = coordinate_traj_row[idx]
+                        if in_degrees:
+                            Ry =np.deg2rad(coordinate_traj_row[idx])
+                        else:
+                            Ry = coordinate_traj_row[idx]
 
                     if traj_model_coordinate_types[idx] == 'coordinate_Rz':
-                        Rz = coordinate_traj_row[idx]   
+                        if in_degrees:
+                            Rz = np.deg2rad(coordinate_traj_row[idx])  
+                        else:
+                            Rz = coordinate_traj_row[idx]
            
                 #add the position and orientation, using the original position and orientation as an offset.
                 #the above loop should have only added the changed coordinates (e.g. Rz), zo all the other components are simply zero.

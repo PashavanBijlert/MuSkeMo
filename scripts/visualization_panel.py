@@ -235,7 +235,7 @@ class VIEW3D_PT_import_trajectory_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row.label(text = "Do not import trajectories into your main .blend file, make a backup first.")
         row = layout.row()
         row.operator("visualization.import_trajectory_sto",text = 'Import .sto trajectory')
-
+        
         row = layout.row()
         row.prop(muskemo, "number_of_repetitions")
 
@@ -248,6 +248,8 @@ class VIEW3D_PT_import_trajectory_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row = layout.row()
         row.prop(muskemo, "forward_progression_coordinate")
 
+        row = layout.row()
+        row.prop(muskemo, "in_degrees")
                
         return    
     

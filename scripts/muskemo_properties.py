@@ -8,11 +8,12 @@ from bpy.props import (StringProperty,
                          EnumProperty,
                          FloatVectorProperty,
                          IntVectorProperty,
+                         CollectionProperty,
                          )
 from bpy.types import (PropertyGroup,
                         )
-
-
+from .inertial_properties_panel import (SegmentParameterInputItem, #to fix the dependency for the scale factor list.
+                                        update_expansion_mode, update_expansion_type, PRESETS)
 class MuSkeMoProperties(PropertyGroup):
 
 ##### bodies
@@ -214,6 +215,28 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen = 1024,
         ) 
     
+    #### for the scale factors
+    segment_parameter_list: bpy.props.CollectionProperty(type=SegmentParameterInputItem) #this inherits from the class SegmentParameterInputItem,
+    # That class is defined in inertial_properties_panel.py, and the class should be registered before MuSkeMoProperties
+
+    expansion_mode : EnumProperty(
+        name="Expansion Mode",
+        items=[
+            ("Arithmetic", "Arithmetic", ""),
+            ("Logarithmic", "Logarithmic", "")
+        ],
+        default="Arithmetic",
+        update=update_expansion_mode  # Calls update function when changed
+    )
+
+    expansion_type : EnumProperty(
+        name="Expansion Type",
+        items=[("Custom", "Custom", "")],  # Default item
+        default="Custom",
+        update=update_expansion_type  # Calls update function when changed
+    )
+
+
 
 #### Export panel
 
@@ -440,6 +463,13 @@ class MuSkeMoProperties(PropertyGroup):
               ],
         default = "coordinate_Tx",
         )
+    
+    in_degrees: BoolProperty(
+        name="In degrees",
+        description='Select this if angles are defined in degrees, but not hardcoded in the header of your .sto file',
+        default = False,
+    )
+
     
     muscle_color: FloatVectorProperty(
                  name = "Default muscle color",
