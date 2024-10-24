@@ -72,13 +72,13 @@ from .scripts.muscle_panel import (AddMusclepointOperator, ReflectRightsideMuscl
 #### inertial properties panel
 from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel, 
                                                   VIEW3D_PT_convex_hull_subpanel,
-                                                  VIEW3D_PT_expand_convex_hulls_subpanel,
+                                                  VIEW3D_PT_expand_convex_hulls_arith_subpanel,
+                                                  VIEW3D_PT_expand_convex_hulls_logar_subpanel,
                                                   SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                                   CollectionConvexHull, 
-                                                  SegmentParameterInputItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
-                                                  AddSegmentInputOperator, RemoveSegmentInputOperator,
+                                                  SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
+                                                  AddSegmentOperator, RemoveSegmentOperator,
                                                   
-                                                  update_expansion_mode, #this function doesn't need to be registered, just needs to be run once to initialize the panel
                                                   )
 
 #### export panel
@@ -137,11 +137,12 @@ from .scripts.inertialproperties_func import (inertial_properties)  ## This func
 classes = (  #Inertial properties panel 
                                     VIEW3D_PT_inertial_prop_panel, 
                                     VIEW3D_PT_convex_hull_subpanel, 
-                                    VIEW3D_PT_expand_convex_hulls_subpanel,
+                                     VIEW3D_PT_expand_convex_hulls_arith_subpanel,
+                                    VIEW3D_PT_expand_convex_hulls_logar_subpanel,
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                     CollectionConvexHull,
-                                    SegmentParameterInputItem, #MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES
-                                    AddSegmentInputOperator, RemoveSegmentInputOperator,
+                                    SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
+                                    AddSegmentOperator, RemoveSegmentOperator,
 
             #body_panel
                                     VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,
@@ -231,7 +232,3 @@ def unregister():
     
 if __name__ == "__main__":
     register()
-
-    # Initialize with default Arithmetic options
-    bpy.context.scene.muskemo.expansion_mode = 'Arithmetic'
-    update_expansion_mode(None, bpy.context)

@@ -23,7 +23,9 @@ from bpy.types import (Panel,
                         )
 
 from bpy.props import (EnumProperty,
-                        IntProperty)
+                        IntProperty,
+                        StringProperty,
+                        FloatProperty)
 from math import nan
 
 import numpy as np
@@ -279,94 +281,96 @@ PRESETS = {
     },
     "Logarithmic": {
         "Macaulay 2023 Logarithmic Bird": 
-        (["head", "neck", "thoracic", "tail"],
-         [1.5, 2.5, 1.8, 1.7]),
+        (["head", "neck", "thoracic"],
+         [0.001, 0.005, 0.800],
+         [0.5, 0.3, 0.5],
+         [-0.5, -0.3, -0.5]),
         "Macaulay 2023 Logarithmic Reptile": 
         (["head", "neck", "tail"],
-         [2.1, 3.2, 2.8]),
+         [0.002, 0.004, 0.900],
+         [0.4, 0.2, 0.6],
+         [-0.4, -0.2, -0.6]),
     }
 }
 
-# Update function for the expansion mode
-# Update function for the expansion mode
-def update_expansion_mode(self, context):
-    scene = context.scene
-    muskemo = scene.muskemo  # assuming MuSkeMoProperties are stored here
-    expansion_mode = muskemo.expansion_mode  # Using 'muskemo' here
+# Update function for Arithmetic expansion type
+def update_expansion_type_arithmetic(self, context):
+    muskemo = context.scene.muskemo
+    segment_parameter_list = muskemo.segment_parameter_list_arithmetic
+    segment_parameter_list.clear()
 
-    # Dynamically generate expansion_type items from PRESETS
-    expansion_type_items = [("Custom", "Custom", "")]
-    
-    if expansion_mode in PRESETS:
-        for key in PRESETS[expansion_mode]:
-            expansion_type_items.append((key, key, ""))
+    preset_key = muskemo.expansion_type_arithmetic
 
-    # Re-register the EnumProperty with the updated items
-    bpy.types.Scene.muskemo.__annotations__['expansion_type'] = bpy.props.EnumProperty(
-        name="Expansion Type",
-        items=expansion_type_items,
-        default="Custom",
-        update=update_expansion_type  # Calls update function when changed
-    )
-
-    # Reset to "Custom" on mode change
-    muskemo.expansion_type = "Custom"
-    
-    # Trigger an update of the UI
-    if context.area:
-        context.area.tag_redraw()
-
-
-
-# Update function for the expansion type
-
-def update_expansion_type(self, context):
-    muskemo = bpy.context.scene.muskemo
-    segment_parameter_list = muskemo.segment_parameter_list
-    
-    if muskemo.expansion_type == "Custom":
-        # Prefill with 10 default segments, each with scale factor 1
-        segment_parameter_list.clear()
+    if preset_key == "Custom":
+        # Custom case: no prefilling, just set default values
         for i in range(10):
             new_item = segment_parameter_list.add()
             new_item.body_segment = f"Segment {i+1}"
             new_item.scale_factor = 1.0
     else:
-        # Get preset data for the selected expansion type
-        preset_data = PRESETS.get(muskemo.expansion_mode, {}).get(muskemo.expansion_type, ([], []))
-        
-        if preset_data:  # Prefill if preset data exists
-            body_segments, scale_factors = preset_data
-            segment_parameter_list.clear()
-            for segment, scale in zip(body_segments, scale_factors):
-                new_item = segment_parameter_list.add()
-                new_item.body_segment = segment
-                new_item.scale_factor = scale
+        # Use preset data
+        preset_data = PRESETS["Arithmetic"].get(preset_key, ([], []))
+        body_segments, factors = preset_data
+        for i, segment in enumerate(body_segments):
+            new_item = segment_parameter_list.add()
+            new_item.body_segment = segment
+            new_item.scale_factor = factors[i]
+
+# Update function for Logarithmic expansion type
+def update_expansion_type_logarithmic(self, context):
+    muskemo = context.scene.muskemo
+    segment_parameter_list = muskemo.segment_parameter_list_logarithmic
+    segment_parameter_list.clear()
+
+    preset_key = muskemo.expansion_type_logarithmic
+
+    if preset_key == "Custom":
+        # Custom case: no prefilling, just set default values
+        for i in range(3):  # Assuming 3 segments for custom
+            new_item = segment_parameter_list.add()
+            new_item.body_segment = f"Segment {i+1}"
+            new_item.scale_factor = 1.0
+            new_item.log_factor1 = 0.0
+            new_item.log_factor2 = 0.0
+            new_item.log_factor3 = 0.0
+    else:
+        # Use preset data
+        preset_data = PRESETS["Logarithmic"].get(preset_key, ([], [], []))
+        body_segments, factors1, factors2, factors3 = preset_data
+        for i, segment in enumerate(body_segments):
+            new_item = segment_parameter_list.add()
+            new_item.body_segment = segment
+            new_item.scale_factor = factors1[i]
+            new_item.log_factor1 = factors2[i]
+            new_item.log_factor2 = factors3[i]
 
 
+# Define the properties for segment parameters
+class SegmentParameterItem(PropertyGroup):
+    body_segment: StringProperty(name="Body Segment", default="Segment")
+    scale_factor: FloatProperty(name="Scale Factor", default=1.0, precision=3, step=0.1)
+    log_factor1: FloatProperty(name="Log Factor 1", default=0.0, precision=3, step=0.1)
+    log_factor2: FloatProperty(name="Log Factor 2", default=0.0, precision=3, step=0.1)
+    log_factor3: FloatProperty(name="Log Factor 3", default=0.0, precision=3, step=0.1)
 
 
-class SegmentParameterInputItem(PropertyGroup): #the item consists of a segment name and a scale factor, we add one pair for each segment.
-    body_segment: bpy.props.StringProperty(name="Body Segment", default="Segment")
-    scale_factor: bpy.props.FloatProperty(name="Scale Factor", default=1.0, precision=3, step=0.1)
-
-
-class AddSegmentInputOperator(Operator):
-    bl_idname = "inprop.add_segment_input"
-    bl_label = "Add Body Segment"
+# Operators for adding and removing segments
+class AddSegmentOperator(Operator):
+    bl_idname = "inprop.add_segment"
+    bl_label = "Add Segment"
     
     def execute(self, context):
-        bpy.context.scene.muskemo.segment_parameter_list.add()
+        context.scene.muskemo.segment_parameter_list_arithmetic.add()
         return {'FINISHED'}
 
-class RemoveSegmentInputOperator(Operator):
-    bl_idname = "inprop.remove_segment_input"
-    bl_label = "Remove Body Segment"
+class RemoveSegmentOperator(Operator):
+    bl_idname = "inprop.remove_segment"
+    bl_label = "Remove Segment"
     
     index: IntProperty()
 
     def execute(self, context):
-        bpy.context.scene.muskemo.segment_parameter_list.remove(self.index)
+        context.scene.muskemo.segment_parameter_list_arithmetic.remove(self.index)
         return {'FINISHED'}
 
 
@@ -437,49 +441,46 @@ class VIEW3D_PT_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming 
 
         return          
 
-## Arithmetic expansions
-class VIEW3D_PT_expand_convex_hulls_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
-    bl_idname = 'VIEW3D_PT_expand_convex_hulls_subpanel'
+
+# Panel for Arithmetic scaling
+class VIEW3D_PT_expand_convex_hulls_arith_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
-    bl_label = "Expand convex hulls"  # found at the top of the Panel
+    bl_idname = "VIEW3D_PT_expand_convex_hulls_arith_subpanel"
+    bl_label = "Expand convex hulls - arithmetic"
     bl_options = {'DEFAULT_CLOSED'} 
-    
+
     def draw(self, context):
-        #self.layout.label(text="Also Small Class")
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
-        '''
-        #### skeletal mesh collection
-        row = self.layout.row()
-        #row.prop(muskemo, "skeletal_mesh_collection")
 
-        #### convex hull collection
-        row = self.layout.row()
-        row.prop(muskemo, "convex_hull_collection")
+        layout.prop(muskemo, "expansion_type_arithmetic", text="Expansion Type")
+        for i, item in enumerate(muskemo.segment_parameter_list_arithmetic):
+            row = layout.row()
+            row.prop(item, "body_segment", text=f"Segment {i+1}")
+            row.prop(item, "scale_factor", text="Scale Factor")
+            row.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
+        layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')
 
-        #### create convex hulls
-        row = layout.row()
-        
-        #### Dynamic panel section
-        # Add a dropdown for Expansion Type
-        layout.prop(muskemo, "expansion_type", text="Expansion Type")
+# Panel for Logarithmic scaling
+class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
+    bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
+    bl_idname = "VIEW3D_PT_expand_convex_hulls_logar_subpanel"
+    bl_label = "Expand convex hulls - logarithmic"
+    bl_options = {'DEFAULT_CLOSED'} 
 
-        # Add a switch between Arithmetic and Logarithmic
-        layout.prop(muskemo, "expansion_mode", text="Mode")
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
 
-        # Draw the list of inputs
-        for i, item in enumerate(muskemo.segment_parameter_list):
-            row = layout.split(factor=0.25)
-            row.label(text=f"Segment {i+1}")
-            sub = row.split(factor=0.4)
-            sub.prop(item, "body_segment", text="", expand=False)
-            sub = sub.split(factor=0.8)
-            sub.prop(item, "scale_factor", text="", expand=False)
-            sub.operator("inprop.remove_segment_input", text="", icon='REMOVE').index = i
-
-        layout.operator("inprop.add_segment_input", text="Add Body Segment", icon='ADD')
-
-        #### end Dynamic panel section
-        '''
-        return              
+        layout.prop(muskemo, "expansion_type_logarithmic", text="Expansion Type")
+        for i, item in enumerate(muskemo.segment_parameter_list_logarithmic):
+            row = layout.row()
+            row.prop(item, "body_segment", text=f"Segment {i+1}")
+            row.prop(item, "scale_factor", text="Scale Factor")
+            row.prop(item, "log_factor1", text="Log Factor 1")
+            row.prop(item, "log_factor2", text="Log Factor 2")
+            row.prop(item, "log_factor3", text="Log Factor 3")
+            row.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
+        layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')

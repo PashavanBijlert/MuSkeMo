@@ -12,8 +12,9 @@ from bpy.props import (StringProperty,
                          )
 from bpy.types import (PropertyGroup,
                         )
-from .inertial_properties_panel import (SegmentParameterInputItem, #to fix the dependency for the scale factor list.
-                                        update_expansion_mode, update_expansion_type, PRESETS)
+from .inertial_properties_panel import (SegmentParameterItem, #to fix the dependency for the scale factor list.
+                                        update_expansion_type_arithmetic,
+                                        update_expansion_type_logarithmic, PRESETS)
 class MuSkeMoProperties(PropertyGroup):
 
 ##### bodies
@@ -215,27 +216,23 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen = 1024,
         ) 
     
-    #### for the scale factors
-    segment_parameter_list: bpy.props.CollectionProperty(type=SegmentParameterInputItem) #this inherits from the class SegmentParameterInputItem,
-    # That class is defined in inertial_properties_panel.py, and the class should be registered before MuSkeMoProperties
+#### Dynamic scaling panel part of inertial properties panel
+    segment_parameter_list_arithmetic: CollectionProperty(type=SegmentParameterItem)
+    segment_parameter_list_logarithmic: CollectionProperty(type=SegmentParameterItem)
 
-    expansion_mode : EnumProperty(
-        name="Expansion Mode",
-        items=[
-            ("Arithmetic", "Arithmetic", ""),
-            ("Logarithmic", "Logarithmic", "")
-        ],
-        default="Arithmetic",
-        update=update_expansion_mode  # Calls update function when changed
+    expansion_type_arithmetic: EnumProperty(
+        name="Expansion Type (Arithmetic)",
+        items=[("Custom", "Custom", "")] + [(key, key, "") for key in PRESETS["Arithmetic"].keys()],
+        default="Custom",  # Ensure Custom is default
+        update=update_expansion_type_arithmetic
     )
 
-    expansion_type : EnumProperty(
-        name="Expansion Type",
-        items=[("Custom", "Custom", "")],  # Default item
-        default="Custom",
-        update=update_expansion_type  # Calls update function when changed
-    )
-
+    expansion_type_logarithmic: EnumProperty(
+        name="Expansion Type (Logarithmic)",
+        items=[("Custom", "Custom", "")] + [(key, key, "") for key in PRESETS["Logarithmic"].keys()],
+        default="Custom",  # Ensure Custom is default
+        update=update_expansion_type_logarithmic
+    )    
 
 
 #### Export panel
