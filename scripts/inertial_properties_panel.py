@@ -304,9 +304,9 @@ def update_expansion_type_logarithmic(self, context):
         for i in range(3):  # Assuming 3 segments for custom
             new_item = segment_parameter_list.add()
             new_item.body_segment = f"Segment {i+1}"
-            new_item.log_factor1 = 0.0
-            new_item.log_factor2 = 0.0
-            new_item.log_factor3 = 0.0
+            new_item.log_intercept = 0.0
+            new_item.log_slope = 1.0
+            new_item.log_SEE = 0.0
     else:
         # Use preset data
         preset_data = InertialPropertiesPresets["Logarithmic"].get(preset_key, ([], [], []))
@@ -314,18 +314,18 @@ def update_expansion_type_logarithmic(self, context):
         for i, segment in enumerate(body_segments):
             new_item = segment_parameter_list.add()
             new_item.body_segment = segment
-            new_item.log_factor1 = factors1[i]
-            new_item.log_factor2 = factors2[i]
-            new_item.log_factor3 = factors3[i]
+            new_item.log_intercept = factors1[i]
+            new_item.log_slope = factors2[i]
+            new_item.log_SEE = factors3[i]
 
 
 # Define the properties for segment parameters
 class SegmentParameterItem(PropertyGroup):
     body_segment: StringProperty(name="Body Segment", default="Segment")
     scale_factor: FloatProperty(name="Scale Factor", default=1.0, precision=3, step=0.1)
-    log_factor1: FloatProperty(name="Log Factor 1", default=0.0, precision=3, step=0.1)
-    log_factor2: FloatProperty(name="Log Factor 2", default=0.0, precision=3, step=0.1)
-    log_factor3: FloatProperty(name="Log Factor 3", default=0.0, precision=3, step=0.1)
+    log_intercept: FloatProperty(name="Log Intercept", default=0.0, precision=3, step=0.1)
+    log_slope: FloatProperty(name="Log Slope", default=1.0, precision=3, step=0.1)
+    log_SEE: FloatProperty(name="Log SEE", default=0.0, precision=3, step=0.1)
 
 
 # Operators for adding and removing segments
@@ -358,10 +358,15 @@ class ExpandConvexHullCollectionOperator (Operator):
     bl_idname = "inprop.expand_convex_hull_collection"
     bl_label = "Expand all the convex hulls in a designated collection. Expanded convex hulls get placed in a new collection"
     bl_description = "Expand all the convex hulls in a designated collection. Expanded convex hulls get placed in a new collection"
-   
+    
+    # Custom property to store whether the operator should use arithmetic or logarithmic behavior
+    arithmetic_or_logarithmic: StringProperty()
+
     def execute(self, context):
         from .. import inertial_properties #import the function that computes inertial properties from a mesh
-                
+
+        arithmetic_or_logarithmic = self.arithmetic_or_logarithmic
+
         muskemo = bpy.context.scene.muskemo
 
         CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
@@ -387,17 +392,34 @@ class ExpandConvexHullCollectionOperator (Operator):
         ## get names of the convex hull objects
         CH_name = [x.name for x in bpy.data.collections[CH_colname].objects if 'MESH' in x.id_data.type] #get the name for each object in collection 'Convex Hulls', if the data type is a 'MESH'
 
-        ## if arithmetic:
+        if arithmetic_or_logarithmic == 'arithmetic':
 
-        arithmetic_parameters = []  #list of dicts
-        for item in muskemo.segment_parameter_list_arithmetic:
-            arithmetic_parameters.append({
-                "body_segment": item.body_segment,
-                "scale_factor": item.scale_factor,
-            })
-        
-        segment_types = [x['body_segment'] for x in arithmetic_parameters]
-        expansions = [x['scale_factor'] for x in arithmetic_parameters]
+            arithmetic_parameters = []  #list of dicts
+            for item in muskemo.segment_parameter_list_arithmetic:
+                arithmetic_parameters.append({
+                    "body_segment": item.body_segment,
+                    "scale_factor": item.scale_factor,
+                })
+            
+            segment_types = [x['body_segment'] for x in arithmetic_parameters]
+            expansions = [x['scale_factor'] for x in arithmetic_parameters]
+
+        elif arithmetic_or_logarithmic == 'logarithmic':
+            
+            logarithmic_parameters = []  #list of dicts
+            for item in muskemo.segment_parameter_list_logarithmic:
+                logarithmic_parameters.append({
+                    "body_segment": item.body_segment,
+                    "log_intercept": item.log_intercept,
+                    "log_slope": item.log_slope,
+                    "log_SEE": item.log_SEE,
+                })
+
+            segment_types = [x['body_segment'] for x in logarithmic_parameters]    
+            log_intercepts = [x['log_intercept'] for x in logarithmic_parameters] 
+            log_slopes = [x['log_slope'] for x in logarithmic_parameters] 
+            log_SEEs = [x['log_SEE'] for x in logarithmic_parameters] 
+            
 
 
         for h in range(len(CH_name)):   # loop through each mesh in 'Convex Hulls' collection     
@@ -453,18 +475,30 @@ class ExpandConvexHullCollectionOperator (Operator):
             
             bpy.ops.object.select_all(action='DESELECT') #Deselect all, then select desired object 
             obj.select_set(True)
-            bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME')                     
+            bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME')    
+
             ind = segment_types.index(segment_type) #index number (starting at zero) in labels of the current segment
-            expansion_factor = expansions[ind] #how much are you scaling the volume
+
+            if arithmetic_or_logarithmic == 'arithmetic':
+
+                expansion_factor = expansions[ind] #how much are you scaling the volume
+                
+            elif arithmetic_or_logarithmic == 'logarithmic':
+                
+                intercept = log_intercepts[ind]
+                slope = log_slopes[ind]
+                SEE = log_SEEs[ind]
+
+                untransformed_vol = 10**(intercept + (log10(vol_before)*slope)) #volume without SEE correction
+                SEE_corr_vol = untransformed_vol*(exp(SEE**2 /2)) #SEE corrected volume
+                expansion_factor_allo = SEE_corr_vol / vol_before
+                expansion_factor = expansion_factor_allo
+
+                
             correction_factor = vol_mirrored/vol_before #correct for symmetrization. If the segment isn't symmetrized, this equals 1
-            
-            '''
-            untransformed = 10**(OLS_b[ind] + (log10(vol_before)*OLS_a[ind]))
-            SEE_corr = untransformed*(exp(OLS_SEE[ind]**2 /2))
-            expansion_factor_allo = SEE_corr / vol_before
-            '''
             #scale factor
             sf = sqrt(expansion_factor/correction_factor) #square root to scale in two directions, correcting for the increased volume due to mirroring
+            
             
             #### directional scaling ####
             if any([s in obj.name for s in ['head', 'neck', 'torso', 'tail', 'forearm', 'hand', 'toe']]):        
@@ -575,7 +609,9 @@ class VIEW3D_PT_expand_convex_hulls_arith_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         
         #### expand hulls operator
         row = self.layout.row()
-        row.operator("inprop.expand_convex_hull_collection", text="Expand convex hulls")
+        op = row.operator("inprop.expand_convex_hull_collection", text="Expand convex hulls")
+        op.arithmetic_or_logarithmic = 'arithmetic' #set the custom property
+
 
 # Panel for Logarithmic scaling
 class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
@@ -598,9 +634,9 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         for i, item in enumerate(muskemo.segment_parameter_list_logarithmic):
             row = layout.row()
             row.prop(item, "body_segment", text=f"Segment {i+1}")
-            row.prop(item, "log_factor1", text="Log Factor 1")
-            row.prop(item, "log_factor2", text="Log Factor 2")
-            row.prop(item, "log_factor3", text="Log Factor 3")
+            row.prop(item, "log_intercept", text="Log intercept")
+            row.prop(item, "log_slope", text="Log slope")
+            row.prop(item, "log_SEE", text="Log SEE")
             row.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
         layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')
         ### dynamically sized panel
@@ -611,3 +647,5 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         
         #### expand hulls operator
         row = self.layout.row()
+        op = row.operator("inprop.expand_convex_hull_collection", text="Expand convex hulls")
+        op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
