@@ -217,7 +217,7 @@ class MuSkeMoProperties(PropertyGroup):
         ) 
     
 #### Dynamic scaling panel part of inertial properties panel
-    segment_parameter_list_arithmetic: CollectionProperty(type=SegmentParameterItem)
+    segment_parameter_list_arithmetic: CollectionProperty(type=SegmentParameterItem) #imported class from the inprop panel script
     segment_parameter_list_logarithmic: CollectionProperty(type=SegmentParameterItem)
 
     expansion_type_arithmetic: EnumProperty(
@@ -234,6 +234,14 @@ class MuSkeMoProperties(PropertyGroup):
         update=update_expansion_type_logarithmic
     )    
 
+    expanded_hull_collection: StringProperty(
+        name = "Expanded hull collection",
+        description="Name of the collection (ie. folder) that contains (or will contain) scaled convex hulls, representing tissue outlines",
+        default = "Expanded hulls",
+        maxlen = 1024,
+        )
+
+####
 
 #### Export panel
 

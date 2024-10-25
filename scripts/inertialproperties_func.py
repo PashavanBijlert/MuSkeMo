@@ -14,7 +14,7 @@ def inertial_properties(obj):
         rho = obj['density']
         
         print(obj.name + ' had no density assigned, automatically setting it to 1000 kg*m^-3')
-        self.report({'ERROR'}, "Source object with the name '" + obj.name + "' has no precomputed density. Automatically setting it to 1000 kg*m^-3")
+        self.report({'WARNING'}, "Source object with the name '" + obj.name + "' has no precomputed density. Automatically setting it to 1000 kg*m^-3")
                
     else:    
         rho = obj['density'] 

@@ -26,7 +26,7 @@ from bpy.props import (EnumProperty,
                         IntProperty,
                         StringProperty,
                         FloatProperty)
-from math import nan
+from math import (nan, sqrt, log10, exp)
 
 import numpy as np
 
@@ -354,6 +354,129 @@ class RemoveSegmentOperator(Operator):
 
 # Expand Convex hulls operator
 
+class ExpandConvexHullCollectionOperator (Operator):
+    bl_idname = "inprop.expand_convex_hull_collection"
+    bl_label = "Expand all the convex hulls in a designated collection. Expanded convex hulls get placed in a new collection"
+    bl_description = "Expand all the convex hulls in a designated collection. Expanded convex hulls get placed in a new collection"
+   
+    def execute(self, context):
+        from .. import inertial_properties #import the function that computes inertial properties from a mesh
+                
+        muskemo = bpy.context.scene.muskemo
+
+        CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
+        eCH_colname = muskemo.expanded_hull_collection #Collection that will contain the expanded convex hulls
+
+
+        if CH_colname not in bpy.data.collections:
+            self.report({'ERROR'}, "A collection with the name '" + CH_colname + "' does not exist. Which collection contains the convex hulls? Type that into the 'Convex hull collection' field")
+            return {'FINISHED'}
+        
+         #check if the collection name exists, and if not create it
+        if eCH_colname not in bpy.data.collections:
+            bpy.data.collections.new(eCH_colname)
+            
+        eCH_coll = bpy.data.collections[eCH_colname] #Collection which will recieve the scaled  hulls
+
+        if eCH_colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
+            bpy.context.scene.collection.children.link(eCH_coll)     #add it to the scene
+        
+        #Make sure the collection is active
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[eCH_colname]
+
+        ## get names of the convex hull objects
+        CH_name = [x.name for x in bpy.data.collections[CH_colname].objects if 'MESH' in x.id_data.type] #get the name for each object in collection 'Convex Hulls', if the data type is a 'MESH'
+
+        ## if arithmetic:
+
+        arithmetic_parameters = []  #list of dicts
+        for item in muskemo.segment_parameter_list_arithmetic:
+            arithmetic_parameters.append({
+                "body_segment": item.body_segment,
+                "scale_factor": item.scale_factor,
+            })
+        
+        segment_types = [x['body_segment'] for x in arithmetic_parameters]
+        expansions = [x['scale_factor'] for x in arithmetic_parameters]
+
+
+        for h in range(len(CH_name)):   # loop through each mesh in 'Convex Hulls' collection     
+            
+            if any(s in CH_name[h] for s in segment_types): #check if any of the segment types are in the object's name
+                segment_type = [s for s in segment_types if s in CH_name[h]][0] #check which entry in labels matches the current segment name. Make sure all objects in Collection "Skeleton" contain an entry from labels
+            else: #if not, this object doesn't have a corresponding segment type, so we don't know the scale factor. Throw a warning and skip.
+                self.report({'WARNING'}, "Object with the name '" + CH_name[h] + "' does not contain any of the segment types in its name. Skipping this object during expansion.")
+                continue
+
+            hull = bpy.data.objects[CH_name[h]]
+            eCH_name = CH_name[h] + "_expanded" #expanded convex hull object name
+
+            if eCH_name in bpy.data.objects: #ensure a unique name, just in case the name is already in use.
+                base_name = eCH_name
+                counter = 1
+                new_name = f"{base_name}_{counter}"
+                
+                while new_name in bpy.data.objects:
+                    counter += 1
+                    new_name = f"{base_name}_{counter}"
+
+                eCH_name = new_name  # Update eCH_name to the unique name
+            
+        
+            hull_copy = copy_object(hull, eCH_name) #copy the mesh
+            eCH_coll.objects.link(hull_copy)  #add the new mesh to the eCH collection
+            ## ADD a check for if it already exists
+        
+            obj = bpy.data.objects[eCH_name]   #
+
+            obj['density'] = 1000   #density in kg*m^-3
+            obj.id_properties_ui('density').update(description = 'density (in kg*m^-3)')
+
+            bpy.ops.object.select_all(action='DESELECT') #Deselect all, then select desired object  
+            obj.select_set(True)               # select the hull
+            bpy.ops.object.transform_apply()
+            mass, CoM_book, mass_I_com, vol_before, volumetric_I_com   = inertial_properties(obj)            
+            vol_mirrored = vol_before #vol mirrored gets overwritten if it's an axial segment
+            #### symmetrization ####
+            if any([s in obj.name for s in ['head', 'neck', 'torso', 'tail']]):     #If head, neck, torso or tail are in the name
+                obj.modifiers.new('mirror','MIRROR')     #add a mirror modifier to generate a symmetric hull
+                obj.modifiers['mirror'].use_axis[0] = False
+                obj.modifiers['mirror'].use_axis[2] = True # set to 1 if z up
+                obj.modifiers['mirror'].merge_threshold = 0.001
+                bpy.context.view_layer.objects.active = None
+                bpy.context.view_layer.objects.active = obj    
+                bpy.ops.object.modifier_apply(modifier="mirror")    #apply the modifier
+            
+                convex_hull(obj) #convex hulls the mirrored object
+                mass, CoM_book, mass_I_com, vol_mirrored, volumetric_I_com   = inertial_properties(obj) #this recomputes the volume of the mirrored duplicated object, which is probably larger
+            
+            
+            bpy.ops.object.select_all(action='DESELECT') #Deselect all, then select desired object 
+            obj.select_set(True)
+            bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME')                     
+            ind = segment_types.index(segment_type) #index number (starting at zero) in labels of the current segment
+            expansion_factor = expansions[ind] #how much are you scaling the volume
+            correction_factor = vol_mirrored/vol_before #correct for symmetrization. If the segment isn't symmetrized, this equals 1
+            
+            '''
+            untransformed = 10**(OLS_b[ind] + (log10(vol_before)*OLS_a[ind]))
+            SEE_corr = untransformed*(exp(OLS_SEE[ind]**2 /2))
+            expansion_factor_allo = SEE_corr / vol_before
+            '''
+            #scale factor
+            sf = sqrt(expansion_factor/correction_factor) #square root to scale in two directions, correcting for the increased volume due to mirroring
+            
+            #### directional scaling ####
+            if any([s in obj.name for s in ['head', 'neck', 'torso', 'tail', 'forearm', 'hand', 'toe']]):        
+                bpy.ops.transform.resize(value=(1,sf,sf))   # scale along y and z
+                bpy.ops.object.transform_apply()
+            else:
+                bpy.ops.transform.resize(value=(sf,1,sf))   # scale along x and z
+                bpy.ops.object.transform_apply()
+                    
+            mass, CoM_book, mass_I_com, vol_after, volumetric_I_com   = inertial_properties(obj) #this recomputes the volume of the mirrored duplicated object, which is probably larger
+
+        return {'FINISHED'}        
 
 
 ### The panels
@@ -446,6 +569,14 @@ class VIEW3D_PT_expand_convex_hulls_arith_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')
         ### dynamically sized panel
 
+        #### expanded hull collection
+        row = self.layout.row()
+        row.prop(muskemo, "expanded_hull_collection")    
+        
+        #### expand hulls operator
+        row = self.layout.row()
+        row.operator("inprop.expand_convex_hull_collection", text="Expand convex hulls")
+
 # Panel for Logarithmic scaling
 class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
@@ -473,3 +604,10 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
             row.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
         layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')
         ### dynamically sized panel
+
+        #### expanded hull collection
+        row = self.layout.row()
+        row.prop(muskemo, "expanded_hull_collection")    
+        
+        #### expand hulls operator
+        row = self.layout.row()
