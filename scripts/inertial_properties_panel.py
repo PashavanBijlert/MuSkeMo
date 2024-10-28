@@ -306,7 +306,7 @@ def update_expansion_type_logarithmic(self, context):
             new_item.body_segment = f"Segment {i+1}"
             new_item.log_intercept = 0.0
             new_item.log_slope = 1.0
-            new_item.log_SEE = 0.0
+            new_item.log_MSE = 0.0
     else:
         # Use preset data
         preset_data = InertialPropertiesPresets["Logarithmic"].get(preset_key, ([], [], []))
@@ -316,7 +316,7 @@ def update_expansion_type_logarithmic(self, context):
             new_item.body_segment = segment
             new_item.log_intercept = factors1[i]
             new_item.log_slope = factors2[i]
-            new_item.log_SEE = factors3[i]
+            new_item.log_MSE = factors3[i]
 
 
 # Define the properties for segment parameters
@@ -325,7 +325,7 @@ class SegmentParameterItem(PropertyGroup):
     scale_factor: FloatProperty(name="Scale Factor", default=1.0, precision=3, step=0.1)
     log_intercept: FloatProperty(name="Log Intercept", default=0.0, precision=3, step=0.1)
     log_slope: FloatProperty(name="Log Slope", default=1.0, precision=3, step=0.1)
-    log_SEE: FloatProperty(name="Log SEE", default=0.0, precision=3, step=0.1)
+    log_MSE: FloatProperty(name="Log MSE", default=0.0, precision=3, step=0.1)
 
 
 # Operators for adding and removing segments
@@ -412,23 +412,34 @@ class ExpandConvexHullCollectionOperator (Operator):
                     "body_segment": item.body_segment,
                     "log_intercept": item.log_intercept,
                     "log_slope": item.log_slope,
-                    "log_SEE": item.log_SEE,
+                    "log_MSE": item.log_MSE,
                 })
 
             segment_types = [x['body_segment'] for x in logarithmic_parameters]    
             log_intercepts = [x['log_intercept'] for x in logarithmic_parameters] 
             log_slopes = [x['log_slope'] for x in logarithmic_parameters] 
-            log_SEEs = [x['log_SEE'] for x in logarithmic_parameters] 
-            
+            log_MSEs = [x['log_MSE'] for x in logarithmic_parameters] #mean squared errors
 
+
+        #inform the user about the behaviour    
+        if len(segment_types)==1 and segment_types[0]=='whole_body': #if we do the same expansion for all segments
+            if arithmetic_or_logarithmic == 'arithmetic':
+                self.report({'WARNING'}, "Expanding the whole body with a constant factor of " +  f"{expansions[0]:.3f}" + ", on a per segment basis.")
+                    
+            elif arithmetic_or_logarithmic == 'logarithmic':
+                self.report({'WARNING'}, "Logarithmic whole body expansion currently not yet supported. Eventually, this mode will sum all the volumes together, determine the whole-body expansion factor, and then expand on a per-segment basis.")          
 
         for h in range(len(CH_name)):   # loop through each mesh in 'Convex Hulls' collection     
             
-            if any(s in CH_name[h] for s in segment_types): #check if any of the segment types are in the object's name
-                segment_type = [s for s in segment_types if s in CH_name[h]][0] #check which entry in labels matches the current segment name. Make sure all objects in Collection "Skeleton" contain an entry from labels
-            else: #if not, this object doesn't have a corresponding segment type, so we don't know the scale factor. Throw a warning and skip.
-                self.report({'WARNING'}, "Object with the name '" + CH_name[h] + "' does not contain any of the segment types in its name. Skipping this object during expansion.")
-                continue
+            if len(segment_types)==1 and segment_types[0]=='whole_body': #if we do the same expansion for all segments
+                segment_type = 'whole_body'  
+
+            else: #if we try to match segment types to the object names
+                if any(s in CH_name[h] for s in segment_types): #check if any of the segment types are in the object's name
+                    segment_type = [s for s in segment_types if s in CH_name[h]][0] #check which entry in labels matches the current segment name. Make sure all objects in Collection "Skeleton" contain an entry from labels
+                else: #if not, this object doesn't have a corresponding segment type, so we don't know the scale factor. Throw a warning and skip.
+                    self.report({'WARNING'}, "Object with the name '" + CH_name[h] + "' does not contain any of the segment types in its name. Skipping this object during expansion.")
+                    continue
 
             hull = bpy.data.objects[CH_name[h]]
             eCH_name = CH_name[h] + "_expanded" #expanded convex hull object name
@@ -487,12 +498,16 @@ class ExpandConvexHullCollectionOperator (Operator):
                 
                 intercept = log_intercepts[ind]
                 slope = log_slopes[ind]
-                SEE = log_SEEs[ind]
+                MSE = log_MSEs[ind]
 
-                untransformed_vol = 10**(intercept + (log10(vol_before)*slope)) #volume without SEE correction
-                SEE_corr_vol = untransformed_vol*(exp(SEE**2 /2)) #SEE corrected volume
-                expansion_factor_allo = SEE_corr_vol / vol_before
+                uncorrected_vol = 10**(intercept + (log10(vol_before)*slope)) #volume without MSE correction
+                MSE_corr_vol = uncorrected_vol*10**(MSE/2) #MSE corrected volume
+                expansion_factor_allo = MSE_corr_vol / vol_before
                 expansion_factor = expansion_factor_allo
+
+                self.report({'ERROR'}, "Logarithmic per-segment expansion is currently disabled awaiting clarification from the lead authors")
+                return {'FINISHED'}
+                
 
                 
             correction_factor = vol_mirrored/vol_before #correct for symmetrization. If the segment isn't symmetrized, this equals 1
@@ -636,7 +651,7 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
             row.prop(item, "body_segment", text=f"Segment {i+1}")
             row.prop(item, "log_intercept", text="Log intercept")
             row.prop(item, "log_slope", text="Log slope")
-            row.prop(item, "log_SEE", text="Log SEE")
+            row.prop(item, "log_MSE", text="Log MSE")
             row.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
         layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')
         ### dynamically sized panel
