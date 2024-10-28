@@ -30,6 +30,7 @@
 
 % To do: A bit about Operators (functions) versus panels (UI elements)
 % add more prose about number formatting
+% Write section about scaling
 
 
 % Figures to add:
@@ -38,6 +39,9 @@
 % Collections in the outliner
 % Custom properties screenshot
 % Screenshot of each panel?
+% Presets in the expansions panels
+
+
 
 % Before / after picture of recommended render settings
 % Before / after with black falloff
@@ -66,7 +70,7 @@
     \textbf{Github Repository:} \href{https://github.com/PashavanBijlert/MuSkeMo}{Github} \\
     \textbf{Bug Reports and Feature Requests:} \href{https://github.com/PashavanBijlert/MuSkeMo/issues}{Submit an issue on Github} \\
     \vspace{20pt}
-    {\large Version 0.8.31} \\
+    {\large Version 0.8.5} \\
     {\large \today}
 \end{center}
 
@@ -155,10 +159,37 @@ The Blender user interface has several default settings that do not work well wi
 
 \subsection{Inertial properties panel}
 
-Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
+The main goal of this panel is to compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
 Inertial properties are \textbf{not dynamic}, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated.
-To compute the volumetric inertia tensor (with elements \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004} which is based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case.
+To compute the volumetric inertia tensor (with elements \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mehs, based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes".
 
+\subsubsection{Generate minimal convex hulls}
+Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons {sellersMinimumConvexHull2012, BrasseyMOA2013, BrasseySELLERS2014, Brassey2016, Brassey2018, coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023, Bates2025}. In this subpanel, you can automatically generate convex hulls around (skeletal) meshes in a collection, and then apply methods from the literature to reconstruct the inertial properties.
+
+You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a separate collection. Each separate object in the collection will receive its own convex hull,
+ so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection.
+
+
+\subsubsection{Expand convex hulls} 
+
+Both the expansion panels (arithmetic and logarithmic) work with segments and corresponding scale factors or logarithmic parameters. If only "whole\_body" is typed in as Segment 1 (with no other segment names defined), all the objects in the target collection will be treated as one - in arithmetic mode, all objects are scaled by a single factor, in logarithmic mode, all object volumes are summed before determining the whole-body scale factor. If segment 1 is not "whole\_body", or if you have more than one segment defined in the panel, MuSkeMo tries to match whatever segment names you have typed into the panel to the names of the objects in your target collection. E.g., if you've typed "neck" as one of the segment names in the panel, with a corresponding scale factor, all the objects in Convex hull collection that have the word "neck" in their name will be expanded by the scale factor (e.g., "neck\_1", "neck\_prox.obj", but not "Neck\_1" and also not "torso"). The "Expansion type" dropdown menu gives several presets from the literature, and you can customize them if desired.
+
+MuSkeMo assumes you want bilaterally symmetric models, and therefore when using the expansion functions, MuSkeMo generates bilaterally symmetric expanded hulls for the following segments: "head", "neck", "torso", "tail". Furthermore, MuSkeMo also applies directional scaling. The following segments are scaled about the Y and Z axes (and thus not the X axis): "head", "neck", "torso", "tail", "forearm", "hand", "toe". All other segments are scaled about the X and Z axes. The resultant scaled shapes may not be very biologically realistic. You could add a "Maintain volume" constraint and change the shape in Blender. Apply it after you are satisfied.
+
+Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansion factors (i.e., linear scale factors) to scale your hulls. If a segment initially has a volume of 1 \si{m^3} and a scale factor of 1.2, the resultant segment will have a volume of 1.2 \si{m^3}. 
+
+\begin{itemize}
+    \item \textbf{Custom:} Type in the segment names, and the desired scale factor.
+    \item \textbf{Macaulay 2023 Bird:} The per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
+    \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The per-segment "Croc\_Lizard" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
+    \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The per-segment "Av." average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
+    \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012}
+\end{itemize}
+
+Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log-transformed regression equations from the literature to scale your hulls. This functionality is currently disabled.
+
+%eventually, this section should deal with:
+% vol_skin = 10^(intercept + slope*log10(vol_CH) + MSE/2)
 
 \subsection{Body panel}
 
