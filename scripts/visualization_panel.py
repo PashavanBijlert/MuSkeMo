@@ -68,6 +68,7 @@ class CreateGroundPlaneOperator(Operator):
 
         return {"FINISHED"}
 
+
 class SetCompositorBackgroundGradient(Operator):
     bl_idname = "visualization.set_compositor_background_gradient"
     bl_label = "Add nodes to the compositor to add a distance-based black gradient to de-emphasize the background."  #not sure what bl_label does, bl_description gives a hover tooltip
@@ -156,6 +157,66 @@ class SetRecommendedBlenderSettingsOperator(Operator):
         return {'FINISHED'}
         
 
+class ConvertMusclesToVolumetricViz(Operator):
+    bl_idname = "visualization.convert_muscles_to_volumetric"
+    bl_label = "Use volumetric visualizations for all the muscles in the model. Currently not reversible."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Use volumetric visualizations for all the muscles in the model. Currently not reversible."
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+        specific_tension = 300000  #convert to muskemoprop
+
+        coll_name = muskemo.muscle_collection
+        coll = bpy.data.collections[coll_name]
+
+        
+        directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
+
+        nodefilename = 'muscle_geonodes_v4.blend'
+
+       
+        with bpy.data.libraries.load(directory + nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file
+            data_to.node_groups = data_from.node_groups
+
+            
+        node_tree = [x for x in data_to.node_groups if 'MuscleNode' in x.name][0] #node tree template
+
+        for muscle in coll.objects:
+
+            if muscle['MuSkeMo_type']== 'MUSCLE':
+                muscle_name = muscle.name #eg cfl1_r
+                
+                ## remove simple muscle viz node
+                muscle.modifiers.remove(muscle.modifiers[ muscle_name + '_SimpleMuscleViz'])
+                
+                ## get muscle volume
+                vol = muscle['F_max']/specific_tension*muscle['optimal_fiber_length']
+                
+                #set up the muscle node tree and set volume 
+                node_tree_copy = node_tree.copy() #copy of node_tree from the template
+                node_tree_copy.name = muscle_name + '_musclenodetree'
+                
+                #node_tree_copy.nodes['Muscle volume'].outputs['Value'].default_value = vol #set volume
+                #print(node_tree_copy)
+                #node_tree_copy.nodes['Group Input'].outputs['MuscleVolume'].default_value = vol #set volume
+                #node_tree_copy.nodes['MuscleVolume'].inputs[0].default_value = vol #set volume
+                    
+                ### set the existing muscle material in the node
+                mat = bpy.data.materials[muscle_name]
+                node_tree_copy.nodes['Set muscle material'].inputs['Material'].default_value = mat
+                
+                #create a new geometry node for the muscle, and set the node tree we just made
+                geonode = muscle.modifiers.new(name = muscle_name + '_VolumetricMuscleViz', type = 'NODES') #add modifier to muscle
+                geonode.node_group = node_tree_copy
+                geonode['Socket_2'] = vol  #socket two is the volume input slider
+                #sockets are the user input sliders in the modifier. They have a name (geonode['Socket_2_attribute_name']), but you can't access this easily nor can you iterate through sockets to check, so hardcoding it as the simplest solution
+                
+                #Ensure the last modifier is the bevel modifier
+                n_modifiers = len(muscle.modifiers)
+                muscle.modifiers.move(n_modifiers-1, n_modifiers-2) #new modifiers are placed at the end, index is n_modifiers-1. Place it at n_modifiers-2
+        return {"FINISHED"}
+
 
 from .. import VIEW3D_PT_MuSkeMo  #the super class in which all panels will be placed
 
@@ -177,9 +238,7 @@ class VIEW3D_PT_visualization_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming c
         muskemo = scene.muskemo
         row = layout.row()
        
-        #row.operator("export.select_model_export_directory",text = 'Select export directory')
-        #row = layout.row()
-        #row.prop(muskemo, "model_export_directory")
+        
         return
 
     
@@ -195,9 +254,16 @@ class VIEW3D_PT_visualization_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cla
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
+        ### volumetric muscles
         row = self.layout.row()
-        row.operator("visualization.generate_volumetric_muscles",text = 'Generate volumetric muscles')
+        row.prop(muskemo, "muscle_collection")
+        row.prop(muskemo, "specific_tension")
 
+        row = self.layout.row()
+        row.operator("visualization.convert_muscles_to_volumetric",text = 'Convert to volumetric muscles')
+        ### ground plane
+        row = self.layout.row()
+        row = self.layout.row()
         row = self.layout.row()
         row.operator("visualization.create_ground_plane", text = 'Create a ground plane')
 

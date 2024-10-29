@@ -845,8 +845,8 @@ class ImportOpenSimModel(Operator):
         if enable_wrapping: #if the user wants wrapping
             self.report({'WARNING'}, "Wrapping support is currently still very experimental. If your model has a lot of wrapping surfaces, you will currently likely achieve better visualization results by adding via points manually")
 
-            wrap_nodefilename = 'muscle_wrapper_experimental_v1.blend'
-            directory = os.path.dirname(os.path.realpath(__file__)) + '\\'
+            wrap_nodefilename = 'muscle_wrapper_experimental_v2.blend'
+            directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
             with bpy.data.libraries.load(directory + wrap_nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file
                 data_to.node_groups = data_from.node_groups

@@ -441,6 +441,15 @@ class MuSkeMoProperties(PropertyGroup):
         max = 100
     )   
 
+    specific_tension: FloatProperty(
+        name = "Specific tension",
+        description="Specific tension of the muscles, in N/m^2. Used for determining muscle volume for visualizations.",
+        default = 300000,
+        min = 0,
+        max = 2000000,
+        precision = 0,
+        )
+
     fps :  IntProperty(
         name = "Frames per second",
         description="Target frames per second for the rendered animation. If you want slow-motion, input double the desired playback framerate",
