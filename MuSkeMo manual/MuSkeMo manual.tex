@@ -40,6 +40,8 @@
 % Custom properties screenshot
 % Screenshot of each panel?
 % Presets in the expansions panels
+% User modifiable inputs in the muscle visualization nodes.
+% Examples of volumetric muscle visualizations
 
 
 
@@ -70,7 +72,7 @@
     \textbf{Github Repository:} \href{https://github.com/PashavanBijlert/MuSkeMo}{Github} \\
     \textbf{Bug Reports and Feature Requests:} \href{https://github.com/PashavanBijlert/MuSkeMo/issues}{Submit an issue on Github} \\
     \vspace{20pt}
-    {\large Version 0.8.5} \\
+    {\large Version 0.8.6} \\
     {\large \today}
 \end{center}
 
@@ -208,9 +210,25 @@ In the joint panel (under joint utilities), you can also mirror right side joint
 
 \subsection{Muscle panel}
 
-Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies first). 
-To add a point, type in the muscle name, and select the target body. Press shift + right mouse button to position the 3D cursor. Muscle points are added to the 3D cursor location.
-You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB"). If the parent bodies are repositioned, you must delete and redraw the muscles.
+Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies before creating muscles). Muscles points are added to whatever muscle name is currently active in the panel, and muscles are added to the user-designated "Muscles" collection.
+
+\subsubsection{Adding muscle points}
+
+To add a point to the end of the muscle (or to create a new muscle), type in the muscle name, and select the target body. Press shift + right mouse button to position the 3D cursor at the desired location in 3D space, and then press "Add muscle point". Muscle points are added to the 3D cursor location.
+You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB", then select the relevant point and press "G" to move it around). If the parent bodies are repositioned, you must delete and redraw the muscles.
+
+\subsubsection{Adding muscle points}
+It is possible to insert muscle points (instead of adding them at the end). To insert a point, select the point index after which you would like to insert a point (starting at 1), and press "Insert muscle point".
+
+
+\subsubsection{Visualization radius}
+By default, muscles are visualized using a Geometry node modifier named "musc\_name\_SimpleMuscleViz" (see section \ref{sec:simplemuscleviz}). If this visualization option is used, you can change the visualization radius of all muscles simultaneously by using the "Update visualization radius" button after selecting a desired radius. Alternatively, you can manually tune individual radii of muscles by changing the input in the "SimpleMuscleViz" modifier.
+
+If the volumetric visualization option is used for the muscles, visualization parameters can be tuned in the "VolumetricMuscleViz" modifier (see section \ref{sec:volmuscleviz} for details).
+
+\subsubsection{Reflect right-side muscles}
+This feature reflects muscles that have '\_r' in their names across the XY-plane. This feature is currently experimental and will be overhauled in the near future.
+
 
 \subsection{Anatomical \& local reference frames panel}
 
@@ -272,7 +290,7 @@ Future updates will include Hyfydy and MuJoCo model support.
 
 
 \subsection{Visualization panel}
-
+\label{sec:visualizationpanel}
 Rendering in Blender can be a complicated process. It is capable of professional level video graphics rendering, and there are a lot of settings that the user can modify to achieve this. This panel provides some ease of use functions that preset the rendering settings that the author finds visually appealing, while also providing adequate performance. There exist thousands of video tutorials for creating renders in Blender. Until a MuSkeMo-specific rendering tutorial is recorded, it is recommended that you follow one of the many out there (e.g., the Donut tutorial referenced at the top of this document). \textbf{If your computer does not have a powerful graphics card (GPU), it may be necessary to tweak the recommended settings.} 
 
 
@@ -285,11 +303,12 @@ MuSkeMo enables you to import simulated trajectories back into Blender to create
 This subpanel includes several convenience tools to aid users who are new to animations in Blender. These are:
 
 \begin{itemize}
+    \item \textbf{Convert to volumetric muscles:} adds volumetric muscle visualization to each muscle in the scene. See section \ref{sec:volmuscleviz} for details.
     \item \textbf{Create a ground plane:} adds a ground plane to the scene
     \item \textbf{Set recommended render settings:} sets the rendering engine to Cycles (see below), the device to GPU, Max samples to 1000, turns on persistent data (under performance), and sets the "Look" to very high contrast (under Color Management). \textbf{WARNING:} the Cycles rendering engine is a path tracing (raytracing) rendering engine. If you do not have access to a computer with a powerful GPU, rendering performance will be incredibly poor. In that case, you should switch to the Eevee rendering engine.
     \item \textbf{Set black background gradient for renders:} creates a node setup in the \href{https://docs.blender.org/manual/en/latest/compositing/index.html}{compositor} that de-emphasizes the background.
 \end{itemize}
- 
+
 
 \subsubsection{Default colors}
 
@@ -357,7 +376,7 @@ If Decimating the model doesn't work, the visualization error can sometimes also
 This will require you to re-export the geometries, re-export the bodies CSV, and regenerate the OpenSim model. However, it is usually the total filesize that triggers this issue, not composite meshes.
 
 \subsection{MUSCLE}
-
+\label{sec:muscle}
 A path-point muscle. Each muscle point is automatically parented to a body. Muscles have the following user-definable contractile properties:
 
 \begin{itemize}
@@ -369,6 +388,25 @@ A path-point muscle. Each muscle point is automatically parented to a body. Musc
 
 The underlying object type in Blender is a poly-curve. Each point in the curve is attached to a body using a hook-modifier.
 
+\subsubsection{Simple muscle visualization}
+\label{sec:simplemuscleviz}
+
+Simple muscle visualizations are achieved by adding a simple \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry node setup} to each muscle (curve in Blender). This node setup essentially lofts a curve with the user-specified radius (default = 0.015 m) across the entire length of the curve. The radius can be changed without going into the Geometry nodes setup, by selecting the correct modifier in the modifier stack.
+
+Under "Geometry nodes", with the "SimpleMuscleViz" node of a muscle selected, the node setup is visible. The visualization setup itself is specified by the "SimpleMuscleNode" node group (select it and press 'TAB' to modify, this node group is shared by all muscles and thus modifications are applied to all muscles). The node setup also applies a material to each individual muscle, so that their colors can be animated invidually.
+
+
+\subsubsection{Volumetric muscle visualization}
+\label{sec:volmuscleviz}
+
+Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
+
+\begin{itemize}
+\item{MuscleVolume:} Computed using each muscle's F\_max, optimal\_fiber\_length, and specific\_tension (set in the Visualization panel, see section \ref{sec:visualizationpanel}). The node setup adjusts the muscle's radius to keep the volume constant irrespective of the length.
+\item{MuscleTendonLengthRatio: } This decides the ratio of the muscle belly to the total musculotendon complex length. If set to 1, the muscle belly is stretched across the entire muscle's length. 
+\item{TendonMuscleRadiusRatio: } This sets the relative ratio of the tendon with respect to the muscle's radius. Set to 0 if you want no tendon visualization.
+\item{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
+\end{itemize}
 
 \subsection{JOINT}
 
