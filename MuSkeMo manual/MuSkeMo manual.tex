@@ -206,7 +206,7 @@ Define joints, and assign (and remove) parent and child bodies. If you want to c
 
 It is also possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turne into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
-In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. Warning: because inertial properties are not dynamic - if you change the location or rotation of a joint while it has bodies attached to it, their inertial properties will be incorrect. You will have to recompute them in that case. MuSkeMo provides a warning if this may have occured. 
+In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos_in_child) are recomputed automatically.
 
 \subsection{Muscle panel}
 
