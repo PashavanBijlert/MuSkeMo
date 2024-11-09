@@ -36,8 +36,7 @@ def create_muscle (muscle_name, point_position, body_name,
 
     if new_musc:  #if new_musc is true, we first create a new muscle
 
-       
-        
+                
         bpy.data.curves.new(muscle_name, type='CURVE') #create new curve data
         curve = bpy.data.curves[muscle_name] #direct reference to the curve
 
@@ -98,40 +97,13 @@ def create_muscle (muscle_name, point_position, body_name,
         obj.data.use_fill_caps = True 
         '''
         ### seperate materials for each muscle so that they can be individually animated
-        bpy.data.materials.new(name = muscle_name)
-        
-        mat = bpy.data.materials[muscle_name]
-        mat.use_nodes = True
-        
-        matnode_tree =mat.node_tree
-        matnode_tree.nodes["Principled BSDF"].inputs['Roughness'].default_value = 0
-        matnode_tree.nodes.new(type = "ShaderNodeHueSaturation")
-        
-        #if blender type >4
 
-        if bpy.app.version[0] <4: #if blender version is below 4
-        
-            nodename = 'Hue Saturation Value'
+        from .create_muscle_material_func import create_muscle_material
 
-        else: #if blender version is above 4:  
-            
-            nodename = 'Hue/Saturation/Value'
+        mat = create_muscle_material(muscle_name)
 
-        
-        
-        #the name should be different depending on Blender 3.0 or 4.0
-
-        muscle_color = tuple(bpy.context.scene.muskemo.muscle_color)
-        matnode_tree.nodes[nodename].inputs['Color'].default_value = muscle_color
-        matnode_tree.nodes[nodename].inputs['Saturation'].default_value = 1
-        matnode_tree.links.new(matnode_tree.nodes[nodename].outputs['Color'], matnode_tree.nodes["Principled BSDF"].inputs['Base Color'])
-        
         obj.data.materials.append(mat)
-
-        ### viewport display color
-
-        obj.active_material.diffuse_color = muscle_color
-        
+      
         ### add simple muscle visualization modifier
         if "SimpleMuscleNode" not in bpy.data.node_groups:
             from .simple_muscle_viz_node import (create_simple_muscle_node_group, add_simple_muscle_node)

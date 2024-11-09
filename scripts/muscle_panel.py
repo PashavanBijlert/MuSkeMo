@@ -96,12 +96,13 @@ class ReflectRightsideMusclesOperator(Operator):
     bl_description = "Duplicates and reflects muscles across XY plane if they contain '_r' in the name. This creates the muscle on the left side if the left side muscle does not exist already"
     
     def execute(self, context):
-        colname = bpy.context.scene.muskemo.joint_collection
+        colname = bpy.context.scene.muskemo.muscle_collection
 
         collection = bpy.data.collections[colname]
 
+        muscles = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'MUSCLE']
 
-        for obj in (obj for obj in collection.objects if '_r' in obj.name):  #for all the objects if '_r' is in the name
+        for obj in (obj for obj in muscles if '_r' in obj.name):  #for all the objects if '_r' is in the name
             
             if obj.name.replace('_r','_l') not in (obj.name for obj in collection.objects):  #make sure a left side doesn't already exist
             
@@ -114,9 +115,39 @@ class ReflectRightsideMusclesOperator(Operator):
                 
                 for point in new_obj.data.splines[0].points:   #reflect each point about z
                     point.co = point.co*Vector((1,1,-1,1))
-                    
+
+                ## set material
+                oldmatname = new_obj.material_slots[0].name
+                new_obj.data.materials.pop(index = 0)
+                newmatname = oldmatname.replace('_r','_l')
+                if newmatname in bpy.data.materials: #if the material already exists
+                    newmat = bpy.data.materials[newmatname]
+                    new_obj.material_slots[0].material = newmat
+
+                else:
+                    from .create_muscle_material_func import create_muscle_material
+
+                    newmat = create_muscle_material(new_obj.name)
+
                 for mod in new_obj.modifiers: #loop through all modifiers
-                    mod.object = bpy.data.objects[mod.object.name.replace('_r','_l')]
+
+                    mod.name = mod.name.replace('_r','_l')
+
+                    if 'HOOK' == mod.type: #if it's a hook, hook the other side body
+                        newbodyname = mod.object.name.replace('_r','_l')
+                        
+
+                        if newbodyname not in bpy.data.objects:# if the body doesn't exist
+                            self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" +new_obj.name  +  "' MUSCLE currently has unhooked points.")
+                            mod.object = None
+                        else:
+                            mod.object = bpy.data.objects[newbodyname] #point the hook to the left side body
+                            
+
+                    if 'NODES' == mod.type: #if it's a geometry nodes modifier (the simple muscle viz) 
+                       mod.node_group.nodes['Set Material'].inputs['Material'].default_value = newmat   
+                
+                
 
         return {'FINISHED'}
     
