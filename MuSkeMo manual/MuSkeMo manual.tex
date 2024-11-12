@@ -124,7 +124,7 @@ MuSkeMo is built using the Blender Python API, which internally uses double prec
 
 \section{Orientations}
 
-Orientations are represented as XYZ body-fixed Euler angles (see Appendix \ref{sec:euler_angles}) and as unit quaternions (see Appendix \ref{sec:quaternions}). Internally, MuSkeMo avoids Euler angles where possible because they are prone to gimbal lock, but popular simulators often use Euler angles by default (e.g., OpenSim, SCONE).
+Orientations are represented as XYZ body-fixed Euler angles (see Appendix \ref{sec:eulerangles}) and as unit quaternions (see Appendix \ref{sec:quaternions}). Internally, MuSkeMo avoids Euler angles where possible because they are prone to gimbal lock, but popular simulators often use Euler angles by default (e.g., OpenSim, SCONE).
 
 
 \section{Using MuSkeMo}
@@ -133,6 +133,8 @@ MuSkeMo lives in \href{https://docs.blender.org/manual/en/latest/interface/windo
 
 
 \textbf{WARNING:} Ensure that 3D meshes (visual geometry and tissue outlines) have all their transformations applied before you start constructing the model. To do this, select the object, press \texttt{Control + A}, and select “All transforms”. This accounts for the way that Blender stores local transformations. When you move, rotate, and/or scale 3D models in Blender, these transformations are initially stored only locally in the object’s data (an extra storage layer in Blender). This means that the object’s position has not changed in 3D space, you have defined an extra local transformation that can easily be undone. Some of the functions in MuSkeMo may behave unpredictably unless transformations have first been applied.
+
+
 
 \begin{figure}[htbp]
     %\vspace{-155pt}
@@ -166,10 +168,11 @@ Inertial properties are \textbf{not dynamic}, if you move the 3D meshes or chang
 To compute the volumetric inertia tensor (with elements \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mehs, based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes".
 
 \subsubsection{Generate minimal convex hulls}
-Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons {sellersMinimumConvexHull2012, BrasseyMOA2013, BrasseySELLERS2014, Brassey2016, Brassey2018, coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023, Bates2025}. In this subpanel, you can automatically generate convex hulls around (skeletal) meshes in a collection, and then apply methods from the literature to reconstruct the inertial properties.
+Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons %{sellersMinimumConvexHull2012, BrasseyMOA2013, BrasseySELLERS2014, Brassey2016, Brassey2018, coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023, Bates2025}. 
+In this subpanel, you can automatically generate convex hulls around (skeletal) meshes in a collection, and then apply methods from the literature to reconstruct the inertial properties.
 
 You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a separate collection. Each separate object in the collection will receive its own convex hull,
- so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection.
+ so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012a,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection.
 
 
 \subsubsection{Expand convex hulls} 
@@ -185,7 +188,7 @@ Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansio
     \item \textbf{Macaulay 2023 Bird:} The per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The per-segment "Croc\_Lizard" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The per-segment "Av." average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
-    \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012}
+    \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012a}
 \end{itemize}
 
 Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log-transformed regression equations from the literature to scale your hulls. This functionality is currently disabled.
@@ -206,7 +209,7 @@ Define joints, and assign (and remove) parent and child bodies. If you want to c
 
 It is also possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turne into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
-In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos_in_child) are recomputed automatically.
+In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically.
 
 \subsection{Muscle panel}
 
@@ -234,7 +237,7 @@ This feature reflects muscles that have '\_r' in their names across the XY-plane
 
 Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. Local reference frames have a position and an orientation with respect to the global reference frame. If the global frame is denoted with the letter \(\mathcal{G}\), then the position of an arbitrary frame in the global reference frame can be written as the following vector: \(\vec{v}_{\mathcal{G}}\). Internally, orientations are stored through rotation matrices. The rotation matrix that rotates a vector from the local \(\mathcal{B}\)-frame to the global \(\mathcal{G}\)-frame can be written as: \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\).
 
-Orientations are exported as rotation (unit) quaternions (w, x, y, z), and also as body-fixed (intrinsic, active) XYZ-Euler angles (phi\_x, phi\_y, phi\_z, in rad) (see Appendices \ref{sec:euler_angles} \& \ref{sec:quaternions}). The latter is prone to gimbal lock. 
+Orientations are exported as rotation (unit) quaternions (w, x, y, z), and also as body-fixed (intrinsic, active) XYZ-Euler angles (phi\_x, phi\_y, phi\_z, in rad) (see Appendices \ref{sec:eulerangles} \& \ref{sec:quaternions}). The latter is prone to gimbal lock. 
 
 If anatomical / local frames are assigned to a body, MuSkeMo also computes inertial properties, joint positions and orientations, contact positions, and muscle path points with respect to these frames. This requires the transpose of matrix \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\), namely: \({}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}}\). This rotates a vector from the global \(\mathcal{G}\)-frame to the local \(\mathcal{B}\)-frame.
 
@@ -248,7 +251,7 @@ For an arbitrary matrix \(\mathbf{I}\) expressed in \(\mathcal{G}\) (e.g., an in
 
 \begin{equation}
 \mathbf{I}_{\mathcal{B}} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \;\mathbf{I}_{\mathcal{G}} \; {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}
-\label{eq-2}
+\label{eq2}
 \end{equation}
 
 Readers familiar with linear algebra will recognize this as a similarity transformation, that defines a change of basis.
@@ -282,7 +285,7 @@ MuSkeMo provides an OpenSim importer. This can import most of the components of 
 
 MuSkeMo includes a Gaitsym (2019) importer. It currently imports bodies, joints, muscles (DampedSpring elements are treated as muscles), contacts, and markers (as frames). Muscles that include wrapping are currently not supported, but limited wrapping support is planned in a future update. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory, and the name of this subdirectory must currently be manually typed into the panel.
 
-It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq-2} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old -Y-axis becomes the new Z-axis.
+It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq2} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old -Y-axis becomes the new Z-axis.
 
 \subsubsection{Other simulators}
 
@@ -501,7 +504,7 @@ An implementation of \cite{garnerObstacleSetMethodRepresenting2000} for wrapping
 % Redefine the section numbering style for the appendix to use Roman numerals and the word "Appendix"
 %\renewcommand{\thesection}{\textbf{Appendix \Roman{section}}} 
 \section{Euler angles}
-\label{sec:euler_angles}
+\label{sec:eulerangles}
 
 \subsection{Conventions used by MuSkeMo}
 Euler angles define rotation matrices that transform between reference frames. Conceptually, they are relatively straightforward: 3D rotations are defined by three successive rotations about different axes in space. However, Euler angles are ambiguous without explicitly defining what convention is being used. It is possible to choose twelve different sets of axes about which we perform the successive rotations (e.g., XYZ, XYX, etc). It is furthermore possible to define these axes with respect to the rotating body (body-fixed, intrinsic), or the global frame (space-fixed, extrinsic). This determines the order of the application of the individual rotations. The rotations can also be defined to rotate the body itself (active rotations), or rotate the frame around a stationary vector (passive rotations). Active and passive rotation matrices are related by being each others' transpose.
