@@ -484,6 +484,25 @@ class MuSkeMoProperties(PropertyGroup):
         default = False,
     )
 
+
+    ############### Global properties panel
+
+    left_side_delimiter: StringProperty(
+                name = "Left side delimiter",
+                description="What do you use as the delimiter for the left side? Default is '_l', like in 'thigh_l'",
+                default = "_l",
+                maxlen = 1024,
+        )
+    
+    right_side_delimiter: StringProperty(
+                name = "Right side delimiter",
+                description="What do you use as the delimiter for the right side? Default is '_r', like in 'thigh_r'",
+                default = "_r",
+                maxlen = 1024,
+        )
+
+
+    ######## default colors
     
     muscle_color: FloatVectorProperty(
                  name = "Default muscle color",

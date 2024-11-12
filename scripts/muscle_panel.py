@@ -103,9 +103,20 @@ class ReflectRightsideMusclesOperator(Operator):
         muscles = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'MUSCLE']
 
         for obj in (obj for obj in muscles if '_r' in obj.name):  #for all the objects if '_r' is in the name
-            
+
+
+            #right_delimiter = '_r'
+            #left_delimiter = '_l'
+
+            #for obj in (obj for obj in muscles if (
+            #    (right_delimiter in obj.name and obj.name.replace(right_delimiter, left_delimiter) not in muscles) or
+            #    (left_delimiter in obj.name and obj.name.replace(left_delimiter, right_delimiter) not in muscles)
+            #)):
+
             if obj.name.replace('_r','_l') not in (obj.name for obj in collection.objects):  #make sure a left side doesn't already exist
-            
+                
+                current = '_r'
+                otherside = '_l'
             
                 new_obj = obj.copy()  #copy object
                 new_obj.data = obj.data.copy() #copy object data
@@ -326,7 +337,10 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         self.layout.row()
         self.layout.row()
         row = self.layout.row()
-        row.operator("muscle.reflect_rightside_muscles", text="Reflect right-side muscles (experimental)")
+        row.operator("muscle.reflect_rightside_muscles", text="Reflect right-side muscles")
+        row = self.layout.row()
+        row.prop(muskemo, "left_side_delimiter")
+        row.prop(muskemo, "right_side_delimiter")
         
         
         

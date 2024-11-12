@@ -335,6 +335,10 @@ Lower resolution gives a less smooth result, but in most cases will include the 
 
 The resultant objects are Blender curves. It is possible to resample these, if desired. By selecting a curve and right-clicking, it is possible to convert the curve to a mesh. This makes it possible to snap to the fitted curve when creating a MuSkeMo muscle based on the fitted curve.
 
+\subsubsection{Compute closest point between objects}
+The Python script "ComputeClosestPointBetweenMeshes.py" can be run in the Blender script editor. It outputs the closest point between two meshes (in meters). This can be useful to compute minimal joint spacing while articulating a skeleton, or for instance in a series of XROMM frames. An example of how to extend it to work with multiple objects, loop through frames, and export distances as a CSV can be seen in "ComputeClosestPointRealExample.py". This script was written for Voeten et al. (in prep). If that paper has come out by when using this script, please consider citing it as the source.
+
+
 \subsubsection{MuSkeMo version updater}
 The folder also contains an updater (Python) script to update older MuSkeMo scenes to v0.6.3 and up. To run this, open the python script in the Blender script editor and run it. Back up your work first. This script will be removed in a future update.
 
