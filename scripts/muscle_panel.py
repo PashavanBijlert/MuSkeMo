@@ -343,8 +343,9 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         self.layout.row()
         
         row = self.layout.row()
-        row.operator("muscle.insert_muscle_point", text="Insert muscle point")
         row.prop(muskemo, "insert_point_after")
+        row.operator("muscle.insert_muscle_point", text="Insert muscle point")
+        
         self.layout.row()
         row = self.layout.row()
        
