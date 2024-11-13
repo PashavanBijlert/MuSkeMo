@@ -90,73 +90,91 @@ class AddMusclepointOperator(Operator):
         return {'FINISHED'}
 
 
-class ReflectRightsideMusclesOperator(Operator):
-    bl_idname = "muscle.reflect_rightside_muscles"
-    bl_label = "Duplicates and reflects muscles across XY plane if they contain '_r' in the name"
-    bl_description = "Duplicates and reflects muscles across XY plane if they contain '_r' in the name. This creates the muscle on the left side if the left side muscle does not exist already"
+class ReflectUnilateralMusclesOperator(Operator):
+    bl_idname = "muscle.reflect_unilateral_muscles"
+    bl_label = "Reflects unilateral muscles across desired reflection plane if they contain the right or left side string in the name."
+    bl_description = "Reflects unilateral muscles across desired reflection plane if they contain the right or left side string in the name."
     
     def execute(self, context):
-        colname = bpy.context.scene.muskemo.muscle_collection
+        
+        muskemo = bpy.context.scene.muskemo
+        colname = muskemo.muscle_collection
 
         collection = bpy.data.collections[colname]
 
         muscles = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'MUSCLE']
+        muscle_names = [obj.name for obj in muscles]
 
-        for obj in (obj for obj in muscles if '_r' in obj.name):  #for all the objects if '_r' is in the name
+       
+        right_string = muskemo.right_side_string
+        left_string = muskemo.left_side_string
 
+        reflection_plane = muskemo.reflection_plane
 
-            #right_delimiter = '_r'
-            #left_delimiter = '_l'
+        for obj in (obj for obj in muscles if (
+            (right_string in obj.name and obj.name.replace(right_string, left_string) not in muscle_names)) or
+            (left_string in obj.name and obj.name.replace(left_string, right_string) not in muscle_names)):
 
-            #for obj in (obj for obj in muscles if (
-            #    (right_delimiter in obj.name and obj.name.replace(right_delimiter, left_delimiter) not in muscles) or
-            #    (left_delimiter in obj.name and obj.name.replace(left_delimiter, right_delimiter) not in muscles)
-            #)):
-
-            if obj.name.replace('_r','_l') not in (obj.name for obj in collection.objects):  #make sure a left side doesn't already exist
-                
-                current = '_r'
-                otherside = '_l'
             
-                new_obj = obj.copy()  #copy object
-                new_obj.data = obj.data.copy() #copy object data
-                new_obj.name = obj.name.replace('_r','_l') #rename to left
+            if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
+                  
+                currentside = right_string #this is the side we DO have
+                otherside = left_string #the side we are creating
+
+            else: #if right_string is not in the name, the current side is the left side.
+                currentside = left_string #this is the side we DO have
+                otherside = right_string #the side we are creating
+
+        
+            new_obj = obj.copy()  #copy object
+            new_obj.data = obj.data.copy() #copy object data
+            new_obj.name = obj.name.replace(currentside,otherside) #rename to left
+            
+            collection.objects.link(new_obj)  #add to Muscles collection
+            
+            for point in new_obj.data.splines[0].points:   #reflect each point about z
+
+                if reflection_plane == 'XY':
+                    reflect_vect = Vector((1,1,-1,1)) #negative Z
+
+                elif reflection_plane == 'YZ':
+                    reflect_vect = Vector((-1,1,1,1)) #negative X
                 
-                collection.objects.link(new_obj)  #add to Muscles collection
+                elif reflection_plane == 'XZ':
+                    reflect_vect = Vector((1,-1,1,1)) #negative Y
                 
-                for point in new_obj.data.splines[0].points:   #reflect each point about z
-                    point.co = point.co*Vector((1,1,-1,1))
+                point.co = point.co*reflect_vect
 
-                ## set material
-                oldmatname = new_obj.material_slots[0].name
-                new_obj.data.materials.pop(index = 0)
-                newmatname = oldmatname.replace('_r','_l')
-                if newmatname in bpy.data.materials: #if the material already exists
-                    newmat = bpy.data.materials[newmatname]
-                    new_obj.material_slots[0].material = newmat
+            ## set material
+            oldmatname = new_obj.material_slots[0].name
+            new_obj.data.materials.pop(index = 0)
+            newmatname = oldmatname.replace(currentside,otherside)
+            if newmatname in bpy.data.materials: #if the material already exists
+                newmat = bpy.data.materials[newmatname]
+                new_obj.material_slots[0].material = newmat
 
-                else:
-                    from .create_muscle_material_func import create_muscle_material
+            else:
+                from .create_muscle_material_func import create_muscle_material
 
-                    newmat = create_muscle_material(new_obj.name)
+                newmat = create_muscle_material(new_obj.name)
 
-                for mod in new_obj.modifiers: #loop through all modifiers
+            for mod in new_obj.modifiers: #loop through all modifiers
 
-                    mod.name = mod.name.replace('_r','_l')
+                mod.name = mod.name.replace(currentside,otherside)
 
-                    if 'HOOK' == mod.type: #if it's a hook, hook the other side body
-                        newbodyname = mod.object.name.replace('_r','_l')
+                if 'HOOK' == mod.type: #if it's a hook, hook the other side body
+                    newbodyname = mod.object.name.replace(currentside,otherside)
+                    
+
+                    if newbodyname not in bpy.data.objects:# if the body doesn't exist
+                        self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" +new_obj.name  +  "' MUSCLE currently has unhooked points.")
+                        mod.object = None
+                    else:
+                        mod.object = bpy.data.objects[newbodyname] #point the hook to the left side body
                         
 
-                        if newbodyname not in bpy.data.objects:# if the body doesn't exist
-                            self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" +new_obj.name  +  "' MUSCLE currently has unhooked points.")
-                            mod.object = None
-                        else:
-                            mod.object = bpy.data.objects[newbodyname] #point the hook to the left side body
-                            
-
-                    if 'NODES' == mod.type: #if it's a geometry nodes modifier (the simple muscle viz) 
-                       mod.node_group.nodes['Set Material'].inputs['Material'].default_value = newmat   
+                if 'NODES' == mod.type: #if it's a geometry nodes modifier (the simple muscle viz) 
+                    mod.node_group.nodes['Set Material'].inputs['Material'].default_value = newmat   
                 
                 
 
@@ -337,11 +355,27 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         self.layout.row()
         self.layout.row()
         row = self.layout.row()
-        row.operator("muscle.reflect_rightside_muscles", text="Reflect right-side muscles")
+        row.operator("muscle.reflect_unilateral_muscles", text="Reflect unilateral muscles")
         row = self.layout.row()
-        row.prop(muskemo, "left_side_delimiter")
-        row.prop(muskemo, "right_side_delimiter")
-        
+
+        # Split row into four columns with desired proportions
+        split = row.split(factor=3/10)  # First split for left label
+        split_left_label = split.column()
+        split_left_label.label(text="Left Side String")
+
+        split = split.split(factor=2/7)  # Second split for left input field
+        split_left_input = split.column()
+        split_left_input.prop(muskemo, "left_side_string", text="")
+
+        split = split.split(factor=3/5)  # Third split for right label (remaining space)
+        split_right_label = split.column()
+        split_right_label.label(text="Right Side String")
+
+        split_right_input = split.column()  # Last column for right input field
+        split_right_input.prop(muskemo, "right_side_string", text="")
+
+        row = self.layout.row()
+        row.prop(muskemo, "reflection_plane")
         
         
         

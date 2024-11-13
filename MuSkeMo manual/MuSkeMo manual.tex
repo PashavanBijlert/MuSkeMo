@@ -207,7 +207,7 @@ In this panel, you can also attach visualization geometry (eg., bone meshes) to 
 
 Define joints, and assign (and remove) parent and child bodies. If you want to change a joint's position or orientation, detach the parent and child bodies first. If a parent or child body has an anatomical (local) reference frame assigned, MuSkeMo automatically computes the relative positions and orientations in these frames as well. Orientations are stored as body-fixed, XYZ-Euler angles and as quaternions. All data that are created are included during export (if local frames are not assigned, these values will be nan).
 
-It is also possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turne into an immobilized joint (e.g., WeldJoint in OpenSim). 
+It is also possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turned into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
 In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically.
 
@@ -229,8 +229,8 @@ By default, muscles are visualized using a Geometry node modifier named "musc\_n
 
 If the volumetric visualization option is used for the muscles, visualization parameters can be tuned in the "VolumetricMuscleViz" modifier (see section \ref{sec:volmuscleviz} for details).
 
-\subsubsection{Reflect right-side muscles}
-This feature reflects muscles that have '\_r' in their names across the XY-plane. This feature is currently experimental and will be overhauled in the near future.
+\subsubsection{Reflect unilateral muscles}
+This feature reflects left- or right-sided muscles if currently only one of the two sides exists in the "Muscles" collection. You can choose what plane across which to reflect (default = 'XY'), and change the strings with which you designate the left and right sides (default is '\_l' and '\_r', respectively). The script then checks for all muscles whether its other-side counterpart exists, and if not, creates it. \textbf{Warning:} This function uses a string search to check whether the side string is in the object's name. This can potentially cause conflicts (e.g., the name "dorsal\_rib\_l" contains both '\_l' and '\_r').
 
 
 \subsection{Anatomical \& local reference frames panel}

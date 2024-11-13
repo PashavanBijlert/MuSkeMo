@@ -978,6 +978,10 @@ class VIEW3D_PT_body_utilities_subpanel(VIEW3D_PT_MuSkeMo, Panel):  #
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        
         ## update display location using COM
         row = self.layout.row()
         row.operator("body.update_location_from_com", text="Update display location using COM")

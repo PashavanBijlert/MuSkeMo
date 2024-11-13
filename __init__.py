@@ -64,7 +64,7 @@ from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJoint
                                       )
 
 #### muscle panel
-from .scripts.muscle_panel import (AddMusclepointOperator, ReflectRightsideMusclesOperator,
+from .scripts.muscle_panel import (AddMusclepointOperator, ReflectUnilateralMusclesOperator,
                                       InsertMusclePointOperator, UpdateMuscleVizRadius,
                                       VIEW3D_PT_muscle_panel,)
 
@@ -165,7 +165,7 @@ classes = (  #Inertial properties panel
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 
-                                    AddMusclepointOperator, ReflectRightsideMusclesOperator,
+                                    AddMusclepointOperator, ReflectUnilateralMusclesOperator,
                                     InsertMusclePointOperator, UpdateMuscleVizRadius,
                                     VIEW3D_PT_muscle_panel,
             #export panel

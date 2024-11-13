@@ -46,12 +46,7 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen=1024,
         )    
     
-    reflection_plane: StringProperty(
-        name="Reflection plane",
-        description="Desired reflection plane. Options are 'XY', 'YZ', and 'XZ'",
-        default="XY",
-        maxlen=1024,
-        )    
+    
     
     axes_size: FloatProperty(
         name = "Body axes display size",
@@ -487,20 +482,30 @@ class MuSkeMoProperties(PropertyGroup):
 
     ############### Global properties panel
 
-    left_side_delimiter: StringProperty(
-                name = "Left side delimiter",
-                description="What do you use as the delimiter for the left side? Default is '_l', like in 'thigh_l'",
+    left_side_string: StringProperty(
+                name = "Left side string",
+                description="What do you use in the name to designate the left side? Default is '_l', like in 'thigh_l'",
                 default = "_l",
                 maxlen = 1024,
         )
     
-    right_side_delimiter: StringProperty(
-                name = "Right side delimiter",
-                description="What do you use as the delimiter for the right side? Default is '_r', like in 'thigh_r'",
+    right_side_string: StringProperty(
+                name = "Right side string",
+                description="What do you use in the name to designate the right side? Default is '_r', like in 'thigh_r'",
                 default = "_r",
                 maxlen = 1024,
         )
 
+    reflection_plane: EnumProperty(
+        name="Reflection Plane",
+        description="Desired reflection plane.",
+        items=[
+            ('XY', "XY", "Reflect across the XY plane"),
+            ('YZ', "YZ", "Reflect across the YZ plane"),
+            ('XZ', "XZ", "Reflect across the XZ plane"),
+        ],
+        default='XY',
+    )
 
     ######## default colors
     
