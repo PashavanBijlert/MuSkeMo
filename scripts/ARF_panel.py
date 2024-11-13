@@ -496,35 +496,48 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         scene = context.scene
         muskemo = scene.muskemo
         
+        # Row for frame collection
         row = self.layout.row()
-        row.prop(muskemo, "frame_collection")
-        self.layout.row()
+        split = row.split(factor=0.5)
+        split.label(text="Frame Collection")
+        split.prop(muskemo, "frame_collection", text="")
 
+        # Row for frame name
+        row = self.layout.row()
+        split = row.split(factor=0.5)
+        split.label(text="Frame Name")
+        split.prop(muskemo, "framename", text="")
 
+        
+        
+        # Row for Assign as frame origin
         row = self.layout.row()
-        row.prop(muskemo, "framename")
-        self.layout.row()
+        split = row.split(factor=0.5)
+        split.operator("arf.assign_origin", text="Assign as frame origin")
+        sub_split = split.split(factor=0.6)
+        sub_split.label(text="Origin Landmark")
+        sub_split.prop(muskemo, "or_landmark_name", text="")
+
+        # Row for Assign as Y direction
+        row = self.layout.row()
+        split = row.split(factor=0.5)
+        split.operator("arf.assign_ydir_landmark", text="Assign as Y direction")
+        sub_split = split.split(factor=0.6)
+        sub_split.label(text="Y Direction Landmark")
+        sub_split.prop(muskemo, "ydir_landmark_name", text="")
+
+        # Row for Assign as YZ plane landmark
+        row = self.layout.row()
+        split = row.split(factor=0.5)
+        split.operator("arf.assign_yz_plane_landmark", text="Assign as YZ plane landmark")
+        sub_split = split.split(factor=0.6)
+        sub_split.label(text="YZ Plane Landmark")
+        sub_split.prop(muskemo, "yz_plane_landmark_name", text="")
+
         
         
         row = self.layout.row()
-        row.operator("arf.assign_origin", text="Assign as frame origin")
-        row.prop(muskemo, "or_landmark_name")
-        self.layout.row()
-        
-        
-        row = self.layout.row()
-        row.operator("arf.assign_ydir_landmark", text="Assign as Y direction")
-        row.prop(muskemo, "ydir_landmark_name")
-        self.layout.row()
-        
-        row = self.layout.row()
-        row.operator("arf.assign_yz_plane_landmark", text="Assign as YZ plane landmark")
-        row.prop(muskemo, "yz_plane_landmark_name")
-        self.layout.row()
-        
-        
-        row = self.layout.row()
-        row.operator("arf.construct_arf", text="Construct arf from points")
+        row.operator("arf.construct_arf", text="Construct Frame from Landmark Positions")
         self.layout.row()
         row = self.layout.row()
         row.operator("arf.assign_parent_body", text="Assign parent body")

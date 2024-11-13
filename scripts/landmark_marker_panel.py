@@ -118,11 +118,18 @@ class VIEW3D_PT_landmark_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conven
         scene = context.scene
         muskemo = scene.muskemo
 
-        ## user input joint name    
-        self.layout.prop(muskemo, "landmark_name")
+        # Row for landmark name
         row = self.layout.row()
-       
-        row.prop(muskemo, "landmark_collection")
+        split = row.split(factor=0.5)
+        split.label(text="Landmark Name")
+        split.prop(muskemo, "landmark_name", text="")
+
+        # Row for landmark collection
+        row = self.layout.row()
+        split = row.split(factor=0.5)
+        split.label(text="Landmark Collection")
+        split.prop(muskemo, "landmark_collection", text="")
+
 
         self.layout.row()
         row = self.layout.row()

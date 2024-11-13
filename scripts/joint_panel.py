@@ -1380,10 +1380,16 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         
         
         ## user input joint name    
-        layout.prop(muskemo, "jointname")
         row = self.layout.row()
-       
-        row.prop(muskemo, "joint_collection")
+        split = row.split(factor=1/2)
+        split.label(text = "Joint Name")
+        split.prop(muskemo, "jointname", text = "")
+        
+        
+        row = self.layout.row()
+        split = row.split(factor=1/2)
+        split.label(text = "Joint Collection")
+        split.prop(muskemo, "joint_collection", text = "")
                     
         
         row = self.layout.row()

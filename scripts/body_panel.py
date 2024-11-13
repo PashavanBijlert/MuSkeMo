@@ -902,10 +902,16 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         
         
         ## user input body name    
-        layout.prop(muskemo, "bodyname")
         row = self.layout.row()
-       
-        row.prop(muskemo, "body_collection")
+        split = row.split(factor=1/2)
+        split.label(text = "Body Name")
+        split.prop(muskemo, "bodyname", text = "")
+        
+        ## body collection
+        row = self.layout.row()
+        split = row.split(factor=1/2)
+        split.label(text = "Body collection")
+        split.prop(muskemo, "body_collection", text = "")
         row = self.layout.row()
 
 
@@ -957,8 +963,11 @@ class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  #
         scene = context.scene
         muskemo = scene.muskemo
         
-        ## user input body name    
-        layout.prop(muskemo, "geometry_collection")
+        ## user input body name
+        row = self.layout.row()
+        split = row.split(factor=1/2)
+        split.label(text = "Geometry collection")
+        split.prop(muskemo, "geometry_collection", text = "")
         row = self.layout.row()
 
         row.operator("body.attach_visual_geometry", text = "Attach visual (bone) geometry")

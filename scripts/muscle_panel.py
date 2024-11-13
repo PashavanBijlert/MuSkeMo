@@ -330,10 +330,15 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         row.label(text = 'You must select a body before attempting to add a muscle point')
         
         
-            
-        layout.prop(muskemo, "musclename")
         row = self.layout.row()
-        row.prop(muskemo, "muscle_collection")
+        split = row.split(factor=1/2)
+        split.label(text = "Muscle Name")
+        split.prop(muskemo, "musclename", text = "")
+        
+        row = self.layout.row()
+        split = row.split(factor=1/2)
+        split.label(text = "Muscle Collection")
+        split.prop(muskemo, "muscle_collection", text = "")
 
         row = self.layout.row()
 
@@ -360,15 +365,15 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         row = self.layout.row()
 
         # Split row into four columns with desired proportions
-        split = row.split(factor=3/10)  # First split for left label
+        split = row.split(factor=4/10)  # First split for left label
         split_left_label = split.column()
         split_left_label.label(text="Left Side String")
 
-        split = split.split(factor=2/7)  # Second split for left input field
+        split = split.split(factor=1/7)  # Second split for left input field
         split_left_input = split.column()
         split_left_input.prop(muskemo, "left_side_string", text="")
 
-        split = split.split(factor=3/5)  # Third split for right label (remaining space)
+        split = split.split(factor=4/5)  # Third split for right label (remaining space)
         split_right_label = split.column()
         split_right_label.label(text="Right Side String")
 
@@ -376,7 +381,9 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         split_right_input.prop(muskemo, "right_side_string", text="")
 
         row = self.layout.row()
-        row.prop(muskemo, "reflection_plane")
+        split = row.split(factor = 1/2)
+        split.label(text = 'Reflection Plane')
+        split.prop(muskemo, "reflection_plane", text = "")
         
         
         

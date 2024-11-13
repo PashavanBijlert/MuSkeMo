@@ -172,13 +172,18 @@ class VIEW3D_PT_contact_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convent
         scene = context.scene
         muskemo = scene.muskemo
 
+        # First row for contact collection
         row = self.layout.row()
-        row.prop(muskemo, "contact_collection")
-        self.layout.row()
+        split = row.split(factor=0.5)
+        split.label(text="Contact Collection")
+        split.prop(muskemo, "contact_collection", text="")
 
-
+        # Second row for contact name
         row = self.layout.row()
-        row.prop(muskemo, "contact_name")
+        split = row.split(factor=0.5)
+        split.label(text="Contact Sphere Name")
+        split.prop(muskemo, "contact_name", text="")
+
         
         row = self.layout.row()
         row.operator("contact.create_contact", text = 'Create contact sphere')

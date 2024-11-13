@@ -398,149 +398,144 @@ class VIEW3D_PT_export_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         scene = context.scene
         muskemo = scene.muskemo
         row = layout.row()
-       
+        
         row.operator("export.select_model_export_directory",text = 'Select export directory')
         row = layout.row()
-        row.prop(muskemo, "model_export_directory")
+        split = row.split(factor = 1/2)
+        split.label(text = 'Model export directory')
+        split.prop(muskemo, "model_export_directory", text = "")
         return
 
 ## Export bodies subpanel
-class VIEW3D_PT_export_bodies_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_export_bodies_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_bodies_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export bodies"  # found at the top of the Panel
-    bl_options = {'DEFAULT_CLOSED'} 
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export bodies"
+    bl_options = {'DEFAULT_CLOSED'}
     
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
-        muskemo = scene.muskemo
+        muskemo = context.scene.muskemo
         row = layout.row()
-        row.prop(muskemo, "body_collection")
-        row.operator("export.export_bodies",text = 'Export bodies')
-        return  
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "body_collection", text="")
+        split2.operator("export.export_bodies", text="Export bodies")
 
 ## Export joints subpanel
-class VIEW3D_PT_export_joints_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_export_joints_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_joints_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export joints"  # found at the top of the Panel
-    bl_options = {'DEFAULT_CLOSED'} 
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export joints"
+    bl_options = {'DEFAULT_CLOSED'}
     
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
-        muskemo = scene.muskemo
+        muskemo = context.scene.muskemo
         row = layout.row()
-        row.prop(muskemo, "joint_collection")
-        row.operator("export.export_joints",text = 'Export joints')
-        return      
-    
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "joint_collection", text="")
+        split2.operator("export.export_joints", text="Export joints")
 
 ## Export muscles subpanel
-class VIEW3D_PT_export_muscles_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_export_muscles_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_muscles_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export muscles"  # found at the top of the Panel
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export muscles"
     bl_options = {'DEFAULT_CLOSED'}
     
-    
     def draw(self, context):
-        scene = context.scene
-        muskemo = scene.muskemo
-        
+        muskemo = context.scene.muskemo
         row = self.layout.row()
-        row.prop(muskemo, "muscle_collection")
-        row.operator("export.export_muscles",text = 'Export muscles')
-        return     
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "muscle_collection", text="")
+        split2.operator("export.export_muscles", text="Export muscles")
 
 ## Export mesh inertial properties subpanel
-class VIEW3D_PT_export_mesh_inprops_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_export_mesh_inprops_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_inprops_mesh_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export mesh inertial properties"  # found at the top of the Panel
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export mesh inertial properties"
     bl_options = {'DEFAULT_CLOSED'}
     
-    
     def draw(self, context):
-        scene = context.scene
-        muskemo = scene.muskemo
-        
+        muskemo = context.scene.muskemo
         row = self.layout.row()
-        row.prop(muskemo, "source_object_collection")
-        row.operator("export.export_mesh_inertial_props",text = 'Export mesh inertial properties')
-        return      
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "source_object_collection", text="")
+        split2.operator("export.export_mesh_inertial_props", text="Export mesh inertial properties")
 
 ## Export contacts subpanel
-class VIEW3D_PT_export_contacts_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_export_contacts_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_contacts_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export contact locations"  # found at the top of the Panel
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export contact locations"
     bl_options = {'DEFAULT_CLOSED'}
     
-    
     def draw(self, context):
-        scene = context.scene
-        muskemo = scene.muskemo
-        
+        muskemo = context.scene.muskemo
         row = self.layout.row()
-        row.prop(muskemo, "contact_collection")
-        row.operator("export.export_contacts",text = 'Export contact locations')
-        return     
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "contact_collection", text="")
+        split2.operator("export.export_contacts", text="Export contact locations")
 
 ## Export landmarks subpanel
-class VIEW3D_PT_export_landmarks_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_export_landmarks_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_landmarks_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export landmarks"  # found at the top of the Panel
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export landmarks"
     bl_options = {'DEFAULT_CLOSED'}
     
-    
     def draw(self, context):
-        scene = context.scene
-        muskemo = scene.muskemo
-        
+        muskemo = context.scene.muskemo
         row = self.layout.row()
-        row.prop(muskemo, "landmark_collection")
-        row.operator("export.export_landmarks",text = 'Export landmarks')
-        return 
-    
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "landmark_collection", text="")
+        split2.operator("export.export_landmarks", text="Export landmarks")
 
 ## Export frames subpanel
-class VIEW3D_PT_export_frames_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_export_frames_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_frames_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export reference frames"  # found at the top of the Panel
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export reference frames"
     bl_options = {'DEFAULT_CLOSED'}
     
-    
     def draw(self, context):
-        scene = context.scene
-        muskemo = scene.muskemo
-        
+        muskemo = context.scene.muskemo
         row = self.layout.row()
-        row.prop(muskemo, "frame_collection")
-        row.operator("export.export_frames",text = 'Export frames')
-        return
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "frame_collection", text="")
+        split2.operator("export.export_frames", text="Export frames")
 
 ## Export visual geometry folder subpanel
-class VIEW3D_PT_geometry_folder_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_geometry_folder_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_idname = 'VIEW3D_PT_export_geometry_folder_subpanel'
-    bl_parent_id = 'VIEW3D_PT_export_panel'  #have to define this if you use multiple panels
-    bl_label = "Export visual geometry folder"  # found at the top of the Panel
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export visual geometry folder"
     bl_options = {'DEFAULT_CLOSED'}
     
-    
     def draw(self, context):
-        scene = context.scene
-        muskemo = scene.muskemo
-        
+        muskemo = context.scene.muskemo
         row = self.layout.row()
-        row.prop(muskemo, "geometry_collection")
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "geometry_collection", text="")
+        split2.operator("export.export_geometry_folder", text="Export geometry folder")
 
-        row = self.layout.row()
-        row.operator("export.export_geometry_folder",text = 'Export geometry folder')
-        return        
 
 ## File export options
 class VIEW3D_PT_export_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
