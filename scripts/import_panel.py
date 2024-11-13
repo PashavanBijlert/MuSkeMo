@@ -519,27 +519,53 @@ class VIEW3D_PT_import_modelcomponents_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cl
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
-        row = layout.row()
-        row.prop(muskemo, "body_collection")
-        row.operator("import.import_bodies",text = 'Import bodies')
+
         row = layout.row()
         row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
 
-        row = layout.row()
-        row.prop(muskemo, "joint_collection")
-        row.operator("import.import_joints",text = 'Import joints')
+        # Adjusted layout for consistent 1/3-1/3-1/3 split across all rows
 
+        # Row for body collection
         row = layout.row()
-        row.prop(muskemo, "muscle_collection")
-        row.operator("import.import_muscles",text = 'Import muscles')
+        split = row.split(factor=1/3)
+        split.label(text="Body Collection")  # Custom label for the property
+        split = split.split(factor=1/2)
+        split.prop(muskemo, "body_collection", text="")  # Prop itself with label suppressed
+        split.operator("import.import_bodies", text="Import bodies")  # Operator
 
+        # Row for joint collection
         row = layout.row()
-        row.prop(muskemo, "contact_collection")
-        row.operator("import.import_contacts",text = 'Import contacts')
+        split = row.split(factor=1/3)
+        split.label(text="Joint Collection")
+        split = split.split(factor=1/2)
+        split.prop(muskemo, "joint_collection", text="")
+        split.operator("import.import_joints", text="Import joints")
 
+        # Row for muscle collection
         row = layout.row()
-        row.prop(muskemo, "frame_collection")
-        row.operator("import.import_frames",text = 'Import frames')
+        split = row.split(factor=1/3)
+        split.label(text="Muscle Collection")
+        split = split.split(factor=1/2)
+        split.prop(muskemo, "muscle_collection", text="")
+        split.operator("import.import_muscles", text="Import muscles")
+
+        # Row for contact collection
+        row = layout.row()
+        split = row.split(factor=1/3)
+        split.label(text="Contact Collection")
+        split = split.split(factor=1/2)
+        split.prop(muskemo, "contact_collection", text="")
+        split.operator("import.import_contacts", text="Import contacts")
+
+        # Row for frame collection
+        row = layout.row()
+        split = row.split(factor=1/3)
+        split.label(text="Frame Collection")
+        split = split.split(factor=1/2)
+        split.prop(muskemo, "frame_collection", text="")
+        split.operator("import.import_frames", text="Import frames")
+
+
 
         return      
     
@@ -555,12 +581,17 @@ class VIEW3D_PT_import_OpenSim_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
         scene = context.scene
         muskemo = scene.muskemo
         row = layout.row()
+        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
+
+        row = layout.row()
+        
         row.operator("import.import_opensim_model",text = 'Import OpenSim model')
 
         row = layout.row()
-        row.prop(muskemo, "model_import_style")
-        row = layout.row()
-        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
+        split= row.split(factor=1/2)
+        split.label(text = 'Model Import Style')
+        split.prop(muskemo, "model_import_style", text="")
+        
         
         row = layout.row()
         row.prop(muskemo, "enable_wrapping_on_import") #boolean, yes or no
@@ -588,11 +619,15 @@ class VIEW3D_PT_import_Gaitsym_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
         
         row = layout.row()
         row = layout.row()
-        row.prop(muskemo, "gaitsym_geometry_folder")
+        split= row.split(factor=1/2)
+        split.label(text = 'Gaitsym geometry folder')
+        split.prop(muskemo, "gaitsym_geometry_folder", text = "")
 
         row = layout.row()
         row = layout.row()
-        row.prop(muskemo, "rotate_gaitsym_on_import")
+        split= row.split(factor=1/2)
+        split.label(text = 'Gaitsym import rotation')
+        split.prop(muskemo, "rotate_gaitsym_on_import", text = "")
 
         row = layout.row()
         row = layout.row()
