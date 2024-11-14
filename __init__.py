@@ -39,6 +39,10 @@ class VIEW3D_PT_MuSkeMo: # class naming convention ‘CATEGORY_PT_name’
 #### properties
 from .scripts.muskemo_properties import (MuSkeMoProperties)          ## all properties that are assigned by the user as part of the addon
 
+#### Global settings panel
+from .scripts.global_settings_panel import (VIEW3D_PT_global_settings_panel,
+                                            SetRecommendedBlenderSettingsOperator,)
+
 
 #### body panel
 from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_PT_vizgeometry_subpanel,
@@ -110,7 +114,7 @@ from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_mode
 from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel,
                                           VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                           CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
-                                          SetRecommendedBlenderSettingsOperator, ConvertMusclesToVolumetricViz,
+                                           ConvertMusclesToVolumetricViz,
                                     ImportTrajectorySTO,#these are separate scripts)
                                     )
 #### Anatomical (local) reference frame panel
@@ -129,13 +133,22 @@ from .scripts.landmark_marker_panel import (VIEW3D_PT_landmark_panel, CreateLand
 from .scripts.contact_panel import (VIEW3D_PT_contact_panel, CreateContactOperator, 
                                     AssignContactParentOperator,ClearContactParentOperator,)
 
+
+
+
+
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
 
 
 
 
-classes = (  #Inertial properties panel 
+
+classes = (  #Global settings panel 
+                                    VIEW3D_PT_global_settings_panel,
+                                     SetRecommendedBlenderSettingsOperator,
+    
+    #Inertial properties panel 
                                     VIEW3D_PT_inertial_prop_panel, 
                                     VIEW3D_PT_convex_hull_subpanel, 
                                      VIEW3D_PT_expand_convex_hulls_arith_subpanel,
@@ -193,7 +206,7 @@ classes = (  #Inertial properties panel
                                 VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel, 
                                 VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                 CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
-                                SetRecommendedBlenderSettingsOperator,ConvertMusclesToVolumetricViz,
+                               ConvertMusclesToVolumetricViz,
 
                                 ImportTrajectorySTO, # separate script
 
