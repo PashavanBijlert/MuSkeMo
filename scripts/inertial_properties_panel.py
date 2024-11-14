@@ -321,17 +321,28 @@ def update_expansion_template_logarithmic(self, context):
 
 # Define the properties for segment parameters
 class SegmentParameterItem(PropertyGroup):
-    body_segment: StringProperty(name="Body Segment", default="Segment")
-    scale_factor: FloatProperty(name="Scale Factor", default=1.0, precision=3, step=0.1)
-    log_intercept: FloatProperty(name="Log Intercept", default=0.0, precision=3, step=0.1)
-    log_slope: FloatProperty(name="Log Slope", default=1.0, precision=3, step=0.1)
-    log_MSE: FloatProperty(name="Log MSE", default=0.0, precision=3, step=0.1)
+    body_segment: StringProperty(name="Body Segment Name", 
+                                 description = "Body segment name, all objects in the convex hull collection that contain this string in their name will be expanded",
+                                 default="Segment")
+    scale_factor: FloatProperty(name="Scale Factor",
+                                description = 'Arithmetic scale factor. Convex hull volume will be scaled by this number',
+                                  default=1.0, precision=3, step=0.1)
+    log_intercept: FloatProperty(name="Log Intercept", 
+                                 description = "Y-intercept of the regression for the expansion factor in log mode",
+                                 default=0.0, precision=3, step=0.1)
+    log_slope: FloatProperty(name="Log Slope",
+                             description = "Slope of the regression for the expansion in log mode",
+                               default=1.0, precision=3, step=0.1)
+    log_MSE: FloatProperty(name="Log MSE", 
+                           description = "Mean Squared Error of the log regression, used to correct the expansion when transforming from log back to arithmetic scale factors. Optional",
+                           default=0.0, precision=3, step=0.1)
 
 
 # Operators for adding and removing segments
 class AddSegmentOperator(Operator):
     bl_idname = "inprop.add_segment"
-    bl_label = "Add Segment"
+    bl_label = "Add segment to the template"
+    bl_description = "Add segment to the template"
     
     def execute(self, context):
         context.scene.muskemo.segment_parameter_list_arithmetic.add()
@@ -339,7 +350,8 @@ class AddSegmentOperator(Operator):
 
 class RemoveSegmentOperator(Operator):
     bl_idname = "inprop.remove_segment"
-    bl_label = "Remove Segment"
+    bl_label = "Remove Segment from the template"
+    bl_description = "Remove Segment from the template"
     
     index: IntProperty()
 
