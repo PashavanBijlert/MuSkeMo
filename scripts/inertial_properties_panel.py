@@ -268,13 +268,13 @@ class CollectionConvexHull(Operator):
 from .inertial_properties_presets import InertialPropertiesPresets 
 
 
-# Update function for Arithmetic expansion type
-def update_expansion_type_arithmetic(self, context):
+# Update function for Arithmetic expansion template
+def update_expansion_template_arithmetic(self, context):
     muskemo = context.scene.muskemo
     segment_parameter_list = muskemo.segment_parameter_list_arithmetic
     segment_parameter_list.clear()
 
-    preset_key = muskemo.expansion_type_arithmetic
+    preset_key = muskemo.expansion_template_arithmetic
 
     if preset_key == "Custom":
         # Custom case: no prefilling, just set default values
@@ -291,13 +291,13 @@ def update_expansion_type_arithmetic(self, context):
             new_item.body_segment = segment
             new_item.scale_factor = factors[i]
 
-# Update function for Logarithmic expansion type
-def update_expansion_type_logarithmic(self, context):
+# Update function for Logarithmic expansion template
+def update_expansion_template_logarithmic(self, context):
     muskemo = context.scene.muskemo
     segment_parameter_list = muskemo.segment_parameter_list_logarithmic
     segment_parameter_list.clear()
 
-    preset_key = muskemo.expansion_type_logarithmic
+    preset_key = muskemo.expansion_template_logarithmic
 
     if preset_key == "Custom":
         # Custom case: no prefilling, just set default values
@@ -557,6 +557,7 @@ class VIEW3D_PT_inertial_prop_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming c
         #compute for entire collection
         row = self.layout.row()
         row.prop(muskemo, "source_object_collection")
+        row = self.layout.row()
         row.operator("inprop.inertial_properties_collection", text="Compute for all meshes in collection")
 
         return
@@ -579,11 +580,15 @@ class VIEW3D_PT_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming 
 
         #### skeletal mesh collection
         row = self.layout.row()
-        row.prop(muskemo, "skeletal_mesh_collection")
+        split = row.split(factor = 1/2)
+        split.label(text = "Skeletal Mesh Collection")
+        split.prop(muskemo, "skeletal_mesh_collection", text = "")
 
         #### convex hull collection
         row = self.layout.row()
-        row.prop(muskemo, "convex_hull_collection")
+        split = row.split(factor = 1/2)
+        split.label(text = 'Convex Hull Collection')
+        split.prop(muskemo, "convex_hull_collection", text = "")
 
         #### create convex hulls
         row = layout.row()
@@ -606,21 +611,44 @@ class VIEW3D_PT_expand_convex_hulls_arith_subpanel(VIEW3D_PT_MuSkeMo, Panel):
 
         #### convex hull collection
         row = self.layout.row()
-        row.prop(muskemo, "convex_hull_collection")
+        split = row.split(factor = 1/3)
+        split.label(text = 'Convex Hull Collection')
+        split.prop(muskemo, "convex_hull_collection", text = "")
 
         ### dynamically sized panel
-        layout.prop(muskemo, "expansion_type_arithmetic", text="Expansion Type")
+        row = self.layout.row()
+        split = row.split(factor = 1/3)
+        split.label(text = 'Expansion Template:')
+        split.prop(muskemo, "expansion_template_arithmetic", text = "")
+        
+        ### Column labels
+        row = layout.row()
+        row = layout.row()
+        row = layout.row()
+        split = row.split(factor = 1/15)
+        split.label(text = "No")
+        split = split.split(factor = 1/4)
+        split.label(text = "Segment name")
+        split = split.split(factor = 5/6)
+        split.label(text = "Scale factor")
+
         for i, item in enumerate(muskemo.segment_parameter_list_arithmetic):
             row = layout.row()
-            row.prop(item, "body_segment", text=f"Segment {i+1}")
-            row.prop(item, "scale_factor", text="Scale Factor")
-            row.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
+            split = row.split(factor = 1/15)
+            split.label(text = f"{i+1}")
+            split = split.split(factor = 1/4)
+            split.prop(item, "body_segment", text="")
+            split = split.split(factor = 5/6)
+            split.prop(item, "scale_factor", text="Scale Factor")
+            split.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
         layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')
         ### dynamically sized panel
 
         #### expanded hull collection
         row = self.layout.row()
-        row.prop(muskemo, "expanded_hull_collection")    
+        split = row.split(factor = 1/2)
+        split.label(text = 'Expanded Hull Collection')
+        split.prop(muskemo, "expanded_hull_collection", text = "")    
         
         #### expand hulls operator
         row = self.layout.row()
@@ -642,23 +670,56 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
 
         #### convex hull collection
         row = self.layout.row()
-        row.prop(muskemo, "convex_hull_collection")
+        split = row.split(factor = 1/3)
+        split.label(text = 'Convex Hull Collection')
+        split.prop(muskemo, "convex_hull_collection", text = "")
 
         ### dynamically sized panel
-        layout.prop(muskemo, "expansion_type_logarithmic", text="Expansion Type")
+        row = self.layout.row()
+        split = row.split(factor = 1/3)
+        split.label(text = 'Expansion Template:')
+        split.prop(muskemo, "expansion_template_logarithmic", text = "")
+
+
+        ### Column labels
+        row = layout.row()
+        row = layout.row()
+        row = layout.row()
+        split = row.split(factor = 1/15)
+        split.label(text = "No")
+        split = split.split(factor = 1/4)
+        split.label(text = "Segment name")
+        split = split.split(factor = 3/10)
+        split.label(text = "Intercept")
+        split = split.split(factor = 3/7)
+        split.label(text = "Slope")
+        split = split.split(factor = 3/4)
+        split.label(text = "MSE")
+
+
+
         for i, item in enumerate(muskemo.segment_parameter_list_logarithmic):
             row = layout.row()
-            row.prop(item, "body_segment", text=f"Segment {i+1}")
-            row.prop(item, "log_intercept", text="Log intercept")
-            row.prop(item, "log_slope", text="Log slope")
-            row.prop(item, "log_MSE", text="Log MSE")
-            row.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
+            split = row.split(factor = 1/15)
+            split.label(text = f"{i+1}")
+            split = split.split(factor = 1/4)
+            split.prop(item, "body_segment", text="")
+            split = split.split(factor = 3/10)
+            split.prop(item, "log_intercept", text="")
+            split = split.split(factor = 3/7)
+            split.prop(item, "log_slope", text="")
+            split = split.split(factor = 3/4)
+            split.prop(item, "log_MSE", text="")
+            split.operator("inprop.remove_segment", text="", icon='REMOVE').index = i
         layout.operator("inprop.add_segment", text="Add Segment", icon='ADD')
         ### dynamically sized panel
 
         #### expanded hull collection
         row = self.layout.row()
-        row.prop(muskemo, "expanded_hull_collection")    
+        split = row.split(factor = 1/2)
+        split.label(text = 'Expanded Hull Collection')
+        split.prop(muskemo, "expanded_hull_collection", text = "")    
+           
         
         #### expand hulls operator
         row = self.layout.row()
