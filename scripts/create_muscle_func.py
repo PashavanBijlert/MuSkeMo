@@ -4,8 +4,8 @@ import numpy as np
 
 def create_muscle (muscle_name, point_position, body_name,
                    collection_name = 'Muscles',
-                   is_global=True, F_max = 0, pennation_angle = 0, 
-                   optimal_fiber_length = 0, tendon_slack_length = 0,):
+                   is_global=True, F_max = 0.0, pennation_angle = 0.0, 
+                   optimal_fiber_length = 0.0, tendon_slack_length = 0.0,):
     
     #inputs should be name, isglobal, point loc,(so I can remove the 4d thing) and body
     #point position can be list, array or Vector. It gets cast to a Vector().to_4d() within the script
