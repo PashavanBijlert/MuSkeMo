@@ -733,13 +733,8 @@ class FitCylinderOperator(Operator):
         from .quaternions import matrix_from_quaternion
         gRb, bRg = matrix_from_quaternion(quat_diff)  #get the rotation matrix
 
-        worldMat = gRb.to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
-
-        for i in range(len(C)):
-            
-            worldMat[i][3] = C[i]  #set the fourth column as the location
-            
-        #worldmat is now ready for the fitted cylinder, but we need to compute the desired height of the cylinder, first
+              
+        #Compute the desired height of the cylinder by checking the extent of the points along the cylinder axis
             
         #vertices in with respect to cylinder center
         verts_x_C = verts_x - C[0]
@@ -753,11 +748,24 @@ class FitCylinderOperator(Operator):
             
         vertical_cylinder_coordinates = [v[2] for v in vert_b]  #z is the cylinder axis, so this gives all the z-coordinates of the input data, in the frame of the fitted cylinder
             
-        max_height = np.max(vertical_cylinder_coordinates)
-        min_height = np.min(vertical_cylinder_coordinates)
+        max_height = np.max(vertical_cylinder_coordinates)  #wrt cylinder origin, this is always positive
+        min_height = np.min(vertical_cylinder_coordinates)  #wrt cylinder origin ,this is always negative
 
 
         cylinder_height = max_height - min_height #in meters
+
+        position_offset_local = (max_height + min_height)/2 # the cylinder's position is not centered around the extremes of the data if the data is not symmetric about the z axis. We will acount for this when setting the position
+
+        position_offset_glob = gRb @ Vector([0, 0, position_offset_local])
+
+
+        # construct a world matrix for the cylinder
+        worldMat = gRb.to_4x4() #matrix_world in blender is a 4x4 transformation matrix, with the first three columns and rows representing the orientation, last column the location, and bottom right diagonal 1
+
+        for i in range(len(C)):
+            
+            worldMat[i][3] = C[i] + position_offset_glob[i]  #set the fourth column as the location, including the offeset we just computed
+
         
         bpy.ops.mesh.primitive_cylinder_add(radius=Radius, depth=cylinder_height, end_fill_type='NGON', calc_uvs=True, enter_editmode=False, align='WORLD')
         fit_obj_name = obj_name + '_CylinderFit'
