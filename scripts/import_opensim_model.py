@@ -845,13 +845,13 @@ class ImportOpenSimModel(Operator):
         if enable_wrapping: #if the user wants wrapping
             self.report({'WARNING'}, "Wrapping support is currently still very experimental. If your model has a lot of wrapping surfaces, you will currently likely achieve better visualization results by adding via points manually")
 
-            wrap_nodefilename = 'muscle_wrapper_experimental_v2.blend'
+            wrap_nodefilename = 'muscle_wrapper_v3.blend'
             directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
             with bpy.data.libraries.load(directory + wrap_nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file
                 data_to.node_groups = data_from.node_groups
 
-            wrap_node_group_name =   'MuscleWrapNodeGroupShellExperimental' #this is used later in the script. Can update when new versions of the wrap node are made  
+            wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
             wrap_node_tree_template = [x for x in data_to.node_groups if wrap_node_group_name in x.name][0] #node tree template
 
         wrap_objects = {}
@@ -931,28 +931,42 @@ class ImportOpenSimModel(Operator):
                         if enable_wrapping: 
                             wrap_node_tree_new = wrap_node_tree_template.copy()
                             wrap_node_tree_new.name = wrap_node_group_name + '_' + wrap_name
-                            wrap_node_tree_new.nodes['Object Info'].inputs['Object'].default_value = bpy.data.objects[wrap_name] #the wrap geometry
-            
-                                                    
-                            proj_or_angle = 0 #projection orientation z-angle. An Euler angle for which way to project the wrapping. 0 means in positive x direction.
-                            if wrap_obj['quadrant'] == '+x' or wrap_obj['quadrant'] == 'x' :
-                                proj_or_angle = 0
+                            #set the wrap object
+                            wrap_node_tree_new.interface.items_tree['Object'].default_value = bpy.data.objects[wrap_name] #the wrap geometry
 
-                            elif wrap_obj['quadrant'] == '+y':
-                                proj_or_angle = 90
+                            #set the cylinder radius
+                            wrap_node_tree_new.interface.items_tree['Wrap Cylinder Radius'].default_value = dimensions['radius']
+
+                            #set the cylinder height
+                            wrap_node_tree_new.interface.items_tree['Wrap Cylinder Height'].default_value = dimensions['height']
+                            
+
+                                                    
+                            proj_angle = 0 #projection z-angle. An Euler angle for which way to project the wrapping. 0 means in positive x direction.
+                            if wrap_obj['quadrant'] == '+x' or wrap_obj['quadrant'] == 'x' :
+                                proj_angle = 0
+
+                            elif wrap_obj['quadrant'] == '+y'or wrap_obj['quadrant'] == 'y' :
+                                proj_angle = 90
                             
                             elif wrap_obj['quadrant'] == '-x':
-                                proj_or_angle = 180
+                                proj_angle = 180
 
                             elif wrap_obj['quadrant'] == '-y':
-                                proj_or_angle = 270
+                                proj_angle = 270
+
+                            elif wrap_obj['quadrant'] == 'all':
+
+                                shortest_wrap = True
 
                             else:
+
+
 
                                 self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
 
 
-                            wrap_node_tree_new.interface.items_tree['Projection orientation Z-angle (deg)'].default_value = np.deg2rad(proj_or_angle)
+                            wrap_node_tree_new.interface.items_tree['Projection Angle'].default_value = proj_angle
 
 
 
