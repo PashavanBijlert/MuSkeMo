@@ -940,7 +940,8 @@ class ImportOpenSimModel(Operator):
                             #set the cylinder height
                             wrap_node_tree_new.interface.items_tree['Wrap Cylinder Height'].default_value = dimensions['height']
                             
-
+                            force_wrap = False
+                            
                                                     
                             proj_angle = 0 #projection z-angle. An Euler angle for which way to project the wrapping. 0 means in positive x direction.
                             if wrap_obj['quadrant'] == '+x' or wrap_obj['quadrant'] == 'x' :
@@ -951,13 +952,15 @@ class ImportOpenSimModel(Operator):
                             
                             elif wrap_obj['quadrant'] == '-x':
                                 proj_angle = 180
+                                force_wrap = True
 
                             elif wrap_obj['quadrant'] == '-y':
                                 proj_angle = 270
 
                             elif wrap_obj['quadrant'] == 'all':
 
-                                shortest_wrap = True
+                                wrap_node_tree_new.interface.items_tree['Shorted Wrap'].default_value = True
+
 
                             else:
 
@@ -967,6 +970,12 @@ class ImportOpenSimModel(Operator):
 
 
                             wrap_node_tree_new.interface.items_tree['Projection Angle'].default_value = proj_angle
+
+                            wrap_node_tree_new.interface.items_tree['Force Wrap'].default_value = force_wrap
+
+                            if force_wrap:# if force wrap is true, add a warning that force wrap requires you to set indices
+
+                                self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj['quadrant'] + "', which in MuSkeMo corresponds to setting 'Force Wrap' (see the manual). You need to set 'Index of Pre wrap point starting at 1' manually for it to work as expected.")
 
 
 
