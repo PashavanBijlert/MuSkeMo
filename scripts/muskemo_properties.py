@@ -300,9 +300,9 @@ class MuSkeMoProperties(PropertyGroup):
     )
 
     enable_wrapping_on_import: BoolProperty(
-        name = 'Enable wrapping during import (experimental)',
-        description='Enable wrapping for imported muscles. Currently experimental, it is currently advised to manually add extra viapoints instead for visualization.',
-        default = False,
+        name = 'Enable wrapping during import (Cylinders)',
+        description='Enable cylinder wrapping for imported muscles. It may be required to manually tune the parameters after import.',
+        default = True,
     )
 
     gaitsym_geometry_folder: StringProperty(

@@ -843,7 +843,7 @@ class ImportOpenSimModel(Operator):
         enable_wrapping = bpy.context.scene.muskemo.enable_wrapping_on_import #does the user want to enable wrapping?
 
         if enable_wrapping: #if the user wants wrapping
-            self.report({'WARNING'}, "Wrapping support is currently still very experimental. If your model has a lot of wrapping surfaces, you will currently likely achieve better visualization results by adding via points manually")
+            self.report({'WARNING'}, "Only cylinder wrapping is currently supported. It may be required to tune the wrapping settings after import, see the manual")
 
             wrap_nodefilename = 'muscle_wrapper_v3.blend'
             directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
@@ -929,60 +929,64 @@ class ImportOpenSimModel(Operator):
 
                         ### create a geometry nodegroup for the wrapper using the template
                         if enable_wrapping: 
-                            wrap_node_tree_new = wrap_node_tree_template.copy()
-                            wrap_node_tree_new.name = wrap_node_group_name + '_' + wrap_name
-                            #set the wrap object
-                            wrap_node_tree_new.interface.items_tree['Object'].default_value = bpy.data.objects[wrap_name] #the wrap geometry
-
-                            #set the cylinder radius
-                            wrap_node_tree_new.interface.items_tree['Wrap Cylinder Radius'].default_value = dimensions['radius']
-
-                            #set the cylinder height
-                            wrap_node_tree_new.interface.items_tree['Wrap Cylinder Height'].default_value = dimensions['height']
                             
-                            force_wrap = False
-                            
-                                                    
-                            proj_angle = 0 #projection z-angle. An Euler angle for which way to project the wrapping. 0 means in positive x direction.
-                            if wrap_obj['quadrant'] == '+x' or wrap_obj['quadrant'] == 'x' :
-                                proj_angle = 0
+                            if wrap_type == 'WrapCylinder':
+                                
 
-                            elif wrap_obj['quadrant'] == '+y'or wrap_obj['quadrant'] == 'y' :
-                                proj_angle = 90
-                            
-                            elif wrap_obj['quadrant'] == '-x':
-                                proj_angle = 180
-                                force_wrap = True
+                                wrap_node_tree_new = wrap_node_tree_template.copy()
+                                wrap_node_tree_new.name = wrap_node_group_name + '_' + wrap_name
+                                #set the wrap object
+                                wrap_node_tree_new.interface.items_tree['Object'].default_value = bpy.data.objects[wrap_name] #the wrap geometry
 
-                            elif wrap_obj['quadrant'] == '-y':
-                                proj_angle = 270
+                                #set the cylinder radius
+                                wrap_node_tree_new.interface.items_tree['Wrap Cylinder Radius'].default_value = dimensions['radius']
 
-                            elif wrap_obj['quadrant'] == 'all':
+                                #set the cylinder height
+                                wrap_node_tree_new.interface.items_tree['Wrap Cylinder Height'].default_value = dimensions['height']
+                                
+                                force_wrap = False
+                                
+                                                        
+                                proj_angle = 0 #projection z-angle. An Euler angle for which way to project the wrapping. 0 means in positive x direction.
+                                if wrap_obj['quadrant'] == '+x' or wrap_obj['quadrant'] == 'x' :
+                                    proj_angle = 0
+                                    force_wrap = True
 
-                                wrap_node_tree_new.interface.items_tree['Shorted Wrap'].default_value = True
+                                elif wrap_obj['quadrant'] == '+y'or wrap_obj['quadrant'] == 'y' :
+                                    proj_angle = 90
+                                    force_wrap = True
+                                
+                                elif wrap_obj['quadrant'] == '-x':
+                                    proj_angle = 180
+                                    force_wrap = True
+
+                                elif wrap_obj['quadrant'] == '-y':
+                                    proj_angle = 270
+                                    force_wrap = True
+
+                                elif wrap_obj['quadrant'] == 'all':
+
+                                    wrap_node_tree_new.interface.items_tree['Shorted Wrap'].default_value = True
 
 
+                                else:
+
+
+
+                                    self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
+
+
+                                wrap_node_tree_new.interface.items_tree['Projection Angle'].default_value = proj_angle
+
+                                wrap_node_tree_new.interface.items_tree['Force Sided Wrap'].default_value = force_wrap
+
+                                
                             else:
 
+                                self.report({'WARNING'}, "Only cylinder wraps currently work in MuSkeMo. Other wrap objects can be imported for visualization, but they won't support wrapping.")
+                            
 
-
-                                self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
-
-
-                            wrap_node_tree_new.interface.items_tree['Projection Angle'].default_value = proj_angle
-
-                            wrap_node_tree_new.interface.items_tree['Force Wrap'].default_value = force_wrap
-
-                            if force_wrap:# if force wrap is true, add a warning that force wrap requires you to set indices
-
-                                self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj['quadrant'] + "', which in MuSkeMo corresponds to setting 'Force Wrap' (see the manual). You need to set 'Index of Pre wrap point starting at 1' manually for it to work as expected.")
-
-
-
-                         
-
-
-            
+           
         #### create muscles
             
         for muscle_name, muscle in muscle_data.items():
@@ -1000,6 +1004,7 @@ class ImportOpenSimModel(Operator):
                                
                 muscle_point_position = point['location']
                 
+                
                 if bpy.context.scene.muskemo.model_import_style == 'loc':  #if importing a model using local definitions, muscle points are provided wrt parent frame
                     
                     mp_parent_body = bpy.data.objects[mp_parent_body_name] ## this assumes muscle point parent frames are always expressed in a body, thus in the /bodyset/
@@ -1009,6 +1014,8 @@ class ImportOpenSimModel(Operator):
                     parent_frame_pos_in_glob = mp_parent_frame['frame_pos_in_global']
 
                     muscle_point_position = parent_frame_pos_in_glob + gRp @ Vector(muscle_point_position)
+                
+                point['global_position'] = muscle_point_position #store the global position so that we can potentially compare to wrap object position
 
                 create_muscle(muscle_name = muscle_name, 
                             is_global =True, 
@@ -1020,26 +1027,82 @@ class ImportOpenSimModel(Operator):
                             F_max = F_max,
                             pennation_angle = pennation_angle)    
 
+            # Dictionary to store indices and count occurrences
+            pre_wrap_indices_count = {} #we use this to track whether a muscle has a multi-object wrap
             
             if (enable_wrapping and muscle['path_wrap_data']): #if wrapping is enabled and the muscle has wrapping
-                
-                
+                                
                 for pathwrap in muscle['path_wrap_data']: #for each wrap in the muscle
                     
                     wrap_objname = pathwrap['wrap_object']
                     if wrap_objname in bpy.data.objects: #if the wrapping object actually exists
-                        muscle_obj = bpy.data.objects[muscle_name]
-                        #create a new geometry node for the curve, and set the node tree we just made
-                        geonode = muscle_obj.modifiers.new(name = muscle_name + '_wrap' + wrap_objname, type = 'NODES') #add modifier to curve
-                        geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_objname]
-                        #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
 
-                        #Ensure the last two modifiers are always the Visualization and then the bevel modifier
-                        n_modifiers = len(muscle_obj.modifiers)
-                        muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-3) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
+                        if wrap_objects[wrap_objname]['type'] == 'WrapCylinder':
+
+                            muscle_obj = bpy.data.objects[muscle_name]
+                            #create a new geometry node for the curve, and set the node tree we just made
+                            geonode = muscle_obj.modifiers.new(name = muscle_name + '_wrap' + wrap_objname, type = 'NODES') #add modifier to curve
+                            geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_objname]
+                            #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
+
+                            #Ensure the last two modifiers are always the Visualization and then the bevel modifier
+                            n_modifiers = len(muscle_obj.modifiers)
+                            muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-3) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
+                            
+                            ## Here we crudely estimate what the pre-wrap index should be. 
+                            # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
+                            
+                            wrap_obj_pos_glob = bpy.data.objects[wrap_objname].matrix_world.translation
+
+                            total_dist_to_wrap = []  #this is the summed distance between current point and next point to the wrap object center.
+                            for ind, point in enumerate(muscle['path_points_data'][:-1]): #loop through n points-1
+                                
+                                #if the current point and the next point are attached to the same body, they can't span the wrap, so we set distance to inf
+                                if point['parent_frame'] == muscle['path_points_data'][ind+1]['parent_frame']:
+                                    total_dist_to_wrap.append(np.inf)
+                                else:
+                                    dpoint0_wrap = (point['global_position']-wrap_obj_pos_glob).length #distance of current point to wrap
+                                    dpoint1_wrap = (muscle['path_points_data'][ind+1]['global_position']-wrap_obj_pos_glob).length #distance of next point to wrap
+                                    
+                                    #print(dpoint0_wrap)
+                                    #rint(dpoint1_wrap)
+                                    total_dist_to_wrap.append(dpoint0_wrap+dpoint1_wrap)
+                            
+                            index_of_pre_wrap_point = total_dist_to_wrap.index(min(total_dist_to_wrap)) +1 #get the index where the two points have minimal distance to the wrap, while also having different frames. Add 1 because the index count starts at 1
+                            geonode['Socket_6']  = index_of_pre_wrap_point #socket for setting the index
+
+                            # Track occurrences of index_of_pre_wrap_point
+                            pre_wrap_indices_count[index_of_pre_wrap_point] = pre_wrap_indices_count.get(index_of_pre_wrap_point, 0) + 1
 
 
+            ### Throw a warning about multi object wrapping
 
+            duplicates = [index for index, count in pre_wrap_indices_count.items() if count > 1]
+
+            if duplicates:
+                self.report({'WARNING'}, "Muscle with the name '" + muscle_name + "' has multiple wraps sharing the same pre-wrap index. Multiple wraps on one curve segment (without a path-point in between) will not give physically accurate results. See the Manual.")
+
+
+        ### Throw a warning about wrapped muscle quadrants
+        if enable_wrapping:
+            #check if any of the wrap objects have quadrants defined. That corresponds to MuSkeMo's Force Sided Wrap
+            target_chars = {'x', 'y', 'z'}
+            any_match = any(char in obj.get('quadrant', '') for obj in wrap_objects.values() for char in target_chars)
+            # Find the names of objects whose "quadrant" contains any of the target characters
+            matching_objects = [
+                name for name, obj in wrap_objects.items()
+                if any(char in obj.get('quadrant', '') for char in target_chars)
+            ]
+
+            # Join the names into a single string
+            matching_objects_str = ", ".join(matching_objects) 
+
+            if matching_objects:
+                self.report({'WARNING'}, "Wrapping objects '" + matching_objects_str + "' have wrapping quadrants defined. In MuSkeMo, this corresponds with the 'Force Sided Wrap' option. You may have to manually adjust 'Flip Wrap', 'Projection angle', and 'Index of pre wrap point'. See the Manual for details")
+
+        
+
+                        
         ### create contacts    
         for contact_name, contact in contact_data.items():
 
@@ -1076,8 +1139,6 @@ class ImportOpenSimModel(Operator):
                                pos_in_parent_frame=contact_pos_in_parent_frame,
                                is_global = True,
                                )
-
-       
 
        
         time2 = time.time()
