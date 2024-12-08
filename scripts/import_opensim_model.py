@@ -842,6 +842,8 @@ class ImportOpenSimModel(Operator):
         # import the wrapping node template
         enable_wrapping = bpy.context.scene.muskemo.enable_wrapping_on_import #does the user want to enable wrapping?
 
+        renamed_wrap_warning = False #for an if statement that triggers a warning
+
         if enable_wrapping: #if the user wants wrapping
             self.report({'WARNING'}, "Only cylinder wrapping is currently supported. It may be required to tune the wrapping settings after import, see the manual")
 
@@ -866,6 +868,15 @@ class ImportOpenSimModel(Operator):
                         
                         wrap_objects[wrap_name] = wrap_obj  #add to the dict of wrappers
                         
+                        #if the wraps have a non-unique name (e.g., same name as a body or a joint) MuSkeMo will have to assign a new name
+                        if wrap_name in bpy.data.objects:
+                            wrap_name_MuSkeMo =  wrap_name + '_wrap'  #add '_wrap' to the end if the name is non-unique
+                            renamed_wrap_warning = True #
+                        else:
+                            wrap_name_MuSkeMo =  wrap_name #otherwise use the original name
+                            
+
+                        wrap_objects[wrap_name]['wrap_name_MuSkeMo'] = wrap_name_MuSkeMo
 
                         wrap_type = wrap_obj['type']
                         wrap_position = wrap_obj.get('translation', [float('nan')] * 3)  # Translation in parent frame
@@ -914,7 +925,7 @@ class ImportOpenSimModel(Operator):
                             wrap_or_in_parent_frame_quat = quat_from_matrix(wrap_pRb)
 
                         # Create the wrap geometry using create_wrapgeom
-                        create_wrapgeom(name=wrap_name,
+                        create_wrapgeom(name=wrap_name_MuSkeMo,
                                         geomtype=geomtype,
                                         collection_name=wrap_colname,
                                         parent_body=body_name,
@@ -934,9 +945,9 @@ class ImportOpenSimModel(Operator):
                                 
 
                                 wrap_node_tree_new = wrap_node_tree_template.copy()
-                                wrap_node_tree_new.name = wrap_node_group_name + '_' + wrap_name
+                                wrap_node_tree_new.name = wrap_node_group_name + '_' + wrap_name_MuSkeMo
                                 #set the wrap object
-                                wrap_node_tree_new.interface.items_tree['Object'].default_value = bpy.data.objects[wrap_name] #the wrap geometry
+                                wrap_node_tree_new.interface.items_tree['Object'].default_value = bpy.data.objects[wrap_name_MuSkeMo] #the wrap geometry
 
                                 #set the cylinder radius
                                 wrap_node_tree_new.interface.items_tree['Wrap Cylinder Radius'].default_value = dimensions['radius']
@@ -966,7 +977,7 @@ class ImportOpenSimModel(Operator):
 
                                 elif wrap_obj['quadrant'] == 'all':
 
-                                    wrap_node_tree_new.interface.items_tree['Shorted Wrap'].default_value = True
+                                    wrap_node_tree_new.interface.items_tree['Shortest Wrap'].default_value = True
 
 
                                 else:
@@ -985,7 +996,18 @@ class ImportOpenSimModel(Operator):
 
                                 self.report({'WARNING'}, "Only cylinder wraps currently work in MuSkeMo. Other wrap objects can be imported for visualization, but they won't support wrapping.")
                             
+        if renamed_wrap_warning:
+            # Find the names of objects whose name is not equal to 'wrap_obj_name_MuSkeMo'
+            changed_name_objects = [
+                name for name, obj in wrap_objects.items()
+                if name != obj.get('wrap_name_MuSkeMo', '')
+            ]
 
+            # Join the names into a single string
+            changed_name_objects_str = ", ".join(changed_name_objects)
+            self.report({'WARNING'}, "Wrapping objects '" + changed_name_objects_str + "' had identical names to other existing model components (e.g. Joints). '_wrap' has been appended to their names to prevent conflicts.")
+
+            
            
         #### create muscles
             
@@ -1034,15 +1056,18 @@ class ImportOpenSimModel(Operator):
                                 
                 for pathwrap in muscle['path_wrap_data']: #for each wrap in the muscle
                     
-                    wrap_objname = pathwrap['wrap_object']
-                    if wrap_objname in bpy.data.objects: #if the wrapping object actually exists
+                    wrap_objname = pathwrap['wrap_object'] #get the wrap name defined in the muscle's pathwrap info
+
+                    wrap_obj_name_MuSkeMo = wrap_objects[wrap_objname]['wrap_name_MuSkeMo'] #get that wrapper's MuSkeMo name from the earlier defined dictionary
+
+                    if wrap_obj_name_MuSkeMo in bpy.data.objects: #if the wrapping object actually exists
 
                         if wrap_objects[wrap_objname]['type'] == 'WrapCylinder':
 
                             muscle_obj = bpy.data.objects[muscle_name]
                             #create a new geometry node for the curve, and set the node tree we just made
-                            geonode = muscle_obj.modifiers.new(name = muscle_name + '_wrap' + wrap_objname, type = 'NODES') #add modifier to curve
-                            geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_objname]
+                            geonode = muscle_obj.modifiers.new(name = muscle_name + '_wrap' + wrap_obj_name_MuSkeMo, type = 'NODES') #add modifier to curve
+                            geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_obj_name_MuSkeMo]
                             #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
 
                             #Ensure the last two modifiers are always the Visualization and then the bevel modifier
@@ -1052,7 +1077,7 @@ class ImportOpenSimModel(Operator):
                             ## Here we crudely estimate what the pre-wrap index should be. 
                             # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
                             
-                            wrap_obj_pos_glob = bpy.data.objects[wrap_objname].matrix_world.translation
+                            wrap_obj_pos_glob = bpy.data.objects[wrap_obj_name_MuSkeMo].matrix_world.translation
 
                             total_dist_to_wrap = []  #this is the summed distance between current point and next point to the wrap object center.
                             for ind, point in enumerate(muscle['path_points_data'][:-1]): #loop through n points-1
