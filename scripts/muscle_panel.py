@@ -282,7 +282,7 @@ class InsertMusclePointOperator(Operator):
         
         return {'FINISHED'}    
     
-class UpdateMuscleVizRadius(Operator):
+class UpdateMuscleVizRadiusOperator(Operator):
     bl_idname = "muscle.update_muscle_viz_radius"
     bl_label = "Update the muscle visualization radius of the muscle line segments (not the volumetric muscles)"
     bl_description = "Update the muscle visualization radius of the muscle line segments (not the volumetric muscles)"
@@ -302,7 +302,50 @@ class UpdateMuscleVizRadius(Operator):
         bpy.data.node_groups['SimpleMuscleNode'].nodes['Merge by Distance'].inputs['Distance'].default_value = muscle_visualization_radius * 0.13
         
         return {'FINISHED'}
+
+
+class AssignWrappingOperator(Operator):
+    bl_idname = "muscle.assign_wrapping"
+    bl_label = "Assign wrapping to the select muscle, after the specified point index (starting at 1). Currently only cylinders supported."
+    bl_description = "Assign wrapping to the select muscle, after the specified point index (starting at 1). Currently only cylinders supported."
     
+    def execute(self, context):
+
+        #insert_after = bpy.context.scene.muskemo.insert_point_after
+        
+        muscle_name = bpy.context.scene.muskemo.musclename
+        
+        active_obj = bpy.context.active_object  #should be the wrap object you want to assign
+        sel_obj = bpy.context.selected_objects  #should be the wrap object you want to assign
+
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one wrap geometry.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one wrap geometry.")
+            return {'FINISHED'}
+        
+        wrap_obj = sel_obj[0]
+        wrap_obj_name = wrap_obj.name
+
+        if 'MuSkeMo_type' in wrap_obj:
+            if 'WRAP' != bpy.data.objects[wrap_obj_name]['MuSkeMo_type']:
+                self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' is not a WRAP. Wrap assignment cancelled.")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' was not an object created by MuSkeMo. Wrap assignment cancelled")
+            return {'FINISHED'}      
+
+
+        for obj in sel_obj:
+            obj.select_set(False)
+
+        print(wrap_obj_name)
+
+        return {'FINISHED'}
 
 class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
 
@@ -386,9 +429,26 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         split.prop(muskemo, "reflection_plane", text = "")
         
         
+class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+
+    bl_idname = 'VIEW3D_PT_wrap_subpanel'
+    bl_label = "Wrapping"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_muscle_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
+    
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+
+        row = self.layout.row()
         
-        
-        #row = self.layout.row()
-        #self.layout.prop(muskemo, "musclename_string")
+        row.operator("muscle.assign_wrapping", text="Assign wrap object")
+
 
 
