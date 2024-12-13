@@ -12,6 +12,12 @@ To install: In Blender, go to Edit > preferences > Add-ons and then click "Insta
 
 **Download the [MuSkeMo user manual](https://github.com/PashavanBijlert/MuSkeMo/blob/main/MuSkeMo%20manual/MuSkeMo%20manual.pdf)**. This document is being updated and extended in preparation for the first full release (v1.0).
 
+# **Preprint**
+
+I am preparing a publication to submit for peer-review describing MuSkeMo. Until that is available, please cite the [preprint on bioRxiv](https://www.biorxiv.org/content/10.1101/2024.12.10.627828v1) if you used MuSkeMo for your work.
+
+PA van Bijlert. MuSkeMo: Open-source software to construct, analyze, and visualize human and animal musculoskeletal models and movements in Blender. bioRxiv (preprint) 2024.12.10.627828; doi: https://doi.org/10.1101/2024.12.10.627828 
+
 # **Inertial properties panel**
 
 Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
