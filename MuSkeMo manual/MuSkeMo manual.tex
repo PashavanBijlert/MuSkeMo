@@ -283,7 +283,7 @@ You can currently import bodies, joints, muscles, frames, and contacts, if they 
 
 MuSkeMo provides an OpenSim importer. This can import most of the components of an OpenSim model. Although the default behavior is to import models using local definitions, it is also possible to import models using global definitions (i.e., all the component positions are defined as their position in the global frame, and for joints specifically, transformations in parent and child are both set to the global position and orientation). Global definition import is probably only useful for models that were created using MuSkeMo's conversion script, using the "Global definitions" option.
 
-During import, cylinder wrapping is supported (see \nameref{sec:wrap}). MuSkeMo's wrapping definitions are different from OpenSim, and the importer tries to convert wrapping definitions. If the wrapping does not visualize correctly, it may be necessary to change the projection angle (combined with enabling "force wrap"), selecting "flip wrap", or "shortest wrap", depending on the situation. See \nameref{sec:wrap} for a full description of MuSkeMo's wrapping.
+During import, cylinder wrapping is supported (see \ref{musclewrapping} and \ref{sec:wrapgeom}). MuSkeMo's wrapping definitions are different from OpenSim, and the importer tries to convert wrapping definitions. If the wrapping does not visualize correctly, it may be necessary to change the projection angle (combined with enabling "force wrap"), selecting "flip wrap", or "shortest wrap", depending on the situation. See \ref{sec:musclewrapping} for a full description of MuSkeMo's wrapping.
 
 \textbf{Warning:} Blender does not allow \textit{any} object name to be reused. This means that all of your model components need to have unique names in MuSkeMo (so e.g., if a body is named 'shank\_r', and it has only one wrapping object, it till cannot be named 'shank\_r'. It would need a unique name such as 'shank\_wrap\_r'). If all components don't have unique names, the OpenSim importer may fail. The importer currently checks whether wrapping objects have non-unique names, but not other model components.
 
@@ -422,6 +422,16 @@ Similar to the simple muscle visualizations, volumetric muscle visualizations ar
 \item{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
 \end{itemize}
 
+
+\subsubsection{Muscle wrapping}
+\label{sec:musclewrapping}
+
+MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric wrapping, using a custom-designed Geometry node. The wrapping node will give a true tangent-curve solution as long as there is maximum of one wrapping object between each pair of subsequent muscle points. Garner et al. \cite{garnerObstacleSetMethodRepresenting2000} propose an iterative root finding method for multi-object wrapping between two curve points, which is currently very challenging to implement using Geometry nodes. \textbf{If you add multiple wrapping objects per pair of muscle points, MuSkeMo currently does not provide a true tangent curve solution, even though the wrapping can look mostly correct.} The wrapping will be correct as long as there is a curve point between two subsquent muscle-sections with a wrapping object.
+
+[Documentation about the wrapping settings to follow]
+
+
+
 \subsection{JOINT}
 
 A joint in MuSkeMo represents the connection between two rigid bodies, allowing them to articulate relative to each other. The joint position and orientation can be expressed in XYZ Euler angles or quaternions.
@@ -495,11 +505,13 @@ The underlying object types in Blender are regular meshes (UV Sphere, cylinder, 
 MuSkeMo implements two different sphere fitting algorithms, described in \cite{Jekel2016, yesudasanFastGeometricFit2015}. The cylinder fit algorithm was adapted from \cite{eberlyLeastSquaresFitting}. The ellipsoid fit algorithm \cite{semplePyEllipsoid_Fit} was provided courtesy of Mark Semple, who converted a Matlab implementation written by Yuri Petrov to Python. I modified it further to ensure right-handed coordinate systems.
 
 \subsection{WRAP}
-\label{sec:wrap}
+\label{sec:wrapgeom}
 
-% Wrapping objects defined in OpenSim models (but currently not yet Gaitsym models) are included in the model import. The underlying object types in Blender are regular meshes (UV Sphere, cylinder, ellipsoid).
+ Wrapping objects defined in OpenSim models (but currently not yet Gaitsym models) are included in the model import. Currently, WRAP objects are regular meshes just like GEOM\_PRIMITIVEs, but it is not straightforward to control aspects of the wrapping geometry (e.g., the cylinder radius) parametrically in regular meshes. To achieve parametric wrap geometry, WRAP geometry will soon be replaced with Geometry nodes that parametrically generate the desired object.
+ 
 
-% \textbf{MuSkeMo currently does not yet support physically accurate wrapping,} and only provides a very experimental setup as an option during import for model visualizations. When the option is selected during import, muscles get one extra geometry node modifier per wrapping interaction. The "wrapping" is currently achieved by a node setup that projects the section of the muscle inside the wrapping object in a 180 degree arc onto the wrapping surface. This is not a minimal-distance wrapping approach, and is thus not physically realistic, but could potentially be useful for visualizations. The direction of the wrapping can be changed by changing the projection angle - accessible in the node setup. 0\degree means the wrap is projected around the positive $x$-direction of the wrapping object's local coordinate system, and the angle is the local $z$-angle.
+ 
+ % \textbf{MuSkeMo currently does not yet support physically accurate wrapping,} and only provides a very experimental setup as an option during import for model visualizations. When the option is selected during import, muscles get one extra geometry node modifier per wrapping interaction. The "wrapping" is currently achieved by a node setup that projects the section of the muscle inside the wrapping object in a 180 degree arc onto the wrapping surface. This is not a minimal-distance wrapping approach, and is thus not physically realistic, but could potentially be useful for visualizations. The direction of the wrapping can be changed by changing the projection angle - accessible in the node setup. 0\degree means the wrap is projected around the positive $x$-direction of the wrapping object's local coordinate system, and the angle is the local $z$-angle.
 
 % Implementing physically accurate realtime wrapping is a challenge in Blender, because it seems that creating custom curve types is not currently possible. The most promising avenue appears to be using \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes}, but this comes with its own set of challenges because all of the logic needs to be implemented with nodes, and currently Blender does not have something equivalent to a "Scripted Expression" node. Thus, even a simple equation such as $ \sqrt{0.5x^2 + 3xy + \cos(x)} $ requires 8 nodes, and thus things can get very complicated rather quickly.
 
