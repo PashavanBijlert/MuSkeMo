@@ -1,0 +1,32 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: MuSkeMo
+message: >-
+  If you use this software in your projects, please cite it
+  as below
+type: software
+authors:
+  - given-names: Pasha A
+    family-names: van Bijlert
+    affiliation: Utrecht University & Naturalis Biodiversity Center
+    orcid: 'https://orcid.org/0000-0002-5567-7022'
+identifiers:
+  - type: doi
+    value: 10.1101/2024.12.10.627828
+repository-code: 'https://github.com/PashavanBijlert/MuSkeMo'
+abstract: >-
+  MuSkeMo is an open source tool for musculoskeletal
+  modelling and biomechanical analysis in Blender. Read the
+  preprint and the manual for more details.
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "van Bijlert"
+    given-names: "Pasha A"
+    orcid: 'https://orcid.org/0000-0002-5567-7022'
+  doi: '10.1101/2024.12.10.627828'
+  journal: "bioRxiv (preprint)"
+  title: "MuSkeMo: Open-source software to construct, analyze, and visualize human and animal musculoskeletal models and movements in Blender"
+  year: 2024
