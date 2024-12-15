@@ -352,7 +352,7 @@ class AssignWrappingOperator(Operator):
         ### inputs of the function should include all the inputs of the wrapping node as optional input
         #some settings for if I decide to rename node groups:
         cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
-        wrap_nodefilename = 'muscle_wrapper_v4.blend'  
+        wrap_nodefilename = 'muscle_wrapper_v5.blend'  
 
 
         if wrap_obj['wrap_type'].upper() == 'CYLINDER': #if it's a cylinder
