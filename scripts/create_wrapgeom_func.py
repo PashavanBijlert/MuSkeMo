@@ -24,8 +24,21 @@ def create_wrapgeom(name, geomtype, collection_name,
     if collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
         bpy.context.scene.collection.children.link(coll)     #add it to the scene
     
-    #Make sure the "contacts" collection is active
+    #Make sure the correct collection is active
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
+
+    ## check if material exists and if not, create it
+    matname = 'wrap_geom_material'
+    color = tuple(bpy.context.scene.muskemo.wrap_geom_color)
+    transparency = 0.5
+
+    ##### Assign a material
+    
+    if matname not in bpy.data.materials:   #if the material doesn't exist, get it
+        from .create_transparent_material_func import create_transparent_material
+        create_transparent_material(matname, color, transparency)
+
+    mat = bpy.data.materials[matname]
 
 
     if geomtype == 'Cylinder':
@@ -52,9 +65,94 @@ def create_wrapgeom(name, geomtype, collection_name,
         obj.id_properties_ui('cylinder_height').update(description = "Cylinder height in m")
 
 
-    bpy.context.object.name = name #set the name
-    bpy.context.object.data.name = name #set the name of the object data
-    obj = bpy.data.objects[name]
+        ### create a geometry node mesh cylinder so that the object dimensions become parametric.
+
+        ## first the node tree
+        obj_type = 'WrapCylinderGeometry' #name of the cylinder node tree.
+        if obj_type in bpy.data.node_groups: #check if the node tree exists, and if so, select it.
+            node_tree= bpy.data.node_groups[obj_type]
+            
+            
+        else: #if it doesn't exist, create it now.
+                
+            node_tree = bpy.data.node_groups.new('WrapCylinderGeometry','GeometryNodeTree')
+            #output socket
+            node_tree.interface.new_socket(name='Geometry', in_out='OUTPUT', socket_type='NodeSocketGeometry')
+            
+            #input socket
+            node_tree.interface.new_socket(name = "Radius", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+            node_tree.interface.new_socket(name = "Height", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+            
+            
+            group_output = node_tree.nodes.new(type='NodeGroupOutput')
+            group_output.location = (400, 0)
+            
+        
+        
+            group_input = node_tree.nodes.new(type='NodeGroupInput')
+            group_input.location = (-800, 0)
+
+            primitive_cylinder = node_tree.nodes.new(type='GeometryNodeMeshCylinder')
+            primitive_cylinder.location = (-600, 200)
+
+            set_material = node_tree.nodes.new(type='GeometryNodeSetMaterial')
+            set_material.location = (200, 0)
+            
+                
+            # Addobject info nodes
+            object_info = node_tree.nodes.new(type='GeometryNodeObjectInfo')
+            object_info.location = (-600, -100)
+            object_info.transform_space =  'RELATIVE'
+            
+            # Add a Self Object node
+            self_object = node_tree.nodes.new(type='GeometryNodeSelfObject')
+            self_object.location = (-800, -100)
+            
+            transform_geometry = node_tree.nodes.new(type='GeometryNodeTransform')
+            transform_geometry.location = (-200, 0)
+                        
+            # Link nodes
+            links = node_tree.links
+            
+            #link self object node to object info node
+            links.new(self_object.outputs['Self Object'], object_info.inputs['Object'])
+
+            # Link object info outputs to transform geometry
+            links.new(object_info.outputs['Location'], transform_geometry.inputs['Translation'])
+            links.new(object_info.outputs['Rotation'], transform_geometry.inputs['Rotation'])
+
+            # Link cylinder output to transform geometry
+            links.new(primitive_cylinder.outputs['Mesh'], transform_geometry.inputs['Geometry'])
+
+            # Update connection to set material
+            links.new(transform_geometry.outputs['Geometry'], set_material.inputs['Geometry'])
+            
+            
+            
+            #set output
+            links.new(set_material.outputs['Geometry'], group_output.inputs['Geometry'])
+
+            ## set material 
+            set_material.inputs['Material'].default_value = mat
+
+            
+        
+            # Link group inputs to the primitive cylinder
+            links.new(group_input.outputs['Radius'], primitive_cylinder.inputs['Radius'])
+            links.new(group_input.outputs['Height'], primitive_cylinder.inputs['Depth'])
+
+        ## nNow Add a Geometry Nodes modifier
+        modifier = obj.modifiers.new(name="WrapObjMesh", type='NODES')
+    
+        modifier.node_group = node_tree
+        
+        # Set the radius and depth in the modifier socket
+        modifier['Socket_1'] = dimensions['radius']
+        modifier['Socket_2'] = dimensions['height']
+
+    else: #if not a cylinder, skip for now.
+        return
+    
     obj.rotation_mode = 'ZYX'    #change rotation sequence
 
     obj['MuSkeMo_type'] = 'WRAP'    #to inform the user what type is created
@@ -101,17 +199,7 @@ def create_wrapgeom(name, geomtype, collection_name,
     
     #####
     #     
-    matname = 'wrap_geom_material'
-    color = tuple(bpy.context.scene.muskemo.wrap_geom_color)
-    transparency = 0.5
-
-    ##### Assign a material
     
-    if matname not in bpy.data.materials:   #if the material doesn't exist, get it
-        from .create_transparent_material_func import create_transparent_material
-        create_transparent_material(matname, color, transparency)
-
-    mat = bpy.data.materials[matname]
     obj.data.materials.append(mat)
 
     ### viewport display color

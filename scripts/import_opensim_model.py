@@ -1066,7 +1066,8 @@ class ImportOpenSimModel(Operator):
 
                             muscle_obj = bpy.data.objects[muscle_name]
                             #create a new geometry node for the curve, and set the node tree we just made
-                            geonode = muscle_obj.modifiers.new(name = muscle_name + '_wrap' + wrap_obj_name_MuSkeMo, type = 'NODES') #add modifier to curve
+                            geonode_name = muscle_name + '_wrap' + wrap_obj_name_MuSkeMo
+                            geonode = muscle_obj.modifiers.new(name = geonode_name, type = 'NODES') #add modifier to curve
                             geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_obj_name_MuSkeMo]
                             #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
 
@@ -1099,6 +1100,21 @@ class ImportOpenSimModel(Operator):
                             # Track occurrences of index_of_pre_wrap_point
                             pre_wrap_indices_count[index_of_pre_wrap_point] = pre_wrap_indices_count.get(index_of_pre_wrap_point, 0) + 1
 
+                            add_wrap_drivers = False
+                            ## try out adding a driver
+                            if add_wrap_drivers:
+                                driver_str = 'modifiers["' + geonode_name +'"]["Socket_3"]'
+                                driver = muscle_obj.driver_add(driver_str)
+
+                                var = driver.driver.variables.new()        #make a new variable
+                                var.name = geonode_name + '_' + wrap_obj_name_MuSkeMo + '_var'            #give the variable a name
+
+                                #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+
+                                var.targets[0].id = bpy.data.objects[wrap_obj_name_MuSkeMo] #set the id to target object
+                                var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
+
+                                driver.driver.expression = var.name  
 
             ### Throw a warning about multi object wrapping
 
