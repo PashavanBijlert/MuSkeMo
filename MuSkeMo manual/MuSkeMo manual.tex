@@ -434,7 +434,15 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 
 [Documentation about the wrapping settings to follow]
 
-% Projection direction tries to 
+% Projection affects flips the wrap in two situations
+% 1) If force wrap is on, using a dot product, we find the clostest point between the wrap object center (2D projection) and the wrap crossing line.
+% If this points in the same general direction as the projection direction (second dot product), then the wrap is active 
+% 2) Take a vector frome pre to post wrapping point, in the wrapping frame. The arctan2 gives the phi_angle this is pointing in. If this angle is between 0 and pi (so in the first or second quadrant), we flip the wrap. This is assuming a projection angle of 0 (so the projection is in local X dir.). The projection angle shifts the relevant quadrants. So we compute if (phi_angle - proj angle ) is between 0 and pi.
+
+%shortest wrap uses a cross product between the wrap crossing points, then computes the dot product between that vector and the cylinder z-axis. This is used to flip the wrap if required.
+
+
+
 
 \subsection{JOINT}
 
