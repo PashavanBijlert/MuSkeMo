@@ -397,7 +397,7 @@ class AssignWrappingOperator(Operator):
 
             ## create a modifier for the muscle and set this node group
             muscle_obj = bpy.data.objects[muscle_name]
-            geonode_name = muscle_name + '_wrap' + wrap_obj_name
+            geonode_name = muscle_name + '_wrap_' + wrap_obj_name
             if geonode_name in muscle_obj.modifiers: #if the object already has this wrap, we quit the code
                 self.report({'ERROR'}, "Wrap object with name '" + wrap_obj_name + "' is already assigned to the MUSCLE with name '" + muscle_name + "'. Wrap assignment cancelled")
                 return {"FINISHED"}
@@ -413,6 +413,13 @@ class AssignWrappingOperator(Operator):
                 n_modifiers = len(muscle_obj.modifiers)
                 muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-3) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
                 
+                ## Add the muscle to the target_muscles property of the wrap object
+                if wrap_obj['target_muscles'] == 'not_assigned': #if the wrap currently has no wrap assigned, assign it
+                    wrap_obj['target_muscles'] = muscle_name + ';'
+
+                else: #else, we add it to the end
+                    wrap_obj['target_muscles'] = wrap_obj['target_muscles'] +  muscle_name + ';'
+
                 ## Here we crudely estimate what the pre-wrap index should be. 
                 # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
                 ''' 

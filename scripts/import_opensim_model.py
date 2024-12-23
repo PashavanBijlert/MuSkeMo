@@ -1061,15 +1061,25 @@ class ImportOpenSimModel(Operator):
                     wrap_obj_name_MuSkeMo = wrap_objects[wrap_objname]['wrap_name_MuSkeMo'] #get that wrapper's MuSkeMo name from the earlier defined dictionary
 
                     if wrap_obj_name_MuSkeMo in bpy.data.objects: #if the wrapping object actually exists
+                        
+                        wrap_obj = bpy.data.objects[wrap_obj_name_MuSkeMo]
 
                         if wrap_objects[wrap_objname]['type'] == 'WrapCylinder':
 
                             muscle_obj = bpy.data.objects[muscle_name]
                             #create a new geometry node for the curve, and set the node tree we just made
-                            geonode_name = muscle_name + '_wrap' + wrap_obj_name_MuSkeMo
+                            geonode_name = muscle_name + '_wrap_' + wrap_obj_name_MuSkeMo
                             geonode = muscle_obj.modifiers.new(name = geonode_name, type = 'NODES') #add modifier to curve
                             geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_obj_name_MuSkeMo]
                             #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
+
+                            ## Add the muscle to the target_muscles property of the wrap object
+                            if wrap_obj['target_muscles'] == 'not_assigned': #if the wrap currently has no wrap assigned, assign it
+                                wrap_obj['target_muscles'] = muscle_name + ';'
+
+                            else: #else, we add it to the end
+                                wrap_obj['target_muscles'] = wrap_obj['target_muscles'] +  muscle_name + ';'   
+                            
 
                             #Ensure the last two modifiers are always the Visualization and then the bevel modifier
                             n_modifiers = len(muscle_obj.modifiers)

@@ -107,7 +107,7 @@ def create_body(name, size, self,
     
     # Add geometry property
     obj['Geometry'] = Geometry
-    obj.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes). Optional')  
+    obj.id_properties_ui('Geometry').update(description = 'Attached geometry for visualization (eg. bone meshes). Optional. Delimited by ";"')  
 
     #add local frame property
     obj['local_frame'] = local_frame

@@ -172,6 +172,9 @@ def create_wrapgeom(name, geomtype, collection_name,
     obj.id_properties_ui('or_in_parent_frame_quat').update(description='Wrap geometry orientation quaternion decomposition in the parent body anatomical (local) reference frame (w, x, y, z). Optional.')
 
 
+    obj['target_muscles'] = 'not_assigned'
+    obj.id_properties_ui('target_muscles').update(description='Muscles that are affected by this wrapping object. Delimited by ";"')
+
     bpy.ops.object.select_all(action='DESELECT') 
 
 

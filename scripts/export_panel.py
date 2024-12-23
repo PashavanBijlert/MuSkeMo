@@ -224,6 +224,33 @@ class ExportMusclesOperator(Operator, ExportHelperCustom): #inherits from Export
         write_muscles(context, self.filepath, muscle_colname, delimiter, self.number_format)
         return {'FINISHED'}
 
+## export wrapping objects
+
+
+class ExportWrappingOperator(Operator, ExportHelperCustom): #inherits from ExportHelperCustom class
+    bl_description = "Export all the wrapping objects from the designated collection to a csv or other text file"
+    bl_idname = "export.export_wrapping"
+    bl_label = "Export wrap objects"
+
+   
+    
+    def invoke(self, context, event):
+        
+        self.default_filename = bpy.context.scene.muskemo.wrap_geom_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
+
+        return super().invoke(context, event)
+        
+    
+    
+    def execute(self, context):
+        from .write_wrapping_func import write_wrapping
+       
+        delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
+        muscle_colname = bpy.context.scene.muskemo.wrap_geom_collection
+        
+        
+        write_wrapping(context, self.filepath, muscle_colname, delimiter, self.number_format)
+        return {'FINISHED'}
 
 ## export inertial properties
 class ExportMeshInPropsOperator(Operator, ExportHelperCustom): #inherits from ExportHelperCustom class
@@ -455,6 +482,24 @@ class VIEW3D_PT_export_muscles_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         split2 = split1.split(factor=0.5)
         split2.prop(muskemo, "muscle_collection", text="")
         split2.operator("export.export_muscles", text="Export muscles")
+
+
+## Export wrap objects subpanel
+class VIEW3D_PT_export_wrapping_subpanel(VIEW3D_PT_MuSkeMo, Panel):
+    bl_idname = 'VIEW3D_PT_export_wrapping_subpanel'
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export wrap objects"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        muskemo = context.scene.muskemo
+        row = layout.row()
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "wrap_geom_collection", text="")
+        split2.operator("export.export_wrapping", text="Export wrap objects")        
 
 ## Export mesh inertial properties subpanel
 class VIEW3D_PT_export_mesh_inprops_subpanel(VIEW3D_PT_MuSkeMo, Panel):
