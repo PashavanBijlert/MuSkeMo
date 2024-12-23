@@ -487,6 +487,7 @@ if ~isempty(muscles_file)% if the muscles file is not empty
     end
 end
 
+model.finalizeConnections();
 
 
 
@@ -547,12 +548,80 @@ end
 %% Define wrapping in a loop
 
 if ~isempty(wrapping_file)% if the muscles file is not empty
+    
     for i = 1:height(wrapping_data)
+        % add the wrap object
+
+        name = wrapping_data.WRAP_name{i};
+        type = lower(wrapping_data.WRAP_type{i});
+        
+        if strcmp(type,'cylinder') %for now only support cylinders
+
+            wrapobj = WrapCylinder();
+            wrapobj.set_radius(wrapping_data.dimension1(i));
+            wrapobj.set_length(wrapping_data.dimension2(i));
+            %wrapobj.set_quadrant('-x'); %to be modified later
+
+        end
+
+        wrapobj.setName(name);
+        if strcmp(global_or_local,'global')
+            % global pos
+            pos_glob_indices = find(contains(wrapping_data.Properties.VariableNames,'pos') & contains(wrapping_data.Properties.VariableNames,'global'));
+            wrapping_pos_glob = wrapping_data{i,pos_glob_indices};
+
+            wrap_position = ArrayDouble.createVec3(wrapping_pos_glob); %vec3 of the wrap obj
+
+            % global orientation
+            ind_or_glob = (find(contains(wrapping_data.Properties.VariableNames, 'or') & contains(wrapping_data.Properties.VariableNames, 'global') &  contains(wrapping_data.Properties.VariableNames, 'euler')));
+            wrapping_or_glob = wrapping_data{i,ind_or_glob};
+
+            wrap_orientation = ArrayDouble.createVec3(wrapping_or_glob);  %global orientation
+
+        elseif strcmp(global_or_local,'local')
+            % local pos
+            pos_loc_indices = find(contains(wrapping_data.Properties.VariableNames,'pos') & contains(wrapping_data.Properties.VariableNames,'local'));
+            wrapping_pos_loc= wrapping_data{i,pos_loc_indices};
+
+            wrap_position = ArrayDouble.createVec3(wrapping_pos_loc); %vec3 of the contact
+
+            % local orientation
+            ind_or_loc = (find(contains(wrapping_data.Properties.VariableNames, 'or') & contains(wrapping_data.Properties.VariableNames, 'local') &  contains(wrapping_data.Properties.VariableNames, 'euler')));
+            wrapping_or_loc = wrapping_data{i,ind_or_loc};
+
+            wrap_orientation = ArrayDouble.createVec3(wrapping_or_loc);  %local orientation
 
 
-    end        
+        end
+        wrapobj.set_translation(wrap_position);
+        wrapobj.set_xyz_body_rotation(wrap_orientation);
 
-end    
+        wrap_parent_body = model.getBodySet.get(wrapping_data.parent_body{i});
+
+        wrapobj.setFrame(wrap_parent_body); %set the parent body as the wrap frame
+        wrap_parent_body.addWrapObject(wrapobj); %add the wrap to the body
+
+        % create a pathwrap, and loop through target muscles to add it
+        
+        pathwrap = PathWrap();
+        pathwrap.setName([name '_PathWrap']);
+        pathwrap.setWrapObject(wrapobj);
+        
+        
+        target_musc = strsplit(wrapping_data.target_muscles{i},';'); %split according to ;
+        target_musc = target_musc(strlength(target_musc) > 0); %remove the empty cell, this is a cell array with the target muscles
+
+        for tm = 1:length(target_musc) %add the pathwraps to the muscles
+            
+            model.getMuscles.get(target_musc{tm}).getGeometryPath.getWrapSet.cloneAndAppend(pathwrap);
+            model.finalizeConnections();
+        end
+
+
+
+    end
+
+end
 if ~isempty(contacts_file)% if the muscles file is not empty
     
     %% Make a Contact plane
