@@ -13,11 +13,12 @@ uibutton(fig, 'Position', [450 540 50 22], 'Text', 'Browse', 'ButtonPushedFcn', 
 
 
 % Data File Selection
-DatafileLabels = {'Bodies', 'Joint Centers', 'Muscles (optional)', 'Contacts (optional)', 'Frames (optional)'};
+DatafileLabels = {'Bodies', 'Joint Centers', 'Muscles (optional)', 'Wrap objects (optional)', 'Contacts (optional)', 'Frames (optional)'};
 
 datafileTooltips = {'Bodies file';
     'Joint centers file (optional)';
     'Muscles file (optional)';
+    'Wrap objects file (optional)';
     'Contacts file (optional)';
     'Frames file (optional. Required if you want a locally-defined model'};
 datafileFields = cell(1, length(DatafileLabels));
@@ -31,29 +32,29 @@ end
 
 
 % Model Name
-uilabel(fig, 'Position', [30 300 100 22], 'Text', 'Model Name');
-modelNameField = uieditfield(fig, 'text', 'Position', [200 300 200 22]);
+uilabel(fig, 'Position', [30 260 100 22], 'Text', 'Model Name');
+modelNameField = uieditfield(fig, 'text', 'Position', [200 260 200 22]);
 modelNameField.Tooltip = 'Model name in OpenSim';
 
 % Filename
-uilabel(fig, 'Position', [30 260 100 22], 'Text', 'Filename');
-filenameField = uieditfield(fig, 'text', 'Position', [200 260 200 22]);
+uilabel(fig, 'Position', [30 220 100 22], 'Text', 'Filename');
+filenameField = uieditfield(fig, 'text', 'Position', [200 220 200 22]);
 filenameField.Tooltip = 'File name of the .osim model file.';
 
 % Version
-uilabel(fig, 'Position', [30 220 100 22], 'Text', 'Version');
-versionField = uieditfield(fig, 'text', 'Position', [200 220 200 22],'Value','v1');
+uilabel(fig, 'Position', [30 180 100 22], 'Text', 'Version');
+versionField = uieditfield(fig, 'text', 'Position', [200 180 200 22],'Value','v1');
 versionField.Tooltip = 'Designate the version number here';
 
 % Global or Local
-uilabel(fig, 'Position', [30 180 100 22], 'Text', 'Global or Local');
-globalOrLocalDropdown = uidropdown(fig, 'Position', [200 180 200 22], 'Items', {'global', 'local'});
+uilabel(fig, 'Position', [30 140 100 22], 'Text', 'Global or Local');
+globalOrLocalDropdown = uidropdown(fig, 'Position', [200 140 200 22], 'Items', {'global', 'local'});
 globalOrLocalDropdown.Tooltip = {'Do you want the model defined in global or local coordinates?';
     'Local coordinates require local / anatomical reference frames to be defined'};
 
 % Export NoMusc Version
-uilabel(fig, 'Position', [30 140 150 22], 'Text', 'Export NoMusc Version');
-exportNoMuscDropdown = uidropdown(fig, 'Position', [200 140 200 22], 'Items', {'yes', 'no'},'Value','no');
+uilabel(fig, 'Position', [30 100 150 22], 'Text', 'Export NoMusc Version');
+exportNoMuscDropdown = uidropdown(fig, 'Position', [200 100 200 22], 'Items', {'yes', 'no'},'Value','no');
 exportNoMuscDropdown.Tooltip = 'Export a version without muscles. Can be useful for debugging';
 
 
@@ -103,8 +104,9 @@ ModelInfoStruct.model_dir = modelDirField.Value;
 ModelInfoStruct.bodies_file = datafileFields{1}.Value;
 ModelInfoStruct.joints_file = datafileFields{2}.Value;
 ModelInfoStruct.muscles_file = datafileFields{3}.Value;
-ModelInfoStruct.contacts_file = datafileFields{4}.Value;
-ModelInfoStruct.frame_file = datafileFields{5}.Value;
+ModelInfoStruct.wrapping_file = datafileFields{4}.Value;
+ModelInfoStruct.contacts_file = datafileFields{5}.Value;
+ModelInfoStruct.frame_file = datafileFields{6}.Value;
 ModelInfoStruct.model_name = modelNameField.Value;
 ModelInfoStruct.filename = filenameField.Value;
 ModelInfoStruct.version = versionField.Value;

@@ -3,11 +3,11 @@ function CreateOpenSimModelFunc(ModelInfoStruct)
 %input. ModelInfoStruct needs the following fields:
 
 
-
 model_dir = ModelInfoStruct.model_dir;  %path to the directory that contains the MuSkeMo outputs
 bodies_file = ModelInfoStruct.bodies_file; %MuSkeMo Body filename. e.g. 'Bodies.csv'
 joints_file = ModelInfoStruct.joints_file; %MuSkeMo Joints filename e.g. 'Joint centers.csv'
 muscles_file = ModelInfoStruct.muscles_file; %MuSkeMo Muscles filename e.g. 'Muscles.csv'
+wrapping_file = ModelInfoStruct.wrapping_file; % MuSkeMo wrapping filename e.g. 'Wrapping geometry.csv'
 contacts_file = ModelInfoStruct.contacts_file; %MuSkeMo contacts filename e.g. 'Contacts.csv'
 frame_file = ModelInfoStruct.frame_file; %MuSkeMo framesfilename e.g. 'Frames.csv' %only required if global_or_local == 'local'
 model_name = ModelInfoStruct.model_name; %Model name in OpenSim
@@ -43,10 +43,16 @@ disp(['Global or Local: ', global_or_local]);
 disp(['Export NoMusc Version: ', export_nomusc_version]);
 
 
-% Load the Moco libraries
+% Load the OpenSim libraries
 import org.opensim.modeling.*;
 
-
+try
+    Model()
+catch
+    error(['This script requires the OpenSim API installed in Matlab. ' ...
+        'Follow the instructions here: ' ...
+        'https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab.'])
+end
 
 %% Import model data
 
@@ -108,6 +114,11 @@ if ~isempty(muscles_file)% if the muscles file is not empty
     % Get the unique muscle names
     muscle_names = unique(muscle_names);
 end
+
+if ~isempty(wrapping_file)% if the muscles file is not empty
+    wrapping_data = readtable([model_dir '/' wrapping_file],'VariableNamingRule','preserve');
+end
+
 
 if ~isempty(contacts_file)% if the contacts file is not empty
     contacts_data = readtable([model_dir '/' contacts_file],'VariableNamingRule','preserve');
@@ -476,6 +487,9 @@ if ~isempty(muscles_file)% if the muscles file is not empty
     end
 end
 
+
+
+
 %%
 % % % % %
 % % % % % %% Define ligaments in a loop
@@ -529,6 +543,16 @@ end
 % % % % %
 % % % % % end
 % % % % %
+
+%% Define wrapping in a loop
+
+if ~isempty(wrapping_file)% if the muscles file is not empty
+    for i = 1:height(wrapping_data)
+
+
+    end        
+
+end    
 if ~isempty(contacts_file)% if the muscles file is not empty
     
     %% Make a Contact plane
