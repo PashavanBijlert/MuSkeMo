@@ -10,7 +10,7 @@ def create_simple_muscle_node_group():
 
     # Set locations for Group Input and Output nodes
     group_input.location = (-400, 0)
-    group_output.location = (600, 0)
+    group_output.location = (800, 0)
 
     # Create input sockets for the Curve and Radius directly in the node group
     muscle_node_group.interface.new_socket(name='Curve', description="", in_out='INPUT', socket_type='NodeSocketGeometry', parent=None)  # Create a Curve input socket
@@ -26,7 +26,7 @@ def create_simple_muscle_node_group():
 
     # Create Curve Circle node
     curve_circle = muscle_node_group.nodes.new('GeometryNodeCurvePrimitiveCircle')
-    curve_circle.location = (200, -200)
+    curve_circle.location = (0, -200)
     curve_circle.mode = 'RADIUS'  # Set mode to radius
     curve_circle.inputs['Resolution'].default_value = 16  # Set resolution to 16
 
@@ -41,8 +41,22 @@ def create_simple_muscle_node_group():
     set_shade_smooth.location = (600, 0)
     set_shade_smooth.inputs['Shade Smooth'].default_value = True  # Enable shade smooth
 
+    ### to be able to compute the length of the curve, we need to compute the length and store it as a named attribute.
+    # Create store named attribute node
+    named_attribute = muscle_node_group.nodes.new('GeometryNodeStoreNamedAttribute')
+    named_attribute.location = (0,0)
+    named_attribute.inputs['Name'].default_value = 'length'
+
+    # Create curve length node
+    curve_length = muscle_node_group.nodes.new('GeometryNodeCurveLength')
+    curve_length.location = (-200, -200)
+
+
     # Link the nodes: Group Input -> Curve to Mesh -> Merge by Distance -> Set Shade Smooth -> Group Output
-    muscle_node_group.links.new(group_input.outputs['Curve'], curve_to_mesh.inputs['Curve'])  # Curve link
+    muscle_node_group.links.new(group_input.outputs['Curve'], named_attribute.inputs['Geometry']) 
+    muscle_node_group.links.new(named_attribute.outputs['Geometry'],curve_to_mesh.inputs['Curve'])  # Curve link
+    muscle_node_group.links.new(group_input.outputs['Curve'], curve_length.inputs['Curve'])
+    muscle_node_group.links.new(curve_length.outputs['Length'], named_attribute.inputs['Value'])    #link the length into the named attribute so that we can call it outside the node
     muscle_node_group.links.new(group_input.outputs['Radius'], curve_circle.inputs['Radius'])  # Radius link
     muscle_node_group.links.new(curve_circle.outputs['Curve'], curve_to_mesh.inputs['Profile Curve'])
     muscle_node_group.links.new(curve_to_mesh.outputs['Mesh'], merge_by_distance.inputs['Geometry'])  # Connect Curve to Mesh to Merge by Distance
