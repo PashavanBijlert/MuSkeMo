@@ -559,3 +559,34 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
 
 
 
+class VIEW3D_PT_moment_arm_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+    bl_idname = 'VIEW3D_PT_moment_arm_subpanel'
+    bl_label = "Moment arms"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_muscle_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
+    
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+
+        row = self.layout.row()
+        
+        #row.operator("muscle.assign_wrapping", text="Assign wrap object")
+        row = self.layout.row()
+        row.prop(muskemo, "active_joint_1")
+
+        row = self.layout.row()
+        row.prop(muskemo, "joint_1_dof")
+
+        row = self.layout.row()
+        row.prop(muskemo, "joint_1_ranges")
+
+        row = self.layout.row()
+        row.prop(muskemo, "angle_step_size")
+

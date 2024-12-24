@@ -178,6 +178,45 @@ class MuSkeMoProperties(PropertyGroup):
         ) 
 
 
+# moment arms subpanel
+
+    active_joint_1: StringProperty(
+        name="Active Joint 1",
+        description="The name of the joint that will be rotated for moment arm computations",
+        default="",
+        maxlen=1024,
+        )
+    
+
+    joint_1_dof: EnumProperty(
+        name="Joint 1 DOF",
+        description="Which (local) rotational degree of freedom of Active Joint 1 are you interested in for the moment arm computation?",
+        items=[ ('Rx', "Rx", ""),
+                ('Ry', "Ry", ""),
+                ('Rz', "Rz", ""),
+              ],
+        default = "Rz",
+        )
+    
+    joint_1_ranges: IntVectorProperty(
+          name="Joint 1 ranges",
+        size=2,  #
+        default=(0,0),
+        description="Min and max joint angles (in degrees) for Active Joint 1, between which you would like to compute the moment arm."
+        )
+    
+    angle_step_size: FloatProperty(
+        name = "Angle step size",
+        description="Step size (in degrees) of the joint angle for the moment arm computations. Lower is slower.",
+        default = 0.1,
+        min = 0.0000001,
+        max = 1
+        )    
+    
+
+
+
+
 #### Inertial properties panel
 
     segment_density: FloatProperty(

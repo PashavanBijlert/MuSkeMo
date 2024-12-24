@@ -71,7 +71,8 @@ from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJoint
 from .scripts.muscle_panel import (AddMusclepointOperator, ReflectUnilateralMusclesOperator,
                                       InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                       AssignWrappingOperator,
-                                      VIEW3D_PT_muscle_panel,VIEW3D_PT_wrap_subpanel,)
+                                      VIEW3D_PT_muscle_panel,VIEW3D_PT_wrap_subpanel,
+                                      VIEW3D_PT_moment_arm_subpanel,)
 
 
 #### inertial properties panel
@@ -185,6 +186,7 @@ classes = (  #Global settings panel
                                     InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                     AssignWrappingOperator,
                                     VIEW3D_PT_muscle_panel,VIEW3D_PT_wrap_subpanel,
+                                    VIEW3D_PT_moment_arm_subpanel,
             #export panel
                                     VIEW3D_PT_export_panel, VIEW3D_PT_export_bodies_subpanel,
                                     VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,
