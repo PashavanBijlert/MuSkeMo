@@ -2,7 +2,7 @@
 # give Python access to Blender's functionality
 import bpy
 from mathutils import Vector
-
+from math import nan
 
 from bpy.types import (Panel,
                         Operator,
@@ -305,6 +305,50 @@ class UpdateMuscleVizRadiusOperator(Operator):
         
         return {'FINISHED'}
 
+class CreateWrappingGeometryOperator(Operator):
+    bl_idname = "muscle.create_wrapping_geometry"
+    bl_label = "Create a wrapping geometry object which can be assigned to a muscle."
+    bl_description = "Create a wrapping geometry object which can be assigned to a muscle."
+
+    def execute(self, context):
+
+        muskemo = bpy.context.scene.muskemo
+        name = muskemo.wrap_geom_name
+        wrap_geom_type = muskemo.wrap_geom_type
+        collection_name = muskemo.wrap_geom_collection
+
+        if not name:
+            self.report({'ERROR'}, "Fill in a desired wrapping geometry name before creating one. Operation aborted")
+            return {'FINISHED'} 
+        
+        if name in bpy.data.objects:
+            self.report({'ERROR'}, "Object with the name '" + name + "' already exists in the Blender scene. Please choose a unique name for this wrapping geometry. Operation aborted")
+            return {'FINISHED'} 
+    
+        from .create_wrapgeom_func import create_wrapgeom
+
+        if wrap_geom_type == 'Cylinder':
+
+            
+            geomtype = 'Cylinder'
+
+            dimensions = {}
+            dimensions['radius'] = 0.05
+            dimensions['height'] = 0.1
+
+            create_wrapgeom(name, geomtype, collection_name,
+                    parent_body='not_assigned', 
+                    pos_in_global=[nan] * 3,
+                    or_in_global_XYZeuler=[nan] * 3, 
+                    or_in_global_quat=[nan] * 4,
+                    pos_in_parent_frame=[nan] * 3,
+                    or_in_parent_frame_XYZeuler=[nan] * 3, 
+                    or_in_parent_frame_quat=[nan] * 4,
+                    dimensions = dimensions,
+                    )
+            
+        muskemo.wrap_geom_name = "" #reset the name after object creation.   
+        return {'FINISHED'}
 
 class AssignWrappingOperator(Operator):
     bl_idname = "muscle.assign_wrapping"
@@ -554,8 +598,28 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
 
 
         row = self.layout.row()
+
+        row = self.layout.row()
+        split = row.split(factor=1/2)
+        split.label(text = "Wrap Geometry Collection")
+        split.prop(muskemo, "wrap_geom_collection", text = "")
+
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.label(text = 'Desired Geometry name')
+        split.prop(muskemo, "wrap_geom_name", text = "")
+
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.label(text = 'Desired Geometry type')
+        split.prop(muskemo, "wrap_geom_type", text = "")
         
-        row.operator("muscle.assign_wrapping", text="Assign wrap object")
+        
+        row = self.layout.row()
+        row.operator("muscle.create_wrapping_geometry", text="Create wrapping geometry")
+
+        row = self.layout.row()
+        row.operator("muscle.assign_wrapping", text="Assign wrap to muscle")
 
 
 

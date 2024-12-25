@@ -177,6 +177,20 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen = 1024,
         ) 
 
+    wrap_geom_type: EnumProperty(
+        name="Wrapping geometry type",
+        description="What type of geometry would you like to create?",
+        items=[ ('Cylinder', "Cylinder", ""),
+                  ],
+        default = "Cylinder",
+        )
+    
+    wrap_geom_name: StringProperty(
+        name = "Wrap Geometry Name",
+        description="Desired name of the wrapping geometry that you would like to create.",
+        default = "",
+        maxlen = 1024,
+        )
 
 # moment arms subpanel
 

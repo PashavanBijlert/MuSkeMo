@@ -235,6 +235,15 @@ If the volumetric visualization option is used for the muscles, visualization pa
 This feature reflects left- or right-sided muscles if currently only one of the two sides exists in the "Muscles" collection. You can choose what plane across which to reflect (default = 'XY'), and change the strings with which you designate the left and right sides (default is '\_l' and '\_r', respectively). The script then checks for all muscles whether its other-side counterpart exists, and if not, creates it. \textbf{Warning:} This function uses a string search to check whether the side string is in the object's name. This can potentially cause conflicts (e.g., the name "dorsal\_rib\_l" contains both '\_l' and '\_r').
 
 
+
+%Assign wrap?
+
+\subsubsection{Moment arms}
+%how to use the basic functionality to compute for a single dof single muscle
+%exporting functionality? Or split that off to export panel?
+%how to plot
+%example figure of difference in my emu, made using an automated script that will be dumped in the utilities folder
+
 \subsection{Anatomical \& local reference frames panel}
 
 Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. Local reference frames have a position and an orientation with respect to the global reference frame. If the global frame is denoted with the letter \(\mathcal{G}\), then the position of an arbitrary frame in the global reference frame can be written as the following vector: \(\vec{v}_{\mathcal{G}}\). Internally, orientations are stored through rotation matrices. The rotation matrix that rotates a vector from the local \(\mathcal{B}\)-frame to the global \(\mathcal{G}\)-frame can be written as: \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\).
