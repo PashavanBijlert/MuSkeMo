@@ -581,8 +581,7 @@ class VIEW3D_PT_import_OpenSim_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
         scene = context.scene
         muskemo = scene.muskemo
         row = layout.row()
-        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
-
+        
         row = layout.row()
         
         row.operator("import.import_opensim_model",text = 'Import OpenSim model')
@@ -592,10 +591,15 @@ class VIEW3D_PT_import_OpenSim_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
         split.label(text = 'Model Import Style')
         split.prop(muskemo, "model_import_style", text="")
         
+        row = layout.row()
+        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
+
         
         row = layout.row()
         row.prop(muskemo, "enable_wrapping_on_import") #boolean, yes or no
         
+        row = self.layout.row()
+        row.prop(muskemo, 'parametric_wraps', text = "Parametric wraps")
         return   
 
 

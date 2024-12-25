@@ -534,6 +534,7 @@ class AssignWrappingOperator(Operator):
         cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
         wrap_nodefilename = 'muscle_wrapper_v5.blend'  
 
+        parametric_wraps = bpy.context.scene.muskemo.parametric_wraps
 
         if wrap_obj['wrap_type'].upper() == 'CYLINDER': #if it's a cylinder
             
@@ -599,6 +600,39 @@ class AssignWrappingOperator(Operator):
 
                 else: #else, we add it to the end
                     wrap_obj['target_muscles'] = wrap_obj['target_muscles'] +  muscle_name + ';'
+
+
+                ## Add a driver
+                if parametric_wraps:
+
+                    #radius
+                    driver_str = 'modifiers["' + geonode_name +'"]["Socket_3"]' #wrap geonode cylinder radius socket
+                    driver = muscle_obj.driver_add(driver_str)
+
+                    var = driver.driver.variables.new()        #make a new variable
+                    var.name = geonode_name + '_' + wrap_obj_name + '_rad_var'            #give the variable a name
+
+                    #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+
+                    var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
+                    var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
+
+                    driver.driver.expression = var.name
+
+                    #height
+                    driver_str = 'modifiers["' + geonode_name +'"]["Socket_4"]' #wrap geonode cylinder height socket
+                    driver = muscle_obj.driver_add(driver_str)
+
+                    var = driver.driver.variables.new()        #make a new variable
+                    var.name = geonode_name + '_' + wrap_obj_name + '_height_var'            #give the variable a name
+
+                    #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+
+                    var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
+                    var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
+
+                    driver.driver.expression = var.name
+
 
                 ## Here we crudely estimate what the pre-wrap index should be. 
                 # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
@@ -839,6 +873,9 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
         row.operator("muscle.assign_wrapping", text="Assign muscle wrap")
         row.operator("muscle.clear_wrapping", text="Clear muscle wrap")
 
+
+        row = self.layout.row()
+        row.prop(muskemo, 'parametric_wraps', text = "Parametric wraps")
 
 
 class VIEW3D_PT_moment_arm_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
