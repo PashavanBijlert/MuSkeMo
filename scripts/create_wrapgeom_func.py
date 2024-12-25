@@ -146,12 +146,6 @@ def create_wrapgeom(name, geomtype, collection_name,
         obj.id_properties_ui('wrap_type').update(description = "The type of wrapping object")
 
 
-        obj['cylinder_radius'] = dimensions['radius']    #to inform the user what type is created
-        obj.id_properties_ui('cylinder_radius').update(description = "Cylinder radius in m")
-
-        obj['cylinder_height'] = dimensions['height']    #to inform the user what type is created
-        obj.id_properties_ui('cylinder_height').update(description = "Cylinder height in m")
-
         add_drivers = False
         if add_drivers == True:
 

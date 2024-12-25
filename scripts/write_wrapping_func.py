@@ -54,8 +54,10 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
         file.write( wrap_type + delimiter) # wrapobj type
 
         if wrap_type.lower() == 'cylinder':
-            file.write(f"{wrapobj['cylinder_radius']:{number_format}}{delimiter}")     # dimension 1 is radius
-            file.write(f"{wrapobj['cylinder_height']:{number_format}}{delimiter}")     # dimension 2 is height
+
+            
+            file.write(f"{wrapobj.modifiers['WrapObjMesh']['Socket_1']:{number_format}}{delimiter}")     # dimension 1 is radius
+            file.write(f"{wrapobj.modifiers['WrapObjMesh']['Socket_2']:{number_format}}{delimiter}")     # dimension 2 is height
             file.write(f"{np.nan:{number_format}}{delimiter}")     # dimension 3 is nan
 
         elif wrap_type.lower() == 'sphere':
@@ -122,8 +124,9 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
 
         #### target muscles
         file.write(wrapobj['target_muscles']+ delimiter) # wrapobj name
-        
-        target_muscle_objects = [bpy.data.objects[x] for x in wrapobj['target_muscles'].split(';') if x]
+        print(wrapobj.name)
+        print(wrapobj['target_muscles'])
+        target_muscle_objects = [bpy.data.objects[x] for x in wrapobj['target_muscles'].split(';') if (x and x!='not_assigned')]
         
         pre_wrap_points = []
         for tm in target_muscle_objects:
