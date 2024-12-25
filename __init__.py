@@ -72,7 +72,7 @@ from .scripts.muscle_panel import (AddMusclepointOperator, ReflectUnilateralMusc
                                       InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                       CreateWrappingGeometryOperator, 
                                       AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
-                                        AssignWrappingOperator,
+                                        AssignWrappingOperator, ClearWrappingOperator,
                                       VIEW3D_PT_muscle_panel, VIEW3D_PT_muscle_reflection_subpanel,
                                       VIEW3D_PT_wrap_subpanel, VIEW3D_PT_moment_arm_subpanel,)
 
@@ -188,7 +188,7 @@ classes = (  #Global settings panel
                                     InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                     CreateWrappingGeometryOperator,
                                     AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
-                                    AssignWrappingOperator,
+                                    AssignWrappingOperator, ClearWrappingOperator,
                                     VIEW3D_PT_muscle_panel,VIEW3D_PT_muscle_reflection_subpanel,
                                     VIEW3D_PT_wrap_subpanel, VIEW3D_PT_moment_arm_subpanel,
             #export panel

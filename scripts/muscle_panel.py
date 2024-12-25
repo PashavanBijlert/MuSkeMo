@@ -488,8 +488,8 @@ class ClearWrapGeomParentOperator(Operator):
 
 class AssignWrappingOperator(Operator):
     bl_idname = "muscle.assign_wrapping"
-    bl_label = "Assign wrapping to the select muscle, after the specified point index (starting at 1). Currently only cylinders supported."
-    bl_description = "Assign wrapping to the select muscle, after the specified point index (starting at 1). Currently only cylinders supported."
+    bl_label = "Assign selected wrapping to the active muscle, after the specified point index (starting at 1). Currently only cylinders supported."
+    bl_description = "Assign selected wrapping to the active muscle, after the specified point index (starting at 1). Currently only cylinders supported."
     
     def execute(self, context):
         
@@ -634,6 +634,66 @@ class AssignWrappingOperator(Operator):
 
         return {'FINISHED'}
 
+
+class ClearWrappingOperator(Operator):
+    bl_idname = "muscle.clear_wrapping"
+    bl_label = "Clear selected wrapping from the active muscle. Select the wrap geometry, and ensure the muscle is filled into the panel."
+    bl_description = "Clear selected wrapping from the active muscle. Select the wrap geometry, and ensure the muscle is filled into the panel."
+    
+    def execute(self, context):
+                
+        #insert_after = bpy.context.scene.muskemo.insert_point_after
+        
+        muscle_name = bpy.context.scene.muskemo.musclename
+        
+        sel_obj = bpy.context.selected_objects  #should be the wrap object you want to clear
+
+
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "Too few objects selected. Select one wrap geometry.")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one wrap geometry.")
+            return {'FINISHED'}
+        
+        wrap_obj = sel_obj[0]
+        wrap_obj_name = wrap_obj.name
+
+        if 'MuSkeMo_type' in wrap_obj:
+            if 'WRAP' != bpy.data.objects[wrap_obj_name]['MuSkeMo_type']:
+                self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' is not a WRAP. Operation cancelled.")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' was not an object created by MuSkeMo. Operation cancelled")
+            return {'FINISHED'}      
+
+        geonode_name = muscle_name + '_wrap_' + wrap_obj_name #name of the geometry node modifier
+
+        muscle_obj = bpy.data.objects[muscle_name]
+
+        if geonode_name not in muscle_obj.modifiers: #if the modifier is not in the modifier stack
+            self.report({'ERROR'}, "The wrap object '" + wrap_obj_name + "' is not currently assigned to the muscle '" + muscle_name + "', so it cannot be cleared. Operation cancelled")
+            return {'FINISHED'}
+
+        #remove the modifier from the muscle
+        muscle_obj.modifiers.remove(muscle_obj.modifiers[geonode_name])
+
+        #update the target_muscles property of the wrapping geometry
+        wrap_obj['target_muscles'] = wrap_obj['target_muscles'].replace(muscle_name + ';','') #remove the muscle and the delimiter
+
+        if not wrap_obj['target_muscles']: #if the wrap now has no muscles assigned
+            wrap_obj['target_muscles'] = 'not_assigned'
+
+
+        return{'FINISHED'}
+
+        
+        
+
+
 class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
 
     
@@ -776,7 +836,8 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
         row.operator("muscle.clear_wrap_parent_body", text="Clear parent body")
 
         row = self.layout.row()
-        row.operator("muscle.assign_wrapping", text="Assign wrap to muscle")
+        row.operator("muscle.assign_wrapping", text="Assign muscle wrap")
+        row.operator("muscle.clear_wrapping", text="Clear muscle wrap")
 
 
 

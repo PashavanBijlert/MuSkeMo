@@ -116,7 +116,6 @@ class SetCompositorBackgroundGradient(Operator):
 
 
 
-
         input = nodes["Mix"].inputs[2]
         output = nodes[inv_nodename].outputs['Color']
         bpy.data.scenes['Scene'].node_tree.links.new(input,output)
@@ -287,10 +286,14 @@ class VIEW3D_PT_import_trajectory_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row.prop(muskemo, "fps")
 
         row = layout.row()
-        row.prop(muskemo, "root_joint_name")
+        split = row.split(factor = 1/2)
+        split.label(text = "Root joint name")
+        split.prop(muskemo, "root_joint_name", text = '')
 
         row = layout.row()
-        row.prop(muskemo, "forward_progression_coordinate")
+        split = row.split(factor = 1/2)
+        split.label(text = "Forward progression coordinate")
+        split.prop(muskemo, "forward_progression_coordinate", text = '')
 
         row = layout.row()
         row.prop(muskemo, "in_degrees")
