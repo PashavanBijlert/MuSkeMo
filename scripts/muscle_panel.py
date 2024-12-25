@@ -349,6 +349,142 @@ class CreateWrappingGeometryOperator(Operator):
             
         muskemo.wrap_geom_name = "" #reset the name after object creation.   
         return {'FINISHED'}
+    
+
+class AssignWrapGeomParentOperator(Operator):
+    bl_idname = "muscle.assign_wrap_parent_body"
+    bl_label = "Assigns a parent body to 1+ wrapping geometries. Select both the parent body and the wrapping geometries(s), then press the button."
+    bl_description = "Assigns a parent body to 1+ wrapping geometries. Select both the parent body and the wrapping geometries(s), then press the button."
+   
+    def execute(self, context):
+        
+                
+       
+        sel_obj = bpy.context.selected_objects  #should be the parent body and the wrap
+        
+        colname = bpy.context.scene.muskemo.wrap_geom_collection
+        bodycolname = bpy.context.scene.muskemo.body_collection
+        
+                
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select the parent body and the target wrapping geometry.")
+            return {'FINISHED'}
+        
+                
+        target_wraps = [s_obj for s_obj in sel_obj if s_obj['MuSkeMo_type'] == 'WRAP']
+        if (len(target_wraps) < 1):
+            self.report({'ERROR'}, "You did not select any wrapping geometries. Operation cancelled.")
+            return {'FINISHED'}
+
+        
+        non_wrap_objects = [s_obj for s_obj in sel_obj if s_obj not in target_wraps]  #get the object that's not the wrap
+        if len(non_wrap_objects)<1:
+            self.report({'ERROR'}, "You only selected wrapping geometries. You must also select one target body. Operation cancelled.")
+            return {'FINISHED'}
+        
+        if len(non_wrap_objects)>1:
+            self.report({'ERROR'}, "You selected more than one object that is not a wrapping geometry. You must select only wrapping geometries and one target body. Operation cancelled.")
+            return {'FINISHED'}
+        
+        parent_body = non_wrap_objects[0] #if len is 1
+
+        if parent_body['MuSkeMo_type'] != 'BODY':
+            self.report({'ERROR'}, "You did not select a target body. Operation cancelled.")
+            return {'FINISHED'}
+        
+        
+            
+        ### if none of the previous scenarios triggered an error, set the parent body
+        for wrap in target_wraps:
+            wrap.parent = parent_body
+                
+            #this undoes the transformation after parenting
+            wrap.matrix_parent_inverse = parent_body.matrix_world.inverted()
+
+            wrap['parent_body'] = parent_body.name
+
+
+            ### check if parent_body has a local frame, and if yes, compute wrap location in parent frame 
+            if parent_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+                
+                ## import functions euler angles and quaternions from matrix
+
+                from .quaternions import quat_from_matrix
+                from .euler_XYZ_body import euler_XYZbody_from_matrix
+
+                frame = bpy.data.objects[parent_body['local_frame']]
+
+                gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+                bRg = gRb.copy()
+                bRg.transpose()
+        
+                frame_or_g = frame.matrix_world.translation    
+             
+                wrap_pos_g = wrap.matrix_world.translation #location of the wrap
+                gRb_wrap = wrap.matrix_world.to_3x3() #gRb rotation matrix of wrap
+                wrap_pos_in_parent = bRg @ (wrap_pos_g - frame_or_g) #location in parent of wrap
+                                              
+                b_R_wrapframe = bRg @ gRb_wrap #rotation matrix from wrap frame to parent frame - decompose this for orientation in parent
+                
+                wrap_or_in_parent_euler = euler_XYZbody_from_matrix(b_R_wrapframe) #XYZ body-fixed decomposition of orientation in parent
+                wrap_or_in_parent_quat = quat_from_matrix(b_R_wrapframe) #quaternion decomposition of orientation in parent
+                
+                wrap['pos_in_parent_frame'] = wrap_pos_in_parent
+                wrap['or_in_parent_frame_XYZeuler'] = wrap_or_in_parent_euler
+                wrap['or_in_parent_frame_quat'] = wrap_or_in_parent_quat 
+            
+        return {'FINISHED'}    
+
+class ClearWrapGeomParentOperator(Operator):
+    bl_idname = "muscle.clear_wrap_parent_body"
+    bl_label = "Clears the parent body assigned to selected wrapping geometrie(s). Select the target geometrie(s), then press the button."
+    bl_description = "Clears the parent body assigned to selected wrapping geometrie(s). Select the target geometrie(s), then press the button."
+    
+    def execute(self, context):
+        
+        sel_obj = bpy.context.selected_objects  #should be the parent body and the wrap
+
+        # throw an error if no objects are selected     
+        if (len(sel_obj) == 0):
+            self.report({'ERROR'}, "No wrap selected. Select the target wrap(s) and try again.")
+            return {'FINISHED'}
+            
+
+        for wrap in sel_obj:
+            
+            if wrap['MuSkeMo_type'] != 'WRAP':
+                self.report({'ERROR'}, "Object with the name '" + wrap.name + "' is not a wrapping geometry. Skipping this object.")
+                continue
+
+            try: wrap.parent.name
+            
+            except: #throw an error if the wrap has no parent
+                self.report({'ERROR'}, "Wrap geometry with the name '" + wrap.name + "' does not have a parent body. Skipping this wrap.")
+                continue
+            
+                                
+            ### if none of the previous scenarios triggered an error, clear the parent body
+            
+            
+            #clear the parent, without moving the wrap
+            parented_worldmatrix = wrap.matrix_world.copy() 
+            wrap.parent = None
+            wrap.matrix_world = parented_worldmatrix   
+            
+            wrap['parent_body'] = 'not_assigned'
+
+            wrap['pos_in_parent_frame'] = [nan, nan, nan]
+            wrap['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
+            wrap['or_in_parent_frame_quat'] = [nan, nan, nan, nan]
+            
+
+
+        return {'FINISHED'}
+
+
+
+
 
 class AssignWrappingOperator(Operator):
     bl_idname = "muscle.assign_wrapping"
@@ -553,6 +689,23 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
 
 
         self.layout.row()
+        
+
+class VIEW3D_PT_muscle_reflection_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+    bl_idname = 'VIEW3D_PT_muscle_reflection_subpanel'
+    bl_label = "Reflect muscles"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_muscle_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
+    
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        
         self.layout.row()
         row = self.layout.row()
         row.operator("muscle.reflect_unilateral_muscles", text="Reflect unilateral muscles")
@@ -563,7 +716,7 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         split_left_label = split.column()
         split_left_label.label(text="Left Side String")
 
-        split = split.split(factor=1/7)  # Second split for left input field
+        split = split.split(factor=1/6)  # Second split for left input field
         split_left_input = split.column()
         split_left_input.prop(muskemo, "left_side_string", text="")
 
@@ -617,6 +770,10 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
         
         row = self.layout.row()
         row.operator("muscle.create_wrapping_geometry", text="Create wrapping geometry")
+
+        row = self.layout.row()
+        row.operator("muscle.assign_wrap_parent_body", text="Assign parent body")
+        row.operator("muscle.clear_wrap_parent_body", text="Clear parent body")
 
         row = self.layout.row()
         row.operator("muscle.assign_wrapping", text="Assign wrap to muscle")
