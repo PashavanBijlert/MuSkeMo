@@ -60,6 +60,7 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
             file.write(f"{wrapobj.modifiers['WrapObjMesh']['Socket_2']:{number_format}}{delimiter}")     # dimension 2 is height
             file.write(f"{np.nan:{number_format}}{delimiter}")     # dimension 3 is nan
 
+        ### once implemented these should get the info from the modifier sockets
         elif wrap_type.lower() == 'sphere':
             file.write(f"{wrapobj['radius']:{number_format}}{delimiter}")     # dimension 1 is radius
             file.write(f"{np.nan:{number_format}}{delimiter}")     # dimension 2 is height

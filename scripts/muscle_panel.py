@@ -403,8 +403,8 @@ class AssignWrappingOperator(Operator):
             
             wrap_node_group_name = cylinder_wrap_node_group_name
 
-            radius = wrap_obj['cylinder_radius']
-            height = wrap_obj['cylinder_height']
+            radius = wrap_obj.modifiers['WrapObjMesh']['Socket_1']
+            height = wrap_obj.modifiers['WrapObjMesh']['Socket_2']
             
             ## load the node group template if necessary
             if wrap_node_group_name in bpy.data.node_groups: #if the node group template is already added to the scene
