@@ -21,8 +21,9 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
     
     curve_names = [x.name for x in coll.objects if 'CURVE' in x.id_data.type] #get the name for each object in bpy.data, if the data type is a 'CURVE'
 
-    current_position_export = True
-    if current_position_export: #if current position export is true, we aply the hook modifiers in an evaluated depsgraph copy of each curve to get the position.
+    muscle_current_position_export = bpy.context.scene.muskemo.muscle_current_position_export
+
+    if muscle_current_position_export: #if current position export is true, we aply the hook modifiers in an evaluated depsgraph copy of each curve to get the position.
         #this allows the user to construct the muscles in a different position than the default model export position
         depsgraph = bpy.context.evaluated_depsgraph_get()
 
@@ -34,7 +35,7 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
         modifier_list = [x.name for x in curve.modifiers if 'Hook'.casefold() in x.name.casefold()] #list of all the hook modifiers that are added to this curve
 
 
-        if current_position_export:
+        if muscle_current_position_export:
             curve_ev = curve.to_curve(depsgraph, apply_modifiers=True)
     ### loop through points
 
@@ -55,7 +56,7 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
                     if i == modifier.vertex_indices[j]:       
                         body_name = modifier.object.name      #if curve point i equals a connected curve point j in modifier h, get the corresponding body name
 
-            if current_position_export:
+            if muscle_current_position_export:
                 #the depsgraph copy of the evaluated curve doesn't have data, but has a spline directly under it.
                 location = curve.matrix_world @ curve_ev.splines[0].points[i].co.xyz  # global location is matrix_world * local_point_location 
             else:
@@ -103,7 +104,7 @@ def write_muscles(context, filepath, collection_name, delimiter, number_format):
                                                                    # start a new line
             file.write('\n')
 
-        if current_position_export:
+        if muscle_current_position_export:
             curve.to_curve_clear() #clear the depsgraph evaluated copy
 
     file.close()

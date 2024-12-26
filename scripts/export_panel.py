@@ -483,6 +483,9 @@ class VIEW3D_PT_export_muscles_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         split2.prop(muskemo, "muscle_collection", text="")
         split2.operator("export.export_muscles", text="Export muscles")
 
+        row = self.layout.row()
+        row.prop(muskemo, "muscle_current_position_export")
+
 
 ## Export wrap objects subpanel
 class VIEW3D_PT_export_wrapping_subpanel(VIEW3D_PT_MuSkeMo, Panel):

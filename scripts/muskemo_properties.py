@@ -344,6 +344,13 @@ class MuSkeMoProperties(PropertyGroup):
         default = "g",
         )
 
+
+    muscle_current_position_export: BoolProperty(
+        name="Export muscles in current position",
+        description='This allows you to export the muscles in a different position than the one they were created in. Useful if your model neutral pose is not a biologically realistic posture.',
+        default = True,
+    )
+
 #### import
 
     model_import_style: EnumProperty(
