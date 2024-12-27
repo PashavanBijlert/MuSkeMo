@@ -3,12 +3,14 @@
 import bpy
 from mathutils import Vector
 from math import nan
+import numpy as np
 
 from bpy.types import (Panel,
                         Operator,
                         )
 
 import os
+import csv
 
 from .. import VIEW3D_PT_MuSkeMo
 
@@ -724,10 +726,239 @@ class ClearWrappingOperator(Operator):
 
         return{'FINISHED'}
 
-        
-        
 
 
+class SingleDOFLengthMomentArmOperator(Operator):
+    bl_idname = "muscle.single_dof_length_moment_arm"
+    bl_label = "Compute the length and moment arm of the active muscle for a single degree of freedom. You can choose to plot the data, or export it for later analyses."
+    bl_description = "Compute the length and moment arm of the active muscle for a single degree of freedom. You can choose to plot the data, or export it for later analyses."
+    
+    
+    def execute(self, context):
+                
+        #insert_after = bpy.context.scene.muskemo.insert_point_after
+        muskemo = bpy.context.scene.muskemo
+
+        muscle_name = muskemo.musclename
+        active_joint_1 = muskemo.active_joint_1
+        joint_1_dof = muskemo.joint_1_dof
+        joint_1_ranges = muskemo.joint_1_ranges
+        angle_step_size = muskemo.angle_step_size
+
+        export_data = muskemo.export_length_and_moment_arm
+
+        ## error checking for muscles
+        if not muscle_name:
+            self.report({'ERROR'}, "No muscle is currently active. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
+            return {'FINISHED'}
+        
+        if muscle_name not in bpy.data.objects:
+            self.report({'ERROR'}, "Object with the name '" + muscle_name + "' does not exist. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
+            return {'FINISHED'}
+
+        muscle = bpy.data.objects[muscle_name]
+
+        if 'MuSkeMo_type' in muscle:
+            if 'MUSCLE' != muscle['MuSkeMo_type']:
+                self.report({'ERROR'}, "Target muscle '" + muscle_name + "' is not a MUSCLE. Operation cancelled")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Target muscle '" + muscle_name + "' was not an object created by MuSkeMo. Operation cancelled")
+            return {'FINISHED'}
+        
+        ## error checking for joint
+        if not active_joint_1:
+            self.report({'ERROR'}, "No joint is currently active. Type the target joint name into the 'Active Joint 1' field of the moment arm panel.")
+            return {'FINISHED'}
+
+        if active_joint_1 not in bpy.data.objects:
+            self.report({'ERROR'}, "Object with the name '" + active_joint_1 + "' does not exist. Type the target joint name into the 'Active Joint 1' field of the moment arm panel.")
+            return {'FINISHED'}
+
+        joint = bpy.data.objects[active_joint_1]
+
+        if 'MuSkeMo_type' in joint:
+            if 'JOINT' != joint['MuSkeMo_type']:
+                self.report({'ERROR'}, "Target joint '" + active_joint_1 + "' is not a JOINT. Operation cancelled")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Target joint '" + active_joint_1 + "' was not an object created by MuSkeMo. Operation cancelled")
+            return {'FINISHED'}
+
+
+        if joint_1_ranges[0] == joint_1_ranges[1]:
+            self.report({'ERROR'}, "Joint 1 ranges should not be equal to each other. Operation cancelled")
+            return {'FINISHED'}
+
+        muscle_with_wrap = False
+        if any(['wrap' in x.name.lower() for x in muscle.modifiers]):### if the muscle has a wrap modifier, use the slightly slower approach to calc the muscle length
+    
+             muscle_with_wrap= True
+
+        min_range_angle1 = min(joint_1_ranges) #in degrees
+        max_range_angle1 = max(joint_1_ranges)
+     
+        angle_1_range = np.arange(min_range_angle1, max_range_angle1+angle_step_size, angle_step_size)  #
+        
+        # Convert degrees to radians for each angle
+        angle_1_range_rad = np.deg2rad(angle_1_range)
+
+        from .euler_XYZ_body import matrix_from_euler_XYZbody
+        from .compute_curve_length import compute_curve_length
+        
+        ## unit_vec will be multiplied by the instantaneous angle, resulting in a 3,1 vector that contains the angle and 2 zeros
+        if joint_1_dof == 'Rx':
+            unit_vec= np.array([1,0,0])
+
+        elif joint_1_dof == 'Ry':
+            unit_vec= np.array([0,1,0])
+        
+        elif joint_1_dof == 'Rz':
+            unit_vec= np.array([0,0,1])
+
+
+        length = []
+
+        joint_wm_copy = joint.matrix_world.copy() #copy of the current position of the joint world matrix
+        depsgraph = bpy.context.evaluated_depsgraph_get()#get the dependency graph
+
+        for angle in angle_1_range_rad: #loop through each desired angle, set the joint in that orientation, compute the muscle length, then rotate the joint back.
+
+            
+            #Local frame rotation
+            [gRb, bRg] = matrix_from_euler_XYZbody(angle*unit_vec) #rotation matrix for the desired angle
+            
+            wm = joint.matrix_world #current world matrix
+            joint_gRb = wm.to_3x3() #
+            translation = wm.translation
+
+                       
+            new_wm = joint_gRb@gRb #post multiply by the desired rotation to get a local rotation
+
+            new_wm = new_wm.to_4x4()       
+            new_wm.translation = translation
+            joint.matrix_world = new_wm
+
+            #Compute length in this position
+            length.append(compute_curve_length(muscle_name, depsgraph, muscle_with_wrap))
+
+            #reset to original position.  ### we reset the position each time. This is not costlier than simply progressing from min to max, as long as you don't update the despgraph after resetting the joint position.
+
+            joint.matrix_world = joint_wm_copy
+
+        length_data = {
+            "plotname": muscle_name + "_length",
+            "x_data": angle_1_range_rad,
+            "y_data": length,
+            "x_label": "Angle",
+            "y_label": "Length",
+            "x_unit": "rad",
+            "y_unit": "m",
+        }
+
+
+        muscle['length_data'] = length_data    
+
+        moment_arm = [-x/y for x,y in zip(np.gradient(length), np.gradient(angle_1_range_rad))]
+
+        if export_data: #if the user selects to export, but didn't set a directory, throw a warning and don't export data
+
+            export_dir = muskemo.model_export_directory
+
+            if not export_dir:
+                self.report({'WARNING'}, "No export directory set, so muscle length and moment arm data was not be exported. Set the directory then try again.")
+                export_data = False
+
+        if export_data:
+            
+            delimiter = muskemo.delimiter
+            filetype = muskemo.export_filetype
+
+            filepath = export_dir + '/' + muscle_name + "_" + active_joint_1 + '_length_moment_arm_' +  "." + filetype
+
+            '''
+            sig_dig = muskemo.significant_digits
+            number_format = muskemo.number_format  #can be 'e', 'g', or '8f'
+
+            if number_format == 'g':
+                number_format = f"{sig_dig}{number_format}"  #if it's g, we add the number of sig digits in front
+
+            elif number_format == 'e':
+                number_format = f"{sig_dig-1}{number_format}" #if it's e, we remove one digit (because e exports an extra digit)
+
+            number_format = '.' + number_format
+            '''
+
+            # Construct headers
+            headers = [
+                f"{active_joint_1}_{joint_1_dof}(rad)", 
+                "length(m)", 
+                "moment_arm(m)"
+            ]
+
+            # Combine data into rows
+            data = zip(angle_1_range_rad, length, moment_arm)
+
+            # Write to CSV
+            with open(filepath, mode='w', newline='') as file:
+                writer = csv.writer(file, delimiter=delimiter)
+                writer.writerow(headers)  # Write headers
+                writer.writerows(data)    # Write data rows
+
+
+        plot_data_bool = True 
+        plot_moment_arms = True
+        convert_to_degrees = True
+
+        if plot_data_bool: #bool user switch
+            print('plotting')
+
+            from .create_2D_plot import create_2D_plot
+
+            plot_data = length_data.copy()
+
+            if plot_moment_arms:
+    
+                plot_data['plotname'] = plot_data['plotname'].replace('length', 'moment_arm') 
+                plot_data['y_label'] = plot_data['y_label'].replace('Length', 'Moment Arm')
+                
+                length = plot_data['y_data']
+                angles_rad = plot_data['x_data']
+                
+                #moment arm is -dL / dphi. Sign is negative by convention?
+                moment_arm = [-x/y for x,y in zip(np.gradient(length), np.gradient(angles_rad))]
+                plot_data['y_data'] = moment_arm
+                
+
+            if convert_to_degrees:
+                
+                plot_data['x_unit'] = 'degrees'
+                plot_data['x_data'] = np.rad2deg(plot_data['x_data'])
+                
+                
+
+            create_2D_plot(
+                plot_params=plot_data,
+                x_ticks=3,
+                y_ticks=3,
+                plot_lower_left=(1, 1),  # Replace 'plot_origin' with 'plot_lower_left'
+                plot_dimensions=(1, 1),  # Specify the visualization range as before
+                font_scale=0.1,
+                tick_size = 0.1,
+                ylim = (0,0),
+                xlim = (0,0),
+                curve_thickness = 0.015,
+            )
+
+
+
+
+            
+
+                       
+
+        return {"FINISHED"}
+    
 class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
 
     
@@ -843,7 +1074,6 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
         scene = context.scene
         muskemo = scene.muskemo
 
-
         row = self.layout.row()
 
         row = self.layout.row()
@@ -893,19 +1123,37 @@ class VIEW3D_PT_moment_arm_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming co
         scene = context.scene
         muskemo = scene.muskemo
 
-
         row = self.layout.row()
         
         #row.operator("muscle.assign_wrapping", text="Assign wrap object")
         row = self.layout.row()
-        row.prop(muskemo, "active_joint_1")
+        split = row.split(factor = 1/2)
+        split.label(text = 'Active Joint 1')
+        split.prop(muskemo, "active_joint_1", text = "")
 
         row = self.layout.row()
-        row.prop(muskemo, "joint_1_dof")
+        split = row.split(factor = 1/2)
+        split.label(text = 'Joint 1 DOF')
+        split.prop(muskemo, "joint_1_dof", text = "")
 
         row = self.layout.row()
         row.prop(muskemo, "joint_1_ranges")
 
         row = self.layout.row()
         row.prop(muskemo, "angle_step_size")
+
+        row = self.layout.row()
+        row.operator("muscle.single_dof_length_moment_arm",text = "Compute length & moment arm (1 DOF)")
+
+        row = self.layout.row()
+        row.prop(muskemo, "export_length_and_moment_arm")
+
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.label(text = 'Model export directory')
+        split.prop(muskemo, "model_export_directory", text = "")
+        
+        row = layout.row()
+        row.operator("export.select_model_export_directory",text = 'Select export directory')
+
 

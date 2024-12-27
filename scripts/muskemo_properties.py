@@ -222,7 +222,7 @@ class MuSkeMoProperties(PropertyGroup):
         )
     
     joint_1_ranges: IntVectorProperty(
-          name="Joint 1 ranges",
+          name="Joint 1 ranges (deg)",
         size=2,  #
         default=(0,0),
         description="Min and max joint angles (in degrees) for Active Joint 1, between which you would like to compute the moment arm."
@@ -237,7 +237,11 @@ class MuSkeMoProperties(PropertyGroup):
         )    
     
 
-
+    export_length_and_moment_arm: BoolProperty(
+        name="Export length and moment arm",
+        description='Export a .CSV of length and moment arm data.',
+        default = False,
+    )
 
 
 #### Inertial properties panel
