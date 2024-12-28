@@ -11,6 +11,7 @@ from bpy.types import (Panel,
 
 import os
 import csv
+import time
 
 from .. import VIEW3D_PT_MuSkeMo
 
@@ -735,7 +736,8 @@ class SingleDOFLengthMomentArmOperator(Operator):
     
     
     def execute(self, context):
-                
+
+        time1 = time.time() 
         #insert_after = bpy.context.scene.muskemo.insert_point_after
         muskemo = bpy.context.scene.muskemo
 
@@ -793,7 +795,34 @@ class SingleDOFLengthMomentArmOperator(Operator):
         muscle_with_wrap = False
         if any(['wrap' in x.name.lower() for x in muscle.modifiers]):### if the muscle has a wrap modifier, use the slightly slower approach to calc the muscle length
     
-             muscle_with_wrap= True
+            muscle_with_wrap= True
+
+            #if we have wrapping objects, we up the resolution during moment arm computation for higher accuracy
+            wrapmods = [x for x in muscle.modifiers if 'wrap' in x.name.lower()] #the wrap modifiers that this muscle has
+
+
+            wrap_point_res = []
+            wrap_obj_res = []
+
+            for modifier in wrapmods:
+                
+                wrap_point_res.append(modifier["Socket_10"]) #resolution of the wrapping curve
+                modifier["Socket_10"] = 100
+                wrapobj = modifier["Socket_2"]
+
+                wrapobj.modifiers["WrapObjMesh"]
+
+                if wrapobj['wrap_type'] == 'Cylinder':
+                    #wrap object resolution
+                    wrap_obj_res.append(wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value)
+                    wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 1000
+
+            #wrap curve resolution doesn't seem to be updating before execution of the script?
+            for area in context.screen.areas:
+                area.tag_redraw() 
+            bpy.context.view_layer.update()
+                    
+
 
         min_range_angle1 = min(joint_1_ranges) #in degrees
         max_range_angle1 = max(joint_1_ranges)
@@ -845,6 +874,24 @@ class SingleDOFLengthMomentArmOperator(Operator):
             #reset to original position.  ### we reset the position each time. This is not costlier than simply progressing from min to max, as long as you don't update the despgraph after resetting the joint position.
 
             joint.matrix_world = joint_wm_copy
+
+        #restore the wrapping resolutions
+        if muscle_with_wrap:
+
+            for i,modifier in enumerate(wrapmods):
+                
+                #wrap curve res
+                modifier["Socket_10"] = wrap_point_res[i]
+                wrapobj = modifier["Socket_2"]
+
+                wrapobj.modifiers["WrapObjMesh"]
+
+                if wrapobj['wrap_type'] == 'Cylinder':
+                    #wrap object resolution
+                    wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = wrap_obj_res[i]
+
+        print(wrap_point_res)
+        print(wrap_obj_res)                
 
         length_data = {
             "plotname": muscle_name + "_length",
@@ -930,6 +977,11 @@ class SingleDOFLengthMomentArmOperator(Operator):
                 plot_data['y_data'] = moment_arm
                 
 
+                #TO DO:
+                #Separate plotting call where user sets their own plotting parameters
+                #Resolution is getting changed and reset, but the wrap curve resolution appears not be active until the operator finishes
+                
+
             if convert_to_degrees:
                 
                 plot_data['x_unit'] = 'degrees'
@@ -955,7 +1007,9 @@ class SingleDOFLengthMomentArmOperator(Operator):
 
             
 
-                       
+        time2 = time.time()
+
+        print(str(time2-time1))    
 
         return {"FINISHED"}
     
