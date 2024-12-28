@@ -12,7 +12,7 @@ def compute_curve_length(curve_name, depsgraph, muscle_with_wrap = False):
         obj.to_curve_clear()
         
     else:
-        obj_ev = obj.evaluated_get(depsgraph) #assumes the target object is selected.
+        obj_ev = obj.evaluated_get(depsgraph) #
         obj_ev_mesh = obj_ev.to_mesh()
         length = obj_ev_mesh.attributes['length'].data[0].value
         obj_ev.to_mesh_clear()

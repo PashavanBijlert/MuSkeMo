@@ -805,7 +805,10 @@ class SingleDOFLengthMomentArmOperator(Operator):
             for modifier in wrapmods:
                 
                 wrap_point_res.append(modifier["Socket_10"]) #resolution of the wrapping curve
-                modifier["Socket_10"] = 100
+                modifier["Socket_10"] = 250
+                modifier.show_render = not modifier.show_render  # Toggle visibility to refresh
+                modifier.show_render = not modifier.show_render
+
                 wrapobj = modifier["Socket_2"]
 
                 wrapobj.modifiers["WrapObjMesh"]
@@ -813,7 +816,8 @@ class SingleDOFLengthMomentArmOperator(Operator):
                 if wrapobj['wrap_type'] == 'Cylinder':
                     #wrap object resolution
                     wrap_obj_res.append(wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value)
-                    wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 1000
+                    wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 2000
+
 
             #wrap curve resolution doesn't seem to be updating before execution of the script?
             for area in context.screen.areas:
@@ -888,8 +892,8 @@ class SingleDOFLengthMomentArmOperator(Operator):
                     #wrap object resolution
                     wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = wrap_obj_res[i]
 
-        print(wrap_point_res)
-        print(wrap_obj_res)                
+            print(wrap_point_res)
+            print(wrap_obj_res)                
 
         length_data = {
             "plotname": muscle_name + "_length",
@@ -902,8 +906,8 @@ class SingleDOFLengthMomentArmOperator(Operator):
         }
 
 
-        muscle['length_data'] = length_data    
-
+        muscle['length_data'] = length_data
+        
         moment_arm = [-x/y for x,y in zip(np.gradient(length), np.gradient(angle_1_range_rad))]
 
 
@@ -1055,7 +1059,7 @@ class Regenerate2DMusclePlotOperator(Operator):
             self.report({'ERROR'}, "Target muscle '" + muscle_name + "' does not have any length data associated to it yet which can be plotted. First create this in the Moment arms subpanel. Operation cancelled")
             return {'FINISHED'} 
         
-        muscle_name = muskemo.musclename
+        
         xlim = muskemo.xlim #input as tuple?
         ylim = muskemo.ylim
         plot_lower_left = muskemo.plot_lower_left
@@ -1108,6 +1112,48 @@ class Regenerate2DMusclePlotOperator(Operator):
 
 
         return {'FINISHED'}    
+    
+class AddLiveLengthViewerNodeOperator(Operator):
+    bl_idname = "muscle.add_live_length_viewer"
+    bl_label = "View the muscle's instantaneous length in realtime"
+    bl_description = "View the muscle's instantaneous length in realtime"
+    
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+
+        #error checking for muscle
+
+        muscle_name = muskemo.musclename
+        if not muscle_name:
+            self.report({'ERROR'}, "No muscle is currently active. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
+            return {'FINISHED'}
+        
+        if muscle_name not in bpy.data.objects:
+            self.report({'ERROR'}, "Object with the name '" + muscle_name + "' does not exist. Type the correct target muscle name into the 'Muscle Name' field of the muscle panel.")
+            return {'FINISHED'}
+
+        muscle = bpy.data.objects[muscle_name]
+
+        if 'MuSkeMo_type' in muscle:
+            if 'MUSCLE' != muscle['MuSkeMo_type']:
+                self.report({'ERROR'}, "Target muscle '" + muscle_name + "' is not a MUSCLE. Operation cancelled")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Target muscle '" + muscle_name + "' was not an object created by MuSkeMo. Operation cancelled")
+            return {'FINISHED'}
+        
+
+        from .live_length_viewer_node import add_live_length_viewer_node
+
+        add_live_length_viewer_node(muscle)
+
+
+        return {'FINISHED'}
+        
+        
+
     
 class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
 
@@ -1162,9 +1208,9 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         row.prop(muskemo, "muscle_visualization_radius")
         row.operator("muscle.update_muscle_viz_radius", text = "Update visualization radius")
 
-
-        self.layout.row()
         
+        row = self.layout.row()
+        row.operator("muscle.add_live_length_viewer", text = "View length in realtime")
 
 class VIEW3D_PT_muscle_reflection_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo
@@ -1206,6 +1252,8 @@ class VIEW3D_PT_muscle_reflection_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class na
         split = row.split(factor = 1/2)
         split.label(text = 'Reflection Plane')
         split.prop(muskemo, "reflection_plane", text = "")
+
+
         
         
 class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
