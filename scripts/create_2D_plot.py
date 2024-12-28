@@ -6,12 +6,12 @@ def create_2D_plot(
     plot_params,
     x_ticks=5,
     y_ticks=5,
-    plot_lower_left=(0, 0),  # The lower-left corner of the plot visualization
-    plot_dimensions=(10, 10),  # Dimensions of the entire plot
+    plot_lower_left=(0, 0),  # The lower-left corner of the plot visualization. Input should be a tuple.
+    plot_dimensions=(10, 10),  # Dimensions of the entire plot Input should be a tuple.
     font_scale=0.05,
     tick_size=0.2,
-    xlim = (0,0),
-    ylim = (0,0),
+    xlim = (0,0), #Input should be a tuple.
+    ylim = (0,0), #Input should be a tuple.
     curve_thickness = 0.01,
 ):
     """

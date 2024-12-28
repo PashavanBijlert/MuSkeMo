@@ -747,8 +747,6 @@ class SingleDOFLengthMomentArmOperator(Operator):
         joint_1_ranges = muskemo.joint_1_ranges
         angle_step_size = muskemo.angle_step_size
 
-        export_data = muskemo.export_length_and_moment_arm
-
         ## error checking for muscles
         if not muscle_name:
             self.report({'ERROR'}, "No muscle is currently active. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
@@ -908,6 +906,64 @@ class SingleDOFLengthMomentArmOperator(Operator):
 
         moment_arm = [-x/y for x,y in zip(np.gradient(length), np.gradient(angle_1_range_rad))]
 
+
+        generate_plot_bool = muskemo.generate_plot_bool
+        plot_type = muskemo.plot_type
+        convert_to_degrees = muskemo.convert_to_degrees
+
+        if generate_plot_bool: #bool user switch
+            print('plotting')
+
+            from .create_2D_plot import create_2D_plot
+
+            plot_data = length_data.copy()
+
+            if plot_type == 'moment arm':
+    
+                plot_data['plotname'] = plot_data['plotname'].replace('length', 'moment_arm') 
+                plot_data['y_label'] = plot_data['y_label'].replace('Length', 'Moment Arm')
+                
+                length = plot_data['y_data']
+                angles_rad = plot_data['x_data']
+                
+                #moment arm is -dL / dphi. Sign is negative by convention
+                moment_arm = [-x/y for x,y in zip(np.gradient(length), np.gradient(angles_rad))]
+                plot_data['y_data'] = moment_arm
+                
+
+                #TO DO:
+                #Separate plotting call where user sets their own plotting parameters
+                #Resolution is getting changed and reset, but the wrap curve resolution appears not be active until the operator finishes
+
+
+            if convert_to_degrees:
+                
+                plot_data['x_unit'] = 'degrees'
+                plot_data['x_data'] = np.rad2deg(plot_data['x_data'])
+            
+            plot_lower_left = muskemo.plot_lower_left
+            plot_dimensions = muskemo.plot_dimensions
+            plot_font_scale = muskemo.plot_font_scale
+            plot_tick_size = muskemo.plot_tick_size
+            plot_curve_thickness = muskemo.plot_curve_thickness
+            plot_ticknumber = muskemo.plot_ticknumber    
+
+            create_2D_plot(
+                plot_params=plot_data,
+                x_ticks=plot_ticknumber[0],
+                y_ticks=plot_ticknumber[1],
+                plot_lower_left=tuple(plot_lower_left),  # Replace 'plot_origin' with 'plot_lower_left'
+                plot_dimensions=tuple(plot_dimensions),  # Specify the visualization range as before
+                font_scale=plot_font_scale,
+                tick_size = plot_tick_size,
+                ylim = (0,0), #xlim and ylim not set from the user preferences when first generating a plot
+                xlim = (0,0), 
+                curve_thickness = plot_curve_thickness,
+            )
+
+        export_data = muskemo.export_length_and_moment_arm
+
+
         if export_data: #if the user selects to export, but didn't set a directory, throw a warning and don't export data
 
             export_dir = muskemo.model_export_directory
@@ -953,56 +1009,7 @@ class SingleDOFLengthMomentArmOperator(Operator):
                 writer.writerows(data)    # Write data rows
 
 
-        plot_data_bool = True 
-        plot_moment_arms = True
-        convert_to_degrees = True
-
-        if plot_data_bool: #bool user switch
-            print('plotting')
-
-            from .create_2D_plot import create_2D_plot
-
-            plot_data = length_data.copy()
-
-            if plot_moment_arms:
-    
-                plot_data['plotname'] = plot_data['plotname'].replace('length', 'moment_arm') 
-                plot_data['y_label'] = plot_data['y_label'].replace('Length', 'Moment Arm')
-                
-                length = plot_data['y_data']
-                angles_rad = plot_data['x_data']
-                
-                #moment arm is -dL / dphi. Sign is negative by convention?
-                moment_arm = [-x/y for x,y in zip(np.gradient(length), np.gradient(angles_rad))]
-                plot_data['y_data'] = moment_arm
-                
-
-                #TO DO:
-                #Separate plotting call where user sets their own plotting parameters
-                #Resolution is getting changed and reset, but the wrap curve resolution appears not be active until the operator finishes
-                
-
-            if convert_to_degrees:
-                
-                plot_data['x_unit'] = 'degrees'
-                plot_data['x_data'] = np.rad2deg(plot_data['x_data'])
-                
-                
-
-            create_2D_plot(
-                plot_params=plot_data,
-                x_ticks=3,
-                y_ticks=3,
-                plot_lower_left=(1, 1),  # Replace 'plot_origin' with 'plot_lower_left'
-                plot_dimensions=(1, 1),  # Specify the visualization range as before
-                font_scale=0.1,
-                tick_size = 0.1,
-                ylim = (0,0),
-                xlim = (0,0),
-                curve_thickness = 0.015,
-            )
-
-
+        
 
 
             
@@ -1012,6 +1019,95 @@ class SingleDOFLengthMomentArmOperator(Operator):
         print(str(time2-time1))    
 
         return {"FINISHED"}
+    
+class Regenerate2DMusclePlotOperator(Operator):
+    bl_idname = "muscle.regenerate_2d_plot"
+    bl_label = "(Re)generate a muscle's length or moment arm plot using different plotting parameters"
+    bl_description = "(Re)generate a muscle's length or moment arm plot using different plotting parameters"
+    
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+
+        #error checking for muscle
+
+        muscle_name = muskemo.musclename
+        if not muscle_name:
+            self.report({'ERROR'}, "No muscle is currently active. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
+            return {'FINISHED'}
+        
+        if muscle_name not in bpy.data.objects:
+            self.report({'ERROR'}, "Object with the name '" + muscle_name + "' does not exist. Type the correct target muscle name into the 'Muscle Name' field of the muscle panel.")
+            return {'FINISHED'}
+
+        muscle = bpy.data.objects[muscle_name]
+
+        if 'MuSkeMo_type' in muscle:
+            if 'MUSCLE' != muscle['MuSkeMo_type']:
+                self.report({'ERROR'}, "Target muscle '" + muscle_name + "' is not a MUSCLE. Operation cancelled")
+                return {'FINISHED'} 
+        else:
+            self.report({'ERROR'}, "Target muscle '" + muscle_name + "' was not an object created by MuSkeMo. Operation cancelled")
+            return {'FINISHED'}
+        
+        if 'length_data' not in muscle:
+            self.report({'ERROR'}, "Target muscle '" + muscle_name + "' does not have any length data associated to it yet which can be plotted. First create this in the Moment arms subpanel. Operation cancelled")
+            return {'FINISHED'} 
+        
+        muscle_name = muskemo.musclename
+        xlim = muskemo.xlim #input as tuple?
+        ylim = muskemo.ylim
+        plot_lower_left = muskemo.plot_lower_left
+        plot_dimensions = muskemo.plot_dimensions
+        plot_font_scale = muskemo.plot_font_scale
+        plot_tick_size = muskemo.plot_tick_size
+        plot_curve_thickness = muskemo.plot_curve_thickness
+        plot_ticknumber = muskemo.plot_ticknumber
+        plot_type = muskemo.plot_type
+        convert_to_degrees = muskemo.convert_to_degrees
+
+
+        plot_data = muscle['length_data'].to_dict()
+
+        if plot_type == 'moment arm':
+
+            plot_data['plotname'] = plot_data['plotname'].replace('length', 'moment_arm') 
+            plot_data['y_label'] = plot_data['y_label'].replace('Length', 'Moment Arm')
+            
+            length = plot_data['y_data']
+            angles_rad = plot_data['x_data']
+            
+            #moment arm is -dL / dphi. Sign is negative by convention
+            moment_arm = [-x/y for x,y in zip(np.gradient(length), np.gradient(angles_rad))]
+            plot_data['y_data'] = moment_arm
+            
+
+           
+
+        if convert_to_degrees:
+            
+            plot_data['x_unit'] = 'degrees'
+            plot_data['x_data'] = np.rad2deg(plot_data['x_data'])
+
+        from .create_2D_plot import create_2D_plot
+
+                
+        create_2D_plot(
+            plot_params=plot_data,
+            x_ticks=plot_ticknumber[0],
+            y_ticks=plot_ticknumber[1],
+            plot_lower_left=tuple(plot_lower_left),  # Replace 'plot_origin' with 'plot_lower_left'
+            plot_dimensions=tuple(plot_dimensions),  # Specify the visualization range as before
+            font_scale=plot_font_scale,
+            tick_size = plot_tick_size,
+            xlim = tuple(xlim),
+            ylim = tuple(ylim),
+            curve_thickness = plot_curve_thickness,
+        )
+
+
+        return {'FINISHED'}    
     
 class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
 
@@ -1200,6 +1296,11 @@ class VIEW3D_PT_moment_arm_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming co
         row.operator("muscle.single_dof_length_moment_arm",text = "Compute length & moment arm (1 DOF)")
 
         row = self.layout.row()
+        row.prop(muskemo, "generate_plot_bool")
+        row.prop(muskemo, "plot_type", text = "")
+
+
+        row = self.layout.row()
         row.prop(muskemo, "export_length_and_moment_arm")
 
         row = self.layout.row()
@@ -1210,4 +1311,76 @@ class VIEW3D_PT_moment_arm_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming co
         row = layout.row()
         row.operator("export.select_model_export_directory",text = 'Select export directory')
 
+
+class VIEW3D_PT_plotting_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+    bl_idname = 'VIEW3D_PT_plotting_subpanel'
+    bl_label = "Plotting"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_muscle_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
+
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+        row = self.layout.row()
+        row.operator("muscle.regenerate_2d_plot", text = "(Re)generate a muscle plot")
+
+
+        # Plot type
+        row = layout.row()
+        split = row.split(factor=1/2)
+        split.label(text='Plot type')
+        split.prop(muskemo, "plot_type", text="")
+
+        # convert to degrees
+        row = self.layout.row()
+        row.prop(muskemo, 'convert_to_degrees')
+
+        # Plot curve thickness
+        row = layout.row()
+        split = row.split(factor=1/2)
+        split.label(text='Curve thickness')
+        split.prop(muskemo, "plot_curve_thickness", text="")
+
+
+        # X-axis limits
+        row = layout.row()
+        row.prop(muskemo, "xlim")
+        
+
+        # Y-axis limits
+        row = layout.row()
+        row.prop(muskemo, "ylim")
+
+        # Plot lower left corner position
+        row = layout.row()
+        row.prop(muskemo, "plot_lower_left")
+
+        # Plot dimensions
+        row = layout.row()
+        row.prop(muskemo, "plot_dimensions")
+
+        # Font scale
+        row = layout.row()
+        split = row.split(factor=1/2)
+        split.label(text='Font scale')
+        split.prop(muskemo, "plot_font_scale", text="")
+
+        # Tick size
+        row = layout.row()
+        split = row.split(factor=1/2)
+        split.label(text='Tick size')
+        split.prop(muskemo, "plot_tick_size", text="")
+
+        # Axes ticks
+        row = layout.row()
+        row.prop(muskemo, "plot_ticknumber")
+
+        
+        
 

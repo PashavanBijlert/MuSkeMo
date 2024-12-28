@@ -73,9 +73,10 @@ from .scripts.muscle_panel import (AddMusclepointOperator, ReflectUnilateralMusc
                                       CreateWrappingGeometryOperator, 
                                       AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
                                         AssignWrappingOperator, ClearWrappingOperator,
-                                        SingleDOFLengthMomentArmOperator,
+                                        SingleDOFLengthMomentArmOperator,Regenerate2DMusclePlotOperator,
                                       VIEW3D_PT_muscle_panel, VIEW3D_PT_muscle_reflection_subpanel,
-                                      VIEW3D_PT_wrap_subpanel, VIEW3D_PT_moment_arm_subpanel,)
+                                      VIEW3D_PT_wrap_subpanel, VIEW3D_PT_moment_arm_subpanel,
+                                      VIEW3D_PT_plotting_subpanel,)
 
 
 #### inertial properties panel
@@ -190,9 +191,10 @@ classes = (  #Global settings panel
                                     CreateWrappingGeometryOperator,
                                     AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
                                     AssignWrappingOperator, ClearWrappingOperator,
-                                    SingleDOFLengthMomentArmOperator,
+                                    SingleDOFLengthMomentArmOperator,Regenerate2DMusclePlotOperator,
                                     VIEW3D_PT_muscle_panel,VIEW3D_PT_muscle_reflection_subpanel,
                                     VIEW3D_PT_wrap_subpanel, VIEW3D_PT_moment_arm_subpanel,
+                                    VIEW3D_PT_plotting_subpanel,
             #export panel
                                     VIEW3D_PT_export_panel, VIEW3D_PT_export_bodies_subpanel,
                                     VIEW3D_PT_export_joints_subpanel, VIEW3D_PT_export_muscles_subpanel,

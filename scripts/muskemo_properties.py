@@ -1,5 +1,4 @@
 import bpy
-
 from bpy.props import (StringProperty,
                         IntProperty,
                          PointerProperty,
@@ -239,11 +238,104 @@ class MuSkeMoProperties(PropertyGroup):
 
     export_length_and_moment_arm: BoolProperty(
         name="Export length and moment arm",
-        description='Export a .CSV of length and moment arm data.',
+        description='Export a .CSV of both length and moment arm data. See export panel for file export options',
         default = False,
     )
 
 
+#### Muscle plotting parameters 
+
+
+    
+    generate_plot_bool: BoolProperty(
+        name="Generate plot",
+        description='Generate plot after computation of moment arms and lengths.',
+        default = True,
+    )
+    
+    plot_type: EnumProperty(
+        name="Plot type",
+        description="Do you want to generate a plot of muscle lengths or moment arms?",
+        items=[ ('length', "length", ""),
+                ('moment arm', "moment arm", ""),
+              ],
+        default = "moment arm",
+        )
+
+
+    convert_to_degrees: BoolProperty(
+        name="x-axis in degrees",
+        description='Plot the data against degrees instead of radians',
+        default = True,
+    )
+        
+
+    xlim: FloatVectorProperty(
+          name="x-axis limits",
+        size=2,  #
+        default=(0,0),
+        description="Plotting limits for the x-axis. Scaled according to the data if the input is (0,0)"
+        )
+
+    ylim: FloatVectorProperty(
+          name="y-axis limits",
+        size=2,  #
+        default=(0,0),
+        description="Plotting limits for the y-axis. Scaled according to the data if the input is (0,0)"
+        )    
+
+    plot_lower_left: FloatVectorProperty(
+          name="Origin position",
+        size=2,  #
+        default=(1,1),
+        description="Lower left corner position for the plot."
+        )
+    
+    plot_dimensions: FloatVectorProperty(
+          name="Plot dimensions",
+        size=2,  #
+        default=(1,1),
+        description="Size of the plot (x and y dimensions)"
+        )
+    
+    plot_font_scale: FloatProperty(
+        name = "Font scale",
+        description="Scale factor of the plot fonts",
+        default = 0.05,
+        min = 0.0001,
+        max = 1,
+        precision = 2,
+        step = 0.05,
+        )
+    
+    plot_tick_size: FloatProperty(
+        name = "Tick size",
+        description="Relative scale of the  axes ticks" ,
+        default = 0.2,
+        min = 0.0001,
+        max = 1,
+        precision = 2,
+        step = 0.05,
+        )
+    
+    plot_curve_thickness: FloatProperty(
+        name = "Plot curve thickness",
+        description="How thick would you like the plotted data durve to be." ,
+        default = 0.01,
+        min = 0.0001,
+        max = 1,
+        precision = 2,
+        step = 0.005,
+        )
+
+    plot_ticknumber: IntVectorProperty(
+          name= "Axes ticks",
+        size=2,  #
+        default=(3,3),
+        description="Number of ticks for the x and y axes (respectively)"
+        )
+    
+    
 #### Inertial properties panel
 
     segment_density: FloatProperty(
