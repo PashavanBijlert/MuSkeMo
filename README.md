@@ -1,6 +1,6 @@
 # **MuSkeMo**
 
-Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in versions between 3.0-4.1.
+Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in Blender versions between 4.1+.
 
 To download: Click on the latest release on the right, and download "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
