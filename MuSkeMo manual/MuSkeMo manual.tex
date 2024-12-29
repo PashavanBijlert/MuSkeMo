@@ -43,6 +43,9 @@
 % Collections in the outliner
 % Custom properties screenshot
 % Screenshot of each panel?
+
+% Modifier panel User inputs
+
 % User settings of the muscle viewer node
 % Presets in the expansions panels
 % User modifiable inputs in the muscle visualization nodes.
@@ -150,13 +153,23 @@ MuSkeMo lives in \href{https://docs.blender.org/manual/en/latest/interface/windo
 \end{figure}
 
 \subsection{Where MuSkeMo stores model data}
+\label{sec:muskemodata}
 All the model components and other user-created objects are stored in Blender \href{https://docs.blender.org/manual/en/latest/scene_layout/collections/collections.html}{Collections} (Fig. \ref{fig:MuSkeMoUI}B), which are essentially just folders. The collection names all have sensible defaults in MuSkeMo (e.g., "Bodies" for bodies), but can be changed if desired. The collection names are also used as the default filenames during import/export, but this is also customizable. By default, child objects aren't always visible in the collection that they're actually in (see Section \ref{sec:MSM_glob_settings}).
 
 For each model component, data created by MuSkeMo are stored in Blender as \href{https://docs.blender.org/manual/en/latest/files/custom_properties.html}{Custom Properties} assigned to each object in question (Fig. \ref{fig:MuSkeMoUI}C, see also Section \ref{sec:DataTypes} on MuSkeMo Data Types).
 
-\subsection{How MuSkeMo generates model components}
+\subsection{Model components and modifiers}
 
-%bit about objects, modifiers, and geometry nodes modifiers
+MuSkeMo creates a new \href{https://docs.blender.org/manual/en/latest/scene_layout/object/types.html}{Blender Object} for each model component. Blender has many different object types, but MuSkeMo mainly uses "Mesh", "Curve", and "Empty" (see \ref{sec:DataTypes} for a full specification of all the used data types). Objects in Blender do not interact with other objects, unless the user somehow defines their inter-relationships. MuSkeMo handles all of this under the hood. For instance, components such as contact spheres need to be parented to specific bodies in the model, and MuSkeMo handles this while also keeping track of these inter-relationships in "Custom properties" (see \ref{sec:muskemodata}) so they are exposed to the user.
+
+Combining parenting and Blender's native object types does not provide all of the required functionality. MuSkeMo extensively makes use of Blender's \href{https://docs.blender.org/manual/en/latest/modeling/modifiers/index.html}{Modifier system} for both generating and visualizing components. For instance, individual muscle curve points cannot be attached to bodies using Blender's parenting system, so MuSkeMo achieves this by adding a hook modifier for each curve point (see \ref{sec:muscle}). 
+
+MuSkeMo uses both regular modifiers (which perform a predefined operation/modification on the object, e.g. the \href{https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/bevel.html}{Bevel modifier} is used to round the edges of muscle visualizations), but also several custom-made Geometry nodes modifiers.
+
+\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes} modifiers are a very powerful way perform a customized sequence of operations on a specific object. MuSkeMo uses custom-made geometry nodes modifiers for muscle visualization (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}), muscle wrapping \ref{sec:musclewrapping}, creating parametric wrap geometry \ref{sec:wrapgeom}, amongst other features. The most important inputs for most MuSkeMo's custom Geometry nodes are accessible from the modifier panel itself [FIGURE], but advanced Blender users can also dive into the nodes themselves for more in depth modifications to their behavior. Where possible MuSkeMo tries to reuse node groups, which means that it is possible to make global changes to geometry node behavior by changing the parameters of a single node group. For example, the visualization of all the muscles can be changed by modifying the underlying node groups (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}).
+
+By default, MuSkeMo color codes each component (see \ref{sec:defaultcolors} for details).
+
 
 \subsection{Blender Auto Save}
 
@@ -266,6 +279,8 @@ If "Generate plot" is selected, moment arms are plotted straight away (see also 
 
 If "Export length and moment arm" is selected, a CSV (or other file, see \ref{sec:exportpanel}) is exported during moment arm computation. This requires setting a target export directory.
 
+If a muscle uses wrapping, the wrapped points are projected onto the wrap geometry using a raycast node (\ref{sec:musclewrapping}). This currently results in some noise when computing moment arms. FIGURE COMPARISON TO FOLLOW.
+
 
 %REF AN? REF something else?
  
@@ -361,10 +376,13 @@ This subpanel includes several convenience tools to aid users who are new to ani
 
 
 \subsubsection{Default colors}
+\label{sec:defaultcolors}
 
 In Blender, objects get assigned a color (and other surface rendering properties, such as roughness) by assigning a \href{https://docs.blender.org/manual/en/latest/editors/properties_editor.html}{material}. Before importing and/or model component creation, you can define the desired default colors in this panel for muscles, visual geometry (bones), joints, contacts, markers, geometric primitives, and wrapping geometry. If an instance of the object has been already created (e.g., you have already created a joint), you can change the colors by changing the object's material in the \href{https://docs.blender.org/manual/en/latest/editors/properties_editor.html}{properties tab} or in the \href{https://docs.blender.org/manual/en/latest/editors/shader_editor.html}{shader editor}. Unlike all other object types, each individual muscle in the model gets a unique material. This is to ensure that its activation can be independently animated when importing trajectories. This means that if you want a different default muscle color, you need to define it before model import/creation, or you must change all the muscle-materials individually.
 
 Joints, contacts, wrap geometry, geometric primitives, and markers are provided with a transparent material by default (this is achieved with a mix shader node in the shader editor).
+
+Importantly, the coloration in Blender depends on \href{https://docs.blender.org/manual/en/latest/editors/3dview/display/shading.html}{Viewport Shading} mode in Blender. "Solid" mode uses a material's \href{https://docs.blender.org/manual/en/latest/render/workbench/display_settings.html#properties-material-viewport-display}{Viewport Display}, whereas "Material Preview" and "Rendered" modes actually use the object's Material properties themselves. Eevee does not support transparent materials, so this is only available when selecting "Cycles" as the rendering engine.
 
 \subsection{MuSkeMo utilities}
 
