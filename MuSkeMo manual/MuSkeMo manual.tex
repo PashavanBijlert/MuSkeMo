@@ -32,6 +32,10 @@
 % add more prose about number formatting
 % Write section about scaling
 
+% Moment arm computation validation figure
+% body segment property validation figure
+
+
 
 % Figures to add:
 % Maybe intro overview figure?
@@ -39,6 +43,7 @@
 % Collections in the outliner
 % Custom properties screenshot
 % Screenshot of each panel?
+% User settings of the muscle viewer node
 % Presets in the expansions panels
 % User modifiable inputs in the muscle visualization nodes.
 % Examples of volumetric muscle visualizations
@@ -72,7 +77,7 @@
     \textbf{Github Repository:} \href{https://github.com/PashavanBijlert/MuSkeMo}{Github} \\
     \textbf{Bug Reports and Feature Requests:} \href{https://github.com/PashavanBijlert/MuSkeMo/issues}{Submit an issue on Github} \\
     \vspace{20pt}
-    {\large Version 0.9.0} \\
+    {\large Version 0.9.1} \\
     {\large \today}
 \end{center}
 
@@ -149,6 +154,9 @@ All the model components and other user-created objects are stored in Blender \h
 
 For each model component, data created by MuSkeMo are stored in Blender as \href{https://docs.blender.org/manual/en/latest/files/custom_properties.html}{Custom Properties} assigned to each object in question (Fig. \ref{fig:MuSkeMoUI}C, see also Section \ref{sec:DataTypes} on MuSkeMo Data Types).
 
+\subsection{How MuSkeMo generates model components}
+
+%bit about objects, modifiers, and geometry nodes modifiers
 
 \subsection{Blender Auto Save}
 
@@ -222,7 +230,7 @@ Define path-point muscles. Muscle points are added to the 3D cursor location, an
 To add a point to the end of the muscle (or to create a new muscle), type in the muscle name, and select the target body. Press shift + right mouse button to position the 3D cursor at the desired location in 3D space, and then press "Add muscle point". Muscle points are added to the 3D cursor location.
 You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB", then select the relevant point and press "G" to move it around). If the parent bodies are repositioned, you must delete and redraw the muscles.
 
-\subsubsection{Adding muscle points}
+\subsubsection{Inserting muscle points}
 It is possible to insert muscle points (instead of adding them at the end). To insert a point, select the point index after which you would like to insert a point (starting at 1), and press "Insert muscle point".
 
 
@@ -231,18 +239,41 @@ By default, muscles are visualized using a Geometry node modifier named "musc\_n
 
 If the volumetric visualization option is used for the muscles, visualization parameters can be tuned in the "VolumetricMuscleViz" modifier (see section \ref{sec:volmuscleviz} for details).
 
+\subsubsection{View length in realtime}
+
+This button adds a geometry node modifier named "LiveLengthViewer" to the active muscle. This allows the user to interactively pose the model and see how the muscle lengths change. This can be useful during muscle construction, and for tuning musculotendon parameters. The user can change the placement and the size of the text from the modifier inputs. %Add figure!
+The node uses a custom node group named "LiveLengthViewerNodeGroup", which is shared between all muscles that have a length viewer modifier added to it. To disable the length viewer, remove the modifier from the muscle's modifier stack.
+
 \subsubsection{Reflect unilateral muscles}
 This feature reflects left- or right-sided muscles if currently only one of the two sides exists in the "Muscles" collection. You can choose what plane across which to reflect (default = 'XY'), and change the strings with which you designate the left and right sides (default is '\_l' and '\_r', respectively). The script then checks for all muscles whether its other-side counterpart exists, and if not, creates it. \textbf{Warning:} This function uses a string search to check whether the side string is in the object's name. This can potentially cause conflicts (e.g., the name "dorsal\_rib\_l" contains both '\_l' and '\_r').
 
 
 
-%Assign wrap?
+\subsubsection{Assigning wrapping}
+
+You can use the "Wrapping" subpanel to perform all the necessary steps to assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. 
+
+\subsubsection{Parametric wraps}
+Wrapping geometries can be interactively resized using the inputs in the object's modifier (e.g., the cylinder). To achieve this in Blender, wrapping geometries are also generated using geometry nodes (see \ref{sec:wrapgeom} for details). When a muscle gets assigned a WRAP, it receives a very complex geometry nodes modifier (see \ref{sec:musclewrapping} for details). This geometry node modifier, amongst other inputs, requires the wrap object dimensions (e.g., cylinder radius and height) as inputs. In Blender, it is not straightforward to couple the wrap parameters of a muscle to the wrapping geometry, because they are two separate objects. Turning on "Parametric Wraps" before creating (or importing) a wrap achieves this behavior using \href{https://docs.blender.org/manual/en/latest/animation/drivers/introduction.html}{Blender Drivers}. \textbf{Having many drivers on simultaneously can reduce performance and cause instability. It is recommended to turn Parametric Wraps ON when constructing muscle paths and modifying them, and then to export the model, and reimport it into a new scene with Parametric Wraps turned OFF for further processing.}
+
 
 \subsubsection{Moment arms}
-%how to use the basic functionality to compute for a single dof single muscle
-%exporting functionality? Or split that off to export panel?
-%how to plot
+
+MuSkeMo can compute a muscle's moment arms, about a single degree of freedom. Specify the muscle name in the top of the Muscle panel, and the "Active joint 1"  name in the Moment arms panel. You can choose between rotating about local x, y, or z axes, and the range (in degrees) over which the moment arms should be computed. MuSkeMo assumes that 0 degrees rotation is the current model's position. Angle step size determines how fine or coarse the joint range will be sampled. 
+
+When a computation is succesful, a Python dictionary named "length\_data" is added to the muscles's custom properties. MuSkeMo computes the length of the target muscle over the desired joint range. Moment arms are computed using the principle of virtual work, where r = -dL / dphi. Only lengths are stored, moment arms are computed during plotting or export.
+If "Generate plot" is selected, moment arms are plotted straight away (see also \ref{sec:plotting}), which may be useful when constructing muscle paths. It is also possible to plot muscle lengths instead.
+
+If "Export length and moment arm" is selected, a CSV (or other file, see \ref{sec:exportpanel}) is exported during moment arm computation. This requires setting a target export directory.
+
+
+%REF AN? REF something else?
+ 
 %example figure of difference in my emu, made using an automated script that will be dumped in the utilities folder
+\subsubsection{Plotting}
+\label{sec:plotting}
+
+The plotting subpanel provides the user with some flexibility to alter the plots. Change the parameters in the panel, and then press "(Re)generate a muscle plot", which updates the length or moment arm plot of the muscle in question. The plotter can only (re)generate a plot for muscles where "length\_data" were previously computed in the moment arms subpanel.
 
 \subsection{Anatomical \& local reference frames panel}
 
@@ -276,7 +307,7 @@ Similar to muscle points, landmarks are added to the 3D cursor location.
 Similar to muscle points, contacts are added to the 3D cursor location. Contacts can also be assigned a parent body.
 
 \subsection{Export panel}
-
+\label{sec:exportpanel}
 You can export all the user-created datatypes via this panel. The individual exporters export all the data types from the user-designated collections (folders) in Blender. It is possible to export all the visual geometry to a subfolder.
 
 MuSkeMo exports all the data with respect to both the global reference frame (origin), and body-fixed local reference frames. Orientations are exported as XYZ-Euler angle decompositions, and as quaternion decompositions.
@@ -454,6 +485,9 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 
 %shortest wrap uses a cross product between the wrap crossing points, then computes the dot product between that vector and the cylinder z-axis. This is used to flip the wrap if required.
 
+% \textbf{MuSkeMo currently does not yet support physically accurate wrapping,} and only provides a very experimental setup as an option during import for model visualizations. When the option is selected during import, muscles get one extra geometry node modifier per wrapping interaction. The "wrapping" is currently achieved by a node setup that projects the section of the muscle inside the wrapping object in a 180 degree arc onto the wrapping surface. This is not a minimal-distance wrapping approach, and is thus not physically realistic, but could potentially be useful for visualizations. The direction of the wrapping can be changed by changing the projection angle - accessible in the node setup. 0\degree means the wrap is projected around the positive $x$-direction of the wrapping object's local coordinate system, and the angle is the local $z$-angle.
+
+% Implementing physically accurate realtime wrapping is a challenge in Blender, because it seems that creating custom curve types is not currently possible. The most promising avenue appears to be using \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes}, but this comes with its own set of challenges because all of the logic needs to be implemented with nodes, and currently Blender does not have something equivalent to a "Scripted Expression" node. Thus, even a simple equation such as $ \sqrt{0.5x^2 + 3xy + \cos(x)} $ requires 8 nodes, and thus things can get very complicated rather quickly.
 
 
 
@@ -532,18 +566,17 @@ MuSkeMo implements two different sphere fitting algorithms, described in \cite{J
 \subsection{WRAP}
 \label{sec:wrapgeom}
 
- Wrapping objects defined in OpenSim models (but currently not yet Gaitsym models) are included in the model import. Currently, WRAP objects are regular meshes just like GEOM\_PRIMITIVEs, but it is not straightforward to control aspects of the wrapping geometry (e.g., the cylinder radius) parametrically in regular meshes. To achieve parametric wrap geometry, WRAP geometry will soon be replaced with Geometry nodes that parametrically generate the desired object.
+Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (but currently not yet Gaitsym models) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. To achieve parametric wrap geometry, WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface). Currently, only cylinders are supported.
+
+WRAP geometry are the physical objects that muscles can be assigned to wrap around, but the actual curve wrapping is achieved with modifiers on individual muscles (see \ref{musclewrapping}).
+
+Just like JOINTS, WRAPS have parent bodies, and orientations and positions with respect to parent frames if those are assigned to the body. Unique to WRAP are the following properties:
+
+\begin{itemize}
+    \item \texttt{target\_muscles}. A list of all the muscles (delimited with ';') that wrap around this object. Can be 'not\_assigned'.
+    \item \texttt{wrap\_type}. Currently only 'Cylinder'.
+\end{itemize}
  
-
- 
- % \textbf{MuSkeMo currently does not yet support physically accurate wrapping,} and only provides a very experimental setup as an option during import for model visualizations. When the option is selected during import, muscles get one extra geometry node modifier per wrapping interaction. The "wrapping" is currently achieved by a node setup that projects the section of the muscle inside the wrapping object in a 180 degree arc onto the wrapping surface. This is not a minimal-distance wrapping approach, and is thus not physically realistic, but could potentially be useful for visualizations. The direction of the wrapping can be changed by changing the projection angle - accessible in the node setup. 0\degree means the wrap is projected around the positive $x$-direction of the wrapping object's local coordinate system, and the angle is the local $z$-angle.
-
-% Implementing physically accurate realtime wrapping is a challenge in Blender, because it seems that creating custom curve types is not currently possible. The most promising avenue appears to be using \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes}, but this comes with its own set of challenges because all of the logic needs to be implemented with nodes, and currently Blender does not have something equivalent to a "Scripted Expression" node. Thus, even a simple equation such as $ \sqrt{0.5x^2 + 3xy + \cos(x)} $ requires 8 nodes, and thus things can get very complicated rather quickly.
-
-% An implementation of \cite{garnerObstacleSetMethodRepresenting2000} for wrapping cylinders and spheres is currently under development, but is not yet part of the main release.
-
-Cylinder wrapping using a geometry nodes implementation of \cite{garnerObstacleSetMethodRepresenting2000} is supported but not yet documented.
-
 % Start the appendix
 \appendix
 % Redefine the section numbering style for the appendix to use Roman numerals and the word "Appendix"
