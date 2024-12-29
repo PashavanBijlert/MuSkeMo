@@ -279,7 +279,7 @@ If "Generate plot" is selected, moment arms are plotted straight away (see also 
 
 If "Export length and moment arm" is selected, a CSV (or other file, see \ref{sec:exportpanel}) is exported during moment arm computation. This requires setting a target export directory.
 
-If a muscle uses wrapping, the wrapped points are projected onto the wrap geometry using a raycast node (\ref{sec:musclewrapping}). This currently results in some noise when computing moment arms. FIGURE COMPARISON TO FOLLOW.
+\textbf{Warning:} While the moment arms computed by MuSkeMo are physically accurate (FIGURE COMPARISON TO FOLLOW), the computed moment arms for muscles that have wrapping can be a slightly noisy. This is likely occurs because wrapped points are projected onto the wrap geometry using a raycast node (\ref{sec:musclewrapping}). It is up to the user to decide whether this is a problem for their purposes. 
 
 
 %REF AN? REF something else?
