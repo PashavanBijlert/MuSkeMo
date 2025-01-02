@@ -230,7 +230,7 @@ class MuSkeMoProperties(PropertyGroup):
     angle_step_size: FloatProperty(
         name = "Angle step size",
         description="Step size (in degrees) of the joint angle for the moment arm computations. Lower is slower.",
-        default = 0.5,
+        default = 1,
         min = 0.0000001,
         max = 1
         )    
