@@ -68,14 +68,14 @@ from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJoint
                                       )
 
 #### muscle panel
-from .scripts.muscle_panel import (AddMusclepointOperator, ReflectUnilateralMusclesOperator,
+from .scripts.muscle_panel import (AddMusclepointOperator, 
                                       InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                       CreateWrappingGeometryOperator, 
                                       AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
                                         AssignWrappingOperator, ClearWrappingOperator,
                                         SingleDOFLengthMomentArmOperator,Regenerate2DMusclePlotOperator,
                                         AddLiveLengthViewerNodeOperator,
-                                      VIEW3D_PT_muscle_panel, VIEW3D_PT_muscle_reflection_subpanel,
+                                      VIEW3D_PT_muscle_panel,
                                       VIEW3D_PT_wrap_subpanel, VIEW3D_PT_moment_arm_subpanel,
                                       VIEW3D_PT_plotting_subpanel,)
 
@@ -143,6 +143,13 @@ from .scripts.contact_panel import (VIEW3D_PT_contact_panel, CreateContactOperat
                                     AssignContactParentOperator,ClearContactParentOperator,)
 
 
+#### reflection panel
+
+from .scripts.reflection_panel import (ReflectUnilateralMusclesOperator,
+                                       ReflectUnilateralWrapsOperator,
+                                       VIEW3D_PT_reflection_panel, 
+                                       )
+
 
 
 
@@ -187,14 +194,14 @@ classes = (  #Global settings panel
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 
-                                    AddMusclepointOperator, ReflectUnilateralMusclesOperator,
+                                    AddMusclepointOperator, 
                                     InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                     CreateWrappingGeometryOperator,
                                     AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
                                     AssignWrappingOperator, ClearWrappingOperator,
                                     SingleDOFLengthMomentArmOperator,Regenerate2DMusclePlotOperator,
                                     AddLiveLengthViewerNodeOperator,
-                                    VIEW3D_PT_muscle_panel,VIEW3D_PT_muscle_reflection_subpanel,
+                                    VIEW3D_PT_muscle_panel,
                                     VIEW3D_PT_wrap_subpanel, VIEW3D_PT_moment_arm_subpanel,
                                     VIEW3D_PT_plotting_subpanel,
             #export panel
@@ -242,6 +249,13 @@ classes = (  #Global settings panel
             #contact sphere panel
                                 VIEW3D_PT_contact_panel, CreateContactOperator,                                       
                                 AssignContactParentOperator, ClearContactParentOperator,
+
+            
+            #Reflection panel
+                                ReflectUnilateralMusclesOperator,
+                                ReflectUnilateralWrapsOperator,
+                                VIEW3D_PT_reflection_panel, 
+                                       
 
             # properties
                                    MuSkeMoProperties,

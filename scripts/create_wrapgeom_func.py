@@ -25,7 +25,7 @@ def create_wrapgeom(name, geomtype, collection_name,
         bpy.context.scene.collection.children.link(coll)     #add it to the scene
     
     #Make sure the correct collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
+    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
 
     ## check if material exists and if not, create it
     matname = 'wrap_geom_material'
@@ -43,9 +43,18 @@ def create_wrapgeom(name, geomtype, collection_name,
 
     if geomtype == 'Cylinder':
         # Create a cylinder using bpy.ops
+
+        if dimensions: #if the user specified dimensions
+            radius = dimensions['radius']
+            height = dimensions['height']
+
+        else: #otherwise just set default values
+            radius = 1.0
+            height = 1.0
+
         bpy.ops.mesh.primitive_cylinder_add(
-            radius=dimensions['radius'], 
-            depth=dimensions['height'], 
+            radius=radius, 
+            depth=height, 
             
         )
 
@@ -136,8 +145,8 @@ def create_wrapgeom(name, geomtype, collection_name,
         modifier.node_group = node_tree
         
         # Set the radius and depth in the modifier socket
-        modifier['Socket_1'] = dimensions['radius']
-        modifier['Socket_2'] = dimensions['height']
+        modifier['Socket_1'] = radius
+        modifier['Socket_2'] = height
 
        
 

@@ -1,7 +1,7 @@
 
 # give Python access to Blender's functionality
 import bpy
-from mathutils import Vector
+
 from math import nan
 import numpy as np
 
@@ -95,155 +95,7 @@ class AddMusclepointOperator(Operator):
         return {'FINISHED'}
 
 
-class ReflectUnilateralMusclesOperator(Operator):
-    bl_idname = "muscle.reflect_unilateral_muscles"
-    bl_label = "Reflects unilateral muscles across desired reflection plane if they contain the right or left side string in the name."
-    bl_description = "Reflects unilateral muscles across desired reflection plane if they contain the right or left side string in the name."
-    
-    def execute(self, context):
-        
-        muskemo = bpy.context.scene.muskemo
-        colname = muskemo.muscle_collection
 
-        collection = bpy.data.collections[colname]
-
-        muscles = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'MUSCLE']
-        muscle_names = [obj.name for obj in muscles]
-
-       
-        right_string = muskemo.right_side_string
-        left_string = muskemo.left_side_string
-
-        reflection_plane = muskemo.reflection_plane
-
-        if reflection_plane == 'XY':
-            reflect_vect = Vector((1,1,-1,1)) #negative Z
-
-        elif reflection_plane == 'YZ':
-            reflect_vect = Vector((-1,1,1,1)) #negative X
-        
-        elif reflection_plane == 'XZ':
-            reflect_vect = Vector((1,-1,1,1)) #negative Y
-            
-
-        from .create_muscle_func import create_muscle
-
-        for obj in (obj for obj in muscles if (
-            (right_string in obj.name and obj.name.replace(right_string, left_string) not in muscle_names)) or
-            (left_string in obj.name and obj.name.replace(left_string, right_string) not in muscle_names)):
-
-            
-            if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
-                  
-                currentside = right_string #this is the side we DO have
-                otherside = left_string #the side we are creating
-
-            else: #if right_string is not in the name, the current side is the left side.
-                currentside = left_string #this is the side we DO have
-                otherside = right_string #the side we are creating
-
-            muscle_name = obj.name.replace(currentside,otherside) #rename to otherside
-                                    
-            F_max = obj['F_max']
-            pennation_angle = obj['pennation_angle'] 
-            optimal_fiber_length = obj['optimal_fiber_length']
-            tendon_slack_length = obj['tendon_slack_length']
-
-            '''
-            new_obj = obj.copy()  #copy object
-            new_obj.data = obj.data.copy() #copy object data
-            new_obj.name = obj.name.replace(currentside,otherside) #rename to left
-            
-            collection.objects.link(new_obj)  #add to Muscles collection
-            '''
-            
-            
-            modifier_list = [x.name for x in obj.modifiers if 'Hook'.casefold() in x.name.casefold()] #list of all the hook modifiers that are added to this curve
-
-            #if muscle_current_position_export:
-            #    curve_ev = curve.to_curve(depsgraph, apply_modifiers=True)
-            ### loop through points
-
-            for i in range(0, len(obj.data.splines[0].points)): #for each point
-                
-                body_name = ''   #this gets overwritten unless a muscle is currently unhooked
-                newbodyname = ''
-                print(i)
-                for h in range(len(modifier_list)):               #for each hook modifier that is added to this curve
-                    modifier = obj.modifiers[modifier_list[h]]  #modifier is the h'th modifier in the list
-                    for j in range(len(modifier.vertex_indices)): #vertex index = connected curve point, so for each connected curve point j, which starts counting at 0
-                        if i == modifier.vertex_indices[j]:       
-                            body_name_curr = modifier.object.name      #if curve point i equals a connected curve point j in modifier h, get the corresponding body name
-
-                            newbodyname = body_name_curr.replace(currentside,otherside) #rename to otherside
-                            print(newbodyname)
-                            if newbodyname not in bpy.data.objects:# if the body doesn't exist
-                                self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" + muscle_name  +  "' MUSCLE currently has unhooked points.")
-                        
-                            else:
-                                body_name = newbodyname
-                        
-
-                    #reflect each point about z
-
-                point_position = obj.data.splines[0].points[i].co*reflect_vect
-
-                
-                create_muscle(muscle_name=muscle_name,
-                            point_position=point_position,
-                            body_name = body_name,
-                            collection_name= colname,
-                            F_max=F_max,
-                            pennation_angle=pennation_angle,
-                            optimal_fiber_length=optimal_fiber_length,
-                            tendon_slack_length=tendon_slack_length)
-                    
-                
-                    
-            '''      
-
-            ## set material
-            oldmatname = new_obj.material_slots[0].name
-            new_obj.data.materials.pop(index = 0)
-            newmatname = oldmatname.replace(currentside,otherside)
-            if newmatname in bpy.data.materials: #if the material already exists
-                newmat = bpy.data.materials[newmatname]
-                new_obj.material_slots[0].material = newmat
-
-            else:
-                from .create_muscle_material_func import create_muscle_material
-
-                newmat = create_muscle_material(new_obj.name)
-
-            for mod in new_obj.modifiers: #loop through all modifiers
-
-                mod.name = mod.name.replace(currentside,otherside)
-
-                if 'HOOK' == mod.type: #if it's a hook, hook the other side body
-                    newbodyname = mod.object.name.replace(currentside,otherside)
-                    
-
-                    if newbodyname not in bpy.data.objects:# if the body doesn't exist
-                        self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" +new_obj.name  +  "' MUSCLE currently has unhooked points.")
-                        mod.object = None
-                    else:
-                        mod.object = bpy.data.objects[newbodyname] #point the hook to the left side body
-                        
-
-                if 'NODES' == mod.type: #if it's a geometry nodes modifier
-                
-                    if 'SimpleMuscleViz' in mod.name:  #(the simple muscle viz) 
-                        mod.node_group.nodes['Set Material'].inputs['Material'].default_value = newmat   
-                        mod.name.replace(currentside, otherside)
-                        #create a new nodegroup.
-
-                    #if VolMuscle
-                    # 
-                    # 
-                    #if wrap in mod.name:    
-
-            '''  
-        return {'FINISHED'}
     
 class InsertMusclePointOperator(Operator):
     bl_idname = "muscle.insert_muscle_point"
@@ -573,6 +425,17 @@ class AssignWrappingOperator(Operator):
             self.report({'ERROR'}, "Too many objects selected. Select one wrap geometry.")
             return {'FINISHED'}
         
+        # throw an error if no muscle name is given
+
+        if not muscle_name:
+            self.report({'ERROR'}, "No muscle name is given. Type it into the 'Muscle name' panel input.")
+            return {'FINISHED'}
+        
+        if muscle_name not in bpy.data.objects:
+            self.report({'ERROR'}, "No object with the name '" + muscle_name + "' exists. Double check your spelling of the 'Muscle name' panel input.")
+            return {'FINISHED'}
+
+
         wrap_obj = sel_obj[0]
         wrap_obj_name = wrap_obj.name
 
@@ -1272,49 +1135,7 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         row = self.layout.row()
         row.operator("muscle.add_live_length_viewer", text = "View length in realtime")
 
-class VIEW3D_PT_muscle_reflection_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
-    #This panel inherits from the class VIEW3D_PT_MuSkeMo
 
-    bl_idname = 'VIEW3D_PT_muscle_reflection_subpanel'
-    bl_label = "Reflect muscles"  # found at the top of the Panel
-    bl_context = "objectmode"
-    bl_parent_id = "VIEW3D_PT_muscle_panel"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context): 
-    
-        layout = self.layout
-        scene = context.scene
-        muskemo = scene.muskemo
-        
-        self.layout.row()
-        row = self.layout.row()
-        row.operator("muscle.reflect_unilateral_muscles", text="Reflect unilateral muscles")
-        row = self.layout.row()
-
-        # Split row into four columns with desired proportions
-        split = row.split(factor=4/10)  # First split for left label
-        split_left_label = split.column()
-        split_left_label.label(text="Left Side String")
-
-        split = split.split(factor=1/6)  # Second split for left input field
-        split_left_input = split.column()
-        split_left_input.prop(muskemo, "left_side_string", text="")
-
-        split = split.split(factor=4/5)  # Third split for right label (remaining space)
-        split_right_label = split.column()
-        split_right_label.label(text="Right Side String")
-
-        split_right_input = split.column()  # Last column for right input field
-        split_right_input.prop(muskemo, "right_side_string", text="")
-
-        row = self.layout.row()
-        split = row.split(factor = 1/2)
-        split.label(text = 'Reflection Plane')
-        split.prop(muskemo, "reflection_plane", text = "")
-
-
-        
         
 class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo
