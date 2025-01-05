@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 import numpy as np
 
-def create_muscle (muscle_name, point_position, body_name,
+def create_muscle (muscle_name, point_position, body_name = '',
                    collection_name = 'Muscles',
                    is_global=True, F_max = 0.0, pennation_angle = 0.0, 
                    optimal_fiber_length = 0.0, tendon_slack_length = 0.0,):
@@ -21,9 +21,6 @@ def create_muscle (muscle_name, point_position, body_name,
     #Make sure the "Muscles" collection is active
     bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
 
-
-
-    body = bpy.data.objects[body_name]     
 
     new_musc = True #assume the Muscle needs to be created anew
     if muscle_name in bpy.data.objects:  #if an object exists with this name
@@ -143,12 +140,16 @@ def create_muscle (muscle_name, point_position, body_name,
     spline.points[last_point].co = Vector(point_position).to_4d()  ## co has has input a 4d vector (x,y,z,1).
 
     ### hook point to body
-    modname = 'hook' + str(last_point) + '_' + body.name #
+    modname = 'hook' + str(last_point) + '_' + body_name #
     obj = curve
             
     obj.modifiers.new(name=modname, type='HOOK')
     obj.modifiers[modname].vertex_indices_set([last_point])#setting this only updates if you either toggle in and out of edit mode (slow) or add the body afterwards
-    obj.modifiers[modname].object = body  #      
+    
+    if body_name: #if the user specifies a body name that exists
+        if body_name in bpy.data.objects:
+            body = bpy.data.objects[body_name]     
+            obj.modifiers[modname].object = body  #      
 
     #Ensure the last two modifiers are always the Visualization and then the bevel modifier
     n_modifiers = len(obj.modifiers)

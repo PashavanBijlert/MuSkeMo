@@ -116,6 +116,18 @@ class ReflectUnilateralMusclesOperator(Operator):
 
         reflection_plane = muskemo.reflection_plane
 
+        if reflection_plane == 'XY':
+            reflect_vect = Vector((1,1,-1,1)) #negative Z
+
+        elif reflection_plane == 'YZ':
+            reflect_vect = Vector((-1,1,1,1)) #negative X
+        
+        elif reflection_plane == 'XZ':
+            reflect_vect = Vector((1,-1,1,1)) #negative Y
+            
+
+        from .create_muscle_func import create_muscle
+
         for obj in (obj for obj in muscles if (
             (right_string in obj.name and obj.name.replace(right_string, left_string) not in muscle_names)) or
             (left_string in obj.name and obj.name.replace(left_string, right_string) not in muscle_names)):
@@ -130,25 +142,65 @@ class ReflectUnilateralMusclesOperator(Operator):
                 currentside = left_string #this is the side we DO have
                 otherside = right_string #the side we are creating
 
-        
+            muscle_name = obj.name.replace(currentside,otherside) #rename to otherside
+                                    
+            F_max = obj['F_max']
+            pennation_angle = obj['pennation_angle'] 
+            optimal_fiber_length = obj['optimal_fiber_length']
+            tendon_slack_length = obj['tendon_slack_length']
+
+            '''
             new_obj = obj.copy()  #copy object
             new_obj.data = obj.data.copy() #copy object data
             new_obj.name = obj.name.replace(currentside,otherside) #rename to left
             
             collection.objects.link(new_obj)  #add to Muscles collection
+            '''
             
-            for point in new_obj.data.splines[0].points:   #reflect each point about z
+            
+            modifier_list = [x.name for x in obj.modifiers if 'Hook'.casefold() in x.name.casefold()] #list of all the hook modifiers that are added to this curve
 
-                if reflection_plane == 'XY':
-                    reflect_vect = Vector((1,1,-1,1)) #negative Z
+            #if muscle_current_position_export:
+            #    curve_ev = curve.to_curve(depsgraph, apply_modifiers=True)
+            ### loop through points
 
-                elif reflection_plane == 'YZ':
-                    reflect_vect = Vector((-1,1,1,1)) #negative X
+            for i in range(0, len(obj.data.splines[0].points)): #for each point
                 
-                elif reflection_plane == 'XZ':
-                    reflect_vect = Vector((1,-1,1,1)) #negative Y
+                body_name = ''   #this gets overwritten unless a muscle is currently unhooked
+                newbodyname = ''
+                print(i)
+                for h in range(len(modifier_list)):               #for each hook modifier that is added to this curve
+                    modifier = obj.modifiers[modifier_list[h]]  #modifier is the h'th modifier in the list
+                    for j in range(len(modifier.vertex_indices)): #vertex index = connected curve point, so for each connected curve point j, which starts counting at 0
+                        if i == modifier.vertex_indices[j]:       
+                            body_name_curr = modifier.object.name      #if curve point i equals a connected curve point j in modifier h, get the corresponding body name
+
+                            newbodyname = body_name_curr.replace(currentside,otherside) #rename to otherside
+                            print(newbodyname)
+                            if newbodyname not in bpy.data.objects:# if the body doesn't exist
+                                self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" + muscle_name  +  "' MUSCLE currently has unhooked points.")
+                        
+                            else:
+                                body_name = newbodyname
+                        
+
+                    #reflect each point about z
+
+                point_position = obj.data.splines[0].points[i].co*reflect_vect
+
                 
-                point.co = point.co*reflect_vect
+                create_muscle(muscle_name=muscle_name,
+                            point_position=point_position,
+                            body_name = body_name,
+                            collection_name= colname,
+                            F_max=F_max,
+                            pennation_angle=pennation_angle,
+                            optimal_fiber_length=optimal_fiber_length,
+                            tendon_slack_length=tendon_slack_length)
+                    
+                
+                    
+            '''      
 
             ## set material
             oldmatname = new_obj.material_slots[0].name
@@ -178,11 +230,19 @@ class ReflectUnilateralMusclesOperator(Operator):
                         mod.object = bpy.data.objects[newbodyname] #point the hook to the left side body
                         
 
-                if 'NODES' == mod.type: #if it's a geometry nodes modifier (the simple muscle viz) 
-                    mod.node_group.nodes['Set Material'].inputs['Material'].default_value = newmat   
+                if 'NODES' == mod.type: #if it's a geometry nodes modifier
                 
-                
+                    if 'SimpleMuscleViz' in mod.name:  #(the simple muscle viz) 
+                        mod.node_group.nodes['Set Material'].inputs['Material'].default_value = newmat   
+                        mod.name.replace(currentside, otherside)
+                        #create a new nodegroup.
 
+                    #if VolMuscle
+                    # 
+                    # 
+                    #if wrap in mod.name:    
+
+            '''  
         return {'FINISHED'}
     
 class InsertMusclePointOperator(Operator):
