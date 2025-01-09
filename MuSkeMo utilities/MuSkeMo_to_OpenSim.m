@@ -87,21 +87,24 @@ function userInputsDialog()
     end
 
 %% Define Muscle Parameter Labels, Tooltips, and Defaults
-muscleParamLabels = {'v_max', 'SEE_strain_at_fmax'};
+muscleParamLabels = {'v_max', 'SEE_strain_at_fmax', 'PEE_strain_at_fmax'};
 muscleParamTooltips = { ...
     'Maximal contractile velocity in L0/s', ...
-    'Strain in the serial elastic element when the fiber is contracting at its maximal isometric force'};
-muscleParamDefaults = [10, 0.04];
+    'Strain in the serial elastic element when the tendon force is equal to maximal isometric force',...
+    'Strain in the parallel elastic element when PEE force reaches max isometric force'};
+muscleParamDefaults = [10, 0.04, 0.6];
+
 
 %% Add a grid layout to the "Muscle parameters" tab
-muscleParamsGrid = uigridlayout(muscleParamsTab, [length(muscleParamLabels), 2]);
-muscleParamsGrid.RowHeight = repmat({'fit'}, 1, length(muscleParamLabels));
+nRows = length(muscleParamLabels); % Automatically adapts to the number of parameters
+muscleParamsGrid = uigridlayout(muscleParamsTab, [nRows, 2]);
+muscleParamsGrid.RowHeight = repmat({'fit'}, 1, nRows);
 muscleParamsGrid.ColumnWidth = {'1x', '2x'};
 
-%% Populate the "Muscle parameters" tab
-muscleParamFields = cell(1, length(muscleParamLabels));
+%% Populate the "Muscle parameters" tab dynamically
+muscleParamFields = cell(1, nRows);
 
-for i = 1:length(muscleParamLabels)
+for i = 1:nRows
     % Create label
     ui_label = uilabel(muscleParamsGrid, 'Text', muscleParamLabels{i}, 'HorizontalAlignment', 'right');
     ui_label.Layout.Row = i;
@@ -117,6 +120,38 @@ for i = 1:length(muscleParamLabels)
     muscleParamFields{i} = ui_editfield;
 end
 
+%% Define Contact Parameter Labels, Tooltips, and Defaults
+contactParamLabels = {'stiffness', 'damping', 'friction_coefficient'};
+contactParamTooltips = { ...
+    'Contact stiffness in N/m', ...
+    'Contact damping coefficient in Ns/m', ...
+    'Coefficient of friction for contact surface'};
+contactParamDefaults = [10000, 0.1, 0.5];
+
+%% Add a grid layout to the "Contact Parameters" tab
+nRowsContact = length(contactParamLabels); % Automatically adapts to the number of parameters
+contactParamsGrid = uigridlayout(contactParamsTab, [nRowsContact, 2]);
+contactParamsGrid.RowHeight = repmat({'fit'}, 1, nRowsContact);
+contactParamsGrid.ColumnWidth = {'1x', '2x'};
+
+%% Populate the "Contact Parameters" tab dynamically
+contactParamFields = cell(1, nRowsContact);
+
+for i = 1:nRowsContact
+    % Create label
+    ui_label = uilabel(contactParamsGrid, 'Text', contactParamLabels{i}, 'HorizontalAlignment', 'right');
+    ui_label.Layout.Row = i;
+    ui_label.Layout.Column = 1;
+
+    % Create input field
+    ui_editfield = uieditfield(contactParamsGrid, 'numeric', 'Value', contactParamDefaults(i));
+    ui_editfield.Tooltip = contactParamTooltips{i};
+    ui_editfield.Layout.Row = i;
+    ui_editfield.Layout.Column = 2;
+
+    % Store the input field
+    contactParamFields{i} = ui_editfield;
+end
 
     %% Create OpenSim Model Button
     create_model_button = uibutton(grid, 'Text', 'Create OpenSim Model', ...
