@@ -80,9 +80,9 @@ if strcmp(global_or_local,'local')
     end
     
     %check if all assigned local frames exist in the frames file
-    if ~all(ismember(body_data.local_frame_name, frame_data.frame_name)) %if not all the local frames defined in bodies are actually available in frame data
+    if ~all(ismember(body_data.local_frame_name, frame_data.FRAME_name)) %if not all the local frames defined in bodies are actually available in frame data
         
-        ind_missing_frames = ~ismember(body_data.local_frame_name, frame_data.frame_name);
+        ind_missing_frames = ~ismember(body_data.local_frame_name, frame_data.FRAME_name);
         missing_frames = body_data.local_frame_name(ind_missing_frames);
         
         % Create a formatted string that includes the incorrect strings
@@ -173,7 +173,7 @@ for i = 1:height(body_data)
         
         frame_name = body_data.local_frame_name{i}; %body_fixed frame
         
-        frame_ind = find(strcmp(frame_name, frame_data.frame_name)); %index to the frame
+        frame_ind = find(strcmp(frame_name, frame_data.FRAME_name)); %index to the frame
         euler_ind = find(contains(frame_data.Properties.VariableNames, 'Euler')); % indices to the euler angles
         pos_ind = find(contains(frame_data.Properties.VariableNames, 'pos')); %indices to global position of the frame origin
         

@@ -1,130 +1,176 @@
-% Run the dialog
-userInputsDialog();
-
 function userInputsDialog()
-% Create a figure for the dialog
-fig = uifigure('Position', [100 100 600 600], 'Name', 'Select your files for OpenSim model creation');
-
-% Model Directory
-uilabel(fig, 'Position', [30 540 100 22], 'Text', 'Model Directory');
-modelDirField = uieditfield(fig, 'text', 'Position', [200 540 200 22]);
-modelDirField.Tooltip = 'Directory where your MuSkeMo outputs are located, and where the OpenSim model will be created'
-uibutton(fig, 'Position', [450 540 50 22], 'Text', 'Browse', 'ButtonPushedFcn', @(btn, event) browseDirectory(modelDirField));
-
-
-% Data File Selection
-DatafileLabels = {'Bodies', 'Joint Centers', 'Muscles (optional)', 'Wrap objects (optional)', 'Contacts (optional)', 'Frames (optional)'};
-
-datafileTooltips = {'Bodies file';
-    'Joint centers file (optional)';
-    'Muscles file (optional)';
-    'Wrap objects file (optional)';
-    'Contacts file (optional)';
-    'Frames file (optional. Required if you want a locally-defined model'};
-datafileFields = cell(1, length(DatafileLabels));
-for i = 1:length(DatafileLabels)
-    uilabel(fig, 'Position', [30 500 - (i - 1) * 40 150 22], 'Text', DatafileLabels{i});
-    datafileFields{i} = uieditfield(fig, 'text', 'Position', [200 500 - (i - 1) * 40 200 22]);
-    datafileFields{i}.Tooltip = datafileTooltips{i};
+    %% Create a figure for the dialog
+    fig = uifigure('Position', [100 100 600 600], 'Name', 'Select your files for OpenSim model creation');
     
-    uibutton(fig, 'Position', [450 500 - (i - 1) * 40 50 22], 'Text', 'Browse', 'ButtonPushedFcn', @(btn, event) browseFile(datafileFields{i},modelDirField.Value));
+    % Create a grid layout for the entire figure
+    mainGrid = uigridlayout(fig);
+    mainGrid.RowHeight = {'1x'}; % Single row to stretch the tab group
+    mainGrid.ColumnWidth = {'1x'}; % Single column to stretch the tab group
+
+    % Create a tab group and attach it to the main grid
+    tabGroup = uitabgroup(mainGrid);
+    tabGroup.Layout.Row = 1;
+    tabGroup.Layout.Column = 1;
+
+    % Create tabs
+    modelDataTab = uitab(tabGroup, 'Title', 'Model data');
+    muscleParamsTab = uitab(tabGroup, 'Title', 'Muscle parameters');
+    contactParamsTab = uitab(tabGroup, 'Title', 'Contact parameters');
+    
+    %% Add UI components to the "Model data" tab
+    n_rows = 13;
+    % Create a grid layout for the "Model data" tab
+    grid = uigridlayout(modelDataTab, [n_rows, 3]);
+    grid.RowHeight = repmat({'fit'}, 1, n_rows);
+    grid.ColumnWidth = {'1x', '2x', 'fit'};
+
+    %% Model Directory
+    uilabel(grid, 'Text', 'Model Directory', 'HorizontalAlignment', 'right');
+    modelDirField = uieditfield(grid, 'text');
+    modelDirField.Tooltip = 'Directory where your MuSkeMo outputs are located, and where the OpenSim model will be created';
+    uibutton(grid, 'Text', 'Browse', 'ButtonPushedFcn', @(btn, event) browseDirectory(modelDirField));
+
+    %% Data File Selection
+    DatafileLabels = {'Bodies', 'Joint Centers', 'Muscles (optional)', 'Wrap objects (optional)', 'Contacts (optional)', 'Frames (optional)'};
+    datafileTooltips = {'Bodies file', 'Joint centers file (optional)', 'Muscles file (optional)', ...
+        'Wrap objects file (optional)', 'Contacts file (optional)', ...
+        'Frames file (optional. Required if you want a locally-defined model)'};
+    datafileFields = cell(1, length(DatafileLabels));
+
+    for i = 1:length(DatafileLabels)
+        uilabel(grid, 'Text', DatafileLabels{i}, 'HorizontalAlignment', 'right');
+        datafileFields{i} = uieditfield(grid, 'text');
+        datafileFields{i}.Tooltip = datafileTooltips{i};
+        uibutton(grid, 'Text', 'Browse', ...
+            'ButtonPushedFcn', @(btn, event) browseFile(datafileFields{i}, modelDirField.Value));
+    end
+
+    %% Manual inputs
+    ManualInputLabels = {'Model Name'; 'Filename'; 'Version'};
+    ManualInputTooltips = {'Model name in OpenSim';...
+        'File name of the .osim model file.';...
+        'Designate the version number here'};
+
+    ManualInputFields = cell(1, length(ManualInputLabels));
+
+    for i = 1:length(ManualInputLabels)
+        ui_label = uilabel(grid, 'Text', ManualInputLabels{i}, 'HorizontalAlignment', 'right');
+        ui_label.Layout.Row = length(DatafileLabels) + i + 1;
+        ui_label.Layout.Column = 1;
+        if ~strcmp(ManualInputLabels{i}, 'Version')
+            ui_editfield = uieditfield(grid, 'text');
+        else
+            ui_editfield = uieditfield(grid, 'text', 'Value', 'v1');
+        end
+        ui_editfield.Tooltip = ManualInputTooltips{i};
+        ManualInputFields{i} = ui_editfield;
+    end
+
+    %% Dropdown fields
+    DropDownLabels = {'Global or Local'; 'Export NoMusc Version'};
+    DropDownOptions = {{'global', 'local'}; {'no', 'yes'}};
+    DropDownTooltips = {{'Do you want the model defined in global or local coordinates?', ...
+        'Local coordinates require local / anatomical reference frames to be defined'}; ...
+        'Export a version without muscles. Can be useful for debugging'};
+    
+    DropDownFields = cell(1, length(DropDownLabels));
+
+    for i = 1:length(DropDownLabels)
+        ui_label = uilabel(grid, 'Text', DropDownLabels{i}, 'HorizontalAlignment', 'right');
+        ui_label.Layout.Row = length(DatafileLabels) + length(ManualInputLabels) + i + 1;
+        ui_label.Layout.Column = 1;
+    
+        ui_dropdown = uidropdown(grid, 'Items', DropDownOptions{i});
+        ui_dropdown.Tooltip = DropDownTooltips{i};
+
+        DropDownFields{i} = ui_dropdown;
+    end
+
+%% Define Muscle Parameter Labels, Tooltips, and Defaults
+muscleParamLabels = {'v_max', 'SEE_strain_at_fmax'};
+muscleParamTooltips = { ...
+    'Maximal contractile velocity in L0/s', ...
+    'Strain in the serial elastic element when the fiber is contracting at its maximal isometric force'};
+muscleParamDefaults = [10, 0.04];
+
+%% Add a grid layout to the "Muscle parameters" tab
+muscleParamsGrid = uigridlayout(muscleParamsTab, [length(muscleParamLabels), 2]);
+muscleParamsGrid.RowHeight = repmat({'fit'}, 1, length(muscleParamLabels));
+muscleParamsGrid.ColumnWidth = {'1x', '2x'};
+
+%% Populate the "Muscle parameters" tab
+muscleParamFields = cell(1, length(muscleParamLabels));
+
+for i = 1:length(muscleParamLabels)
+    % Create label
+    ui_label = uilabel(muscleParamsGrid, 'Text', muscleParamLabels{i}, 'HorizontalAlignment', 'right');
+    ui_label.Layout.Row = i;
+    ui_label.Layout.Column = 1;
+
+    % Create input field
+    ui_editfield = uieditfield(muscleParamsGrid, 'numeric', 'Value', muscleParamDefaults(i));
+    ui_editfield.Tooltip = muscleParamTooltips{i};
+    ui_editfield.Layout.Row = i;
+    ui_editfield.Layout.Column = 2;
+
+    % Store the input field
+    muscleParamFields{i} = ui_editfield;
 end
 
 
-% Model Name
-uilabel(fig, 'Position', [30 260 100 22], 'Text', 'Model Name');
-modelNameField = uieditfield(fig, 'text', 'Position', [200 260 200 22]);
-modelNameField.Tooltip = 'Model name in OpenSim';
+    %% Create OpenSim Model Button
+    create_model_button = uibutton(grid, 'Text', 'Create OpenSim Model', ...
+        'ButtonPushedFcn', @(btn, event) CreateOpenSimModelFunc(UnpackFields(modelDirField, datafileFields, ...
+        ManualInputFields, DropDownFields)));
+    create_model_button.Layout.Row = n_rows;
+    create_model_button.Layout.Column = 2;
 
-% Filename
-uilabel(fig, 'Position', [30 220 100 22], 'Text', 'Filename');
-filenameField = uieditfield(fig, 'text', 'Position', [200 220 200 22]);
-filenameField.Tooltip = 'File name of the .osim model file.';
-
-% Version
-uilabel(fig, 'Position', [30 180 100 22], 'Text', 'Version');
-versionField = uieditfield(fig, 'text', 'Position', [200 180 200 22],'Value','v1');
-versionField.Tooltip = 'Designate the version number here';
-
-% Global or Local
-uilabel(fig, 'Position', [30 140 100 22], 'Text', 'Global or Local');
-globalOrLocalDropdown = uidropdown(fig, 'Position', [200 140 200 22], 'Items', {'global', 'local'});
-globalOrLocalDropdown.Tooltip = {'Do you want the model defined in global or local coordinates?';
-    'Local coordinates require local / anatomical reference frames to be defined'};
-
-% Export NoMusc Version
-uilabel(fig, 'Position', [30 100 150 22], 'Text', 'Export NoMusc Version');
-exportNoMuscDropdown = uidropdown(fig, 'Position', [200 100 200 22], 'Items', {'yes', 'no'},'Value','no');
-exportNoMuscDropdown.Tooltip = 'Export a version without muscles. Can be useful for debugging';
-
-
-
-
-% Create OpenSim model Button
-uibutton(fig, 'Position', [140 60 200 22], 'Text', 'Create OpenSim Model', 'ButtonPushedFcn', @(btn, event) CreateOpenSimModelFunc(UnpackFields(modelDirField, datafileFields, modelNameField, filenameField, versionField, globalOrLocalDropdown, exportNoMuscDropdown)));
-
-
-
-    function browseDirectory(modelDirField)
-        
+    %% Nested functions for file browsing
+    function browseDirectory(field)
         folderPath = uigetdir('', 'Select a folder');
         if folderPath ~= 0
-            modelDirField.Value = folderPath;
+            field.Value = folderPath;
         end
-        
-        % Bring the User Inputs window back to focus
-        fig.WindowState = 'normal';
-        fig.Visible = 'on';
-        figure(fig); % Bring the figure to the front
+        figure(fig); % Bring figure to front
     end
 
-    function browseFile(field,modeldir)
-        
-        
+    function browseFile(field, modeldir)
         [file, path] = uigetfile([modeldir '/*.*'], 'Select a file');
         if file ~= 0
             field.Value = file;
         end
-        
-        % Bring the User Inputs window back to focus
-        fig.WindowState = 'normal';
-        fig.Visible = 'on';
-        figure(fig); % Bring the figure to the front
+        figure(fig); % Bring figure to front
     end
-
 end
 
 
-function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, modelNameField, filenameField, versionField, globalOrLocalDropdown, exportNoMuscDropdown)
-%% This function unpacks the values from the UI button fields so that the Model creation script can be cleaner, having only a single struct which contains strings as an input.
+%%
+function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, ManualInputFields, DropDownFields)
+    % This function unpacks the values from the UI fields into a struct
+    % the UI fields are saved as cells.
+    ModelInfoStruct.model_dir = modelDirField.Value;
+    ModelInfoStruct.bodies_file = datafileFields{1}.Value;
+    ModelInfoStruct.joints_file = datafileFields{2}.Value;
+    ModelInfoStruct.muscles_file = datafileFields{3}.Value;
+    ModelInfoStruct.wrapping_file = datafileFields{4}.Value;
+    ModelInfoStruct.contacts_file = datafileFields{5}.Value;
+    ModelInfoStruct.frame_file = datafileFields{6}.Value;
+    ModelInfoStruct.model_name = ManualInputFields{1}.Value;
+    ModelInfoStruct.filename = ManualInputFields{2}.Value;
+    ModelInfoStruct.version = ManualInputFields{3}.Value;
+    ModelInfoStruct.global_or_local = DropDownFields{1}.Value;
+    ModelInfoStruct.export_nomusc_version = DropDownFields{2}.Value;
 
-
-
-ModelInfoStruct.model_dir = modelDirField.Value;
-ModelInfoStruct.bodies_file = datafileFields{1}.Value;
-ModelInfoStruct.joints_file = datafileFields{2}.Value;
-ModelInfoStruct.muscles_file = datafileFields{3}.Value;
-ModelInfoStruct.wrapping_file = datafileFields{4}.Value;
-ModelInfoStruct.contacts_file = datafileFields{5}.Value;
-ModelInfoStruct.frame_file = datafileFields{6}.Value;
-ModelInfoStruct.model_name = modelNameField.Value;
-ModelInfoStruct.filename = filenameField.Value;
-ModelInfoStruct.version = versionField.Value;
-ModelInfoStruct.global_or_local = globalOrLocalDropdown.Value;
-ModelInfoStruct.export_nomusc_version = exportNoMuscDropdown.Value;
-
-%% error checking
-if isempty(ModelInfoStruct.model_dir)
-    error(["You did not select the 'Model Directory'. You have to select the directory that contains all your MuSkeMo outputs."])
+    %% Error checking
+    if isempty(ModelInfoStruct.model_dir)
+        error("You must select the 'Model Directory'.");
+    end
+    if isempty(ModelInfoStruct.bodies_file)
+        error("You must select a 'Bodies' file.");
+    end
+    if isempty(ModelInfoStruct.joints_file)
+        error("You must select a 'Joints' file.");
+    end
 end
 
-if isempty(ModelInfoStruct.bodies_file)
-    error(["You did not select a 'Bodies' file. You have to specify one, and ensure it is in the model directory."])
-end
 
-if isempty(ModelInfoStruct.joints_file)
-    error(["You did not select a 'Joints' file. You have to specify one, and ensure it is in the model directory."])
-end
-
-
-end
