@@ -87,7 +87,7 @@ function userInputsDialog()
     end
 
 %% Define Muscle Parameter Labels, Tooltips, and Defaults
-muscleParamLabels = {'v_max', 'SEE_strain_at_fmax', 'PEE_strain_at_fmax'};
+muscleParamLabels = {'v_max', 'SEE_strain_at_Fmax', 'PEE_strain_at_Fmax'};
 muscleParamTooltips = { ...
     'Maximal contractile velocity in L0/s', ...
     'Strain in the serial elastic element when the tendon force is equal to maximal isometric force',...
@@ -180,21 +180,32 @@ end
 
 
 %%
-function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, ManualInputFields, DropDownFields)
+function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, ManualInputFields, DropDownFields, muscleParamFields, contactParamFields)
     % This function unpacks the values from the UI fields into a struct
     % the UI fields are saved as cells.
     ModelInfoStruct.model_dir = modelDirField.Value;
+    
     ModelInfoStruct.bodies_file = datafileFields{1}.Value;
     ModelInfoStruct.joints_file = datafileFields{2}.Value;
     ModelInfoStruct.muscles_file = datafileFields{3}.Value;
     ModelInfoStruct.wrapping_file = datafileFields{4}.Value;
     ModelInfoStruct.contacts_file = datafileFields{5}.Value;
     ModelInfoStruct.frame_file = datafileFields{6}.Value;
+    
     ModelInfoStruct.model_name = ManualInputFields{1}.Value;
     ModelInfoStruct.filename = ManualInputFields{2}.Value;
     ModelInfoStruct.version = ManualInputFields{3}.Value;
+    
     ModelInfoStruct.global_or_local = DropDownFields{1}.Value;
     ModelInfoStruct.export_nomusc_version = DropDownFields{2}.Value;
+    
+    ModelInfoStruct.v_max = muscleParamFields{1}.Value;
+    ModelInfoStruct.SEE_strain_at_Fmax = muscleParamFields{2}.Value;
+    ModelInfoStruct.PEE_strain_at_Fmax = muscleParamFields{3}.Value;
+    
+    
+          
+
 
     %% Error checking
     if isempty(ModelInfoStruct.model_dir)

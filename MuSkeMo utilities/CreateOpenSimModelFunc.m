@@ -435,8 +435,15 @@ if ~isempty(muscles_file)% if the muscles file is not empty
         muscle.setTendonSlackLength(muscle_data.("tendon_slack_length(m)")(muscle_ind(1)));
         muscle.setPennationAngleAtOptimalFiberLength(deg2rad(muscle_data.("pennation_angle(deg)")(muscle_ind(1))));
         
-        %muscle.set_tendon_strain_at_one_norm_force(0.04)
+        muscle.setMaxContractionVelocity(ModelInfoStruct.v_max);
+        muscle.set_tendon_strain_at_one_norm_force(ModelInfoStruct.SEE_strain_at_Fmax);
+        muscle.set_passive_fiber_strain_at_one_norm_force(ModelInfoStruct.PEE_strain_at_Fmax);
+
+        %muscle.set_activation_time_constant(DGF.get_activation_time_constant*TC_scale)
+        %muscle.set_deactivation_time_constant(DGF.get_deactivation_time_constant*TC_scale)
         
+       
+              
         n_mpts = length(muscle_ind); %number of muscle points
         n_vpts = n_mpts - 2; %number of viapoints is equal to total points - or and ins
         
