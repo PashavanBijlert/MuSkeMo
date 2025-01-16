@@ -31,22 +31,7 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen=1024,
         )
         
-    side_suffix: StringProperty(
-        name="Side suffix",
-        description="Side suffix, e.g. '_r' for the body 'thigh_r'. Search for bodies with this suffix to mirror.",
-        default="_r",
-        maxlen=1024,
-        )
         
-    otherside_suffix: StringProperty(
-        name="Other side suffix",
-        description="Other side suffix, e.g. '_l' for the body 'thigh_r'. Mirrored bodies get this suffix.",
-        default="_l",
-        maxlen=1024,
-        )    
-    
-    
-    
     axes_size: FloatProperty(
         name = "Body axes display size",
         description="Size of the axes for newly created bodies, in meters",

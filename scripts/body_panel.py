@@ -55,89 +55,7 @@ class CreateNewBodyOperator(Operator):
 
 
 
-class ReflectBilateralBodiesOperator(Operator):
-    bl_idname = "body.reflect_bilateral_bodies"
-    bl_label = "Duplicates and reflects bodies across the specified plane (def: XY), if they contain the specified suffix (def: '_r') in the name. Transforms COM and MOI as well"
-    bl_description = "Duplicates and reflects bodies across the specified plane (def: XY), if they contain the specified suffix (def: '_r') in the name. Transforms COM and MOI as well"
-    
-    
-    
-    def execute(self, context):
-        colname = bpy.context.scene.muskemo.body_collection
-
-        collection = bpy.data.collections[colname]
-        
-        
-        side_suffix = bpy.context.scene.muskemo.side_suffix
-        otherside_suffix = bpy.context.scene.muskemo.otherside_suffix
-        reflection_plane = bpy.context.scene.muskemo.reflection_plane
-        
-        
-        source_bodies = [obj for obj in collection.objects if side_suffix in obj.name]
-        
-        if len(source_bodies) == 0:
-            self.report({'ERROR'}, "There are no bodies with the suffix " + side_suffix + " in the '" + colname + "' collection")
-            return {'FINISHED'}
-       
-        unilateral_source_bodies = []  #bodies that have the side_suffix in the name, and don't have a mirrored counterpart with otherside_suffix in the name
-        
-
-        for obj in source_bodies:  #
-            
-            if obj.name.replace(side_suffix,otherside_suffix) not in (obj.name for obj in collection.objects):  #make sure a left side doesn't already exist
-            
-                unilateral_source_bodies.append(obj)
-                
-        
-        if len(unilateral_source_bodies) == 0:
-            self.report({'ERROR'}, "All the bodies with the suffix " + side_suffix + " already have a mirrored counterpart. Delete those first")
-            return {'FINISHED'}    
-                
-        
-        
-        for obj in unilateral_source_bodies:
-            
-                    
-            new_obj = obj.copy()  #copy object
-            new_obj.name = obj.name.replace(side_suffix,otherside_suffix) #rename to left
-            
-            collection.objects.link(new_obj)  #add to collection
-            
-            
-            try:
-                new_obj.parent.name
-            except:
-                pass
-            else:
-                new_obj.parent = None
-                
-            
-            if reflection_plane == 'XY':  #so Z becomes -Z
-            
-                new_obj['COM'][2] = -new_obj['COM'][2]  #COM_z
-                new_obj['inertia_COM'][4] = -new_obj['inertia_COM'][4]  #Ixz
-                new_obj['inertia_COM'][5] = -new_obj['inertia_COM'][5]  #Iyz
-        
-                new_obj.location = new_obj['COM']
-                
-            elif reflection_plane == 'XZ':  #so Y becomes -Y
-            
-                new_obj['COM'][1] = -new_obj['COM'][1]  #COM_y
-                new_obj['inertia_COM'][3] = -new_obj['inertia_COM'][3]  #Ixy
-                new_obj['inertia_COM'][5] = -new_obj['inertia_COM'][5]  #Iyz
-        
-                new_obj.location = new_obj['COM']
-                
-            elif reflection_plane == 'YZ':  #so X becomes -X
-        
-                new_obj['COM'][0] = -new_obj['COM'][0]  #COM_x
-                new_obj['inertia_COM'][3] = -new_obj['inertia_COM'][3]  #Ixy
-                new_obj['inertia_COM'][4] = -new_obj['inertia_COM'][4]  #Ixz
-        
-                new_obj.location = new_obj['COM']        
-
-        return {'FINISHED'}
-    
+ 
 class UpdateLocationFromCOMOperator(Operator):
     bl_idname = "body.update_location_from_com"
     bl_label = "Updates the display location of the body, using the COM property that was previously assigned (useful if you manually edit the COM property)"
@@ -944,7 +862,11 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         row = self.layout.row()
         row.label(text = "Properties are not dynamic, recompute them if you move source objects around")
 
+        row = self.layout.row()
+        row.label(text = "If you manually type in inertial properties, use the below button to update the display location")
 
+        row.operator("body.update_location_from_com", text="Update display location using COM")
+        
         
 class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
     bl_idname = 'VIEW3D_PT_vizgeometry_subpanel'
@@ -992,28 +914,10 @@ class VIEW3D_PT_body_utilities_subpanel(VIEW3D_PT_MuSkeMo, Panel):  #
         muskemo = scene.muskemo
         
         ## update display location using COM
-        row = self.layout.row()
-        row.operator("body.update_location_from_com", text="Update display location using COM")
         
          
         
-        self.layout.row()
-        self.layout.row()
-        row = self.layout.row()
-        row.operator("body.reflect_bilateral_bodies", text="Reflect bilateral bodies")
-        
-        
-        self.layout.row()
-        self.layout.row()
-        row = self.layout.row()
-        row.prop(muskemo, "side_suffix")
-        row = self.layout.row()
-        row.prop(muskemo, "otherside_suffix")
-        row = self.layout.row()
-        row.prop(muskemo, "reflection_plane")
-        
-        
-        
+              
         self.layout.row()
         self.layout.row()
         row = self.layout.row()
