@@ -31,11 +31,94 @@ class ReflectionMixinClass: #mixin class to share functionality across all the r
         elif plane == 'XZ':
             return Matrix([(1, 0, 0,),(0, -1, 0), (0, 0, 1)])  # Negative Y    
 
+    
+    def get_unilateral_objects(self, objects, object_names, left_string, right_string):
+        "Returns the unilateral objects based on whether or not they end with the left or right side string"
+        unilateral_objects = (obj for obj in objects if 
+            (obj.name.endswith(right_string) and obj.name[0:-len(right_string)]+left_string not in object_names) or
+            (obj.name.endswith(left_string) and obj.name[0:-len(left_string)]+right_string not in object_names)
+            )
+
+        return unilateral_objects
+class ReflectUnilateralBodiesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+    bl_idname = "body.reflect_unilateral_bodies"
+    bl_label = "Reflects unilateral bodies across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
+    bl_description = "Reflects unilateral bodies across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+        colname = muskemo.body_collection
+
+        collection = bpy.data.collections[colname]
+
+        bodies = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'BODY']
+        body_names = [obj.name for obj in bodies]
+
+       
+        right_string = muskemo.right_side_string
+        left_string = muskemo.left_side_string
+
+        reflection_plane = muskemo.reflection_plane
+
+        reflect_mat =  self.get_reflection_matrix(reflection_plane) 
+
+        size = bpy.context.scene.muskemo.axes_size #axis length, in meters
+
+        from .create_body_func import create_body
+
+        unilateral_bodies = self.get_unilateral_objects(bodies, body_names, left_string=left_string, right_string=right_string)
+
+        for obj in unilateral_bodies:
+            
+            if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
+                  
+                currentside = right_string #this is the side we DO have
+                otherside = left_string #the side we are creating
+
+            else: #if right_string is not in the name, the current side is the left side.
+                currentside = left_string #this is the side we DO have
+                otherside = right_string #the side we are creating
+
+            body_name = obj.name[0:-len(currentside)] + otherside #rename to otherside
+
+            inertia_COM_currentside = obj['inertia_COM']
+            inertia_COM_currentside_mat = Matrix([
+                (inertia_COM_currentside[0],inertia_COM_currentside[3] ,inertia_COM_currentside[4] ),
+                (inertia_COM_currentside[3],inertia_COM_currentside[1] ,inertia_COM_currentside[5] ),
+                (inertia_COM_currentside[4],inertia_COM_currentside[5] ,inertia_COM_currentside[2] )
+                ])
+
+            inertia_COM_otherside_mat = reflect_mat @ inertia_COM_currentside_mat @ reflect_mat.inverted()
+            inertia_COM_otherside = [inertia_COM_otherside_mat[0][0],inertia_COM_otherside_mat[1][1], inertia_COM_otherside_mat[2][2],
+                                     inertia_COM_otherside_mat[0][1],inertia_COM_otherside_mat[0][2], inertia_COM_otherside_mat[1][2]]
+            
+            COM_currentside = Vector(obj['COM'])
+            COM_otherside = reflect_mat @ COM_currentside
+
+            COM_otherside = [x for x in COM_otherside] #convert vector to list
+
+            create_body(name = body_name, size=size, self = self,
+                is_global = True, 
+                mass=obj['mass'],
+                inertia_COM= inertia_COM_otherside, 
+                COM=COM_otherside, 
+                inertia_COM_local=[nan]*6, 
+                COM_local=[nan]*3, 
+                Geometry='no geometry', 
+                local_frame='not_assigned', 
+                collection_name = colname)
+            
+        return {"FINISHED"}
+
+
+
+                                    
 
 class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
     bl_idname = "muscle.reflect_unilateral_muscles"
-    bl_label = "Reflects unilateral muscles across desired reflection plane if they contain the right or left side string in the name."
-    bl_description = "Reflects unilateral muscles across desired reflection plane if they contain the right or left side string in the name."
+    bl_label = "Reflects unilateral muscles across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
+    bl_description = "Reflects unilateral muscles across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
     
     def execute(self, context):
         
@@ -57,10 +140,12 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
 
         from .create_muscle_func import create_muscle
 
-        for obj in (obj for obj in muscles if 
-            (obj.name.endswith(right_string) and obj.name[0:-len(right_string)]+left_string not in muscle_names) or
-            (obj.name.endswith(left_string) and obj.name[0:-len(left_string)]+right_string not in muscle_names)
-            ):
+
+        unilateral_muscles = self.get_unilateral_objects(muscles, muscle_names, left_string=left_string, right_string=right_string)
+
+        for obj in unilateral_muscles:
+
+       
             
             if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
                   
@@ -103,15 +188,19 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
                     for j in range(len(modifier.vertex_indices)): #vertex index = connected curve point, so for each connected curve point j, which starts counting at 0
                         if i == modifier.vertex_indices[j]:       
                             body_name_curr = modifier.object.name      #if curve point i equals a connected curve point j in modifier h, get the corresponding body name
-
-                            newbodyname = body_name_curr[0:-len(currentside)] + otherside #rename to otherside
+                            
+                            if body_name_curr.endswith(currentside): #if it is a sided body
+                                
+                                newbodyname = body_name_curr[0:-len(currentside)] + otherside #rename to otherside
                                                         
-                            if newbodyname not in bpy.data.objects:# if the body doesn't exist
-                                self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" + muscle_name  +  "' MUSCLE currently has unhooked points.")
+                                if newbodyname not in bpy.data.objects:# if the body doesn't exist
+                                    self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" + muscle_name  +  "' MUSCLE currently has unhooked points.")
                         
-                            else:
-                                body_name = newbodyname
-                        
+                                else: #if the body exists, we pass it to  the muscle point creation function, otherwise the point gets created without hooking it to anything
+                                    body_name = newbodyname
+
+                            else: #if it wasn't a sided body, we leave it hooked to the same side
+                                body_name = body_name_curr
 
                 #reflect each point about z
 
@@ -177,8 +266,8 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
 
 class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
     bl_idname = "muscle.reflect_unilateral_wraps"
-    bl_label = "Reflects unilateral wrapping geometries across desired reflection plane if they contain the right or left side string in the name. If the target muscles exist, also assigns the wraps to designated muscles."
-    bl_description = "Reflects unilateral muscles across desired reflection plane if they contain the right or left side string in the name. If the target muscles exist, also assigns the wraps to designated muscles."
+    bl_label = "Reflects unilateral wrapping geometries across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
+    bl_description = "Reflects unilateral muscles across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
     
     def execute(self, context):
         
@@ -203,11 +292,10 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
         from .quaternions import quat_from_matrix
         from .euler_XYZ_body import euler_XYZbody_from_matrix
 
-        for obj in (obj for obj in wraps if 
-            (obj.name.endswith(right_string) and obj.name[0:-len(right_string)]+left_string not in wrap_names) or
-            (obj.name.endswith(left_string) and obj.name[0:-len(left_string)]+right_string not in wrap_names)
-            ):
 
+        unilateral_wraps = self.get_unilateral_objects(wraps, wrap_names, left_string=left_string, right_string=right_string)
+
+        for obj in unilateral_wraps:
             
             if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
                   
@@ -233,15 +321,23 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
             #check if the mirrored parent exists
             if obj['parent_body'] !='not_assigned':
                 original_pbname = obj['parent_body']
-                reflected_pbname = original_pbname[0:-len(currentside)] + otherside #get the reflected parent body name
 
-                if reflected_pbname in bpy.data.objects:
-                    parent_body_name = reflected_pbname
+                if original_pbname.endswith(currentside): #if the pbody is also sided
 
-                else:
-                    self.report({'WARNING'}, "BODY with the name '" + reflected_pbname + "' Does not exist. Create it using the body mirroring button. '" + wrap_name  +  "' WRAP currently unparented.")
-                        
-                    parent_body_name = 'not_assigned'
+                    reflected_pbname = original_pbname[0:-len(currentside)] + otherside #get the reflected parent body name
+
+                    if reflected_pbname in bpy.data.objects:
+                        parent_body_name = reflected_pbname
+
+                    else:
+                        self.report({'WARNING'}, "BODY with the name '" + reflected_pbname + "' Does not exist. Create it using the body mirroring button. '" + wrap_name  +  "' WRAP currently unparented.")
+                            
+                        parent_body_name = 'not_assigned'
+
+                else:#if not a sided pbody
+
+                    parent_body_name = original_pbname
+
 
             #compute the global position and orientation
             obj_wm = obj.matrix_world.copy()
@@ -302,8 +398,8 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
 
                 for muscle_name in target_muscles:
                     
-                    muscle_name_refl = muscle_name.replace(currentside,otherside)
-
+                    muscle_name_refl = muscle_name[0:-len(currentside)] + otherside
+                    
                     if muscle_name_refl in bpy.data.objects:
  
                         new_wrapobj.select_set(True)
@@ -379,6 +475,12 @@ class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conv
 
         row = self.layout.row()
 
+        split = row.split(factor = 1/3)
+        split.label(text = 'Body collection')
+        split = split.split(factor =1/2)
+        split.prop(muskemo, "body_collection", text = "")
+        split.operator("body.reflect_unilateral_bodies", text="Reflect unilateral bodies")
+
         row = self.layout.row()
         split = row.split(factor = 1/3)
         split.label(text = 'Muscle collection')
@@ -388,7 +490,7 @@ class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conv
         
         row = self.layout.row()
 
-        row = self.layout.row()
+       
         split = row.split(factor = 1/3)
         split.label(text = 'Wrap Geometry collection')
         split = split.split(factor =1/2)
