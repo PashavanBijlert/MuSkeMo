@@ -640,17 +640,17 @@ if ~isempty(contacts_file)% if the muscles file is not empty
     
     %% Add contacts & contact forces
     
-    r_contactsphere=0.015; %radius in meters
+    r_contactsphere     = ModelInfoStruct.contact_sphere_radius; %radius in meters
     
-    stiffness           = 11250000;  %version 2
-    dissipation         = 1;
-    staticFriction      = 0.4;
-    dynamicFriction     = 0.4;
-    viscousFriction     = 0.1;
-    transitionVelocity  = 0.2;
+    stiffness           = ModelInfoStruct.plane_strain_modulus;  %version 2
+    dissipation         = ModelInfoStruct.dissipation;
+    staticFriction      = ModelInfoStruct.static_friction_coef;
+    dynamicFriction     = ModelInfoStruct.dynamic_friction_coef;
+    viscousFriction     = ModelInfoStruct.viscous_friction_coef;
+    transitionVelocity  = ModelInfoStruct.transition_velocity;
     
     ConstantContactForce = 1e-5; % ConstantContactForce
-    HertzSmoothing = 300; % HertzSmoothing; version 2
+    HertzSmoothing = ModelInfoStruct.hertz_smoothing; % HertzSmoothing; version 2
     HuntCrossleySmoothing = 50; % HuntCrossleySmoothing
     
     

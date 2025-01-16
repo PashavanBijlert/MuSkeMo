@@ -121,12 +121,17 @@ for i = 1:nRows
 end
 
 %% Define Contact Parameter Labels, Tooltips, and Defaults
-contactParamLabels = {'stiffness', 'damping', 'friction_coefficient'};
-contactParamTooltips = { ...
-    'Contact stiffness in N/m', ...
-    'Contact damping coefficient in Ns/m', ...
-    'Coefficient of friction for contact surface'};
-contactParamDefaults = [10000, 0.1, 0.5];
+contactParamLabels = {'Contact sphere radius','Plane strain modulus', 'Dissipation', 'Static friction',...
+    'Dynamic friction', 'Transition velocity', 'Viscous friction', 'Hertz smoothing'};
+contactParamTooltips = { 'Contact sphere radius in m',...
+    'Contact plane strain modulus in N/m^2', ...
+    'Dissipation coefficient in s/m', ...
+    'Static friction coefficient',...
+    'Dynamic friction coefficient', ...
+    'Transition velocity between static and dynamic friction coefficient',...
+    'Viscous friction coefficient',...
+    'Hertz smoothing parameter for SmoothSphereHalfSpaceForce'};
+contactParamDefaults = [0.015, 2500000, 1, 0.4, 0.4, 0.2, 0.1, 300];
 
 %% Add a grid layout to the "Contact Parameters" tab
 nRowsContact = length(contactParamLabels); % Automatically adapts to the number of parameters
@@ -156,7 +161,7 @@ end
     %% Create OpenSim Model Button
     create_model_button = uibutton(grid, 'Text', 'Create OpenSim Model', ...
         'ButtonPushedFcn', @(btn, event) CreateOpenSimModelFunc(UnpackFields(modelDirField, datafileFields, ...
-        ManualInputFields, DropDownFields)));
+        ManualInputFields, DropDownFields, muscleParamFields, contactParamFields)));
     create_model_button.Layout.Row = n_rows;
     create_model_button.Layout.Column = 2;
 
@@ -203,6 +208,15 @@ function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, ManualI
     ModelInfoStruct.SEE_strain_at_Fmax = muscleParamFields{2}.Value;
     ModelInfoStruct.PEE_strain_at_Fmax = muscleParamFields{3}.Value;
     
+    ModelInfoStruct.contact_sphere_radius = contactParamFields{1}.Value;
+    ModelInfoStruct.plane_strain_modulus= contactParamFields{2}.Value;
+    ModelInfoStruct.dissipation= contactParamFields{3}.Value;
+    ModelInfoStruct.static_friction_coef= contactParamFields{4}.Value;
+    ModelInfoStruct.dynamic_friction_coef= contactParamFields{5}.Value;
+    ModelInfoStruct.transition_velocity = contactParamFields{6}.Value;
+    ModelInfoStruct.viscous_friction_coef= contactParamFields{7}.Value;    
+    ModelInfoStruct.hertz_smoothing = contactParamFields{8}.Value;
+
     
           
 

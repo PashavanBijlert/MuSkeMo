@@ -57,10 +57,10 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
 
         from .create_muscle_func import create_muscle
 
-        for obj in (obj for obj in muscles if (
-            (right_string in obj.name and obj.name.replace(right_string, left_string) not in muscle_names)) or
-            (left_string in obj.name and obj.name.replace(left_string, right_string) not in muscle_names)):
-
+        for obj in (obj for obj in muscles if 
+            (obj.name.endswith(right_string) and obj.name[0:-len(right_string)]+left_string not in muscle_names) or
+            (obj.name.endswith(left_string) and obj.name[0:-len(left_string)]+right_string not in muscle_names)
+            ):
             
             if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
                   
@@ -71,7 +71,7 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
                 currentside = left_string #this is the side we DO have
                 otherside = right_string #the side we are creating
 
-            muscle_name = obj.name.replace(currentside,otherside) #rename to otherside
+            muscle_name = obj.name[0:-len(currentside)] + otherside #rename to otherside
                                     
             F_max = obj['F_max']
             pennation_angle = obj['pennation_angle'] 
@@ -104,8 +104,8 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
                         if i == modifier.vertex_indices[j]:       
                             body_name_curr = modifier.object.name      #if curve point i equals a connected curve point j in modifier h, get the corresponding body name
 
-                            newbodyname = body_name_curr.replace(currentside,otherside) #rename to otherside
-                            
+                            newbodyname = body_name_curr[0:-len(currentside)] + otherside #rename to otherside
+                                                        
                             if newbodyname not in bpy.data.objects:# if the body doesn't exist
                                 self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" + muscle_name  +  "' MUSCLE currently has unhooked points.")
                         
@@ -203,9 +203,10 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
         from .quaternions import quat_from_matrix
         from .euler_XYZ_body import euler_XYZbody_from_matrix
 
-        for obj in (obj for obj in wraps if (
-            (right_string in obj.name and obj.name.replace(right_string, left_string) not in wrap_names)) or
-            (left_string in obj.name and obj.name.replace(left_string, right_string) not in wrap_names)):
+        for obj in (obj for obj in wraps if 
+            (obj.name.endswith(right_string) and obj.name[0:-len(right_string)]+left_string not in wrap_names) or
+            (obj.name.endswith(left_string) and obj.name[0:-len(left_string)]+right_string not in wrap_names)
+            ):
 
             
             if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
@@ -218,7 +219,7 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
                 otherside = right_string #the side we are creating
 
             #create the reflected wrap name
-            wrap_name = obj.name.replace(currentside,otherside) #rename to otherside
+            wrap_name = obj.name[0:-len(currentside)] + otherside #rename to otherside
 
             geomtype = obj['wrap_type']
             dimensions = {} #preallocate
@@ -232,7 +233,7 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
             #check if the mirrored parent exists
             if obj['parent_body'] !='not_assigned':
                 original_pbname = obj['parent_body']
-                reflected_pbname = original_pbname.replace(currentside,otherside)#get the reflected parent body name
+                reflected_pbname = original_pbname[0:-len(currentside)] + otherside #get the reflected parent body name
 
                 if reflected_pbname in bpy.data.objects:
                     parent_body_name = reflected_pbname
