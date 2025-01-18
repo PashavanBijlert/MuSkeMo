@@ -518,7 +518,13 @@ class AssignWrappingOperator(Operator):
 
                 #Ensure the last two modifiers are always the Visualization and then the bevel modifier
                 n_modifiers = len(muscle_obj.modifiers)
-                muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-3) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
+
+                if 'LiveLengthViewer' in muscle_obj.modifiers: #new modifiers are placed by default at the end. We want the wrap to be after the hooks, but before the visualization nodes
+                    #we have to account for the possibility of the LiveLengthViewer node.
+                    muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-4) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
+                
+                else:
+                    muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-3) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
                 
                 ## Add the muscle to the target_muscles property of the wrap object
                 if wrap_obj['target_muscles'] == 'not_assigned': #if the wrap currently has no wrap assigned, assign it
