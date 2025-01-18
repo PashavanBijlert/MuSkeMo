@@ -130,8 +130,8 @@ from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_
 from .scripts.ARF_panel import (VIEW3D_PT_frame_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
                                 AssignYZPlaneLandmarkOperator, 
-                                ConstructARFOperator, 
-                                AssignARFParentBodyOperator,ClearARFParentBodyOperator,)
+                                ConstructFrameOperator, 
+                                AssignFrameParentBodyOperator,ClearFrameParentBodyOperator,)
 
 #### Landmark & marker panel
 from .scripts.landmark_marker_panel import (VIEW3D_PT_landmark_panel, CreateLandmarkOperator,
@@ -241,8 +241,8 @@ classes = (  #Global settings panel
                                  VIEW3D_PT_frame_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
                                 AssignYZPlaneLandmarkOperator,
-                                ConstructARFOperator,
-                                AssignARFParentBodyOperator,ClearARFParentBodyOperator,
+                                ConstructFrameOperator,
+                                AssignFrameParentBodyOperator,ClearFrameParentBodyOperator,
 
             #landmark & marker panel
                                 VIEW3D_PT_landmark_panel, CreateLandmarkOperator,

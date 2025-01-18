@@ -53,7 +53,7 @@ class AssignYZPlaneLandmarkOperator(Operator):
 
     
 
-class ConstructARFOperator(Operator):
+class ConstructFrameOperator(Operator):
     bl_idname = "frame.construct_frame"
     bl_label = "Constructs a new anatomical (local) reference frame"
     bl_description = "Constructs a new anatomical (local) reference frame"
@@ -132,7 +132,7 @@ class ConstructARFOperator(Operator):
         return {'FINISHED'}
 
 
-class AssignARFParentBodyOperator(Operator):
+class AssignFrameParentBodyOperator(Operator):
     bl_idname = "frame.assign_parent_body"
     bl_label = "Assigns a parent body to an anatomical (local) reference frame. Select both the parent body and the frame, then press the button."
     bl_description = "Assigns a parent body to an anatomical (local) reference frame. Select both the parent body and the frame, then press the button."
@@ -310,7 +310,7 @@ class AssignARFParentBodyOperator(Operator):
   
         return {'FINISHED'}
 
-class ClearARFParentBodyOperator(Operator):
+class ClearFrameParentBodyOperator(Operator):
     bl_idname = "frame.clear_parent_body"
     bl_label = "Clears the parent body assigned to a frame. Select the frame, then press the button."
     bl_description = "Clears the parent body assigned to a frame. Select the frame, then press the button."
