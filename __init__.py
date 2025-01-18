@@ -127,7 +127,7 @@ from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_
                                     ImportTrajectorySTO,#these are separate scripts)
                                     )
 #### Anatomical (local) reference frame panel
-from .scripts.ARF_panel import (VIEW3D_PT_arf_panel,
+from .scripts.ARF_panel import (VIEW3D_PT_frame_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
                                 AssignYZPlaneLandmarkOperator, 
                                 ConstructARFOperator, 
@@ -238,7 +238,7 @@ classes = (  #Global settings panel
                                 ImportTrajectorySTO, # separate script
 
             #anatomical (local) reference frames panel
-                                 VIEW3D_PT_arf_panel,
+                                 VIEW3D_PT_frame_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
                                 AssignYZPlaneLandmarkOperator,
                                 ConstructARFOperator,

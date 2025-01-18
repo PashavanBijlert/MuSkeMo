@@ -54,9 +54,9 @@ class AssignYZPlaneLandmarkOperator(Operator):
     
 
 class ConstructARFOperator(Operator):
-    bl_idname = "frame.construct_arf"
-    bl_label = "Constructs a new anatomical (local) reference frame (arf)"
-    bl_description = "Constructs a new anatomical (local) reference frame (arf)"
+    bl_idname = "frame.construct_frame"
+    bl_label = "Constructs a new anatomical (local) reference frame"
+    bl_description = "Constructs a new anatomical (local) reference frame"
     
     def execute(self, context):
         
@@ -442,10 +442,10 @@ class ClearARFParentBodyOperator(Operator):
 
 
 
-class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
 
     bl_context = "objectmode"
-    bl_idname = 'VIEW3D_PT_ARF_panel'
+    bl_idname = 'VIEW3D_PT_frame_panel'
     
     
     bl_label = "Anatomical & local reference frames panel"  # found at the top of the Panel
@@ -501,7 +501,7 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         
         
         row = self.layout.row()
-        row.operator("frame.construct_arf", text="Construct Frame from Landmark Positions")
+        row.operator("frame.construct_frame", text="Construct Frame from Landmark Positions")
         self.layout.row()
         row = self.layout.row()
         row.operator("frame.assign_parent_body", text="Assign parent body")
