@@ -42,7 +42,9 @@ In the joint panel (under joint utilities), you can also mirror right side joint
 
 Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies first). 
 To add a point, type in the muscle name, and select the target body. Press shift + right mouse button to position the 3D cursor. Muscle points are added to the 3D cursor location.
-You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB"). If the parent bodies are repositioned, you must delete and redraw the muscles.
+You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB").
+
+Within the muscle panel, it is also possible to create wrapping geometry (currently, only cylinders are supported), and assign these to muscles.
 
 # **Anatomical & local reference frames panel**
 
@@ -87,8 +89,16 @@ MuSkeMo enables you to import simulated trajectories back into Blender to create
 
 Users are able to define their desired default colors in this panel (currently only muscle color has been exposed to the user).
 
+# **Visualization panel**
+
+MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. This panel features a trajectory importer (currently OpenSim .sto format only) that has the optional feature to repeat the trajectory in a loop while progressing the forward translation coordinate (useful for simulations of a single stride). This panel also includes several convenience tools to aid users who are new to animations in Blender. 
+
+Users are able to define their desired default colors in this panel (currently only muscle color has been exposed to the user).
+
+# **Reflection panel**
+
+This panel allows you to create symmetric models, by only defining components on a single side and then reflecting them to the other side. The panel searches for objects that have a 'side string' (e.g. '_l' or '_r') at the end of their name. You can choose your own side string.
+
 # **MuSkeMo utilities**
 
-The MuSkeMo.zip release contains a folder with MuSkeMo utlities. This includes a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. You must have the [OpenSim Matlab API](https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab) installed. 
-
-It also contains an updater (Python) script to update older MuSkeMo scenes to v0.6.3 and up. To run this, open the python script in the Blender script editor and run it. Back up your work first.
+The MuSkeMo.zip release contains a folder with MuSkeMo utlities. This includes a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. You must have the [OpenSim Matlab API](https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab) installed. This folder also includes python scripts that can be run in Blender's script editor, including a muscle line of action fitter, and some demo scripts that show you how to access MuSkeMo functionality via the Python API.
