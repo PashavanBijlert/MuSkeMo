@@ -129,7 +129,7 @@ from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_
 #### Anatomical (local) reference frame panel
 from .scripts.ARF_panel import (VIEW3D_PT_arf_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
-                                AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
+                                AssignYZPlaneLandmarkOperator, 
                                 ConstructARFOperator, 
                                 AssignARFParentBodyOperator,ClearARFParentBodyOperator,)
 
@@ -240,7 +240,7 @@ classes = (  #Global settings panel
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_arf_panel,
                                 AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
-                                AssignYZPlaneLandmarkOperator, ReflectSelectedRSideFrames,
+                                AssignYZPlaneLandmarkOperator,
                                 ConstructARFOperator,
                                 AssignARFParentBodyOperator,ClearARFParentBodyOperator,
 

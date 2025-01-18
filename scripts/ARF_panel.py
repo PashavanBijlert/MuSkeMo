@@ -50,42 +50,6 @@ class AssignYZPlaneLandmarkOperator(Operator):
 
         bpy.context.scene.muskemo.yz_plane_landmark_name = bpy.context.active_object.name  #assigns the name of the active object as the origin landmark
         return {'FINISHED'}        
-    
-    
-class ReflectSelectedRSideFrames(Operator):
-    bl_idname = "arf.reflect_selected_r_arfs"
-    bl_label = "Reflect the selected frames about the YZ-plane if they have '_r' in the name"
-    bl_description = "Reflect the selected frames about the YZ-plane if they have '_r' in the name"
-    
-    def execute(self, context):
-        
-        colname = bpy.context.scene.muskemo.frame_collection  #target collection
-
-        Collection = bpy.data.collections[colname]
-
-
-        sel_obj = bpy.context.selected_objects  #all selected objects
-        
-        for obj in (obj for obj in sel_obj if '_r' in obj.name):
-            
-            
-            if obj.name.replace('_r','_l') not in (obj.name for obj in  Collection.objects):  #make sure a left side doesn't already exist
-            
-            
-                new_obj = obj.copy()  #copy object
-                
-                new_obj.name = obj.name.replace('_r','_l') #rename to left
-                
-                Collection.objects.link(new_obj)  #add to Collection
-                
-                new_obj.location = obj.location*Vector([1,1,-1])
-                new_obj.rotation_euler = [-1*obj.rotation_euler[0], -1*obj.rotation_euler[1], 1*obj.rotation_euler[2]]
-                    
-                new_obj['MuSkeMo_type'] = 'FRAME'  #to inform the user what type is created
-                new_obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
-        
-        
-        return {'FINISHED'}       
 
     
 
@@ -546,12 +510,6 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         
         row = self.layout.row()
         
-        self.layout.row()
-        
-        row = self.layout.row()
-        row.operator("arf.reflect_selected_r_arfs", text="Reflect selected r-side arfs")
-
-        self.layout.row()
         self.layout.row()
         
         row = self.layout.row()
