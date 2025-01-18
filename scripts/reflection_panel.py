@@ -431,7 +431,7 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
 
 
 class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
-    bl_idname = "arf.reflect_unilateral_frames"
+    bl_idname = "frame.reflect_unilateral_frames"
     bl_label = "Reflects unilateral frames across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     bl_description = "Reflects unilateral frame across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     
@@ -496,7 +496,7 @@ class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits
                     [bpy.data.objects[x].select_set(True) for x in [frame_name, pbody_name_refl]] #set the selection for the correct objects
                     muskemo.framename = frame_name #THIS CAN BE DELETED LATER
 
-                    bpy.ops.arf.assign_parent_body()
+                    bpy.ops.frame.assign_parent_body()
                     bpy.ops.object.select_all(action='DESELECT')
                     
  
@@ -565,7 +565,7 @@ class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conv
         split.label(text = 'Frame collection')
         split = split.split(factor =1/2)
         split.prop(muskemo, "frame_collection", text = "")
-        split.operator("arf.reflect_unilateral_frames", text="Reflect unilateral frames")
+        split.operator("frame.reflect_unilateral_frames", text="Reflect unilateral frames")
 
         row = self.layout.row()
         split = row.split(factor = 1/3)

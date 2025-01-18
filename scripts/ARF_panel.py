@@ -20,7 +20,7 @@ from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 
 
 class AssignOrLandmarkOperator(Operator):
-    bl_idname = "arf.assign_origin"
+    bl_idname = "frame.assign_origin"
     bl_label = "Assign the selected landmark as the origin of the frame."
     bl_description = "Assign the selected landmark as the origin of the frame."
     
@@ -32,7 +32,7 @@ class AssignOrLandmarkOperator(Operator):
     
     
 class AssignYDirLandmarkOperator(Operator):
-    bl_idname = "arf.assign_ydir_landmark"
+    bl_idname = "frame.assign_ydir_landmark"
     bl_label = "Assign the selected landmark as the Y-direction (long axis) of the frame."
     bl_description = "Assign the selected landmark as the Y-direction (long axis) of the frame."
 
@@ -42,7 +42,7 @@ class AssignYDirLandmarkOperator(Operator):
         return {'FINISHED'}    
     
 class AssignYZPlaneLandmarkOperator(Operator):
-    bl_idname = "arf.assign_yz_plane_landmark"
+    bl_idname = "frame.assign_yz_plane_landmark"
     bl_label = "Assign the selected landmark as the YZ plane landmark (direction of the temporary Z-axis)"
     bl_description = "Assign the selected landmark as the YZ plane landmark (direction of the temporary Z-axis)"
     
@@ -54,7 +54,7 @@ class AssignYZPlaneLandmarkOperator(Operator):
     
 
 class ConstructARFOperator(Operator):
-    bl_idname = "arf.construct_arf"
+    bl_idname = "frame.construct_arf"
     bl_label = "Constructs a new anatomical (local) reference frame (arf)"
     bl_description = "Constructs a new anatomical (local) reference frame (arf)"
     
@@ -133,7 +133,7 @@ class ConstructARFOperator(Operator):
 
 
 class AssignARFParentBodyOperator(Operator):
-    bl_idname = "arf.assign_parent_body"
+    bl_idname = "frame.assign_parent_body"
     bl_label = "Assigns a parent body to an anatomical (local) reference frame. Select both the parent body and the frame, then press the button."
     bl_description = "Assigns a parent body to an anatomical (local) reference frame. Select both the parent body and the frame, then press the button."
    
@@ -311,7 +311,7 @@ class AssignARFParentBodyOperator(Operator):
         return {'FINISHED'}
 
 class ClearARFParentBodyOperator(Operator):
-    bl_idname = "arf.clear_parent_body"
+    bl_idname = "frame.clear_parent_body"
     bl_label = "Clears the parent body assigned to a frame. Select the frame, then press the button."
     bl_description = "Clears the parent body assigned to a frame. Select the frame, then press the button."
     
@@ -477,7 +477,7 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         # Row for Assign as frame origin
         row = self.layout.row()
         split = row.split(factor=0.5)
-        split.operator("arf.assign_origin", text="Assign as frame origin")
+        split.operator("frame.assign_origin", text="Assign as frame origin")
         sub_split = split.split(factor=0.6)
         sub_split.label(text="Origin Landmark")
         sub_split.prop(muskemo, "or_landmark_name", text="")
@@ -485,7 +485,7 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         # Row for Assign as Y direction
         row = self.layout.row()
         split = row.split(factor=0.5)
-        split.operator("arf.assign_ydir_landmark", text="Assign as Y direction")
+        split.operator("frame.assign_ydir_landmark", text="Assign as Y direction")
         sub_split = split.split(factor=0.6)
         sub_split.label(text="Y Direction Landmark")
         sub_split.prop(muskemo, "ydir_landmark_name", text="")
@@ -493,7 +493,7 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         # Row for Assign as YZ plane landmark
         row = self.layout.row()
         split = row.split(factor=0.5)
-        split.operator("arf.assign_yz_plane_landmark", text="Assign as YZ plane landmark")
+        split.operator("frame.assign_yz_plane_landmark", text="Assign as YZ plane landmark")
         sub_split = split.split(factor=0.6)
         sub_split.label(text="YZ Plane Landmark")
         sub_split.prop(muskemo, "yz_plane_landmark_name", text="")
@@ -501,11 +501,11 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         
         
         row = self.layout.row()
-        row.operator("arf.construct_arf", text="Construct Frame from Landmark Positions")
+        row.operator("frame.construct_arf", text="Construct Frame from Landmark Positions")
         self.layout.row()
         row = self.layout.row()
-        row.operator("arf.assign_parent_body", text="Assign parent body")
-        row.operator("arf.clear_parent_body", text="Clear parent body")
+        row.operator("frame.assign_parent_body", text="Assign parent body")
+        row.operator("frame.clear_parent_body", text="Clear parent body")
 
         
         row = self.layout.row()
