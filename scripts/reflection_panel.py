@@ -42,8 +42,8 @@ class ReflectionMixinClass: #mixin class to share functionality across all the r
         return unilateral_objects
 class ReflectUnilateralBodiesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
     bl_idname = "body.reflect_unilateral_bodies"
-    bl_label = "Reflects unilateral bodies across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
-    bl_description = "Reflects unilateral bodies across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
+    bl_label = "Reflects unilateral bodies across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    bl_description = "Reflects unilateral bodies across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     
     def execute(self, context):
         
@@ -117,8 +117,8 @@ class ReflectUnilateralBodiesOperator(Operator, ReflectionMixinClass): #inherits
 
 class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
     bl_idname = "muscle.reflect_unilateral_muscles"
-    bl_label = "Reflects unilateral muscles across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
-    bl_description = "Reflects unilateral muscles across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version."
+    bl_label = "Reflects unilateral muscles across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    bl_description = "Reflects unilateral muscles across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     
     def execute(self, context):
         
@@ -266,8 +266,8 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
 
 class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
     bl_idname = "muscle.reflect_unilateral_wraps"
-    bl_label = "Reflects unilateral wrapping geometries across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
-    bl_description = "Reflects unilateral muscles across desired reflection plane if their name ends with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
+    bl_label = "Reflects unilateral wrapping geometries across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
+    bl_description = "Reflects unilateral muscles across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
     
     def execute(self, context):
         
@@ -401,11 +401,12 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
                     muscle_name_refl = muscle_name[0:-len(currentside)] + otherside
                     
                     if muscle_name_refl in bpy.data.objects:
- 
+                        bpy.ops.object.select_all(action='DESELECT')
                         new_wrapobj.select_set(True)
 
-                        muskemo.musclename = muscle_name_refl
+                        muskemo.musclename = muscle_name_refl#THIS CAN BE DELETED LATER
                         bpy.ops.muscle.assign_wrapping()
+                        bpy.ops.object.select_all(action='DESELECT')
 
                         #original muscle and wrap
                         muscle = bpy.data.objects[muscle_name]
@@ -424,13 +425,90 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
                     else:
                         self.report({'WARNING'}, "MUSCLE with the name '" + muscle_name_refl + "' does not exist, so it will not be assigned to '" + wrap_name  +  "' WRAP.")
                     
-
-
-
-                                  
+                             
            
         return {'FINISHED'}    
 
+
+class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+    bl_idname = "arf.reflect_unilateral_frames"
+    bl_label = "Reflects unilateral frames across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    bl_description = "Reflects unilateral frame across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+        colname = muskemo.frame_collection
+
+        collection = bpy.data.collections[colname]
+
+        frames = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'FRAME']
+        frame_names = [obj.name for obj in frames]
+
+       
+        right_string = muskemo.right_side_string
+        left_string = muskemo.left_side_string
+
+        reflection_plane = muskemo.reflection_plane
+
+        reflect_mat =  self.get_reflection_matrix(reflection_plane) 
+
+        size = bpy.context.scene.muskemo.ARF_axes_size #axis length, in meters
+
+        from .create_frame_func import create_frame
+
+        unilateral_frames = self.get_unilateral_objects(frames, frame_names, left_string=left_string, right_string=right_string)
+
+        for obj in unilateral_frames:
+            
+            if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
+                  
+                currentside = right_string #this is the side we DO have
+                otherside = left_string #the side we are creating
+
+            else: #if right_string is not in the name, the current side is the left side.
+                currentside = left_string #this is the side we DO have
+                otherside = right_string #the side we are creating
+
+            frame_name = obj.name[0:-len(currentside)] + otherside #rename to otherside
+
+            current_side_wm = obj.matrix_world.copy()
+
+            pos_in_global_refl = reflect_mat @ current_side_wm.translation #reflect position 
+
+            gRb_refl =  reflect_mat @ current_side_wm.to_3x3() @ reflect_mat.inverted() #change of basis
+
+            create_frame(name = frame_name,
+                             size = size,
+                 pos_in_global = pos_in_global_refl,
+                   gRb = gRb_refl, 
+                    collection_name = colname,
+                    parent_body = 'not_assigned',)
+            
+            if obj['parent_body'] != 'not_assigned': #if a parent body is assigned
+                
+                pbody_name_current = obj['parent_body']
+                pbody_name_refl = pbody_name_current[0:-len(currentside)] + otherside
+
+                if pbody_name_refl in bpy.data.objects: #if the reflected BODY exists, assign it.
+                    bpy.ops.object.select_all(action='DESELECT')
+                    
+                    [bpy.data.objects[x].select_set(True) for x in [frame_name, pbody_name_refl]] #set the selection for the correct objects
+                    muskemo.framename = frame_name #THIS CAN BE DELETED LATER
+
+                    bpy.ops.arf.assign_parent_body()
+                    bpy.ops.object.select_all(action='DESELECT')
+                    
+ 
+
+                else:
+                    self.report({'WARNING'}, "BODY with the name '" + pbody_name_refl + "' does not exist, so it will not be assigned as a parent to '" + frame_name  +  "' FRAME.")
+                    
+
+
+                
+            
+        return {"FINISHED"}
 
 
 class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
@@ -480,6 +558,14 @@ class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conv
         split = split.split(factor =1/2)
         split.prop(muskemo, "body_collection", text = "")
         split.operator("body.reflect_unilateral_bodies", text="Reflect unilateral bodies")
+
+        row = self.layout.row()
+
+        split = row.split(factor = 1/3)
+        split.label(text = 'Frame collection')
+        split = split.split(factor =1/2)
+        split.prop(muskemo, "frame_collection", text = "")
+        split.operator("arf.reflect_unilateral_frames", text="Reflect unilateral frames")
 
         row = self.layout.row()
         split = row.split(factor = 1/3)

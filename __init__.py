@@ -148,6 +148,7 @@ from .scripts.contact_panel import (VIEW3D_PT_contact_panel, CreateContactOperat
 from .scripts.reflection_panel import (ReflectUnilateralBodiesOperator,
                                        ReflectUnilateralMusclesOperator,
                                        ReflectUnilateralWrapsOperator,
+                                       ReflectUnilateralFramesOperator,
                                        VIEW3D_PT_reflection_panel, 
                                        )
 
@@ -254,6 +255,7 @@ classes = (  #Global settings panel
             
             #Reflection panel
                                 ReflectUnilateralBodiesOperator,
+                                ReflectUnilateralFramesOperator,
                                 ReflectUnilateralMusclesOperator,
                                 ReflectUnilateralWrapsOperator,
                                 VIEW3D_PT_reflection_panel, 

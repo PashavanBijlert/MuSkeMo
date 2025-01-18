@@ -382,7 +382,7 @@ Importantly, the coloration in Blender depends on \href{https://docs.blender.org
 
 \subsection{Reflection panel}
 
-This panel is currently still under construction, and will be released with v0.9.3. Currently, only muscles and wrapping geometry have a robust reflection approach.
+This panel is currently still under construction, and will be released with v0.9.3. Currently, only bodies, muscles, and wrapping geometry have a robust reflection approach.
 
 The reflection panel allows symmetric model construction, by only constructing model components on one side, and then reflecting them across the mid-sagittal plane. You can choose what plane defines the midline (default = 'XY'), and change the strings with which you designate the left and right sides (default is '\_l' and '\_r', respectively, at the end of an object's name, e.g., "thigh\_r"). The script then checks for all components whether its other-side counterpart exists, and if not, creates it. The script checks this for both left and right-sided components simultaneously. Each component's reflection function searches within the collection that is designated next to the button.
 
