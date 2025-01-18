@@ -453,7 +453,7 @@ class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits
 
         reflect_mat =  self.get_reflection_matrix(reflection_plane) 
 
-        size = bpy.context.scene.muskemo.ARF_axes_size #axis length, in meters
+        size = bpy.context.scene.muskemo.frame_axes_size #axis length, in meters
 
         from .create_frame_func import create_frame
 

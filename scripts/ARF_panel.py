@@ -96,7 +96,7 @@ class ConstructARFOperator(Operator):
 
         colname = muskemo.frame_collection  #target collection
 
-        size = muskemo.ARF_axes_size
+        size = muskemo.frame_axes_size
 
        
         origin = bpy.data.objects[origin_landmark_name].location
@@ -513,4 +513,4 @@ class VIEW3D_PT_arf_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention 
         self.layout.row()
         
         row = self.layout.row()
-        row.prop(muskemo,  "ARF_axes_size")
+        row.prop(muskemo,  "frame_axes_size")

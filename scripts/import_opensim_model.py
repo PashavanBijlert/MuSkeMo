@@ -470,7 +470,7 @@ class ImportOpenSimModel(Operator):
 
         # Frame related user inputs
         frame_colname = bpy.context.scene.muskemo.frame_collection
-        frame_size = bpy.context.scene.muskemo.ARF_axes_size
+        frame_size = bpy.context.scene.muskemo.frame_axes_size
         
         if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions
             

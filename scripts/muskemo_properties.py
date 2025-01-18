@@ -515,7 +515,7 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen = 1024,
         )
     
-    ARF_axes_size: FloatProperty(
+    frame_axes_size: FloatProperty(
         name = "Reference frame axes display size",
         description="Display size of the axes for newly created reference frames, in meters",
         default = 0.075,

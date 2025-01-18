@@ -440,7 +440,7 @@ class ImportFramesOperator(Operator, ImportHelperCustom):  #inherits from Import
         from .create_frame_func import create_frame
         from .quaternions import matrix_from_quaternion
 
-        size = bpy.context.scene.muskemo.ARF_axes_size # in meters
+        size = bpy.context.scene.muskemo.frame_axes_size # in meters
 
         for row in data:
             

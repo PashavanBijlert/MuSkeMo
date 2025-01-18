@@ -468,7 +468,7 @@ class ImportGaitsymModel(Operator):
             from .create_frame_func import create_frame
             
             frame_colname = bpy.context.scene.muskemo.frame_collection
-            frame_size = bpy.context.scene.muskemo.ARF_axes_size
+            frame_size = bpy.context.scene.muskemo.frame_axes_size
 
             self.report({'WARNING'},"When importing Markers as Frames, the frames will not be parented to bodies, because in MuSkeMo, a frame can have only one local frame.")    
                 
