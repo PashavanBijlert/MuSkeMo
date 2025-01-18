@@ -485,27 +485,31 @@ class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits
                     collection_name = colname,
                     parent_body = 'not_assigned',)
             
-            if obj['parent_body'] != 'not_assigned': #if a parent body is assigned
-                
-                pbody_name_current = obj['parent_body']
-                pbody_name_refl = pbody_name_current[0:-len(currentside)] + otherside
+            #check if the mirrored parent exists
+            if obj['parent_body'] !='not_assigned':
+                original_pbname = obj['parent_body']
 
-                if pbody_name_refl in bpy.data.objects: #if the reflected BODY exists, assign it.
+                if original_pbname.endswith(currentside): #if the pbody is also sided
+
+                    reflected_pbname = original_pbname[0:-len(currentside)] + otherside #get the reflected parent body name
+
+                else:#if not a sided pbody
+
+                    reflected_pbname = original_pbname   
+
+                if not reflected_pbname in bpy.data.objects:
+                        
+                    self.report({'WARNING'}, "BODY with the name '" + reflected_pbname + "' does not exist, so it will not be assigned as a parent to '" + frame_name  +  "' FRAME.")
+                       
+                else:
+                        
                     bpy.ops.object.select_all(action='DESELECT')
                     
-                    [bpy.data.objects[x].select_set(True) for x in [frame_name, pbody_name_refl]] #set the selection for the correct objects
+                    [bpy.data.objects[x].select_set(True) for x in [frame_name, reflected_pbname]] #set the selection for the correct objects
                     muskemo.framename = frame_name #THIS CAN BE DELETED LATER
 
                     bpy.ops.frame.assign_parent_body()
-                    bpy.ops.object.select_all(action='DESELECT')
-                    
- 
-
-                else:
-                    self.report({'WARNING'}, "BODY with the name '" + pbody_name_refl + "' does not exist, so it will not be assigned as a parent to '" + frame_name  +  "' FRAME.")
-                    
-
-
+                    bpy.ops.object.select_all(action='DESELECT')    	        
                 
             
         return {"FINISHED"}
