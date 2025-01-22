@@ -338,6 +338,8 @@ During import, cylinder wrapping is supported (see \ref{sec:musclewrapping} and 
 
 \textbf{Warning:} Blender does not allow \textit{any} object name to be reused. This means that all of your model components need to have unique names in MuSkeMo (so e.g., if a body is named 'shank\_r', and it has only one wrapping object, it till cannot be named 'shank\_r'. It would need a unique name such as 'shank\_wrap\_r'). If all components don't have unique names, the OpenSim importer may fail. The importer currently checks whether wrapping objects have non-unique names, but not other model components.
 
+MuSkeMo does not support conditional or moving path points. These are automatically converted to regular path points during model import. For moving path points, the point position is selected that corresponds to the position when the controlling joint coordinate is equal to 0.
+
 
 \subsubsection{Gaitsym 2019 model import}
 

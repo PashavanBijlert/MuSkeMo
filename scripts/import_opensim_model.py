@@ -369,8 +369,7 @@ class ImportOpenSimModel(Operator):
 
                                                 if None not in loc_list: #if all the values are not None
                                                     location = tuple(loc_list)
-                                                    print(location)
-                                                    print(muscle_name)
+                                                    
 
                                                 else: #if one is None, just make them all None
                                                     location = tuple([None, None, None])    
