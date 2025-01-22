@@ -311,17 +311,78 @@ class ImportOpenSimModel(Operator):
                                 if path_point_set is not None:
                                     path_points = path_point_set.find('objects')
                                     if path_points is not None:
-                                        for point in path_points.findall('PathPoint'):
+                                       for point in path_points:  # Iterate over all child elements
                                             point_name = point.get('name')
                                             parent_frame = point.find('socket_parent_frame').text.strip()
-                                            location = tuple(map(float, point.find('location').text.split()))
 
-                                            path_points_data.append({
-                                                'point_name': point_name,
-                                                'parent_frame': parent_frame,
-                                                'location': location
-                                            })
+                                            if (point.tag == 'PathPoint' or point.tag == 'ConditionalPathPoint'):  # Handle PathPoint and convert ConditionalPathPoint to regular PathPoints
+                                                
+                                                
+                                                location = tuple(map(float, point.find('location').text.split()))
 
+                                                
+                                            elif point.tag == 'MovingPathPoint': #if it's a moving path point, we find the position of each point when the associated joint_coordinate is 0
+
+                                                #the function gets called below, but is reused for all three points
+                                                def get_y_for_x_zero(location_tag):  #a function that extracts the y of each simmspline where the x input (corresponding to the joint coordinate) is zero.
+                                                    """Extract y-value corresponding to x=0 from the given location tag (x_location, y_location, z_location)."""
+                                                    location_elem = point.find(location_tag)  # e.g., "x_location", "y_location", "z_location"
+                                                    if location_elem is not None:
+
+                                                        #these nested if statements assume the simmspline is always within a multiplier function with scale. If this is not correct, add the alternative in the future.
+                                                        multiplier_function = location_elem.find(".//MultiplierFunction") 
+                                                        if multiplier_function is not None:
+
+                                                            scale_element = multiplier_function.find(".//scale")  # Locate the <scale> element
+                                                            scale = float(scale_element.text.strip()) if scale_element is not None else 1.0  # Convert to float, default to 1.0 if not found
+                                                            simm_spline = multiplier_function.find(".//SimmSpline")
+                                                            if simm_spline is not None:
+                                                                # Extract x and y values as lists of floats
+                                                                x_values = list(map(float, simm_spline.find('x').text.split()))
+                                                                y_values = list(map(float, simm_spline.find('y').text.split()))
+                                                                
+                                                                if 0 in x_values:  # Check if 0 is in x values
+                                                                    zero_index = x_values.index(0)  # Get index of 0
+                                                                    return scale*y_values[zero_index]  # Return corresponding y value
+                                                                
+
+                                                                else:
+                                                                    # Find indices of the two x-values that bridge 0
+                                                                    for i in range(len(x_values) - 1):
+                                                                        if x_values[i] < 0 < x_values[i + 1]:
+                                                                            # Perform linear interpolation
+                                                                            x1, x2 = x_values[i], x_values[i + 1]
+                                                                            y1, y2 = y_values[i], y_values[i + 1]
+                                                                            y_interpolated = y1 + (0 - x1) * (y2 - y1) / (x2 - x1)
+                                                                            return scale*float(y_interpolated)
+                                                        else:
+                                                            return None
+
+                                                    
+
+                                                # Get y-values for spline x=0, for x_location, y_location, z_location of the muscle point.
+                                                x_pos_at_zero = get_y_for_x_zero("x_location")
+                                                y_pos_at_zero = get_y_for_x_zero("y_location")
+                                                z_pos_at_zero = get_y_for_x_zero("z_location")
+
+                                                loc_list = [x_pos_at_zero, y_pos_at_zero, z_pos_at_zero]
+
+                                                if None not in loc_list: #if all the values are not None
+                                                    location = tuple(loc_list)
+                                                    print(location)
+                                                    print(muscle_name)
+
+                                                else: #if one is None, just make them all None
+                                                    location = tuple([None, None, None])    
+
+                                            if None not in location: #only if all the points actually exist
+
+                                                path_points_data.append({
+                                                        'point_name': point_name,
+                                                        'parent_frame': parent_frame,
+                                                        'location': location
+                                                    })    
+                                            
                                 # Handle PathWrapSet
                                 path_wrap_set = geometry_path.find('PathWrapSet')
                                 if path_wrap_set is not None:
