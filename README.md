@@ -8,7 +8,7 @@ To install: In Blender, go to Edit > preferences > Add-ons and then click "Insta
 
 # **How to use**
 
-**Check out the [video tutorial on YouTube](https://www.youtube.com/watch?v=9eMm9YalXtg)** More videos and updated tutorials will be added in the near future.
+**Check out the [video tutorial on YouTube](https://www.youtube.com/watch?v=9eMm9YalXtg)**. More videos and updated tutorials will be added after MuSkeMo reaches v0.9.3.
 
 **Download the [MuSkeMo user manual](https://github.com/PashavanBijlert/MuSkeMo/blob/main/MuSkeMo%20manual/MuSkeMo%20manual.pdf)**. This document is being updated and extended in preparation for the first full release (v1.0).
 
