@@ -127,8 +127,11 @@ MuSkeMo uses the following units:
 \textbf{WARNING:} Blender's default units are in metres. Many of the calculations in MuSkeMo are derived from the spatial position of individual points (vertices) of the 3D meshes. If you change the base units of Blender, these calculations are also implicitly scaled, and the units will no longer be correct (e.g., if you change Blender’s base units to centimetres, linear dimensions will be off by a factor of 100, but volumetrics and inertial properties will be off by a factor of 100\(^3\)). MuSkeMo currently only officially supports metres as the base unit, correct scaling of the outputs if using other units is up to the user.
 
 \section{A Note on Precision}
+\label{sec:precision}
 
 MuSkeMo is built using the Blender Python API, which internally uses double precision numbers (64-bit floating point, \(\sim16\) significant digits). However, Blender itself stores numbers using single precision (32-bit floating point, \(\sim8\) significant digits), including all 3D point and mesh data. This means that precision beyond 8 significant digits cannot be expected when using MuSkeMo. Single precision floats nevertheless have a very large range of numbers that can be represented—the smallest number that can be accurately reported is in the order of \(1\times10^{-38}\), approximately 1 million times smaller than the mass of an electron in kilograms.
+
+Because computing inertial properties from 3D vertex data involves successive multiplications of single precision numbers, mass and inertial properties have an expected accuracy of 5-6 digits (see \ref{sec:inpropvalidation}).
 
 \section{Orientations}
 
@@ -787,7 +790,9 @@ For further validation of MuSkeMo, the reader is referred to \cite{vanbijlertMus
 \label{sec:momentarmvalidation}
 \subsection{Mesh inertial properties}
 \label{sec:inpropvalidation}
-To compute inertial properties from arbitrary 3D meshes, MuSkeMo implements pseudo-code from \cite{eberlyGamePhysics2004} (see \ref{sec:inproppanel}). I will validate the implementation in MuSkeMo by demonstrating that it: 1) correctly computes the inertial tensors for objects with known inertial tensors; 2) inertial properties of a complex mesh acquired from a CT scan match the outputs from Meshlab \cite{cignoniMeshLabOpenSourceMesh2008}. We will assume a density of 1000 \si{kg m^{-3}} for all computations, although this is arbitrary since all of the underlying computations are volumetric only (see \ref{sec:inproppanel}).
+To compute inertial properties from arbitrary 3D meshes, MuSkeMo implements pseudo-code from \cite{eberlyGamePhysics2004} (see \ref{sec:inproppanel}). I will validate the implementation in MuSkeMo by demonstrating that it: 1) accurately computes the inertial tensors for objects with known inertial tensors; 2) inertial properties of a complex mesh acquired from a CT scan match the outputs from Meshlab \cite{cignoniMeshLabOpenSourceMesh2008}. We will assume a density of 1000 \si{kg m^{-3}} for all computations, although this is arbitrary since all of the underlying computations are volumetric only (see \ref{sec:inproppanel}).
+
+The inertial properties are computed through successive multiplications of the 3D vertex coordinates of the input meshes. Because Blender stores these coordinates as 32 bit single precision digits (see \ref{sec:precision}), the repeated multiplications required to compute the inertial properties will reduce their precision to approximately 5-6 digits.
 
 \subsubsection*{Icosahedron and sphere}
 
@@ -806,6 +811,27 @@ I = \frac{\tau^2}{10} \cdot e^2 \cdot m,
 where all diagonal terms are equal.
 
 Using the algebraic equations, the computed moment of inertia is \(734.063 \, \si{\kilogram \metre^2}\). MuSkeMo provides a moment of inertia value of \(734.070 \, \si{\kilogram \metre^2}\).
+
+The volume of a sphere with radius \(r\) can be computed as:
+\begin{equation}
+V = 4/3 \cdot \pi \cdot  r^3
+\end{equation}
+
+
+Thus, a sphere with \(r\) = 1 \si{m} weighs 4188.79 \si{kg}. MuSkeMo computes its mass as 4188.65 \si{kg}.
+
+The moment of inertia of a sphere can be computed as \cite{ruinaMechanicsToolsetStatics2019}:
+
+\begin{equation}
+I = 2/5 \cdot m \cdot  r^2,
+\end{equation}
+again with all diagonal terms equal. This gives 1675.52 \si{\kilogram \metre^2} for our sphere. MuSkeMo computes it as 1675.42 \si{\kilogram \metre^2}.
+
+We will reuse the parameters of the icosahedron and the sphere in \ref{sec:compositebodyvalidation}.
+
+\subsubsection*{Complex tissue model from CT scan}
+
+
 
 \subsection{Composite bodies in local frames}
 \label{sec:compositebodyvalidation}
