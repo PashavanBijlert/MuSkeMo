@@ -758,7 +758,7 @@ class SingleDOFLengthMomentArmOperator(Operator):
         min_range_angle1 = min(joint_1_ranges) #in degrees
         max_range_angle1 = max(joint_1_ranges)
      
-        angle_1_range = np.arange(min_range_angle1, max_range_angle1+angle_step_size, angle_step_size)  #
+        angle_1_range = np.arange(min_range_angle1, max_range_angle1+ angle_step_size, angle_step_size)  #we pad by one extra step on both sides so the gradient is correct for moment arm computation. We also add one step at the end because range always skips the last
         
         # Convert degrees to radians for each angle
         angle_1_range_rad = np.deg2rad(angle_1_range)

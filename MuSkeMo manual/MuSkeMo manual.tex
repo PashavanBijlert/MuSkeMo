@@ -183,10 +183,11 @@ The Blender user interface has several default settings that do not work well wi
 
 
 \subsection{Inertial properties panel}
+\label{sec:inproppanel}
 
 The main goal of this panel is to compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
 Inertial properties are \textbf{not dynamic}, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated.
-To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mesh, based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes".
+To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mesh, based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
 
 \subsubsection{Generate minimal convex hulls}
 Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons %{sellersMinimumConvexHull2012, BrasseyMOA2013, BrasseySELLERS2014, Brassey2016, Brassey2018, coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023, Bates2025}. 
@@ -775,6 +776,39 @@ The inverse operation, which rotates from the global frame back to the body-fixe
 \label{sec:quaternions}
 
 To be written. MuSkeMo uses algorithms based on \cite{eberlyGamePhysics2004}.
+
+\section{Validation tests}
+
+Many of MuSkeMo's modeling features rely on correctly computing positions and orientations with respect to local frames. Errors in some of these computations would be quite obvious during import (e.g., if the transformations are incorrectly propagated, resulting in incorrect model component positions and orientations). However, not all potential sources of errors can be detected visually. This section lists several validation tests that rely on the correct application and propagation of all model construction and analysis steps.
+
+For further validation of MuSkeMo, the reader is referred to \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a,vanbijlertMuscleDrivenPredictivePhysics2024}, where animal models constructed using MuSkeMo were used for dynamic simulations, and simulator outputs were compared to empirical data from the animals in question.
+
+\subsection{Muscle moment arms}
+\label{sec:momentarmvalidation}
+\subsection{Mesh inertial properties}
+\label{sec:inpropvalidation}
+To compute inertial properties from arbitrary 3D meshes, MuSkeMo implements pseudo-code from \cite{eberlyGamePhysics2004} (see \ref{sec:inproppanel}). I will validate the implementation in MuSkeMo by demonstrating that it: 1) correctly computes the inertial tensors for objects with known inertial tensors; 2) inertial properties of a complex mesh acquired from a CT scan match the outputs from Meshlab \cite{cignoniMeshLabOpenSourceMesh2008}. We will assume a density of 1000 \si{kg m^{-3}} for all computations, although this is arbitrary since all of the underlying computations are volumetric only (see \ref{sec:inproppanel}).
+
+\subsubsection*{Icosahedron and sphere}
+
+If the edge lengths \(e\) are known, the volume of an icosahedron can be computed as \cite{satterlyMomentsInertiaPolyhedra1958}:
+\begin{equation}
+V = e^3 \cdot \frac{5}{6} \cdot \tau^2,
+\end{equation}
+where \(\tau = \frac{\sqrt{5} + 1}{2}\) is the golden ratio. Multiplying the volume by the density \(\rho\) gives the mass \(m\).
+
+In Blender, an icosahedron with a default radius of 1 has \(e = 1.05146 \, \si{\metre}\) (see FIGURE). Using the algebraic equation, the computed mass is \(2536.13 \, \si{\kilogram}\). MuSkeMo computes a mass of \(2536.15 \, \si{\kilogram}\).
+
+The moment of inertia of an icosahedron can be computed as \cite{satterlyMomentsInertiaPolyhedra1958}:
+\begin{equation}
+I = \frac{\tau^2}{10} \cdot e^2 \cdot m,
+\end{equation}
+where all diagonal terms are equal.
+
+Using the algebraic equations, the computed moment of inertia is \(734.063 \, \si{\kilogram \metre^2}\). MuSkeMo provides a moment of inertia value of \(734.070 \, \si{\kilogram \metre^2}\).
+
+\subsection{Composite bodies in local frames}
+\label{sec:compositebodyvalidation}
 
 \section*{References}
 \addcontentsline{toc}{section}{References} % Add to TOC
