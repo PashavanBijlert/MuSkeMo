@@ -224,9 +224,12 @@ Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log
 % vol_skin = 10^(intercept + slope*log10(vol_CH) + MSE/2)
 
 \subsection{Body panel}
+\label{sec:bodypanel}
 
 Define rigid bodies, assign precomputed inertial properties, or compute directly by selecting one or several volumetric meshes.
 Inertial properties are \textbf{not dynamic}, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated.
+
+A single body can represent the combined inertial properties of more than one mesh. MuSkeMo computes the combined inertial properties using the parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}. See \ref{sec:compositebodyvalidation}.
 
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. 
 
@@ -804,11 +807,11 @@ where \(\tau = \frac{\sqrt{5} + 1}{2}\) is the golden ratio. Multiplying the vol
 
 In Blender, an icosahedron with a default radius of 1 has \(e = 1.05146 \, \si{\metre}\) (see FIGURE). Using the algebraic equation, the computed mass is \(2536.13 \, \si{\kilogram}\). MuSkeMo computes a mass of \(2536.15 \, \si{\kilogram}\).
 
-The moment of inertia of an icosahedron can be computed as \cite{satterlyMomentsInertiaPolyhedra1958}:
+The principal moments of inertia of an icosahedron can be computed as \cite{satterlyMomentsInertiaPolyhedra1958}:
 \begin{equation}
 I = \frac{\tau^2}{10} \cdot e^2 \cdot m,
 \end{equation}
-where all diagonal terms are equal.
+where all three principal moments are equal.
 
 Using the algebraic equations, the computed moment of inertia is \(734.063 \, \si{\kilogram \metre^2}\). MuSkeMo provides a moment of inertia value of \(734.070 \, \si{\kilogram \metre^2}\).
 
@@ -820,21 +823,47 @@ V = 4/3 \cdot \pi \cdot  r^3
 
 Thus, a sphere with \(r\) = 1 \si{m} weighs 4188.79 \si{kg}. MuSkeMo computes its mass as 4188.65 \si{kg}.
 
-The moment of inertia of a sphere can be computed as \cite{ruinaMechanicsToolsetStatics2019}:
+The principal moments of inertia of a sphere can be computed as \cite{ruinaMechanicsToolsetStatics2019}:
 
 \begin{equation}
 I = 2/5 \cdot m \cdot  r^2,
 \end{equation}
-again with all diagonal terms equal. This gives 1675.52 \si{\kilogram \metre^2} for our sphere. MuSkeMo computes it as 1675.42 \si{\kilogram \metre^2}.
+again with all three principal moments equal. This gives 1675.52 \si{\kilogram \metre^2} for our sphere. MuSkeMo computes it as 1675.42 \si{\kilogram \metre^2}.
 
 We will reuse the parameters of the icosahedron and the sphere in \ref{sec:compositebodyvalidation}.
 
 \subsubsection*{Complex tissue model from CT scan}
 
+3D models acquired from CT scans can be complex and irregular. The algorithm presented by Eberly \cite{eberlyGamePhysics2004} can deal with such meshes without problems. Coatham et al. \cite{coathamConvexHullEstimation2021} provided a dataset of CT scanned animals, with manually segmented tissue (skin) outlines. FIGURE shows the torso tissue outline of a cheetah, the "Torso.obj" mesh from the "skin" folder of the \textit{Acinonyx jubatus} dataset. This is a relatively detailed mesh (~78 MB), likely an unnecessary level of detail for a rigid body model.
 
+Using the "Compute Geometric Measures" filter, Meshlab gives: \(V\) = 0.027241 \si{m^3}, center of mass = \((0.461789, -0.002036, 0.555943)\) \si{m}, and the volumetric inertia tensor as (0.000177, 0.002123, 0.002045, 0.000060, 0.000113, 0.000011) \si{m^5}. MuSkeMo gives the following outputs (setting density at 1000 \si{kg m^{-3}}): \(m\) = 27.2405 \si{kg}, center of mass = \((0.461789, -0.002036, 0.555943)\) \si{m}, and the mass inertial tensor as (0.176614, 2.12329, 2.0455, 0.060367, 0.113492, 0.010864).
+
+The numerical values are the same, save for a factor of 1000 representing the density.
 
 \subsection{Composite bodies in local frames}
 \label{sec:compositebodyvalidation}
+
+MuSkeMo can combine the inertial properties of several source objects into a single composite body using the (3D) parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}. When assigning a local frame to a body \ref{sec:frame}, MuSkeMo also expresses these parameters in that local frame. Here, we will compute the values manually, and compare the computations by MuSkeMo.
+
+Consider the icosahedron and sphere from \ref{sec:inpropvalidation}. The icosahedron has mass \(m_{i}\) = 2536.13 \si{kg}, centered at the origin (0,0,0), and its inertia tensor:
+
+\begin{equation}
+    \mathbf{I}_{\mathcal{G}} =     
+\end{equation}
+
+The sphere has mass \(m_{s}\) = 4188.79 \si{kg}, centered at (4,1,-1.5), and its inertia tensor:
+
+\begin{equation}
+    \mathbf{I}_{\mathcal{G}} =     
+\end{equation}
+
+The combined center of mass is =
+
+
+\begin{equation}
+    \frac{m_{i} \cdot \mqty( 0 \\ 0 \\ 0 )  + m_{s} \cdot \mqty( 4 \\ 1 \\ -1.5)}{m_{i} + m_{s}} = \mqty( 2.4915 \\ 0.6229 \\ -0.9343 )
+\end{equation}
+
 
 \section*{References}
 \addcontentsline{toc}{section}{References} % Add to TOC
