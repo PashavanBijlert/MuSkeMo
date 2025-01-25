@@ -149,6 +149,7 @@ from .scripts.reflection_panel import (ReflectUnilateralBodiesOperator,
                                        ReflectUnilateralMusclesOperator,
                                        ReflectUnilateralWrapsOperator,
                                        ReflectUnilateralFramesOperator,
+                                       ReflectUnilateralJointsOperator,
                                        VIEW3D_PT_reflection_panel, 
                                        )
 
@@ -258,6 +259,7 @@ classes = (  #Global settings panel
                                 ReflectUnilateralFramesOperator,
                                 ReflectUnilateralMusclesOperator,
                                 ReflectUnilateralWrapsOperator,
+                                ReflectUnilateralJointsOperator,
                                 VIEW3D_PT_reflection_panel, 
                                        
 

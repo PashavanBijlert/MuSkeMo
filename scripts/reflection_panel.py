@@ -514,6 +514,122 @@ class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits
             
         return {"FINISHED"}
 
+class ReflectUnilateralJointsOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+    bl_idname = "joint.reflect_unilateral_joints"
+    bl_label = "Reflects unilateral joints across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    bl_description = "Reflects unilateral joints across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+        colname = muskemo.joint_collection
+
+        collection = bpy.data.collections[colname]
+
+        joints = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'JOINT']
+        joint_names = [obj.name for obj in joints]
+
+       
+        right_string = muskemo.right_side_string
+        left_string = muskemo.left_side_string
+
+        reflection_plane = muskemo.reflection_plane
+
+        reflect_mat =  self.get_reflection_matrix(reflection_plane) 
+
+        radius = bpy.context.scene.muskemo.jointsphere_size #axis length, in meters
+
+        from .create_joint_func import create_joint
+        from .quaternions import quat_from_matrix
+        from .euler_XYZ_body import euler_XYZbody_from_matrix
+
+        unilateral_joints = self.get_unilateral_objects(joints, joint_names, left_string=left_string, right_string=right_string)
+
+        for obj in unilateral_joints:
+            
+            if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
+                  
+                currentside = right_string #this is the side we DO have
+                otherside = left_string #the side we are creating
+
+            else: #if right_string is not in the name, the current side is the left side.
+                currentside = left_string #this is the side we DO have
+                otherside = right_string #the side we are creating
+
+            joint_name = obj.name[0:-len(currentside)] + otherside #rename to otherside
+
+            current_side_wm = obj.matrix_world.copy()
+
+            pos_in_global_refl = reflect_mat @ current_side_wm.translation #reflect position 
+
+            gRb_refl =  reflect_mat @ current_side_wm.to_3x3() @ reflect_mat.inverted() #change of basis
+            or_in_global_quat_refl = quat_from_matrix(gRb_refl)
+            or_in_global_XYZeuler_refl = euler_XYZbody_from_matrix(gRb_refl)
+
+            create_joint(name = joint_name,
+                             radius = radius,
+                 pos_in_global = pos_in_global_refl,
+                   or_in_global_quat = or_in_global_quat_refl, 
+                   or_in_global_XYZeuler=or_in_global_XYZeuler_refl,
+                    collection_name = colname,
+                    parent_body = 'not_assigned',)
+            
+            #check if the mirrored parent exists
+            if obj['parent_body'] !='not_assigned':
+                original_pbname = obj['parent_body']
+
+                if original_pbname.endswith(currentside): #if the pbody is also sided
+
+                    reflected_pbname = original_pbname[0:-len(currentside)] + otherside #get the reflected parent body name
+
+                else:#if not a sided pbody
+
+                    reflected_pbname = original_pbname   
+
+                if not reflected_pbname in bpy.data.objects:
+                        
+                    self.report({'WARNING'}, "BODY with the name '" + reflected_pbname + "' does not exist, so it will not be assigned as a parent to '" +  joint_name  +  "' JOINT.")
+                       
+                else:
+                        
+                    bpy.ops.object.select_all(action='DESELECT')
+                    
+                    [bpy.data.objects[x].select_set(True) for x in [joint_name, reflected_pbname]] #set the selection for the correct objects
+                    muskemo.jointname = joint_name #THIS CAN BE DELETED LATER
+
+                    bpy.ops.joint.assign_parent_body()
+                    bpy.ops.object.select_all(action='DESELECT')    
+
+
+            #check if the mirrored child exists
+            if obj['child_body'] !='not_assigned':
+                original_cbname = obj['child_body']
+
+                if original_cbname.endswith(currentside): #if the cbody is also sided
+
+                    reflected_cbname = original_cbname[0:-len(currentside)] + otherside #get the reflected child name
+
+                else:#if not a sided cbody
+
+                    reflected_cbname = original_cbname   
+
+                if not reflected_cbname in bpy.data.objects:
+                        
+                    self.report({'WARNING'}, "BODY with the name '" + reflected_cbname + "' does not exist, so it will not be assigned as a child to '" +  joint_name  +  "' JOINT.")
+                       
+                else:
+                        
+                    bpy.ops.object.select_all(action='DESELECT')
+                    
+                    [bpy.data.objects[x].select_set(True) for x in [joint_name, reflected_cbname]] #set the selection for the correct objects
+                    muskemo.jointname = joint_name #THIS CAN BE DELETED LATER
+
+                    bpy.ops.joint.assign_child_body()
+                    bpy.ops.object.select_all(action='DESELECT')    	           	        
+                
+                        
+        return {"FINISHED"}
+
 
 class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
    
@@ -572,6 +688,15 @@ class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conv
         split.operator("frame.reflect_unilateral_frames", text="Reflect unilateral frames")
 
         row = self.layout.row()
+
+        split = row.split(factor = 1/3)
+        split.label(text = 'Joint collection')
+        split = split.split(factor =1/2)
+        split.prop(muskemo, "joint_collection", text = "")
+        split.operator("joint.reflect_unilateral_joints", text="Reflect unilateral joints")
+
+        row = self.layout.row()
+
         split = row.split(factor = 1/3)
         split.label(text = 'Muscle collection')
         split = split.split(factor =1/2)
