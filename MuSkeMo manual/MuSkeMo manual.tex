@@ -391,13 +391,13 @@ Importantly, the coloration in Blender depends on \href{https://docs.blender.org
 
 \subsection{Reflection panel}
 
-This panel is currently still under construction, and will be released with v0.9.3. Currently, only bodies, muscles, and wrapping geometry have a robust reflection approach.
+This panel is currently still under construction, and will be released with v0.9.3. Currently, bodies, frames, joints muscles, and wrapping geometry have a robust reflection approach.
 
 The reflection panel allows symmetric model construction, by only constructing model components on one side, and then reflecting them across the mid-sagittal plane. You can choose what plane defines the midline (default = 'XY'), and change the strings with which you designate the left and right sides (default is '\_l' and '\_r', respectively, at the end of an object's name, e.g., "thigh\_r"). The script then checks for all components whether its other-side counterpart exists, and if not, creates it. The script checks this for both left and right-sided components simultaneously. Each component's reflection function searches within the collection that is designated next to the button.
 
 \textbf{Warning:} All the reflection functions use a case-sensitive string search to check whether the side string is at the end of object's name. Because this can potentially cause conflicts (e.g., the name "dorsal\_rib\_l" contains both '\_l' and '\_r'), MuSkeMo only looks for the side string at the end of the object name. Because it is impossible to account for all naming conventions, a workaround can be to place the target component in its own collection and temporarily changing the name(s). In particular with muscles, where each point is parented to a body with a HOOK modifier (see \ref{sec:muscle}), conflicts may need to be resolved manually.
 
-Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis using equation \ref{eq2}.
+Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis with the reflection matrix, using equation \ref{eq2}.
 
 \subsection{MuSkeMo utilities}
 
