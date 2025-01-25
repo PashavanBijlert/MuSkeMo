@@ -163,21 +163,10 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
             optimal_fiber_length = obj['optimal_fiber_length']
             tendon_slack_length = obj['tendon_slack_length']
 
-            '''
-            new_obj = obj.copy()  #copy object
-            new_obj.data = obj.data.copy() #copy object data
-            new_obj.name = obj.name.replace(currentside,otherside) #rename to left
-            
-            collection.objects.link(new_obj)  #add to Muscles collection
-            '''
-            
             
             modifier_list = [x.name for x in obj.modifiers if 'Hook'.casefold() in x.name.casefold()] #list of all the hook modifiers that are added to this curve
 
-            #if muscle_current_position_export:
-            #    curve_ev = curve.to_curve(depsgraph, apply_modifiers=True)
-            ### loop through points
-
+            
             for i in range(0, len(obj.data.splines[0].points)): #for each point
                 
                 body_name = ''   #this gets overwritten unless a muscle is currently unhooked
@@ -218,49 +207,7 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
                     
                 
                     
-            '''      
-
-            ## set material
-            oldmatname = new_obj.material_slots[0].name
-            new_obj.data.materials.pop(index = 0)
-            newmatname = oldmatname.replace(currentside,otherside)
-            if newmatname in bpy.data.materials: #if the material already exists
-                newmat = bpy.data.materials[newmatname]
-                new_obj.material_slots[0].material = newmat
-
-            else:
-                from .create_muscle_material_func import create_muscle_material
-
-                newmat = create_muscle_material(new_obj.name)
-
-            for mod in new_obj.modifiers: #loop through all modifiers
-
-                mod.name = mod.name.replace(currentside,otherside)
-
-                if 'HOOK' == mod.type: #if it's a hook, hook the other side body
-                    newbodyname = mod.object.name.replace(currentside,otherside)
-                    
-
-                    if newbodyname not in bpy.data.objects:# if the body doesn't exist
-                        self.report({'WARNING'}, "BODY with the name '" + newbodyname + "' Does not exist. Create it using the body mirroring button. '" +new_obj.name  +  "' MUSCLE currently has unhooked points.")
-                        mod.object = None
-                    else:
-                        mod.object = bpy.data.objects[newbodyname] #point the hook to the left side body
-                        
-
-                if 'NODES' == mod.type: #if it's a geometry nodes modifier
-                
-                    if 'SimpleMuscleViz' in mod.name:  #(the simple muscle viz) 
-                        mod.node_group.nodes['Set Material'].inputs['Material'].default_value = newmat   
-                        mod.name.replace(currentside, otherside)
-                        #create a new nodegroup.
-
-                    #if VolMuscle
-                    # 
-                    # 
-                    #if wrap in mod.name:    
-
-            '''  
+            
         return {'FINISHED'}
     
 
@@ -631,6 +578,93 @@ class ReflectUnilateralJointsOperator(Operator, ReflectionMixinClass): #inherits
         return {"FINISHED"}
 
 
+
+        return {"FINISHED"}
+
+class ReflectUnilateralContactsOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+    bl_idname = "contact.reflect_unilateral_contacts"
+    bl_label = "Reflects unilateral contacts across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    bl_description = "Reflects unilateral contacts across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+        colname = muskemo.contact_collection
+
+        collection = bpy.data.collections[colname]
+
+        contacts = [obj for obj in collection.objects if obj['MuSkeMo_type'] == 'CONTACT']
+        contact_names = [obj.name for obj in contacts]
+
+       
+        right_string = muskemo.right_side_string
+        left_string = muskemo.left_side_string
+
+        reflection_plane = muskemo.reflection_plane
+
+        reflect_mat =  self.get_reflection_matrix(reflection_plane) 
+
+        radius = bpy.context.scene.muskemo.contact_radius #axis length, in meters
+
+        from .create_contact_func import create_contact
+       
+        unilateral_contacts = self.get_unilateral_objects(contacts, contact_names, left_string=left_string, right_string=right_string)
+
+        for obj in unilateral_contacts:
+            
+            if right_string in obj.name: #if right_side_string is in the name, that's the current side of the object.
+                  
+                currentside = right_string #this is the side we DO have
+                otherside = left_string #the side we are creating
+
+            else: #if right_string is not in the name, the current side is the left side.
+                currentside = left_string #this is the side we DO have
+                otherside = right_string #the side we are creating
+
+            contact_name = obj.name[0:-len(currentside)] + otherside #rename to otherside
+
+            current_side_wm = obj.matrix_world.copy()
+
+            pos_in_global_refl = reflect_mat @ current_side_wm.translation #reflect position 
+
+            
+            create_contact(name = contact_name,
+                             radius = radius,
+                 pos_in_global = pos_in_global_refl,
+                    collection_name = colname,
+                    parent_body = 'not_assigned',)
+            
+            #check if the mirrored parent exists
+            if obj['parent_body'] !='not_assigned':
+                original_pbname = obj['parent_body']
+
+                if original_pbname.endswith(currentside): #if the pbody is also sided
+
+                    reflected_pbname = original_pbname[0:-len(currentside)] + otherside #get the reflected parent body name
+
+                else:#if not a sided pbody
+
+                    reflected_pbname = original_pbname   
+
+                if not reflected_pbname in bpy.data.objects:
+                        
+                    self.report({'WARNING'}, "BODY with the name '" + reflected_pbname + "' does not exist, so it will not be assigned as a parent to '" +  contact_name  +  "' CONTACT.")
+                       
+                else:
+                        
+                    bpy.ops.object.select_all(action='DESELECT')
+                    
+                    [bpy.data.objects[x].select_set(True) for x in [contact_name, reflected_pbname]] #set the selection for the correct objects
+                    muskemo.contact_name = contact_name #THIS CAN BE DELETED LATER
+
+                    bpy.ops.contact.assign_parent_body()
+                    bpy.ops.object.select_all(action='DESELECT')    
+
+
+           
+                        
+        return {"FINISHED"}    
+
 class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
    
     
@@ -694,6 +728,14 @@ class VIEW3D_PT_reflection_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conv
         split = split.split(factor =1/2)
         split.prop(muskemo, "joint_collection", text = "")
         split.operator("joint.reflect_unilateral_joints", text="Reflect unilateral joints")
+
+        row = self.layout.row()
+
+        split = row.split(factor = 1/3)
+        split.label(text = 'Contact collection')
+        split = split.split(factor =1/2)
+        split.prop(muskemo, "contact_collection", text = "")
+        split.operator("contact.reflect_unilateral_contacts", text="Reflect unilateral contacts")
 
         row = self.layout.row()
 
