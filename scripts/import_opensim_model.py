@@ -653,7 +653,8 @@ class ImportOpenSimModel(Operator):
          
         else: #if using local definitions
             
-            
+            transform_axes_warning_list = [] #list to which we will add OpenSim joints for a warning about transform axes that were not aligned with the joint itself.
+
             def build_joint_tree(joint_data, parent_body):
                 # Find all joints where the parent_body is the current body
                 child_joints = {}
@@ -839,29 +840,52 @@ class ImportOpenSimModel(Operator):
                 coordinate_Ry = ''
                 coordinate_Rz = ''
 
-                # Loop through each transform axis in the joint's spatial_transform data
-                for transform in joint['spatial_transform']:
-                    axis_vector = transform['axis_vector']
-                    coordinates = transform['axis_coordinates']
+                # Initialize the flag to check for standard axes
+                #OpenSim models can have TransformAxes which are not the same as the joint's own axes.
+                #Check for this here, and if the axes are not aligned with the joint's axes, we account for that joint separately
+                has_standard_axes = True #
 
+                # Loop through each transform axis to check for standard axis vectors
+                for transform in joint['spatial_transform']:
+                    axis_vector = tuple(transform['axis_vector'])  # Ensure axis_vector is a tuple
+
+                    # Check if the axis_vector is not a standard axis
+                    if axis_vector not in [(1, 0, 0), (0, 1, 0), (0, 0, 1)]:
+                        has_standard_axes = False
+                        transform_axes_warning_list.append(joint_name)
+                        
+
+               
+                if has_standard_axes:
                     
-                    if coordinates: #if coordinates aren't none
-                    # Check which axis the transform corresponds to and assign the coordinate accordingly
-                        if axis_vector == (1, 0, 0):  # X-axis
-                            if 'rotation' in transform['axis_name']:
-                                coordinate_Rx = coordinates
-                            elif 'translation' in transform['axis_name']:
-                                coordinate_Tx = coordinates
-                        elif axis_vector == (0, 1, 0):  # Y-axis
-                            if 'rotation' in transform['axis_name']:
-                                coordinate_Ry = coordinates
-                            elif 'translation' in transform['axis_name']:
-                                coordinate_Ty = coordinates
-                        elif axis_vector == (0, 0, 1):  # Z-axis
-                            if 'rotation' in transform['axis_name']:
-                                coordinate_Rz = coordinates
-                            elif 'translation' in transform['axis_name']:
-                                coordinate_Tz = coordinates
+                    # Loop through each transform axis in the joint's spatial_transform data
+                    for transform in joint['spatial_transform']: #for transform axis in spatial_transform
+                        axis_vector = transform['axis_vector']
+                        coordinates = transform['axis_coordinates']
+
+                        
+                        if coordinates: #if coordinates aren't none
+                        # standard coordinate axes    
+                        # Check which axis the transform corresponds to and assign the coordinate accordingly
+                            if axis_vector == (1, 0, 0):  # X-axis
+                                if 'rotation' in transform['axis_name']:
+                                    coordinate_Rx = coordinates
+                                elif 'translation' in transform['axis_name']:
+                                    coordinate_Tx = coordinates
+                            elif axis_vector == (0, 1, 0):  # Y-axis
+                                if 'rotation' in transform['axis_name']:
+                                    coordinate_Ry = coordinates
+                                elif 'translation' in transform['axis_name']:
+                                    coordinate_Ty = coordinates
+                            elif axis_vector == (0, 0, 1):  # Z-axis
+                                if 'rotation' in transform['axis_name']:
+                                    coordinate_Rz = coordinates
+                                elif 'translation' in transform['axis_name']:
+                                    coordinate_Tz = coordinates
+
+               
+
+
                 
                 if joint['joint_type'] == 'PinJoint': #if the joint type is a pinjoint, manually set the coordinate
                     coordinate_Rz = joint['coordinates'][0]
@@ -898,14 +922,71 @@ class ImportOpenSimModel(Operator):
                             coordinate_Ry = coordinate_Ry,
                             coordinate_Rz = coordinate_Rz,
                 )
-                            
-                            
+
+                #Deal with non-standard axes explicitly            
+                if not has_standard_axes and joint['joint_type'] == 'CustomJoint':
+                    
+                    print(joint_name)
+                    joint_obj = bpy.data.objects[joint_name] #get the newly created joint in Blender
+
+                    axis_names = ['rotation1', 'rotation2', 'rotation3', 'translation1', 'translation2', 'translation3']
+
+                    for axis_name  in axis_names: #a spatial transform has 6 transform axes. Loop through each explicitly
+                        transform = [x for x in joint['spatial_transform'] if x['axis_name']==axis_name][0]
+                                       
+                        axis_vector = transform['axis_vector']
+                        coordinates = transform['axis_coordinates']
+                        
+                        if coordinates: #if coordinates aren't none
+                            # assign the coordinate accordingly
+
+                            joint_obj['transform_axes'] = {}    
+                            #joint_obj.id_properties_ui('transform_axes').update(description="Transform axes defined in the OpenSim custom joint, if they don't align with the joint's own axes. See MuSkeMo manual for details. Optional.")
+                            #Python custom properties can't have a tooltip overlay.
+
+                            if axis_name == 'rotation1':
+                                joint_obj['coordinate_Rx'] = coordinates
+                                joint_obj['transform_axes']['transform_axis_Rx'] = axis_vector
+
+                            elif axis_name == 'rotation2':
+                                joint_obj['coordinate_Ry'] = coordinates
+                                joint_obj['transform_axes']['transform_axis_Ry'] = axis_vector
+
+
+                            elif axis_name == 'rotation3':
+                                joint_obj['coordinate_Rz'] = coordinates
+                                joint_obj['transform_axes']['transform_axis_Rz'] = axis_vector
+
+                                
+                            elif axis_name == 'translation1':
+                                joint_obj['coordinate_Tx'] = coordinates
+                                joint_obj['transform_axes']['transform_axis_Tx'] = axis_vector
+
+
+                            elif axis_name == 'translation2':
+                                joint_obj['coordinate_Ty'] = coordinates
+                                joint_obj['transform_axes']['transform_axis_Ty'] = axis_vector
+
+
+                            elif axis_name == 'translation3':
+                                joint_obj['coordinate_Tz'] = coordinates
+                                joint_obj['transform_axes']['transform_axis_Tz'] = axis_vector
+
+                                
+
 
                 # Add child joints to the stack to be processed
                 for child_joint_name, child_childtree in joint_childtree.items():
                     stack.append((child_joint_name, child_childtree))
                 
         #### outside 
+
+        # Throw warning about non-standard transform axes        
+        if transform_axes_warning_list: #throw a warning if joints have non-standard transform axes.
+            
+            warning_message= f"The following joints have transform axes that were not aligned with the joint-axes: {', '.join(transform_axes_warning_list)}. See the manual"
+
+            self.report({'WARNING'}, warning_message)
 
 
         #### Wrapping
