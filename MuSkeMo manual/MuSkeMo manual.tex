@@ -341,12 +341,14 @@ You can currently import bodies, joints, muscles, frames, and contacts, if they 
 
 MuSkeMo provides an OpenSim importer. This can import most of the components of an OpenSim model. Although the default behavior is to import models using local definitions, it is also possible to import models using global definitions (i.e., all the component positions are defined as their position in the global frame, and for joints specifically, transformations in parent and child are both set to the global position and orientation). Global definition import is probably only useful for models that were created using MuSkeMo's conversion script, using the "Global definitions" option.
 
+
 During import, cylinder wrapping is supported (see \ref{sec:musclewrapping} and \ref{sec:wrapgeom}). MuSkeMo's wrapping definitions are different from OpenSim, and the importer tries to convert wrapping definitions. If the wrapping does not visualize correctly, it may be necessary to change the projection angle (combined with enabling "force wrap"), selecting "flip wrap", or "shortest wrap", depending on the situation. See \ref{sec:musclewrapping} for a full description of MuSkeMo's wrapping.
 
 \textbf{Warning:} Blender does not allow \textit{any} object name to be reused. This means that all of your model components need to have unique names in MuSkeMo (so e.g., if a body is named 'shank\_r', and it has only one wrapping object, it till cannot be named 'shank\_r'. It would need a unique name such as 'shank\_wrap\_r'). If all components don't have unique names, the OpenSim importer may fail. The importer currently checks whether wrapping objects have non-unique names, but not other model components.
 
 MuSkeMo does not support conditional or moving path points. These are automatically converted to regular path points during model import. For moving path points, the point position is selected that corresponds to the position when the controlling joint coordinate is equal to 0.
 
+OpenSim models with \href{}{CustomJoints} (and perhaps other joint types with a \href{}{SpatialTransform}) can have \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1TransformAxis.html}{Transform Axes} that are different from the axes defined by the joint orientation. In essence, it is possible to define local frames within a joint, and joint coordinates can be expressed with respect to those local frames. This is currently not possible in MuSkeMo. MuSkeMo imports the joints as if they are regular joints, but stores the transform axes as a Python dictionary in a custom property named "transform\_axes". The trajectory importer will be modified to account for non-standard transform axes in the future.
 
 \subsubsection{Gaitsym 2019 model import}
 
