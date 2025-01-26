@@ -274,6 +274,10 @@ class ImportOpenSimModel(Operator):
         def get_muscle_data(model):
             muscle_data = {}
 
+            muscle_data['conditional_pathpoint_flag'] = False
+            muscle_data['moving_pathpoint_flag'] = False
+
+
             # Locate the ForceSet in the model
             forceset = model.find('ForceSet')
             if forceset is not None:
@@ -320,8 +324,14 @@ class ImportOpenSimModel(Operator):
                                                 
                                                 location = tuple(map(float, point.find('location').text.split()))
 
+                                                if point.tag == 'ConditionalPathPoint':
+                                                    muscle_data['conditional_pathpoint_flag'] = True #if there are conditional pathpoints, we set this to true, so that we can display a warning later
+
                                                 
                                             elif point.tag == 'MovingPathPoint': #if it's a moving path point, we find the position of each point when the associated joint_coordinate is 0
+                                                
+                                                muscle_data['moving_pathpoint_flag'] = True #if there are moving pathpoints, we set this to true, so that we can display a warning later
+
 
                                                 #the function gets called below, but is reused for all three points
                                                 def get_y_for_x_zero(location_tag):  #a function that extracts the y of each simmspline where the x input (corresponding to the joint coordinate) is zero.
@@ -1073,7 +1083,10 @@ class ImportOpenSimModel(Operator):
             
         for muscle_name, muscle in muscle_data.items():
 
-            
+            if type(muscle) == bool:  #the conditional and moving path point flags are bools, and should be skipped in this loop
+                continue
+
+
             F_max = muscle['F_max']
             optimal_fiber_length = muscle['optimal_fiber_length']
             tendon_slack_length = muscle['tendon_slack_length']
@@ -1229,6 +1242,13 @@ class ImportOpenSimModel(Operator):
                 self.report({'WARNING'}, "Wrapping objects '" + matching_objects_str + "' have wrapping quadrants defined. In MuSkeMo, this corresponds with the 'Force Sided Wrap' option. You may have to manually adjust 'Flip Wrap', 'Projection angle', and 'Index of pre wrap point'. See the Manual for details")
 
         
+        #### Throw warnings about conditional and/or moving pathpoints
+
+        if muscle_data['conditional_pathpoint_flag']: #if there are conditional pathpoints
+            self.report({'WARNING'}, "Imported OpenSim model had ConditionalPathPoints, which have been converted to regular path points. See the Manual for details")
+
+        if muscle_data['moving_pathpoint_flag']: #if there are moving pathpoints
+            self.report({'WARNING'}, "Imported OpenSim model had MovingPathPoints, which have been converted to regular path points assuming the coordinate values were 0. See the Manual for details")
 
                         
         ### create contacts    
