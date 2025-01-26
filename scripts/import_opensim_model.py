@@ -928,7 +928,7 @@ class ImportOpenSimModel(Operator):
                     
                     print(joint_name)
                     joint_obj = bpy.data.objects[joint_name] #get the newly created joint in Blender
-
+                    joint_obj['transform_axes'] = {}
                     axis_names = ['rotation1', 'rotation2', 'rotation3', 'translation1', 'translation2', 'translation3']
 
                     for axis_name  in axis_names: #a spatial transform has 6 transform axes. Loop through each explicitly
@@ -940,7 +940,7 @@ class ImportOpenSimModel(Operator):
                         if coordinates: #if coordinates aren't none
                             # assign the coordinate accordingly
 
-                            joint_obj['transform_axes'] = {}    
+                              
                             #joint_obj.id_properties_ui('transform_axes').update(description="Transform axes defined in the OpenSim custom joint, if they don't align with the joint's own axes. See MuSkeMo manual for details. Optional.")
                             #Python custom properties can't have a tooltip overlay.
 

@@ -352,37 +352,53 @@ class ImportTrajectorySTO(Operator):
                 Ry = 0
                 Rz = 0
 
-                for idx in entries_in_traj_coor_list: 
-                    
-                    #check what type of coordinate it is
-                    if traj_model_coordinate_types[idx] == 'coordinate_Tx':
-                        #Tx = coordinate_traj_row[traj_coordinate_ind[idx] -1]
-                        Tx = coordinate_traj_row[idx]
-                    
-                    if traj_model_coordinate_types[idx] == 'coordinate_Ty':
-                        #Ty = coordinate_traj_row[traj_coordinate_ind[idx]]
-                        Ty = coordinate_traj_row[idx]
+                if 'transform_axes' not in joint: #if the joint doesn't have transform axes from OpenSim, treat it normally
 
-                    if traj_model_coordinate_types[idx] == 'coordinate_Tz':
-                        Tz = coordinate_traj_row[idx]  
+                    for idx in entries_in_traj_coor_list: 
                         
-                    if traj_model_coordinate_types[idx] == 'coordinate_Rx':
-                        if in_degrees:
-                            Rx = np.deg2rad(coordinate_traj_row[idx])
-                        else:
-                            Rx =coordinate_traj_row[idx]
+                        #check what type of coordinate it is
+                        if traj_model_coordinate_types[idx] == 'coordinate_Tx':
+                            #Tx = coordinate_traj_row[traj_coordinate_ind[idx] -1]
+                            Tx = coordinate_traj_row[idx]
+                        
+                        if traj_model_coordinate_types[idx] == 'coordinate_Ty':
+                            #Ty = coordinate_traj_row[traj_coordinate_ind[idx]]
+                            Ty = coordinate_traj_row[idx]
 
-                    if traj_model_coordinate_types[idx] == 'coordinate_Ry':
-                        if in_degrees:
-                            Ry =np.deg2rad(coordinate_traj_row[idx])
-                        else:
-                            Ry = coordinate_traj_row[idx]
+                        if traj_model_coordinate_types[idx] == 'coordinate_Tz':
+                            Tz = coordinate_traj_row[idx]  
+                            
+                        if traj_model_coordinate_types[idx] == 'coordinate_Rx':
+                            if in_degrees:
+                                Rx = np.deg2rad(coordinate_traj_row[idx])
+                            else:
+                                Rx =coordinate_traj_row[idx]
 
-                    if traj_model_coordinate_types[idx] == 'coordinate_Rz':
-                        if in_degrees:
-                            Rz = np.deg2rad(coordinate_traj_row[idx])  
-                        else:
-                            Rz = coordinate_traj_row[idx]
+                        if traj_model_coordinate_types[idx] == 'coordinate_Ry':
+                            if in_degrees:
+                                Ry =np.deg2rad(coordinate_traj_row[idx])
+                            else:
+                                Ry = coordinate_traj_row[idx]
+
+                        if traj_model_coordinate_types[idx] == 'coordinate_Rz':
+                            if in_degrees:
+                                Rz = np.deg2rad(coordinate_traj_row[idx])  
+                            else:
+                                Rz = coordinate_traj_row[idx]
+
+                else:
+                    transform_axes = joint['transform_axes'].to_dict()  #dict with the transform axes
+                    
+                    #DO SOMETHING WITH entries_in_traj_coor_list
+                    # get a rotation matrix from axis angle
+                    # post multiply the base rotation matrix with the new rotation matrix
+                    # decompose into euler angles
+                    # 
+
+                    
+                    if in_degrees:
+                        print('profit')
+
            
                 #add the position and orientation, using the original position and orientation as an offset.
                 #the above loop should have only added the changed coordinates (e.g. Rz), zo all the other components are simply zero.
