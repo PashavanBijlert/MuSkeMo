@@ -338,7 +338,7 @@ Under export options, it is possible to configure other text-based filetypes for
 You can currently import bodies, joints, muscles, frames, and contacts, if they are MuSkeMo-created CSV files.
 
 \subsubsection{OpenSim model import}
-
+\label{sec:opensimimporter}
 MuSkeMo provides an OpenSim importer. This can import most of the components of an OpenSim model. Although the default behavior is to import models using local definitions, it is also possible to import models using global definitions (i.e., all the component positions are defined as their position in the global frame, and for joints specifically, transformations in parent and child are both set to the global position and orientation). Global definition import is probably only useful for models that were created using MuSkeMo's conversion script, using the "Global definitions" option.
 
 
@@ -348,7 +348,8 @@ During import, cylinder wrapping is supported (see \ref{sec:musclewrapping} and 
 
 MuSkeMo does not support conditional or moving path points. These are automatically converted to regular path points during model import. For moving path points, the point position is selected that corresponds to the position when the controlling joint coordinate is equal to 0.
 
-OpenSim models with \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1CustomJoint.html}{CustomJoints} (and perhaps other joint types with a \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1SpatialTransform.html}{SpatialTransform}) can have \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1TransformAxis.html}{Transform Axes} that are different from the axes defined by the joint orientation. In essence, it is possible to define local frames within a joint, and joint coordinates can be expressed with respect to those local frames. This is currently not possible in MuSkeMo. MuSkeMo imports the joints as if they are regular joints, but stores the transform axes as a Python dictionary in a custom property named "transform\_axes". The trajectory importer will be modified to account for non-standard transform axes in the future.
+OpenSim models with \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1CustomJoint.html}{CustomJoints} (and perhaps other joint types with a \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1SpatialTransform.html}{SpatialTransform}) can have \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1TransformAxis.html}{Transform Axes} that are different from the axes defined by the joint orientation. In essence, it is possible to define local frames within a joint, and joint coordinates can be expressed with respect to those local frames. This is currently not possible in MuSkeMo. MuSkeMo imports the joints as if they are regular joints, but stores the transform axes as a Python dictionary in a custom property named "transform\_axes". These transform axes are mapped onto the joint rotations themselves when importing trajectories (see \ref{sec:trajectoryimport}).
+
 
 \subsubsection{Gaitsym 2019 model import}
 
@@ -367,8 +368,10 @@ Rendering in Blender can be a complicated process. It is capable of professional
 
 
 \subsubsection{Trajectory import}
-
+\label{sec:trajectoryimport}
 MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. Currently, it is only possible to import trajectories using OpenSim .sto files. If you are importing a periodic stride, it is possible to automatically loop these in sequence to create a video using multiple strides, while progressing the (selectable) forward translation coordinate. In this case, you have to define the root joint (default =  groundPelvis) and the forward progression coordinate (default = coordinate\_Tx).
+
+OpenSim can have Transform Axes that do not align with the joint axes themselves (see \ref{sec:opensimimporter}). In the case of translations, these are simply added on to the joint position, but in the directions specified by the transform axes. For rotations, MuSkeMo defines three successive axis-angle Rotation matrices, and applies them in XYZ order (see \ref{sec:axisanglerotation}).
 
 \subsubsection{Visualization options}
 
@@ -784,6 +787,11 @@ The inverse operation, which rotates from the global frame back to the body-fixe
 \label{sec:quaternions}
 
 To be written. MuSkeMo uses algorithms based on \cite{eberlyGamePhysics2004}.
+
+\section{Axis angle rotation matrix}
+\label{sec:axisanglerotation}
+To be written. MuSkeMo uses an algorithm adapted from \cite{valleryAdvancedDynamics2019}
+
 
 \section{Validation tests}
 
