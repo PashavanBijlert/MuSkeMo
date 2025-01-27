@@ -1047,7 +1047,7 @@ class ImportOpenSimModel(Operator):
                         else:
                             
                             self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' is of the type '" + wrap_type + "', which is not yet supported. Skipping this wrapping geom.")
-
+                            continue
 
                         # Fill in global position/orientation if importing globally
                         wrap_pos_in_global = [float('nan')] * 3
