@@ -1,5 +1,5 @@
 import bpy
-from mathutils import Vector
+from mathutils import (Vector, Matrix)
 
 
 from bpy.types import (Operator,
@@ -217,10 +217,10 @@ class ImportTrajectorySTO(Operator):
       
         root_joint_ind = [i for i,x in enumerate(traj_joints) if root_joint_name == x.name]#these column indices have root joint data in coordinate_trajectories
         root_progression_ind = [x for x in root_joint_ind if traj_model_coordinate_types[x]==forward_progression_coordinate] #this is the index to the coordinate that indicates forward progression (usually pelvis Tx)
-        print(root_joint_ind)
-        print(traj_model_coordinate_types)
-        print(forward_progression_coordinate)
-        print(root_progression_ind)
+        #print(root_joint_ind)
+        #print(traj_model_coordinate_types)
+        #print(forward_progression_coordinate)
+        #print(root_progression_ind)
 
 
         if number_of_repeats >0:
@@ -389,16 +389,81 @@ class ImportTrajectorySTO(Operator):
                 else:
                     transform_axes = joint['transform_axes'].to_dict()  #dict with the transform axes
                     
-                    #DO SOMETHING WITH entries_in_traj_coor_list
-                    # get a rotation matrix from axis angle
-                    # post multiply the base rotation matrix with the new rotation matrix
-                    # decompose into euler angles
-                    # 
+                    #pre-allocate translation and identity matrices for rotations
+                    translation = Vector([Tx, Ty, Tz])
 
+                    Rmat_x = Matrix([[1,0,0],[0,1,0],[0,0,1]])
+                    Rmat_y = Matrix([[1,0,0],[0,1,0],[0,0,1]])
+                    Rmat_z = Matrix([[1,0,0],[0,1,0],[0,0,1]])
+
+                    from .axis_angle import matrix_from_axis_angle
+                    from .euler_XYZ_body import (matrix_from_euler_XYZbody, euler_XYZbody_from_matrix)
+
+                    for idx in entries_in_traj_coor_list:
+                        
+                        #for the translation coordinates, multiply the coordinate value by the transform axis vector
+                        if traj_model_coordinate_types[idx] == 'coordinate_Tx':
+                            #Tx = coordinate_traj_row[traj_coordinate_ind[idx] -1]
+                            translation += Vector(transform_axes['transform_axis_Tx'])*coordinate_traj_row[idx]
+                        
+                        if traj_model_coordinate_types[idx] == 'coordinate_Ty':
+                            #Ty = coordinate_traj_row[traj_coordinate_ind[idx]]
+                            translation += Vector(transform_axes['transform_axis_Ty'])*coordinate_traj_row[idx]
+
+                        if traj_model_coordinate_types[idx] == 'coordinate_Tz':
+                            translation += Vector(transform_axes['transform_axis_Tz'])*coordinate_traj_row[idx]
+
+                        #for the rotation coordinates, set up an axis angle rotatin matrix, and replace the ID matrix with it
+                        if traj_model_coordinate_types[idx] == 'coordinate_Rx':
+                            if in_degrees:
+                                angle = np.deg2rad(coordinate_traj_row[idx])
+                            else:
+                                angle =coordinate_traj_row[idx]
+
+                            axis =  transform_axes['transform_axis_Rx']
+                            Rmat_x = matrix_from_axis_angle(axis, angle) 
+
+                        if traj_model_coordinate_types[idx] == 'coordinate_Ry':
+                            if in_degrees:
+                                angle =np.deg2rad(coordinate_traj_row[idx])
+                            else:
+                                angle = coordinate_traj_row[idx]
+
+                            axis =  transform_axes['transform_axis_Ry']
+                            Rmat_y = matrix_from_axis_angle(axis, angle)    
+
+                        if traj_model_coordinate_types[idx] == 'coordinate_Rz':
+                            if in_degrees:
+                                angle = np.deg2rad(coordinate_traj_row[idx])  
+                            else:
+                                angle = coordinate_traj_row[idx]
+
+                            axis =  transform_axes['transform_axis_Rz']
+                            Rmat_z = matrix_from_axis_angle(axis, angle)
+
+                    #unpack translations
+                    Tx = translation[0]
+                    Ty = translation[1]
+                    Tz = translation[2]
+
+
+                    # X Y Z, maybe this should be flipped
+                    jRta = Rmat_x @ Rmat_y @ Rmat_z #matrix from transform axis to joint 
+
+                    [gRj, jRg] = matrix_from_euler_XYZbody(base_orientation[joint_ind])
+
+                    # rotate the joint
+                    rotated_joint = gRj@jRta
                     
-                    if in_degrees:
-                        print('profit')
+                    #decompose into euler angles
+                    rotated_joint_euler = euler_XYZbody_from_matrix(rotated_joint)
 
+                    #Unpack into separate euler angles
+                    Rx = rotated_joint_euler[0]
+                    Ry = rotated_joint_euler[1]
+                    Rz = rotated_joint_euler[2]
+
+                                      
            
                 #add the position and orientation, using the original position and orientation as an offset.
                 #the above loop should have only added the changed coordinates (e.g. Rz), zo all the other components are simply zero.
