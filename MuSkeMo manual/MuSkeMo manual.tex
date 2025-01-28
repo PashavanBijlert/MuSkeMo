@@ -858,21 +858,33 @@ MuSkeMo can combine the inertial properties of several source objects into a sin
 Consider the icosahedron and sphere from \ref{sec:inpropvalidation}. The icosahedron has mass \(m_{i}\) = 2536.13 \si{kg}, centered at the origin (0,0,0), and its inertia tensor:
 
 \begin{equation}
-    \mathbf{I}_{\mathcal{G}} =     
+    \mathbf{I}_{i/c,{\mathcal{G}}} = \mqty(
+    734.063 & 0 & 0 \\
+    0 & 734.063 & 0 \\
+    0 & 0 & 734.063
+    )
 \end{equation}
 
-The sphere has mass \(m_{s}\) = 4188.79 \si{kg}, centered at (4,1,-1.5), and its inertia tensor:
+\(i\) denotes the icosahedron, and \(c\) signifies the inertia is given with respect to its center of mass. Like in \ref{sec:eulerangles}, \(\mathcal{G}\) signifies the tensor is expressed in the global frame.
+
+The sphere has mass \(m_{s}\) = 4188.79 \si{kg}, centered at (4,1,-1.5) \si{m}, and its inertia tensor:
 
 \begin{equation}
-    \mathbf{I}_{\mathcal{G}} =     
+    \mathbf{I}_{s/c,{\mathcal{G}}} = \mqty(
+    1675.52 & 0 & 0 \\
+    0 & 1675.52 & 0 \\
+    0 & 0 & 1675.52
+    )
 \end{equation}
 
-The combined center of mass is =
-
+The combined center of mass is:
 
 \begin{equation}
-    \frac{m_{i} \cdot \mqty( 0 \\ 0 \\ 0 )  + m_{s} \cdot \mqty( 4 \\ 1 \\ -1.5)}{m_{i} + m_{s}} = \mqty( 2.4915 \\ 0.6229 \\ -0.9343 )
+    \frac{m_{i} \cdot \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}  + m_{s} \cdot \begin{bmatrix} 4 \\ 1 \\ -1.5 \end{bmatrix}}{m_{i} + m_{s}},
 \end{equation}
+
+which is at (2.4915, 0.6229, -0.9343) \si{m} in the \(\mathcal{G}\)-frame.
+
 
 
 \section*{References}
