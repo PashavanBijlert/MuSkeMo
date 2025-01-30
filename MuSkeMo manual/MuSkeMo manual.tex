@@ -311,7 +311,7 @@ For an arbitrary matrix \(\mathbf{I}\) expressed in \(\mathcal{G}\) (e.g., an in
 
 \begin{equation}
 \mathbf{I}_{\mathcal{B}} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \;\mathbf{I}_{\mathcal{G}} \; {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}
-\label{eq2}
+\label{eq:changeofbasis}
 \end{equation}
 
 Readers familiar with linear algebra will recognize this as a similarity transformation, that defines a change of basis.
@@ -355,7 +355,7 @@ OpenSim models with \href{https://simtk.org/api_docs/opensim/api_docs/classOpenS
 
 MuSkeMo includes a Gaitsym (2019) importer. It currently imports bodies, joints, muscles (DampedSpring elements are treated as muscles), contacts, and markers (as frames). Muscles that include wrapping are currently not supported, but limited wrapping support is planned in a future update. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory, and the name of this subdirectory must currently be manually typed into the panel.
 
-It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq2} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old -Y-axis becomes the new Z-axis.
+It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq:changeofbasis} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old -Y-axis becomes the new Z-axis.
 
 \subsubsection{Other simulators}
 
@@ -402,7 +402,7 @@ The reflection panel enables symmetric model construction, by only constructing 
 
 \textbf{Warning:} All the reflection functions use a case-sensitive string search to check whether the side string is at the end of object's name. Because this can potentially cause conflicts (e.g., the name "dorsal\_rib\_l" contains both '\_l' and '\_r'), MuSkeMo only looks for the side string at the end of the object name. Because it is impossible to account for all naming conventions, a workaround can be to place the target component in its own collection and temporarily changing the name(s). In particular with muscles, where each point is parented to a body with a HOOK modifier (see \ref{sec:muscle}), conflicts may need to be resolved manually.
 
-Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis with the reflection matrix, using equation \ref{eq2}.
+Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis with the reflection matrix, using equation \ref{eq:changeofbasis}.
 
 \subsection{MuSkeMo utilities}
 
@@ -439,6 +439,7 @@ The folder also contains an updater (Python) script to update older MuSkeMo scen
 \label{sec:DataTypes}
 
 \subsection{BODY}
+\label{sec:body}
 
 A rigid body. Rigid bodies have inertial properties, which can be computed during model creation from 3D scans:
 
@@ -447,6 +448,8 @@ A rigid body. Rigid bodies have inertial properties, which can be computed durin
     \item \texttt{COM} (center of mass (m) in the global reference frame)
     \item \texttt{inertia\_COM} (moment of Inertia (kg m\(^2\)) about the COM, in the global reference frame)
 \end{itemize}
+
+Inertial tensor elements are listed in the following order: (Ixx, Iyy, Izz, Ixy, Ixz, Iyz).
 
 Bodies can have one or more optional attached \texttt{Geometry} meshes for visualization (e.g., 3D meshes of bones). These are delimited with a '\texttt{;}' if present, and usually preceded with the name of the subdirectory (default = '\texttt{Geometry}') in which the meshes will be exported. For example: 
 
@@ -638,6 +641,7 @@ The full rotation matrix ${}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}$ that MuSkeM
     \sin \phi_x \sin \phi_z - \cos \phi_x \cos \phi_z \sin \phi_y & \cos \phi_z \sin \phi_x + \cos \phi_x \sin \phi_y \sin \phi_z & \cos \phi_x \cos \phi_y
     \end{bmatrix}
 \end{equation}
+\label{eq:grbmatrix}
 
 Here, \( \phi_x \), \( \phi_y \), and \( \phi_z \) represent rotations about the body-fixed, right-handed \( x \)-, \( y \)-, and \( z \)-axes. Brackets are omitted because each cosine and sine only has one term inside it. A vector \( {}^{\mathcal{B}}\vec{v} \) expressed in the \( \mathcal{B} \)-frame (hence the \( {}^\mathcal{B} \)-prefix), can be rotated to the \( \mathcal{G} \)-frame by pre-multiplying it with \( {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} \). In other words:
 
@@ -795,12 +799,15 @@ To be written. MuSkeMo uses an algorithm adapted from \cite{valleryAdvancedDynam
 
 \section{Validation tests}
 
-Many of MuSkeMo's modeling features rely on correctly computing positions and orientations with respect to local frames. Errors in some of these computations would be quite obvious during import (e.g., if the transformations are incorrectly propagated, resulting in incorrect model component positions and orientations). However, not all potential sources of errors can be detected visually. This section lists several validation tests that rely on the correct application and propagation of all model construction and analysis steps.
+Many of MuSkeMo's modeling features rely on correctly computing positions and orientations with respect to local frames. Errors in some of these computations would be quite obvious during import (e.g., if the transformations are incorrectly propagated, resulting in incorrect model component positions and orientations). However, not all potential sources of errors can be detected visually. 
+
+This section lists several validation tests that rely on the correct application and propagation of all model construction and analysis steps. Section \ref{sec:inpropvalidation} demonstrates that mesh inertial properties are computed correctly by MuSkeMo, and \ref{sec:compositebodyvalidation} demonstrates these are correctly combined using the parallel axes theorem. Section \ref{sec:compositebodyvalidation} also demonstrates internal consistency between rigid body parameters combined from different meshes ("composite body"), and rigid body parameters from combined meshes ("composite mesh"). Section \ref{sec:framevalidation} demonstrates that MuSkeMo correctly re-expresses vectors and matrices in arbitrary frames. The scripts that construct the rotation matrices are reused by MuSkeMo for all transformations during model construction, import, and export. Section \ref{sec:momentarmvalidation} demonstrates that MuSkeMo can accurately compute moment arms from an imported OpenSim model. This also directly validates MuSkeMo's implementation of cylindric wrapping from \cite{garnerObstacleSetMethodRepresenting2000}, also demonstrates joint positions, orientations, and rotations are treated correctly by MuSkeMo, because the moment arms rely on their correct application.
+
+All Blender scenes, files, scripts, and outputs described in this section are provided here: LINK. Where relevant, each Blender scene has a script in the script editor that manually performs all the calculations that are listed in the equations below.
 
 For further validation of MuSkeMo, the reader is referred to \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a,vanbijlertMuscleDrivenPredictivePhysics2024}, where animal models constructed using MuSkeMo were used for dynamic simulations, and simulator outputs were compared to empirical data from the animals in question.
 
-\subsection{Muscle moment arms}
-\label{sec:momentarmvalidation}
+
 \subsection{Mesh inertial properties}
 \label{sec:inpropvalidation}
 To compute inertial properties from arbitrary 3D meshes, MuSkeMo implements pseudo-code from \cite{eberlyGamePhysics2004} (see \ref{sec:inproppanel}). I will validate the implementation in MuSkeMo by demonstrating that it: 1) accurately computes the inertial tensors for objects with known inertial tensors; 2) inertial properties of a complex mesh acquired from a CT scan match the outputs from Meshlab \cite{cignoniMeshLabOpenSourceMesh2008}. We will assume a density of 1000 \si{kg m^{-3}} for all computations, although this is arbitrary since all of the underlying computations are volumetric only (see \ref{sec:inproppanel}).
@@ -809,34 +816,34 @@ The inertial properties are computed through successive multiplications of the 3
 
 \subsubsection*{Icosahedron and sphere}
 
-If the edge lengths \(e\) are known, the volume of an icosahedron can be computed as \cite{satterlyMomentsInertiaPolyhedra1958}:
+If the edge lengths \(l_{e}\) are known, the volume of an icosahedron can be computed as \cite{satterlyMomentsInertiaPolyhedra1958}:
 \begin{equation}
-V = e^3 \cdot \frac{5}{6} \cdot \tau^2,
+V = l_{e}^3 \cdot \frac{5}{6} \cdot \tau^2,
 \end{equation}
 where \(\tau = \frac{\sqrt{5} + 1}{2}\) is the golden ratio. Multiplying the volume by the density \(\rho\) gives the mass \(m\).
 
-In Blender, an icosahedron with a default radius of 1 has \(e = 1.05146 \, \si{\metre}\) (see FIGURE). Using the algebraic equation, the computed mass is \(2536.13 \, \si{\kilogram}\). MuSkeMo computes a mass of \(2536.15 \, \si{\kilogram}\).
+In Blender, an icosahedron with a default radius of 1 has \(l_{e} = 1.05146 \, \si{\metre}\) (Fig. \ref{fig:icoandsphere}). Using the algebraic equation, the computed mass is \(2536.13 \, \si{\kilogram}\). MuSkeMo computes a mass of \(2536.15 \, \si{\kilogram}\). 
 
 The principal moments of inertia of an icosahedron can be computed as \cite{satterlyMomentsInertiaPolyhedra1958}:
 \begin{equation}
-I = \frac{\tau^2}{10} \cdot e^2 \cdot m,
+I = \frac{\tau^2}{10} \cdot l_{e}^2 \cdot m,
 \end{equation}
 where all three principal moments are equal.
 
 Using the algebraic equations, the computed moment of inertia is \(734.063 \, \si{\kilogram \metre^2}\). MuSkeMo provides a moment of inertia value of \(734.070 \, \si{\kilogram \metre^2}\).
 
-The volume of a sphere with radius \(r\) can be computed as:
+The volume of a sphere with radius \(r_{s}\) can be computed as:
 \begin{equation}
-V = 4/3 \cdot \pi \cdot  r^3
+V = 4/3 \cdot \pi \cdot  r_{s}^3
 \end{equation}
 
 
-Thus, a sphere with \(r\) = 1 \si{m} weighs 4188.79 \si{kg}. MuSkeMo computes its mass as 4188.65 \si{kg}.
+Thus, a sphere with \(r_{s}\) = 1 \si{m} weighs 4188.79 \si{kg}. MuSkeMo computes its mass as 4188.65 \si{kg}.
 
 The principal moments of inertia of a sphere can be computed as \cite{ruinaMechanicsToolsetStatics2019}:
 
 \begin{equation}
-I = 2/5 \cdot m \cdot  r^2,
+I = 2/5 \cdot m \cdot  r_{s}^2,
 \end{equation}
 again with all three principal moments equal. This gives 1675.52 \si{\kilogram \metre^2} for our sphere. MuSkeMo computes it as 1675.42 \si{\kilogram \metre^2}.
 
@@ -844,30 +851,47 @@ We will reuse the parameters of the icosahedron and the sphere in \ref{sec:compo
 
 \subsubsection*{Complex tissue model from CT scan}
 
-3D models acquired from CT scans can be complex and irregular. The algorithm presented by Eberly \cite{eberlyGamePhysics2004} can deal with such meshes without problems. Coatham et al. \cite{coathamConvexHullEstimation2021} provided a dataset of CT scanned animals, with manually segmented tissue (skin) outlines. FIGURE shows the torso tissue outline of a cheetah, the "Torso.obj" mesh from the "skin" folder of the \textit{Acinonyx jubatus} dataset. This is a relatively detailed mesh (~78 MB), likely an unnecessary level of detail for a rigid body model.
+3D models acquired from CT scans can be complex and irregular. The algorithm presented by Eberly \cite{eberlyGamePhysics2004} can deal with such meshes without problems. Coatham et al. \cite{coathamConvexHullEstimation2021} provided a dataset of CT scanned animals, with manually segmented tissue (skin) outlines. Fig. \ref{fig:cheetahhull} shows the torso tissue outline of a cheetah, the "Torso.obj" mesh from the "skin" folder of the \textit{Acinonyx jubatus} dataset. This is a relatively detailed mesh (~78 MB), likely an unnecessary level of detail for a rigid body model.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/cheetah_hull.png} % Add image
+    \caption{The "Torso.obj" mesh from \cite{coathamConvexHullEstimation2021}, providing a 3D model of the torso of a cheetah, segmented from a CT-scan.}
+    \label{fig:cheetahhull}
+\end{figure}
 
 Using the "Compute Geometric Measures" filter, Meshlab gives: \(V\) = 0.027241 \si{m^3}, center of mass = \((0.461789, -0.002036, 0.555943)\) \si{m}, and the volumetric inertia tensor as (0.000177, 0.002123, 0.002045, 0.000060, 0.000113, 0.000011) \si{m^5}. MuSkeMo gives the following outputs (setting density at 1000 \si{kg m^{-3}}): \(m\) = 27.2405 \si{kg}, center of mass = \((0.461789, -0.002036, 0.555943)\) \si{m}, and the mass inertial tensor as (0.176614, 2.12329, 2.0455, 0.060367, 0.113492, 0.010864).
 
 The numerical values are the same, save for a factor of 1000 representing the density.
 
-\subsection{Composite bodies in local frames}
+\subsection{Composite bodies and meshes}
+
 \label{sec:compositebodyvalidation}
 
-MuSkeMo can combine the inertial properties of several source objects into a single composite body using the (3D) parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}. When assigning a local frame to a body \ref{sec:frame}, MuSkeMo also expresses these parameters in that local frame. Here, we will compute the values manually, and compare the computations by MuSkeMo.
+MuSkeMo can combine the inertial properties of several source objects into a single composite body using the (3D) parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}. Here, we will compute the values manually for the situation pictured in Fig. \ref{fig:icoandsphere}, and compare the computations by MuSkeMo.
 
-Consider the icosahedron and sphere from \ref{sec:inpropvalidation}. The icosahedron has mass \(m_{i}\) = 2536.13 \si{kg}, centered at the origin (0,0,0), and its inertia tensor:
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/composite_body.png} % Add image
+    \caption{The icosahedron, sphere, composite body, and local frame described in sections \ref{sec:inpropvalidation}, \ref{sec:compositebodyvalidation}, and \ref{sec:framevalidation}}
+    \label{fig:icoandsphere}
+\end{figure}
+
+
+Consider the icosahedron and sphere from \ref{sec:inpropvalidation}. The icosahedron has mass \(m_{i}\) = 2536.13 \si{kg}, center of mass \(\vec{c_{i}} =  (0,0,0)\)  \si{m}, and its inertia tensor:
 
 \begin{equation}
     \mathbf{I}_{i/c,{\mathcal{G}}} = \mqty(
     734.063 & 0 & 0 \\
     0 & 734.063 & 0 \\
     0 & 0 & 734.063
-    )
+    ).
 \end{equation}
 
-\(i\) denotes the icosahedron, and \(c\) signifies the inertia is given with respect to its center of mass. Like in \ref{sec:eulerangles}, \(\mathcal{G}\) signifies the tensor is expressed in the global frame.
+For the inertia tensor, the subscript \(i\) denotes the icosahedron, and \(c\) signifies the inertia is given with respect to its center of mass. Like in \ref{sec:eulerangles}, \(\mathcal{G}\) signifies the tensor is expressed in the global frame.
 
-The sphere has mass \(m_{s}\) = 4188.79 \si{kg}, centered at (4,1,-1.5) \si{m}, and its inertia tensor:
+The sphere has mass \(m_{s}\) = 4188.79 \si{kg}, center of mass \(\vec{c_{s}} =\) (4,1,-1.5) \si{m}, and its inertia tensor:
 
 \begin{equation}
     \mathbf{I}_{s/c,{\mathcal{G}}} = \mqty(
@@ -877,13 +901,81 @@ The sphere has mass \(m_{s}\) = 4188.79 \si{kg}, centered at (4,1,-1.5) \si{m}, 
     )
 \end{equation}
 
-The combined center of mass is:
+The combined center of mass \(\vec{c_{c}}\) is:
 
 \begin{equation}
-    \frac{m_{i} \cdot \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}  + m_{s} \cdot \begin{bmatrix} 4 \\ 1 \\ -1.5 \end{bmatrix}}{m_{i} + m_{s}},
+    \frac{m_{i} \cdot \vec{c_{i}} + m_{s} \cdot \vec{c_{s}}}{m_{i} + m_{s}} = \vec{c_{c}},
 \end{equation}
 
-which is at (2.4915, 0.6229, -0.9343) \si{m} in the \(\mathcal{G}\)-frame.
+which is at (2.4915, 0.6229, -0.9343) \si{m} in the \(\mathcal{G}\)-frame when we compute it manually. In MuSkeMo, the inertial properties computed for the icosahedron and the sphere in \ref{sec:inpropvalidation} can be assigned to a single body in the Body panel (see \ref{sec:bodypanel}). When their rigid body parameters are assigned to a BODY named "composite\_body", the combined center of mass is computed as (2.4915, 0.6229,-0.9343) \si{m}. 
+
+The combined inertial parameters can be calculated manually using the 3D parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}. To fully write out the equation, it is useful to first define:
+
+\begin{equation}
+\vec{d_{i//c}} = \vec{c_i} - \vec{c_c},
+\end{equation}
+
+and a matrix constructed of its elements:
+
+\begin{equation}
+    \mathbf{D}_{i//c,\mathcal{G}} = \mqty(
+        \vec{d_{i//c, y}}^2 + \vec{d_{i//c, z}}^2& - \vec{d_{i//c, x}} \cdot \vec{d_{i//c, y}} & - \vec{d_{i//c, x}} \cdot \vec{d_{i//c, z}} \\
+        - \vec{d_{i//c, x}} \cdot \vec{d_{i//c, y}} &\vec{d_{i//c, x}}^2 + \vec{d_{i//c, z}}^2& - \vec{d_{i//c, y}} \cdot \vec{d_{i//c, z}}  \\
+        - \vec{d_{i//c, x}} \cdot \vec{d_{i//c, z}}  & - \vec{d_{i//c, y}} \cdot \vec{d_{i//c, z}}  & \vec{d_{i//c, x}}^2 + \vec{d_{i//c, y}}^2
+    ).
+\end{equation}
+
+The matrix \(\mathbf{D}_{s//c,\mathcal{G}}\) is similarly constructed from \(\vec{{d_{s//c}}}\). It is also possible to define \(\vec{d_{c//i}}\) and its respective matrix \(\mathbf{D}_{c//i,\mathcal{G}}\), but because each term is either squared or multiplied with another term, this gives the same result.
+
+To calculate \(\mathbf{I}_{c/c,{\mathcal{G}}}\), the combined inertial properties with respect to \(\vec{c_c}\) in the \(\mathcal{G}\)-frame, we apply the following:
+
+\begin{equation}
+\mathbf{I}_{c/c,{\mathcal{G}}} = \mathbf{I}_{i/c,{\mathcal{G}}} + m_i \cdot \mathbf{D}_{i//c,\mathcal{G}} +  \mathbf{I}_{s/c,{\mathcal{G}}} + m_s \cdot \mathbf{D}_{s//c,\mathcal{G}},
+\end{equation}
+which is the 3D parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}.
+
+Manually calculated, the inertial properties are:
+(7543.59, 31239.0, 29264.4, -6318.78, 9478.17, 2369.54) \si{kg m^2}, using the same element order as defined in \ref{sec:body}. After applying the parallel axes theorem, MuSkeMo computes the inertial properties as: (7543.47,31238.7,29264.1,-6318.73,9478.10,2369.53) \si{kg m^2}.
+
+As an extra internal validation step, it is also possible to combine the meshes from Fig. \ref{fig:icoandsphere} into a single composite mesh, using Blender's join command. If inertial properties for this composite mesh are computed using MuSkeMo, MuSkeMo treats them as a single (but disjointed) mesh, and uses Eberly's algorithm to compute the combined rigid body parameters. This gives numerically identical results, even though the "composite body" approach uses the parallel axes theorem to combine two mesh inertial properties, whereas the "composite mesh" approach computes the inertial properties as if they were one single mesh.
+
+\subsection{Re-expressing matrices and vectors in arbitary frames}
+\label{sec:framevalidation}
+When assigning a local frame (see \ref{sec:frame}) to a BODY , MuSkeMo also expresses the parameters of all associated model components with respect to that local frame (see \ref{sec:DataTypes}). The scripts that compute these matrices are reused throughout MuSkeMo, so we will demonstrate their implementation by expressing the composite rigid body parameters from \ref{sec:compositebodyvalidation} with respect to a local frame.
+
+The frame is pictured in \ref{fig:icoandsphere}. The frame's global position is \(\vec{r_f}\) = (1,1,1) \si{m}. Its Euler angles are 45 \si{\degree} (\( \phi_x \)), 10 \si{\degree} (\( \phi_y \)), and 25 \si{\degree} (\( \phi_z \)), see \ref{sec:eulerangles} for a full treatment on Euler angles in MuSkeMo. Thus, the rotation matrix \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\), which rotates a vector from the local frame to the global frame, follows from equation \ref{eq:grbmatrix} as:
+
+
+\begin{equation}
+    {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} =
+    \mqty(
+    0.892539 & -0.416198 & 0.173648 \\
+    0.410120 & 0.588964 & -0.696364 \\
+    0.187553 & 0.692749 & 0.696364
+    )
+\end{equation}
+
+To express the combined center of mass \(\vec{c_{c}}\) from \ref{sec:compositebodyvalidation} with respect to the local frame, we will start explitcly defining in which frames the vectors are expressed, \(\mathcal{G}\) for the global frame, and \(\mathcal{B}\) for the local frame (the B stands for body-fixed). To compute the transformation manually, we use:
+
+\begin{equation}
+\vec{c}_{c,\mathcal{B}} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \cdot (\vec{c}_{c,\mathcal{G}} - \vec{r}_{f,\mathcal{G}}).
+\end{equation}
+
+Calculated manually, this gives: (0.813771, -2.18287, -0.825374) \si{m}. When assigning the local frame to the composite body, MuSkeMo computes: (0.813736, -2.18285, -0.825365) \si{m}. 
+
+To re-express \(\mathbf{I}_{c/c,{\mathcal{G}}}\) in the \(mathcal{B}\)-frame (but still with respect to the combined center of mass), we apply equation \ref{eq:changeofbasis} (as can be found in standard mechanics textbooks \cite{valleryAdvancedDynamics2019}):
+
+\begin{equation}
+    \mathbf{I}_{c/c,{\mathcal{B}}} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \cdot \mathbf{I}_{c/c,{\mathcal{G}}} \cdot {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}.
+\end{equation}
+
+Manual calculations give: (11205.0, 25752.7, 31089.3, 12358.1, 6113.85, -3495.72) \si{kg m^2}. MuSkeMo computes: (11204.8, 25752.4, 31089.0, 12358.0, 6113.81, -3495.70) \si{kg m^2}.
+
+
+\subsection{Muscle moment arms}
+\label{sec:momentarmvalidation}
+
+
 
 
 
