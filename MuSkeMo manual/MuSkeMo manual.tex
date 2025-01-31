@@ -277,16 +277,20 @@ Wrapping geometries can be interactively resized using the inputs in the object'
 
 MuSkeMo can compute a muscle's moment arms, about a single degree of freedom. Specify the muscle name in the top of the Muscle panel, and the "Active joint 1"  name in the Moment arms panel. You can choose between rotating about local x, y, or z axes, and the range (in degrees) over which the moment arms should be computed. MuSkeMo assumes that 0 degrees rotation is the current model's position. Angle step size determines how fine or coarse the joint range will be sampled. 
 
-When a computation is succesful, a Python dictionary named "length\_data" is added to the muscles's custom properties. MuSkeMo computes the length of the target muscle over the desired joint range. Moment arms are computed using the principle of virtual work, where r = -dL / dphi. Only lengths are stored, moment arms are computed during plotting or export.
-If "Generate plot" is selected, moment arms are plotted straight away (see also \ref{sec:plotting}), which may be useful when constructing muscle paths. It is also possible to plot muscle lengths instead.
+When a computation is succesful, a Python dictionary named "length\_data" is added to the muscles's custom properties. MuSkeMo computes the length of the target muscle over the desired joint range. Moment arms are computed using the principle of virtual work \cite{storaceFunctionalAnalysisRole1979,anDeterminationMuscleOrientations1984}, where \(r = -dL / d\phi \) (see section \ref{sec:momentarmvalidation} in the appendix for more details and a validation of MuSkeMo's moment arms). Only lengths are stored, moment arms are computed during plotting or export. If "Generate plot" is selected, moment arms are plotted straight away (see also \ref{sec:plotting}), which may be useful when constructing muscle paths. It is also possible to plot muscle lengths instead.
 
 If "Export length and moment arm" is selected, a CSV (or other file, see \ref{sec:exportpanel}) is exported during moment arm computation. This requires setting a target export directory.
 
-\textbf{Warning:} While the moment arms computed by MuSkeMo are physically accurate (FIGURE COMPARISON TO FOLLOW), the computed moment arms for muscles that have wrapping can be a slightly noisy. This is likely occurs because wrapped points are projected onto the wrap geometry using a raycast node (\ref{sec:musclewrapping}). It is up to the user to decide whether this is a problem for their purposes. 
+\textbf{Warning:} While the moment arms computed by MuSkeMo are physically accurate (Fig. \ref{fig:momentarmscombined}), they are slightly noisy, in the order of 0.4\% of the value of the moment arm, see \ref{sec:momentarmvalidation} for details. This likely occurs because wrapped points are projected onto the wrap geometry using a raycast node (\ref{sec:musclewrapping}). This issue will be adressed in a future update.
 
+\begin{figure}[htbp]
+    %\vspace{-155pt}
+    \centering
+    \includegraphics[width=1\textwidth]{figures/HKA_momentarms_emu.eps} % Add image
+    \caption{Moment arms of the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, computed by MuSkeMo and exported as .csv files, compared to those computed by OpenSim 4.0 using the Matlab API. See section \ref{sec:momentarmvalidation} for details. A python script that performs a moment arm analyses is provided in the Utilities folder \ref{sec:muskemoutilities}}
+    \label{fig:momentarmscombined}
+\end{figure}
 
-%REF AN? REF something else?
- 
 %example figure of difference in my emu, made using an automated script that will be dumped in the utilities folder
 \subsubsection{Plotting}
 \label{sec:plotting}
@@ -405,6 +409,7 @@ The reflection panel enables symmetric model construction, by only constructing 
 Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis with the reflection matrix, using equation \ref{eq:changeofbasis}.
 
 \subsection{MuSkeMo utilities}
+\label{sec:muskemoutilities}
 
 The MuSkeMo.zip release contains a folder named MuSkeMo utlities, which includes several useful functions and scripts. 
 
@@ -975,10 +980,33 @@ Manual calculations give: (11205.0, 25752.7, 31089.3, 12358.1, 6113.85, -3495.72
 \subsection{Muscle moment arms}
 \label{sec:momentarmvalidation}
 
+Several definitions of muscle moment arms exist \cite{anDeterminationMuscleOrientations1984}. MuSkeMo computes the moment arms using the principle of virtual work \cite{anDeterminationMuscleOrientations1984,storaceFunctionalAnalysisRole1979}. For muscle \(m\) crossing a joint with joint angle \(\phi_j\), the moment arm \(r_m\) is determined by changes in the muscle's length \(l_m\) as a function of the the joint angle:
 
+\begin{equation}
+r_m = -dl_m / d\phi_j
+\end{equation}
+\label{eq:momentarm}
 
+The minus sign in eq. \ref{eq:momentarm} appears due to the convention in musculoskeletal simulators to define muscle contractile force as a positive scalar, even though muscle contraction results in a negative change in length.
 
+Accurate computations of moment arms therefore require correct application of local frames, positions and orientations, require accurate changes in muscle point positions when the joints are rotated, and also require accurate computations of the instantaneous muscle lengths in all of the different joint poses. Fig. \ref{fig:momentarmsinvididual} compares the moment arms computd by MuSkeMo after importing an OpenSim model, to the moment arms of the same model computed by OpenSim 4.0 using the Matlab api.
 
+\begin{figure}[htbp]
+    %\vspace{-155pt}
+    \centering
+    \includegraphics[width=1\textwidth]{figures/emu_momentarms_individual.eps} % Add image
+    \caption{Individual muscle moment arms of the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, computed by MuSkeMo and exported as .csv files, compared to those computed by OpenSim 4.0 using the Matlab API. Panels A and L show that the moment arms are slightly noisy (in the order of 0.4\% the magnitude of the moment arm) when wrapping determines the moment arms in question. This noise is too small to notice in most practical applications (e.g., compare this figure to the same data plotted in Fig. \ref{fig:momentarmscombined}).  
+    The python script that performs this moment arm analysis is provided in the Utilities folder \ref{sec:muskemoutilities}}.
+    \label{fig:momentarmsinvididual}
+\end{figure}
+
+The OpenSim model used for this comparison was the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, specifically \texttt{Dromaius\_model\_ \allowbreak v4\_intermed.\allowbreak osim}. Fig. \ref{fig:momentarmsinvididual} shows that MuSkeMo computes identical moment arms for nearly all muscles, except for those figured in panels A and L. Closer inspection of the vertical axes of those panels reveals that the moment arms are nearly constant for those muscles, because the moment arms are determined by a sphere with constant diameter radius (0.03 \si{m}). MuSkeMo's wrapping implementation introduces some noise in the computations, in the order of 0.4\% of the moment arm magnitude. The noise is so small in magnitude that it is not visible when plotting multiple muscles in the same plot, with more informative ranges on the y axis (Fig. \ref{fig:momentarmscombined}).
+
+The exact cause of this noise is unclear, although it is clearly related to the wrapping implementation, which uses raycasting in Blender (see sec. \ref{sec:musclewrapping}). Future MuSkeMo updates will attempt to circumvent this issue, but the issue is small enough in magnitude that it makes no difference in any practical sense.
+
+The python script (to be run in Blender's script editor) that generates the muscle analysis is provided in MuSkeMo's utilities folder as an example script that calls MuSkeMo's API (sec. \ref{sec:muskemoutilities}). The Matlab script that generates the plots from Figs. \ref{fig:momentarmscombined} and \ref{fig:momentarmsinvididual} is also provided.
+
+\newpage
 \section*{References}
 \addcontentsline{toc}{section}{References} % Add to TOC
 \printbibliography[heading=none] % Suppress the default heading

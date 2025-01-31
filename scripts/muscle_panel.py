@@ -745,7 +745,7 @@ class SingleDOFLengthMomentArmOperator(Operator):
                 if wrapobj['wrap_type'] == 'Cylinder':
                     #wrap object resolution
                     wrap_obj_res.append(wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value)
-                    wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 400
+                    wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 500
 
 
             #wrap curve resolution doesn't seem to be updating before execution of the script?
