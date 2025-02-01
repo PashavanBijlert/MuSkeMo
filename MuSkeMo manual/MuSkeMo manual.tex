@@ -281,7 +281,7 @@ When a computation is succesful, a Python dictionary named "length\_data" is add
 
 If "Export length and moment arm" is selected, a CSV (or other file, see \ref{sec:exportpanel}) is exported during moment arm computation. This requires setting a target export directory.
 
-\textbf{Warning:} While the moment arms computed by MuSkeMo are physically accurate (Fig. \ref{fig:momentarmscombined}), they are slightly noisy, in the order of 0.4\% of the value of the moment arm, see \ref{sec:momentarmvalidation} for details. This likely occurs because wrapped points are projected onto the wrap geometry using a raycast node (\ref{sec:musclewrapping}). This issue will be adressed in a future update.
+\textbf{Warning:} While the moment arms computed by MuSkeMo are physically accurate (Fig. \ref{fig:momentarmscombined}), they are slightly noisy, in the order of 0.4\% of the value of the moment arm, see \ref{sec:momentarmvalidation} for details.
 
 \begin{figure}[htbp]
     %\vspace{-155pt}
@@ -1000,9 +1000,9 @@ Accurate computations of moment arms therefore require correct application of lo
     \label{fig:momentarmsinvididual}
 \end{figure}
 
-The OpenSim model used for this comparison was the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, specifically \texttt{Dromaius\_model\_ \allowbreak v4\_intermed.\allowbreak osim}. Fig. \ref{fig:momentarmsinvididual} shows that MuSkeMo computes identical moment arms for nearly all muscles, except for those figured in panels A and L. Closer inspection of the vertical axes of those panels reveals that the moment arms are nearly constant for those muscles, because the moment arms are determined by a sphere with constant diameter radius (0.03 \si{m}). MuSkeMo's wrapping implementation introduces some noise in the computations, in the order of 0.4\% of the moment arm magnitude. The noise is so small in magnitude that it is not visible when plotting multiple muscles in the same plot, with more informative ranges on the y axis (Fig. \ref{fig:momentarmscombined}).
+The OpenSim model used for this comparison was the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, specifically \texttt{Dromaius\_model\_ \allowbreak v4\_intermed.\allowbreak osim}. Fig. \ref{fig:momentarmsinvididual} shows that MuSkeMo computes identical moment arms for nearly all muscles, except for those figured in panels A and L. Closer inspection of the vertical axes of those panels reveals that the moment arms are nearly constant for those muscles, because the moment arms are determined by a cylinder with constant diameter radius (0.03 \si{m}). MuSkeMo's wrapping implementation introduces some noise in the computations, in the order of 0.4\% of the moment arm magnitude. The noise is so small in magnitude that it is not visible when plotting multiple muscles in the same plot, with more informative ranges on the y axis (Fig. \ref{fig:momentarmscombined}).
 
-The exact cause of this noise is unclear, although it is clearly related to the wrapping implementation, which uses raycasting in Blender (see sec. \ref{sec:musclewrapping}). Future MuSkeMo updates will attempt to circumvent this issue, but the issue is small enough in magnitude that it makes no difference in any practical sense.
+The exact reason why the wrapping node results in noisy moment arms is unclear. The wrapping node (see sec. \ref{sec:musclewrapping}) uses Raycasting, amongst other things, but a likely possibility is that the many mathematical operations that are performed in the node on single precision digits introduces a floating point error (see \nameref{sec:precision}). Future MuSkeMo updates will attempt to address this issue, but the noise is small enough in magnitude that it makes no difference in any practical sense.
 
 The python script (to be run in Blender's script editor) that generates the muscle analysis is provided in MuSkeMo's utilities folder as an example script that calls MuSkeMo's API (sec. \ref{sec:muskemoutilities}). The Matlab script that generates the plots from Figs. \ref{fig:momentarmscombined} and \ref{fig:momentarmsinvididual} is also provided.
 
