@@ -41,7 +41,10 @@ def create_simple_muscle_node_group():
     set_shade_smooth.location = (600, 0)
     set_shade_smooth.inputs['Shade Smooth'].default_value = True  # Enable shade smooth
 
-    ### to be able to compute the length of the curve, we need to compute the length and store it as a named attribute.
+    ### to be able to compute the length of the curve, we need a named attribute that stores the length.
+    #If it already exists we pass it onto the store named attribute node. If it doesn't exist, we pass the newly computed length.
+    #This if statement is handled by a switch node
+
     # Create store named attribute node
     named_attribute = muscle_node_group.nodes.new('GeometryNodeStoreNamedAttribute')
     named_attribute.location = (0,0)
@@ -49,7 +52,19 @@ def create_simple_muscle_node_group():
 
     # Create curve length node
     curve_length = muscle_node_group.nodes.new('GeometryNodeCurveLength')
-    curve_length.location = (-200, -200)
+    curve_length.location = (-400, -400)
+
+    # named attribute input node
+    named_attribute_input = muscle_node_group.nodes.new('GeometryNodeInputNamedAttribute')
+    named_attribute_input.location = (-500,-500)
+    named_attribute_input.inputs['Name'].default_value = 'length'
+
+    # Switch node  (set to float)
+    switch_node_float = muscle_node_group.nodes.new('GeometryNodeSwitch')
+    switch_node_float.location = (-300, -400)
+    switch_node_float.input_type = 'FLOAT'
+    
+
 
     # Domain size node (set to curve mode)
     domain_size = muscle_node_group.nodes.new('GeometryNodeAttributeDomainSize')
@@ -101,8 +116,7 @@ def create_simple_muscle_node_group():
     join_geometry.location = (400, 100)
 
 
-
-
+   
     # Link the nodes: Group Input -> Curve to Mesh -> Merge by Distance -> Set Shade Smooth -> Group Output
     muscle_node_group.links.new(group_input.outputs['Curve'], named_attribute.inputs['Geometry']) 
     muscle_node_group.links.new(group_input.outputs['Curve'], instances_on_points.inputs['Points']) 
@@ -113,7 +127,12 @@ def create_simple_muscle_node_group():
 
     muscle_node_group.links.new(named_attribute.outputs['Geometry'],curve_to_mesh.inputs['Curve'])  # Curve link
     muscle_node_group.links.new(group_input.outputs['Curve'], curve_length.inputs['Curve'])
-    muscle_node_group.links.new(curve_length.outputs['Length'], named_attribute.inputs['Value'])    #link the length into the named attribute so that we can call it outside the node
+    
+    #if length attribute exists already, reuse it. Otherwise compute it now
+    muscle_node_group.links.new(curve_length.outputs['Length'], switch_node_float.inputs['False'])
+    muscle_node_group.links.new(named_attribute_input.outputs['Attribute'], switch_node_float.inputs['True'])
+    muscle_node_group.links.new(named_attribute_input.outputs['Exists'], switch_node_float.inputs['Switch'])
+    muscle_node_group.links.new(switch_node_float.outputs['Output'],named_attribute.inputs['Value'])    #link the length into the named attribute so that we can call it outside the node
     
     muscle_node_group.links.new(group_input.outputs['Radius'], curve_circle.inputs['Radius'])  # Radius link
     muscle_node_group.links.new(group_input.outputs['Radius'], uv_sphere.inputs['Radius'])  # Radius link
