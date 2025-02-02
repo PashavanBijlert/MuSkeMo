@@ -740,10 +740,10 @@ class SingleDOFLengthMomentArmOperator(Operator):
 
             for modifier in wrapmods:
                 
-                wrap_point_res.append(modifier["Socket_10"]) #resolution of the wrapping curve
-                modifier["Socket_10"] = 250
-                modifier.show_render = not modifier.show_render  # Toggle visibility to refresh
-                modifier.show_render = not modifier.show_render
+                # wrap_point_res.append(modifier["Socket_10"]) #resolution of the wrapping curve
+                # modifier["Socket_10"] = 250
+                # modifier.show_render = not modifier.show_render  # Toggle visibility to refresh
+                # modifier.show_render = not modifier.show_render
 
                 wrapobj = modifier["Socket_2"]
 
@@ -752,7 +752,11 @@ class SingleDOFLengthMomentArmOperator(Operator):
                 if wrapobj['wrap_type'] == 'Cylinder':
                     #wrap object resolution
                     wrap_obj_res.append(wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value)
-                    wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 10000
+                    wrapmod = wrapobj.modifiers["WrapObjMesh"]
+                    wrapmod.node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 1000
+                    
+                    wrapmod.show_render =not wrapmod.show_render# Toggle visibility to refresh
+                    wrapmod.show_render =not wrapmod.show_render
 
 
             #wrap curve resolution doesn't seem to be updating before execution of the script?
@@ -819,8 +823,8 @@ class SingleDOFLengthMomentArmOperator(Operator):
             for i,modifier in enumerate(wrapmods):
                 
                 #wrap curve res
-                modifier["Socket_10"] = wrap_point_res[i]
-                wrapobj = modifier["Socket_2"]
+                # modifier["Socket_10"] = wrap_point_res[i]
+                # wrapobj = modifier["Socket_2"]
 
                 wrapobj.modifiers["WrapObjMesh"]
 
@@ -828,8 +832,8 @@ class SingleDOFLengthMomentArmOperator(Operator):
                     #wrap object resolution
                     wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value = wrap_obj_res[i]
 
-            print(wrap_point_res)
-            print(wrap_obj_res)                
+            #print(wrap_point_res)
+            #print(wrap_obj_res)                
 
         length_data = {
             "plotname": muscle_name + "_length",
