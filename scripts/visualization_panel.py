@@ -150,7 +150,7 @@ class ConvertMusclesToVolumetricViz(Operator):
         
         directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
-        nodefilename = 'muscle_geonodes_v5.blend'
+        nodefilename = 'muscle_geonodes_v6.blend'
 
        
         with bpy.data.libraries.load(directory + nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file

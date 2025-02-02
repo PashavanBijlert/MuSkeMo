@@ -998,7 +998,7 @@ class ImportOpenSimModel(Operator):
         if enable_wrapping: #if the user wants wrapping
             self.report({'WARNING'}, "Only cylinder wrapping is currently supported. It may be required to tune the wrapping settings after import, see the manual")
 
-            wrap_nodefilename = 'muscle_wrapper_v5.blend'
+            wrap_nodefilename = 'muscle_wrapper_v6.blend'
             directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
             with bpy.data.libraries.load(directory + wrap_nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file

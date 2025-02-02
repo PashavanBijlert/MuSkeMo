@@ -12,7 +12,7 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self, parametric_wraps = Fals
 
     cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
     sphere_wrap_node_group_name = 'Whatever' #doesn't exist yet, but this is a placeholder to make the intended structure of this script clear
-    wrap_nodefilename = 'muscle_wrapper_v5.blend'  
+    wrap_nodefilename = 'muscle_wrapper_v6.blend'  
 
     wrap_obj = bpy.data.objects[wrap_obj_name]
     

@@ -533,12 +533,16 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 
 % Projection affects flips the wrap in two situations
 % 1) If force wrap is on, using a dot product, we find the clostest point between the wrap object center (2D projection) and the wrap crossing line.
-% If this points in the same general direction as the projection direction (second dot product), then the wrap is active 
+% If this points in the same general direction as the projection direction (second dot product), then the wrap is active. 
 % 2) Take a vector frome pre to post wrapping point, in the wrapping frame. The arctan2 gives the phi_angle this is pointing in. If this angle is between 0 and pi (so in the first or second quadrant), we flip the wrap. This is assuming a projection angle of 0 (so the projection is in local X dir.). The projection angle shifts the relevant quadrants. So we compute if (phi_angle - proj angle ) is between 0 and pi.
 
 %shortest wrap uses a cross product between the wrap crossing points, then computes the dot product between that vector and the cylinder z-axis. This is used to flip the wrap if required.
 
 % \textbf{MuSkeMo currently does not yet support physically accurate wrapping,} and only provides a very experimental setup as an option during import for model visualizations. When the option is selected during import, muscles get one extra geometry node modifier per wrapping interaction. The "wrapping" is currently achieved by a node setup that projects the section of the muscle inside the wrapping object in a 180 degree arc onto the wrapping surface. This is not a minimal-distance wrapping approach, and is thus not physically realistic, but could potentially be useful for visualizations. The direction of the wrapping can be changed by changing the projection angle - accessible in the node setup. 0\degree means the wrap is projected around the positive $x$-direction of the wrapping object's local coordinate system, and the angle is the local $z$-angle.
+
+
+% The conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
+
 
 % Implementing physically accurate realtime wrapping is a challenge in Blender, because it seems that creating custom curve types is not currently possible. The most promising avenue appears to be using \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes}, but this comes with its own set of challenges because all of the logic needs to be implemented with nodes, and currently Blender does not have something equivalent to a "Scripted Expression" node. Thus, even a simple equation such as $ \sqrt{0.5x^2 + 3xy + \cos(x)} $ requires 8 nodes, and thus things can get very complicated rather quickly.
 
