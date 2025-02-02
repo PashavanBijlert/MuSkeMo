@@ -452,15 +452,22 @@ class AssignWrappingOperator(Operator):
             obj.select_set(False)
 
         
-
+        parametric_wraps = bpy.context.scene.muskemo.parametric_wraps
 
         ### everything below here can be a separate function
         ### inputs of the function should include all the inputs of the wrapping node as optional input
+        ##inputs: wrap_obj_name (get wrap obj using the name), muscle_name, parametric_wraps(bool),
+
         #some settings for if I decide to rename node groups:
+
+
         cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
+        sphere_wrap_node_group_name = 'Whatever' #doesn't exist yet, but this is a placeholder to make the intended structure of this script clear
         wrap_nodefilename = 'muscle_wrapper_v5.blend'  
 
-        parametric_wraps = bpy.context.scene.muskemo.parametric_wraps
+        
+        
+        
 
         if wrap_obj['wrap_type'].upper() == 'CYLINDER': #if it's a cylinder
             
