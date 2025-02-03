@@ -817,8 +817,13 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         scene = context.scene
         muskemo = scene.muskemo
         
+         ### selected joints and bodies
+
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('BODY', layout)
         
-        
+
         ## user input body name    
         row = self.layout.row()
         split = row.split(factor=1/2)
@@ -844,16 +849,19 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         ## compute inertial properties from other meshes
         
         row = self.layout.row()
-        row.label(text = "This button computes the mass properties using source objects with assigned densities")
-        row = self.layout.row()
-        row.operator("body.compute_inertial_properties", text="Compute inertial properties")
+        #row.label(text = "This button computes the mass properties using source objects with assigned densities")
+        #row = self.layout.row()
+        #row.operator("body.compute_inertial_properties", text="Compute inertial properties")
         
             
         ## assign precomputed inertial properties from other meshes
         self.layout.row()
         
         row = self.layout.row()
-        
+        row = self.layout.row()
+        row.label(text = "Source objects (Geometry) with precomputed inertial properties")
+        CreateSelectedObjRow('GEOMETRY_withdensity', layout)
+
         row = self.layout.row()
         row.label(text = "This button assigns the mass properties using source objects with precomputed mass properties")
          

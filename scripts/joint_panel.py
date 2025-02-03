@@ -1385,7 +1385,15 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         scene = context.scene
         muskemo = scene.muskemo
         
-        
+        ### selected joints and bodies
+
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('JOINT', layout)
+        CreateSelectedObjRow('BODY', layout)
+
+
+        ###
         
         ## user input joint name    
         row = self.layout.row()

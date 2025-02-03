@@ -171,8 +171,14 @@ class VIEW3D_PT_contact_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convent
 
         scene = context.scene
         muskemo = scene.muskemo
+        layout = self.layout
 
         # First row for contact collection
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('CONTACT', layout)
+        
+        
         row = self.layout.row()
         split = row.split(factor=0.5)
         split.label(text="Contact Collection")

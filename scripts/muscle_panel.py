@@ -1113,6 +1113,11 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         scene = context.scene
         muskemo = scene.muskemo
         
+
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('MUSCLE', layout)
+
         row = self.layout.row()
         row.label(text ='Muscle points are added at the 3D cursor location')
         row = self.layout.row()

@@ -459,7 +459,12 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         
         scene = context.scene
         muskemo = scene.muskemo
+        layout = self.layout
         
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('FRAME', layout)
+
         # Row for frame collection
         row = self.layout.row()
         split = row.split(factor=0.5)
