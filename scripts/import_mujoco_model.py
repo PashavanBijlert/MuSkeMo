@@ -61,32 +61,35 @@ class ImportMuJoCoModel(Operator):
             except ValueError:
                 return value  # Keep as string if conversion fails
 
-        def get_body_data(element, index=0):
-            """ Extracts data from a body element, ensuring only nested <body> elements are considered children. """
+        def get_body_data(element):
+            """ Extracts data from a body element, keeping only necessary nesting. """
             element_data = {key: parse_numerical(value) for key, value in element.attrib.items()}
             
-            # Get body name from 'name' attribute, or generate a fallback
-            body_name = element_data.get("name", f"unnamed_body_{index}")
-            
             children = {}
-            child_index = 0
-
+            
             for child in element:
                 if child.tag == "body":
-                    child_data = get_body_data(child, child_index)
-                    child_name = list(child_data.keys())[0]  # Extract the actual name from child_data
-                    children[child_name] = child_data[child_name]
-                    child_index += 1
+                    # Recursively process child bodies
+                    child_name = child.attrib.get("name", "unnamed_body")
+                    children[child_name] = get_body_data(child)
                 else:
-                    # Non-body elements are attributes of the body itself
-                    if child.tag not in element_data:
-                        element_data[child.tag] = []
-                    element_data[child.tag].append({key: parse_numerical(value) for key, value in child.attrib.items()})
+                    # Store non-body elements as attributes
+                    child_data = {key: parse_numerical(value) for key, value in child.attrib.items()}
+                    
+                    if child.tag in element_data:
+                        # Avoid redundant lists if only one element exists
+                        if isinstance(element_data[child.tag], list):
+                            element_data[child.tag].append(child_data)
+                        else:
+                            element_data[child.tag] = [element_data[child.tag], child_data]
+                    else:
+                        element_data[child.tag] = child_data
 
             if children:
-                element_data["children"] = children  # Store children only if present
+                element_data["children"] = children  # Store only if there are children
 
-            return {body_name: element_data}
+            return element_data
+
 
 
         def get_muscle_data(root):
@@ -112,6 +115,25 @@ class ImportMuJoCoModel(Operator):
 
             return muscle_data
 
+        def get_asset_data(root):
+            asset_data = []
+            asset_element = root.find("asset")
+
+            if asset_element is not None:
+                for element in asset_element:
+                    # Extract relevant attributes (e.g., for texture and mesh)
+                    if element.tag in ["texture", "mesh"]:
+                        asset_data.append({
+                            "type": element.tag,
+                            "name": element.get("name"),
+                            "file": element.get("file"),
+                            "other_attributes": {k: v for k, v in element.attrib.items() if k not in ["name", "file"]}
+                        })
+
+            return asset_data
+
+
+
         # Find the worldbody (where all bodies are defined)
         worldbody = root.find("worldbody")
 
@@ -126,6 +148,9 @@ class ImportMuJoCoModel(Operator):
         muscle_data = get_muscle_data(root)
         print("Muscle Data:", muscle_data)
                 
+        # Extract asset data
+        asset_data = get_asset_data(root)
+        print("Asset Data:", asset_data)        
         
 
         return {'FINISHED'}
