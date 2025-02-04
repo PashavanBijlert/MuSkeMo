@@ -487,6 +487,10 @@ from .import_opensim_model import ImportOpenSimModel
 
 from .import_gaitsym_model import ImportGaitsymModel
 
+## import MuJoCo model
+
+from .import_mujoco_model import ImportMuJoCoModel
+
 ### The panels
 
 ## Main export panel
@@ -640,3 +644,37 @@ class VIEW3D_PT_import_Gaitsym_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
 
         return         
 
+
+
+## Import MuJoCo model
+class VIEW3D_PT_import_MuJoCo_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+    bl_idname = 'VIEW3D_PT_import_MuJoCo_model_subpanel'
+    bl_parent_id = 'VIEW3D_PT_import_panel'  #have to define this if you use multiple panels
+    bl_label = "Import MuJoCo model"  # found at the top of the Panel
+    bl_options = {'DEFAULT_CLOSED'} 
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        row = layout.row()
+        
+        row = layout.row()
+        
+        row.operator("import.import_mujoco_model",text = 'Import MuJoCo model (under development)')
+
+        row = layout.row()
+        split= row.split(factor=1/2)
+        split.label(text = 'Model Import Style')
+        split.prop(muskemo, "model_import_style", text="")
+        
+        row = layout.row()
+        row.prop(muskemo, "import_visual_geometry") #boolean, yes or no
+
+        
+        row = layout.row()
+        #row.prop(muskemo, "enable_wrapping_on_import") #boolean, yes or no
+        
+        row = self.layout.row()
+        #row.prop(muskemo, 'parametric_wraps', text = "Parametric wraps")
+        return   
