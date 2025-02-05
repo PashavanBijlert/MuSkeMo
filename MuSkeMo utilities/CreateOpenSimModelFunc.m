@@ -587,13 +587,13 @@ if ~isempty(wrapping_file)% if the muscles file is not empty
 
         elseif strcmp(global_or_local,'local')
             % local pos
-            pos_loc_indices = find(contains(wrapping_data.Properties.VariableNames,'pos') & contains(wrapping_data.Properties.VariableNames,'local'));
+            pos_loc_indices = find(contains(wrapping_data.Properties.VariableNames,'pos') & contains(wrapping_data.Properties.VariableNames,'parent'));
             wrapping_pos_loc= wrapping_data{i,pos_loc_indices};
 
             wrap_position = ArrayDouble.createVec3(wrapping_pos_loc); %vec3 of the contact
 
             % local orientation
-            ind_or_loc = (find(contains(wrapping_data.Properties.VariableNames, 'or') & contains(wrapping_data.Properties.VariableNames, 'local') &  contains(wrapping_data.Properties.VariableNames, 'euler')));
+            ind_or_loc = (find(contains(wrapping_data.Properties.VariableNames, 'or') & contains(wrapping_data.Properties.VariableNames, 'parent') &  contains(wrapping_data.Properties.VariableNames, 'euler')));
             wrapping_or_loc = wrapping_data{i,ind_or_loc};
 
             wrap_orientation = ArrayDouble.createVec3(wrapping_or_loc);  %local orientation
@@ -733,4 +733,35 @@ end
 
 
 
+end
+
+
+%% sub function
+function [gRb, bRg] = matrix_from_euler_XYZbody(angles_xyz)
+    % Inputs: list of euler angles (phi_x, phi_y, phi_z)
+    % Outputs: 3x3 rotation matrix, outputs both gRb (from body to global) and bRg (from global to body)
+    
+    % This script assumes: body-fixed (intrinsic) successive rotations about body-X, body-Y, then body-Z axes.
+    % This script assumes active rotations (so the object rotates, not the frame). We assume matrix premultiplication of standing vectors.
+    % In other words: gRb = Rx * Ry * Rz * v_b, where v_b is a vector v expressed in body-fixed frame b, and gRb rotates from body-fixed to global coordinates
+    
+    phi_x = angles_xyz(1);
+    phi_y = angles_xyz(2);
+    phi_z = angles_xyz(3);
+    
+    Rx = [1,          0,           0;
+          0, cos(phi_x), -sin(phi_x);
+          0, sin(phi_x),  cos(phi_x)];
+                  
+    Ry = [ cos(phi_y), 0, sin(phi_y);
+                 0, 1,          0;
+          -sin(phi_y), 0, cos(phi_y)];
+                  
+    Rz = [cos(phi_z), -sin(phi_z), 0;
+          sin(phi_z),  cos(phi_z), 0;
+                   0,           0, 1];
+                  
+    gRb = Rx * Ry * Rz;
+    
+    bRg = gRb';
 end

@@ -231,6 +231,9 @@ function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, ManualI
     if isempty(ModelInfoStruct.joints_file)
         error("You must select a 'Joints' file.");
     end
+    if (strcmp(ModelInfoStruct.global_or_local,'local') & isempty(ModelInfoStruct.frame_file))
+        error("You must select a 'Frames' file if you want to construct a model using local definitions.");
+    end
 end
 
 
