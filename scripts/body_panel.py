@@ -19,8 +19,8 @@ from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
     
 class CreateNewBodyOperator(Operator):
     bl_idname = "body.create_new_body"
-    bl_label = "creates a new body at the origin"
-    bl_description = "creates a new body at the origin"
+    bl_label = "Creates a new body at the origin. Choose a unique name and press the button."
+    bl_description = "Creates a new body at the origin. Choose a unique name and press the button."
     
     def execute(self,context):
         
@@ -51,9 +51,9 @@ class CreateNewBodyOperator(Operator):
             self.report({'ERROR'}, "Body with the name " + name + " already exists, please choose a different name")
         
         
+
+        bpy.context.scene.muskemo.bodyname = '' #set the name to be empty again.        
         return {'FINISHED'}
-
-
 
  
 class UpdateLocationFromCOMOperator(Operator):
@@ -63,116 +63,136 @@ class UpdateLocationFromCOMOperator(Operator):
     
     def execute(self, context):
         
+
+        sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
-        body_name = bpy.context.scene.muskemo.bodyname
-        
-        if not body_name: #if the user didn't fill out a name
-            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity. Operation aborted")
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "No body selected. Select a body and try again.")
             return {'FINISHED'}
         
-        try: bpy.data.objects[body_name]  #check if the body exists
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select a single body and try again.")
+            return {'FINISHED'}
         
-        except:  #throw an error if it doesn't exist
-            self.report({'ERROR'}, "Body with the name '" + body_name + "' does not exist yet, create it first")
-            
+
+        muskemo_objects = [ob for ob in sel_obj if 'MuSkeMo_type' in ob]
+        sel_bodies = [ob for ob in muskemo_objects if ob['MuSkeMo_type'] == 'BODY']
+
+        # throw an error if no objects are selected     
+        if (len(sel_bodies) != 1):
+            self.report({'ERROR'}, "The object you selected is not a body. Select a single body and try again.")
+            return {'FINISHED'}
+    
+        
+        target_body = sel_bodies[0] #the target body
+        COM = target_body['COM'].to_list()
+        
+        if np.isnan(COM).any():
+            self.report({'ERROR'}, "Body with the name '" + target_body.name + "' has NANs in de COM property, define a COM first")
         else:
             
-            sel_obj = bpy.context.selected_objects  
+            ## Check whether a local frame is attached to the body, and if so, compute the local frame attributes
+
+            if target_body['local_frame'] != 'not_assigned': #if the target body has a local frame assigned
+
+
+                frame = bpy.data.objects[target_body['local_frame']] #get the frame
+                
+                ### COM extra properties COM_local, inertia_COM_local
+
+                gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+                bRg = gRb.copy()
+                bRg.transpose()
+                
+                frame_or_g = frame.matrix_world.translation   #frame origin in global frame
+                COM_g = Vector(target_body['COM'])  #COM loc in global frame
+
+                relCOM_g = COM_g - frame_or_g  #Relative COM location from the local frame origin, aligned in global frame
+                relCOM_b = bRg @ relCOM_g #COM of the body, expressed in the local frame
+
+                target_body['COM_local'] = list(relCOM_b)  #set COM in local frame
+
+                MOI_glob_vec = target_body['inertia_COM']  #vector of MOI about COM, in global frame. Ixx Iyy Izz Ixy Ixz Iyz
+                MOI_g = Matrix(((MOI_glob_vec[0], MOI_glob_vec[3], MOI_glob_vec[4]), #MOI tensor about COM in global
+                                (MOI_glob_vec[3],MOI_glob_vec[1],MOI_glob_vec[5]),
+                                (MOI_glob_vec[4],MOI_glob_vec[5],MOI_glob_vec[2])))
+                
+                MOI_b = bRg @ MOI_g @ gRb #Vallery & Schwab, Advanced Dynamics 2018, eq. 5.53
+
+                MOI_b_vec = [MOI_b[0][0],  #Ixx, about COM, in local frame
+                            MOI_b[1][1],  #Iyy
+                            MOI_b[2][2],  #Izz
+                            MOI_b[0][1],  #Ixy
+                            MOI_b[0][2],  #Ixz
+                            MOI_b[1][2]]  #Iyz
+
+
+                target_body['inertia_COM_local'] = MOI_b_vec  
+
+            children = target_body.children
             
-            #ensure that only the relevant body is selected, or no bodies are selected. The operations will use the user input body name, so this prevents that the user selects a different body and expects the button to operate on that body
-            if (len(sel_obj) == 0) or ((len(sel_obj) == 1) and sel_obj[0].name == body_name):  #if no objects are selected, or the only selected object is also the correct body
+            if len(children)==0: #if the object has no children
+                target_body.matrix_world.translation = COM
                 
-                obj = bpy.data.objects[body_name]
-                COM = obj['COM'].to_list()
+            else:    #if the object has children, loop through them and ensure they don't change their location
+                                    
+                for chil in children:
+                    parented_worldmatrix = chil.matrix_world.copy() 
+                    chil.parent = None
+                    chil.matrix_world = parented_worldmatrix
+
+                pos_old = target_body.matrix_world.translation.copy()
+                target_body.matrix_world.translation = target_body['COM']
                 
-                if np.isnan(COM).any():
-                    self.report({'ERROR'}, "Body with the name '" + body_name + "' has NANs in de COM property, define a COM first")
-                else:
-                    
-                    children = obj.children
-                    
-                    if len(children)==0: #if the object has no children
-                        obj.location = COM
-                        
-                    else:    #if the object has children, loop through them and ensure they don't change their location
-                                            
-                        for chil in children:
-                            global_transform = chil.matrix_world.copy() 
-                            chil.parent = None
-                            #chil.matrix_world = global_transform
-                        
-                        pos_old = obj.location.copy()
-                        obj.location = COM
-                        
-                        difference = obj.location-pos_old
-                        
-                        for chil in children:
-                            #global_transform = chil.matrix_world.copy()
-                            #local_transform = obj.matrix_world.inverted() @ global_transform
-                            chil.parent = obj
-                            #chil.matrix_local = local_transform
-                            chil.location = chil.location-difference
                                 
+                for chil in children:
+                    #global_transform = chil.matrix_world.copy()
+                    #local_transform = obj.matrix_world.inverted() @ global_transform
+                    chil.parent = target_body
                     
-        
-        
-            else:
-                self.report({'ERROR'}, "Body with the name '" + body_name + "' is not the (only) selected body. Operation cancelled, please either deselect all objects or only select the '" + body_name + "' body. This button operates on the body that corresponds to the user (text) input Body name")
-        
+                    #this undoes the transformation after parenting
+                    chil.matrix_parent_inverse = target_body.matrix_world.inverted()
+                            
         return {'FINISHED'}    
     
 class AssignInertialPropertiesOperator(Operator):
     bl_idname = "body.assign_inertial_properties"
-    bl_label = "Assign mass, COM & inertia, precomputed by the Inertial Properties panel. Select 1+ source objects, and the target body last (which should turn yellow). Applies the parallel axes theorem when selecting multiple source objects"
-    bl_description = "Assign mass, COM & inertia, precomputed by the Inertial Properties panel. Select 1+ source objects, and the target body last (which should turn yellow). Applies the parallel axes theorem when selecting multiple source objects"
+    bl_label = "Assign mass, COM & inertia, precomputed by the Inertial Properties panel. Select 1+ source objects, and the target body. Applies the parallel axes theorem when selecting multiple source objects"
+    bl_description = "Assign mass, COM & inertia, precomputed by the Inertial Properties panel. Select 1+ source objects, and the target body. Applies the parallel axes theorem when selecting multiple source objects"
    
     def execute(self, context):
         
-        body_name = bpy.context.scene.muskemo.bodyname
-        colname = bpy.context.scene.muskemo.body_collection
+        ####body_name = bpy.context.scene.muskemo.bodyname
+        ####colname = bpy.context.scene.muskemo.body_collection
 
-        active_obj = bpy.context.active_object  #should be the body
         sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
-        if not body_name: #if the user didn't fill out a name
-            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity. Operation aborted")
-            return {'FINISHED'}
-
-
-        try: bpy.data.objects[body_name]  #check if the body exists
-        
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Body with the name '" + body_name + "' does not exist yet, create it first")
+        if (len(sel_obj) <= 1):
+            self.report({'ERROR'}, "Not enough objects selected. You must select the target body and 1+ source objects with mass properties precomputed in the Inertial properties panel.")
             return {'FINISHED'}
         
-        
+        muskemo_objects = [ob for ob in sel_obj if 'MuSkeMo_type' in ob]
+        sel_bodies = [ob for ob in muskemo_objects if ob['MuSkeMo_type'] == 'BODY']
+
         # throw an error if no objects are selected     
-        if (len(sel_obj) == 0):
-            self.report({'ERROR'}, "No objects selected. You must select 1+ source objects with mass properties precomputed in the Inertial properties panel, and the target body (which should correspond to the text input at the top)")
+        if (len(sel_bodies) == 0):
+            self.report({'ERROR'}, "No bodies selected. You must select select a body to which you would like to assign inertial properties")
             return {'FINISHED'}
         
-        if (len(sel_obj) == 1):
-            self.report({'ERROR'}, "Not enough objects selected. You must 1+ source objects with mass properties precomputed in the Inertial properties panel, and the target body (which should correspond to the text input at the top)")
+        # throw an error if multiple bodies are selected     
+        if (len(sel_bodies) > 1):
+            self.report({'ERROR'}, "Multiple bodies selected. You must select select one body to which you would like to assign inertial properties")
             return {'FINISHED'}
         
-        if bpy.data.objects[body_name] not in sel_obj:
-            self.report({'ERROR'}, "None of the selected objects is the target body. The target body and body name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
-            return {'FINISHED'}
-        
-        if len([ob for ob in sel_obj if ob.name in bpy.data.collections[colname].objects])>1: #if multiple bodies selected
-            self.report({'ERROR'}, "More than one selected object is a 'Body' in the '" + colname +  "' collection. You can selected multiple source objects, but only one target body. Operation cancelled.")
-            return {'FINISHED'}
-        
-        
-                
-        ## source objects are all the selected objects, except the active object (which is the target body)
-        source_objects = [ob for ob in sel_obj if ob.name != body_name]
-        target_body = bpy.data.objects[body_name]
+        target_body = sel_bodies[0]
+        ## source objects are all the selected objects, except the target body
+        source_objects = [ob for ob in sel_obj if ob != target_body]
+  
         
         for s_obj in source_objects:
             try: s_obj['mass']
             except:
-                self.report({'ERROR'}, "Source object with the name '" + s_obj.name + "' has no precomputed inertial properties.")
+                self.report({'ERROR'}, "Source object with the name '" + s_obj.name + "' has no precomputed inertial properties. Compute these first in the Inertial properties panel.")
                 return {'FINISHED'}
         
         
@@ -262,6 +282,7 @@ class AssignInertialPropertiesOperator(Operator):
         
                             
         children = target_body.children
+
         
         if len(children)==0: #if the object has no children
             target_body.location = target_body['COM']
@@ -269,21 +290,21 @@ class AssignInertialPropertiesOperator(Operator):
         else:    #if the object has children, loop through them and ensure they don't change their location
                                 
             for chil in children:
-                global_transform = chil.matrix_world.copy() 
+                parented_worldmatrix = chil.matrix_world.copy() 
                 chil.parent = None
-                #chil.matrix_world = global_transform
+                chil.matrix_world = parented_worldmatrix
             
-            pos_old = target_body.location.copy()
-            target_body.location = target_body['COM']
+            pos_old = target_body.matrix_world.translation.copy()
+            target_body.matrix_world.translation = target_body['COM']
             
-            difference = target_body.location-pos_old
-            
+                        
             for chil in children:
                 #global_transform = chil.matrix_world.copy()
                 #local_transform = obj.matrix_world.inverted() @ global_transform
                 chil.parent = target_body
-                #chil.matrix_local = local_transform
-                chil.location = chil.location-difference
+                
+                #this undoes the transformation after parenting
+                chil.matrix_parent_inverse = target_body.matrix_world.inverted()
             
             
             
@@ -826,21 +847,22 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
 
         ## user input body name    
         row = self.layout.row()
-        split = row.split(factor=1/2)
-        split.label(text = "Body Name")
+        split = row.split(factor=1/3)
+        split.label(text = "Body Name:")
+        ## Create new body
+        split = split.split(factor = 1/2)
         split.prop(muskemo, "bodyname", text = "")
+        split.operator("body.create_new_body", text="Create new body")
         
         ## body collection
         row = self.layout.row()
         split = row.split(factor=1/2)
-        split.label(text = "Body collection")
+        split.label(text = "Body collection:")
         split.prop(muskemo, "body_collection", text = "")
         row = self.layout.row()
 
 
-        ## Create new body
-        row = self.layout.row()
-        row.operator("body.create_new_body", text="Create new body")
+       
         row = self.layout.row()
         row.prop(muskemo, "axes_size")
         
