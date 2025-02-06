@@ -162,9 +162,7 @@ class AssignInertialPropertiesOperator(Operator):
    
     def execute(self, context):
         
-        ####body_name = bpy.context.scene.muskemo.bodyname
-        ####colname = bpy.context.scene.muskemo.body_collection
-
+        
         sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
         if (len(sel_obj) <= 1):
@@ -561,47 +559,43 @@ class AttachVizGeometryOperator(Operator):
     def execute(self, context):
         body_name = bpy.context.scene.muskemo.bodyname
         colname = bpy.context.scene.muskemo.body_collection
-        active_obj = bpy.context.active_object  #should be the body
         sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
         geom_colname = bpy.context.scene.muskemo.geometry_collection    
 
         
-        if not body_name: #if the user didn't fill out a name
-            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity to prevent ambiguity. Operation aborted")
-            return {'FINISHED'}
-
-
-        try: bpy.data.objects[body_name]  #check if the body exists
+               
+        sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Body with the name '" + body_name + "' does not exist yet, create it first")
+        if (len(sel_obj) <= 1):
+            self.report({'ERROR'}, "Not enough objects selected. You must select the target body and 1+ visual geometry meshes to attach to the target body.")
             return {'FINISHED'}
         
-        
+        muskemo_objects = [ob for ob in sel_obj if 'MuSkeMo_type' in ob]
+        sel_bodies = [ob for ob in muskemo_objects if ob['MuSkeMo_type'] == 'BODY']
+
         # throw an error if no objects are selected     
-        if (len(sel_obj) == 0):
-            self.report({'ERROR'}, "No objects selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+        if (len(sel_bodies) == 0):
+            self.report({'ERROR'}, "No bodies selected. You must select a body to which you would like to attach visual geometry meshes")
             return {'FINISHED'}
         
-        if (len(sel_obj) == 1):
-            self.report({'ERROR'}, "Only 1 object selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+        # throw an error if multiple bodies are selected     
+        if (len(sel_bodies) > 1):
+            self.report({'ERROR'}, "Multiple bodies selected. You must select select one body to which you would like to attach visual geometry meshes")
             return {'FINISHED'}
         
-        if bpy.data.objects[body_name] not in sel_obj:
-            self.report({'ERROR'}, "None of the selected objects is the target body. The target body and body name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
-            return {'FINISHED'}
-        
-        if len([ob for ob in sel_obj if ob.name in bpy.data.collections[colname].objects])>1: #if multiple bodies selected
-            self.report({'ERROR'}, "More than one selected object is a 'Body' in the '" + colname +  "' collection. You can selected multiple source objects, but only one target body. Operation cancelled.")
-            return {'FINISHED'}
-        
-        ## source objects are all the selected objects, except the active object (which is the target body)
-        geom_objects = [ob for ob in sel_obj if ob.name != body_name]
-        target_body = bpy.data.objects[body_name]
+        target_body = sel_bodies[0]
+        ## geom objects are all the selected objects, except the target body
+        geom_objects = [ob for ob in sel_obj if ob != target_body]
 
+        geom_objects_MuSkeMo = [ob for ob in geom_objects if 'MuSkeMo_type' in ob]
         error_check = []  #check if there are non-mesh data types, visualization geometry can only be of the type mesh
 
+        for ob in geom_objects_MuSkeMo: #if any of the prospective geom objects are already a different muskemo type (e.g., joint), don't allow geometry assignment
+            if ob['MuSkeMo_type'] != 'GEOMETRY':
+                error_check.append([1])
+                self.report({'ERROR'}, "The selected object '" + ob.name +  "' is of the MuSkeMo type '" + ob['MuSkeMo_type'] + "', which cannot act as visualization geometry. Operation cancelled.")
+ 
         for geom in geom_objects:
             if geom.type != 'MESH':
                 error_check.append([1])
@@ -628,9 +622,6 @@ class AttachVizGeometryOperator(Operator):
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[geom_colname]
         
 
-        ##target body:
-        body = bpy.data.objects[body_name]
-
         for geom in geom_objects:
             
             if coll not in geom.users_collection:
@@ -656,14 +647,12 @@ class AttachVizGeometryOperator(Operator):
             
             ### check if geom_relpath is already attached to another body
             skip_geom = False
-            for obj in [obj for obj in bpy.data.collections[colname].objects if obj != body]: #for all the bodies in the body collection that aren't the target body
+
+            all_MuSkeMo_objects = [obj for obj in bpy.data.objects if 'MuSkeMo_type' in obj]
+            all_bodies = [obj for obj in all_MuSkeMo_objects if obj['MuSkeMo_type'] == 'BODY']
+
+            for obj in [obj for obj in all_bodies if obj != target_body]: #for all the bodies in the scene that aren't the target body
                 
-                try:
-                    obj['MuSkeMo_type']  #loop through all the bodies in the collection, check if they have the geometry custom property
-                except:     #if not, the user apparently created the body themself
-                    self.report({'INFO'}, "Body with name '" + obj.name +  "' in the '" + colname + "' does not have a MuSkeMo_type. Skipping this object during geometry conflict check.")
-                    continue #skip this object, try the next one
-               
                 if geom_relpath in obj['Geometry']:
                     self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' is already attached to a different body with the name '" + obj.name + "'. Detach it from that body first. Skipped this geometry object.")
                     skip_geom = True
@@ -673,17 +662,17 @@ class AttachVizGeometryOperator(Operator):
                 continue
 
 
-            if geom_relpath in body['Geometry']:
+            if geom_relpath in target_body['Geometry']:
                 self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' is already attached to target body with name '" + obj.name + "'. Skipped this geometry object.")    
                 continue
             
             
 
             ### if nothing throws an error, assign the body as the parent
-            geom.parent = body
+            geom.parent = target_body
             
             #this undoes the transformation after parenting
-            geom.matrix_parent_inverse = body.matrix_world.inverted()
+            geom.matrix_parent_inverse = target_body.matrix_world.inverted()
 
             geom_list.append(geom_relpath)
 
@@ -694,7 +683,7 @@ class AttachVizGeometryOperator(Operator):
                 geom['MuSkeMo_type'] = 'GEOMETRY'    #to inform the user what type is created
                 geom.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
 
-            geom['Attached to'] = body.name
+            geom['Attached to'] = target_body.name
             geom.id_properties_ui('Attached to').update(description = "The body that this geometry is attached to")
             
             ##### Assign a material
@@ -719,10 +708,10 @@ class AttachVizGeometryOperator(Operator):
             
             geom_list_str = geom_delimiter.join(geom_list) + geom_delimiter
             
-            if body['Geometry'] == 'no geometry':
-                body['Geometry'] = geom_list_str
+            if target_body['Geometry'] == 'no geometry':
+                target_body['Geometry'] = geom_list_str
             else:
-                body['Geometry'] = body['Geometry'] + geom_list_str  
+                target_body['Geometry'] = target_body['Geometry'] + geom_list_str  
 
 
         
@@ -736,57 +725,47 @@ class DetachVizGeometryOperator(Operator):
 
 
     def execute(self, context):
-        body_name = bpy.context.scene.muskemo.bodyname
-        colname = bpy.context.scene.muskemo.body_collection
-        active_obj = bpy.context.active_object  #should be the body
+        
         sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
         geom_colname = bpy.context.scene.muskemo.geometry_collection    
 
-        if not body_name: #if the user didn't fill out a name
-            self.report({'ERROR'}, "You must type in the correct body name, and ensure it is the same as the selected body to prevent ambiguity to prevent ambiguity. Operation aborted")
-            return {'FINISHED'}
-
-
-        try: bpy.data.objects[body_name]  #check if the body exists
-        
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Body with the name '" + body_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
-        
+                
         # throw an error if no objects are selected     
         if (len(sel_obj) == 0):
-            self.report({'ERROR'}, "No objects selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+            self.report({'ERROR'}, "No objects selected. You must select 1+ geometry objects and their parent body")
             return {'FINISHED'}
         
         if (len(sel_obj) == 1):
-            self.report({'ERROR'}, "Only 1 object selected. You must select 1+ source objects and the target body (which corresponds to the body name text input at the top)")
+            self.report({'ERROR'}, "Only 1 object selected. You must select 1+ geometry objects and their parent body")
             return {'FINISHED'}
         
-        if bpy.data.objects[body_name] not in sel_obj:
-            self.report({'ERROR'}, "None of the selected objects is the target body. The target body and body name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
-            return {'FINISHED'}
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
         
-        if len([ob for ob in sel_obj if ob.name in bpy.data.collections[colname].objects])>1: #if multiple bodies selected
-            self.report({'ERROR'}, "More than one selected object is a 'Body' in the '" + colname +  "' collection. You can selected multiple source objects, but only one target body. Operation cancelled.")
-            return {'FINISHED'}
-        
-        if len([ob for ob in sel_obj if ob.name in bpy.data.collections[geom_colname].objects])<1: #if less than 1 object is in the geometry collection
-            self.report({'ERROR'}, "None of the selected objects are a geometry file in the '" + colname +  "' collection. Operation cancelled.")
-            return {'FINISHED'}
+        bodies = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='BODY']
 
-        ## source objects are all the selected objects, except the active object (which is the target body)
-        geom_objects = [ob for ob in sel_obj if ob.name != body_name]
-        target_body = bpy.data.objects[body_name]
+        if len(bodies)>1: #if multiple bodies selected
+            self.report({'ERROR'}, "More than one selected object is a 'BODY'. You can selected multiple geometry objects, but only one body (their parent). Operation cancelled.")
+            return {'FINISHED'}
+        
+        if len(bodies)<1: #if multiple bodies selected
+            self.report({'ERROR'}, "None of the selected object is a 'BODY'. Select multiple geometry objects and their parent body, and try again. Operation cancelled.")
+            return {'FINISHED'}
+        
+        parent_body = bodies[0]
+        geom_objects = [obj for obj in muskemo_objects if obj['MuSkeMo_type'] == 'GEOMETRY']
+                
+        if len(geom_objects)<1: #if less than 1 object is in the geometry collection
+            self.report({'ERROR'}, "None of the selected objects are of the MuSkeMo type 'GEOMETRY'. Operation cancelled.")
+            return {'FINISHED'}
 
         geom_delimiter = ';'
         for geom in geom_objects:
             geom_relpath = geom_colname + '/' + geom.name + '.obj'
 
-            if geom_relpath in target_body['Geometry']:  #if geom is attached to the body
+            if geom_relpath in parent_body['Geometry']:  #if geom is attached to the body
                 
-                target_body['Geometry'] = target_body['Geometry'].replace(geom_relpath + geom_delimiter,'')  #remove the geom path from the body
+                parent_body['Geometry'] = parent_body['Geometry'].replace(geom_relpath + geom_delimiter,'')  #remove the geom path from the body
                 geom['Attached to'] = 'no body'  #update the "attached to" state of the geometry
 
 
@@ -799,13 +778,13 @@ class DetachVizGeometryOperator(Operator):
 
             else: 
                 
-                self.report({'ERROR'}, "Geometry file '" + geom.name +  "' does not appear to be attached to body '" + target_body.name + "'. Operation cancelled.")
+                self.report({'WARNING'}, "Geometry file '" + geom.name +  "' does not appear to be attached to body '" + parent_body.name + "'. Geometry skipped.")
 
 
 
 
-        if not target_body['Geometry']: #if the geometry list is now empty, state so explicitly
-            target_body['Geometry'] = 'no geometry'
+        if not parent_body['Geometry']: #if the geometry list is now empty, state so explicitly
+            parent_body['Geometry'] = 'no geometry'
 
 
         return {'FINISHED'}
@@ -865,17 +844,9 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
        
         row = self.layout.row()
         row.prop(muskemo, "axes_size")
-        
-                
-        
-        ## compute inertial properties from other meshes
-        
+             
         row = self.layout.row()
-        #row.label(text = "This button computes the mass properties using source objects with assigned densities")
-        #row = self.layout.row()
-        #row.operator("body.compute_inertial_properties", text="Compute inertial properties")
-        
-            
+                   
         ## assign precomputed inertial properties from other meshes
         self.layout.row()
         
