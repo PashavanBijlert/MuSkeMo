@@ -121,6 +121,9 @@ def create_body(name, size, self,
     if is_global and COM != [nan]*3:#if is_global is True and COM is defined
         
         obj.matrix_world.translation = COM
+
+        obj['default_pose'] = obj.matrix_world #track the default pose to ensure the exported values are in the same pose
+                
       
       
       
