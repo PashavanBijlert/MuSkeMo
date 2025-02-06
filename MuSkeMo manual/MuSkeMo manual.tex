@@ -147,7 +147,12 @@ Orientations are represented as XYZ body-fixed Euler angles (see Appendix \ref{s
 
 \section{Using MuSkeMo}
 
-MuSkeMo lives in \href{https://docs.blender.org/manual/en/latest/interface/window_system/tabs_panels.html}{Blender panels} (Fig. \ref{fig:MuSkeMoUI}A). Panels can be interactively resized and collapsed, which can be useful depending on your screen size. Although Blender does support using a trackpad, it is substantially more intuitive to navigate with a mouse, and a keyboard with a separate numberpad. There are also certain settings that make navigation easier (see Section \ref{sec:MSM_glob_settings}).
+MuSkeMo lives in \href{https://docs.blender.org/manual/en/latest/interface/window_system/tabs_panels.html}{Blender panels} (Fig. \ref{fig:MuSkeMoUI}A). Panels can be interactively resized and collapsed, which can be useful depending on your screen size. The panels contain buttons that perform operations on the data (implemented as \href{https://docs.blender.org/api/current/bpy.types.Operator.html}{Blender Operators}). When hovering over a button, a tooltip appears that briefly explains the workings of the button in question. 
+
+Nearly all functions in MuSkeMo work by selecting the correct objects in the scene, and then pressing a button. If the selected objects are incompatible with the button in question, MuSkeMo will display an error message that explains what went wrong. To make the user aware of what MuSkeMo object (types) are currently selected, each has a live selection display for the relevant object types.
+
+
+Although Blender does support using a trackpad, it is substantially more intuitive to navigate with a mouse, and a keyboard with a separate numberpad. There are also certain settings that make navigation easier (see Section \ref{sec:MSM_glob_settings}).
 
 
 \textbf{WARNING:} Ensure that 3D meshes (visual geometry and tissue outlines) have all their transformations applied before you start constructing the model. To do this, select the object, press \texttt{Control + A}, and select “All transforms”. This accounts for the way that Blender stores local transformations. When you move, rotate, and/or scale 3D models in Blender, these transformations are initially stored only locally in the object’s data (an extra storage layer in Blender). This means that the object’s position has not changed in 3D space, you have defined an extra local transformation that can easily be undone. Some of the functions in MuSkeMo may behave unpredictably unless transformations have first been applied.
@@ -170,7 +175,7 @@ For each model component, data created by MuSkeMo are stored in Blender as \href
 
 \subsection{Model components and modifiers}
 
-MuSkeMo creates a new \href{https://docs.blender.org/manual/en/latest/scene_layout/object/types.html}{Blender Object} for each model component. Blender has many different object types, but MuSkeMo mainly uses "Mesh", "Curve", and "Empty" (see \ref{sec:DataTypes} for a full specification of all the used data types). Objects in Blender do not interact with other objects, unless the user somehow defines their inter-relationships. MuSkeMo handles all of this under the hood. For instance, components such as contact spheres need to be parented to specific bodies in the model, and MuSkeMo handles this while also keeping track of these inter-relationships in "Custom properties" (see \ref{sec:muskemodata}) so they are exposed to the user.
+MuSkeMo creates a new \href{https://docs.blender.org/manual/en/latest/scene_layout/object/types.html}{Blender Object} for each model component. Blender has many different object types, but MuSkeMo mainly uses "Mesh", "Curve", and "Empty" (see \ref{sec:DataTypes} for a full specification of all the used data types). Objects in Blender do not interact with other objects, unless the user somehow defines their inter-relationships. MuSkeMo handles all of this under the hood. For instance, components such as contact spheres need to be parented to specific bodies in the model, and MuSkeMo handles this while also keeping track of these inter-relationships in "Custom properties" so they are exposed to the user (see \ref{sec:muskemodata}).
 
 Combining parenting and Blender's native object types does not provide all of the required functionality. MuSkeMo extensively makes use of Blender's \href{https://docs.blender.org/manual/en/latest/modeling/modifiers/index.html}{Modifier system} for both generating and visualizing components. For instance, individual muscle curve points cannot be attached to bodies using Blender's parenting system, so MuSkeMo achieves this by adding a hook modifier for each curve point (see \ref{sec:muscle}). 
 
@@ -185,6 +190,10 @@ By default, MuSkeMo color codes each component (see \ref{sec:defaultcolors} for 
 
 Blender is quite stable, but it is possible for it to crash. Fortunately, by default, Blender has an Auto Save function. After a crash, restart Blender, and go to File, Recover, Auto Save. Remember to save the recovered file.
 
+\subsection{Default pose}
+\label{sec:defaultpose}
+Constructing a model in Blender provides the user with a lot of freedom to interactively repose model elements during model construction. However, certain computations are only valid in the specific pose they are computed in (e.g., inertial properties in the global frame). To prevent incorrect exports, MuSkeMo keeps track of the 'default\_pose', which is the pose in which the relevant computation was performed. If the user tries to perform an operation that can only be performed in the default pose, the operation is cancelled (with an error message). In that situation, you must either recompute the parameters, or reposition the model components back into the default pose.
+
 \subsection{MuSkeMo Global Settings Panel}
 The Blender user interface has several default settings that do not work well with MuSkeMo. By default, Blender forces the Z-axis as the "up" direction in the viewport. The International Society of Biomechanics assumes Y as the up direction. To achieve this, the user should set the view rotation setting to "Trackball", and use "orbit around selection". The "MuSkeMo Global Settings" panel provides a button that does this automatically: "Set recommended Blender settings". This button also toggles off "Object Children" in the outliner. By default, objects are placed under their parents in the outliner, but this would for instance result in a body being placed under the parent joint in the "Joint collection", instead of in the "Body collection". Turning off "Object children" avoids this behavior. However, this is a project file setting, so this needs to be reset with each new project, unlike the navigation settings. 
 
@@ -196,8 +205,11 @@ The Blender user interface has several default settings that do not work well wi
 \label{sec:inproppanel}
 
 The main goal of this panel is to compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
-Inertial properties are \textbf{not dynamic}, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated.
-To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mesh, based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
+Inertial properties are not dynamic, if you move the 3D meshes or would like to change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo warns you if this has occured, by tracking the 'default\_pose' of each mesh as a custom property (see \ref{sec:defaultpose}). Density can only be changed by changing the 'Segment density' in the panel and recomputing the object's inertial properties.
+
+To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mesh, based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. 
+
+It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
 
 \subsubsection{Generate minimal convex hulls}
 Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons %{sellersMinimumConvexHull2012, BrasseyMOA2013, BrasseySELLERS2014, Brassey2016, Brassey2018, coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023, Bates2025}. 
@@ -233,12 +245,15 @@ Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log
 \subsection{Body panel}
 \label{sec:bodypanel}
 
-Define rigid bodies, assign precomputed inertial properties, or compute directly by selecting one or several volumetric meshes.
-Inertial properties are \textbf{not dynamic}, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated.
+Create new bodies by typing in a (unique) name, and then pressing the 'Create new body' button. The newly created body will have all 'NaN's as inertial properties, and will be centered at the origin. Once you assign rigid body parameters, the body will be moved to the correct position in the global reference frame. A body's position is always its center of mass in the global frame, and its orientation is always aligned with the global frame.
 
-A single body can represent the combined inertial properties of more than one mesh. MuSkeMo computes the combined inertial properties using the parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}. See \ref{sec:compositebodyvalidation}.
+You can assign rigid body parameters in two ways. The recommend approach is to assign values that were computed for meshes in the inertial properties panel (see \ref{sec:inproppanel}). A single body can represent the combined inertial properties of more than one mesh. MuSkeMo computes the combined inertial properties using the parallel axes theorem \cite{valleryAdvancedDynamics2019,ruinaMechanicsToolsetStatics2019}. Simply select the target body, and 1+ source objects, and press 'Assign precomputed inertial properties'. MuSkeMo will give you an error message if you selected objects that don't have inertial properties precomputed, and the live selection boxes in the panel can help you with ensuring you have selected the correct (number of) objects. See \ref{sec:compositebodyvalidation} for a validation of these features.
 
-In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. 
+It is also possible to assign inertial properties manually. This is not recommended, but it is possible by manually typing the values in the Body's custom properties. If going this route, the COM position can be updated using the button in the "Assign inertial properties manually" subpanel.
+
+Inertial properties are not dynamic, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body (see \ref{sec:defaultpose}). Otherwise COM, mass, and or inertia can be outdated. MuSkeMo warns you if you attempt to export inertial property data in a different pose than the default pose.
+
+In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. Select the meshes and the target body, and press the button.
 
 \subsection{Joint panel}
 
@@ -407,7 +422,7 @@ Importantly, the coloration in Blender depends on \href{https://docs.blender.org
 
 \subsection{Reflection panel}
 
-This panel is currently still under construction, and will be released with v0.9.2. Bodies, frames, joints, contacts, muscles, and wrapping geometry have a robust reflection approach.
+Bodies, frames, joints, contacts, muscles, and wrapping geometry have a robust reflection approach.
 
 The reflection panel enables symmetric model construction, by only constructing model components on one side, and then reflecting them across the mid-sagittal plane. You can choose what plane defines the midline (default = 'XY'), and change the strings with which you designate the left and right sides (default is '\_l' and '\_r', respectively, at the end of an object's name, e.g., "thigh\_r"). The script then checks for all components whether its other-side counterpart exists, and if not, creates it. The script checks this for both left and right-sided components simultaneously. Each component's reflection function searches within the collection that is designated next to the button.
 
@@ -449,6 +464,8 @@ The folder also contains an updater (Python) script to update older MuSkeMo scen
 
 \section{MuSkeMo Data Types}
 \label{sec:DataTypes}
+
+
 
 \subsection{BODY}
 \label{sec:body}
