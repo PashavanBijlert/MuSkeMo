@@ -1,16 +1,23 @@
-def write_inprop(context, filepath, collection_name, delimiter, obj_type, number_format):
+def write_inprop(context, filepath, collection_name, delimiter, obj_type, number_format, self):
     #### obj_type is a string, either "body" or "mesh", or something if you reuse this further
     #### the script will fail if you don't specify it when calling the function.
     #### currently, the script gives inertial properties for bodies or meshes
 
 
     import bpy
+    from mathutils import Matrix
 
-    
-    file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     coll = bpy.data.collections[collection_name]
-    
-    
+    ### check if any of the objects is no longer in the default pose. If so, throw an error and cancel.
+
+    for obj in coll.objects:
+        if obj.matrix_world != Matrix(obj['default_pose']):
+            self.report({'ERROR'}, "Inertial properties of '" + obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. Operation cancelled")
+            return {'FINISHED'}
+
+
+    file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
+   
     header = (obj_type + '_name' + delimiter  + 'mass(kg)' + delimiter  + 
               'COM_x_in_global' + delimiter  + 'COM_y_in_global' + delimiter   + 'COM_z_in_global' + delimiter  + 
               'Ixx(kg*m^2)_about_COM_in_global' + delimiter  + 'Iyy_in_global' + delimiter  + 'Izz_in_global' + delimiter  + 'Ixy_in_global' + delimiter  + 'Ixz_in_global' + delimiter  + 'Iyz_in_global' )
@@ -25,8 +32,7 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
 
         header = header + delimiter + 'density(kg*m^-3)' 
 
-    
-        
+           
     file.write(header) #headers
     
     file.write('\n') 

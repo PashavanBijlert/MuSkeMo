@@ -46,7 +46,7 @@ from .scripts.global_settings_panel import (VIEW3D_PT_global_settings_panel,
 
 #### body panel
 from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_PT_vizgeometry_subpanel,
-                                VIEW3D_PT_body_utilities_subpanel, 
+                                VIEW3D_PT_body_manual_inprop_assignment_subpanel, 
                                 CreateNewBodyOperator,
                                 AssignInertialPropertiesOperator,
                                 UpdateLocationFromCOMOperator,
@@ -183,7 +183,7 @@ classes = (  #Global settings panel
 
             #body_panel
                                     VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,
-                                    VIEW3D_PT_body_utilities_subpanel,
+                                    VIEW3D_PT_body_manual_inprop_assignment_subpanel,
                                      CreateNewBodyOperator,
                                     AssignInertialPropertiesOperator,
                                       UpdateLocationFromCOMOperator,

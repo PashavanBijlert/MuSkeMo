@@ -150,9 +150,8 @@ class ExportBodiesOperator(Operator, ExportHelperCustom):  #inherits from Export
         delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
         body_colname = bpy.context.scene.muskemo.body_collection
 
-        print(self.number_format)
-        
-        write_inprop(context, self.filepath, body_colname, delimiter,'BODY', self.number_format)
+                
+        write_inprop(context, self.filepath, body_colname, delimiter,'BODY', self.number_format, self)
         return {'FINISHED'}
 
 ## export joints
@@ -279,7 +278,7 @@ class ExportMeshInPropsOperator(Operator, ExportHelperCustom): #inherits from Ex
         
 
         
-        write_inprop(context, self.filepath, mesh_colname, delimiter,'mesh', self.number_format)
+        write_inprop(context, self.filepath, mesh_colname, delimiter,'mesh', self.number_format, self)
         return {'FINISHED'}
 
 ## export contacts

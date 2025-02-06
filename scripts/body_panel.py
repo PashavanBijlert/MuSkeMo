@@ -133,6 +133,8 @@ class UpdateLocationFromCOMOperator(Operator):
             
             if len(children)==0: #if the object has no children
                 target_body.matrix_world.translation = COM
+
+                target_body['default_pose'] = target_body.matrix_world #track the default pose to ensure the exported values are in the same pose
                 
             else:    #if the object has children, loop through them and ensure they don't change their location
                                     
@@ -143,6 +145,8 @@ class UpdateLocationFromCOMOperator(Operator):
 
                 pos_old = target_body.matrix_world.translation.copy()
                 target_body.matrix_world.translation = target_body['COM']
+
+                target_body['default_pose'] = target_body.matrix_world #track the default pose to ensure the exported values are in the same pose
                 
                                 
                 for chil in children:
@@ -186,13 +190,19 @@ class AssignInertialPropertiesOperator(Operator):
         ## source objects are all the selected objects, except the target body
         source_objects = [ob for ob in sel_obj if ob != target_body]
   
-        
+        #Check if the source objects all have precomputed in props
         for s_obj in source_objects:
             try: s_obj['mass']
             except:
                 self.report({'ERROR'}, "Source object with the name '" + s_obj.name + "' has no precomputed inertial properties. Compute these first in the Inertial properties panel.")
                 return {'FINISHED'}
-        
+              
+        #Check if all the source objects are still in the default pose (in which the inprops were computed)
+        for s_obj in source_objects:
+            if s_obj.matrix_world != Matrix(s_obj['default_pose']):
+                self.report({'ERROR'}, "Inertial properties of '" + s_obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. Operation cancelled")
+                return {'FINISHED'}
+
         
         if len(source_objects)==1: #trivial case, one source object provides the target body inertial parameters
             
@@ -284,6 +294,8 @@ class AssignInertialPropertiesOperator(Operator):
         
         if len(children)==0: #if the object has no children
             target_body.location = target_body['COM']
+            target_body['default_pose'] = target_body.matrix_world #track the default pose to ensure the exported values are in the same pose
+                
             
         else:    #if the object has children, loop through them and ensure they don't change their location
                                 
@@ -294,6 +306,8 @@ class AssignInertialPropertiesOperator(Operator):
             
             pos_old = target_body.matrix_world.translation.copy()
             target_body.matrix_world.translation = target_body['COM']
+
+            target_body['default_pose'] = target_body.matrix_world
             
                         
             for chil in children:
@@ -616,18 +630,10 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         row.label(text = "Source objects (Geometry) with precomputed inertial properties")
         CreateSelectedObjRow('GEOMETRY_withdensity', layout)
 
-        row = self.layout.row()
-        row.label(text = "This button assigns the mass properties using source objects with precomputed mass properties")
-         
+                 
         row = self.layout.row()
         row.operator("body.assign_inertial_properties", text="Assign precomputed inertial properties")
-        row = self.layout.row()
-        row.label(text = "Properties are not dynamic, recompute them if you move source objects around")
-
-        row = self.layout.row()
-        row.label(text = "If you manually type in inertial properties, use the below button to update the display location")
-
-        row.operator("body.update_location_from_com", text="Update display location using COM")
+        
         
         
 class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
@@ -660,12 +666,12 @@ class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  #
         return
 
 
-class VIEW3D_PT_body_utilities_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
+class VIEW3D_PT_body_manual_inprop_assignment_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # 
     bl_idname = 'VIEW3D_PT_body_utilities_subpanel'
     bl_parent_id = 'VIEW3D_PT_body_panel'
     
     #bl_category = "Body panel"  # found in the Sidebar
-    bl_label = "Body utilities"  # found at the top of the Panel
+    bl_label = "Assign inertial properties manually"  # found at the top of the Panel
     bl_context = "objectmode"
     
     bl_options = {'DEFAULT_CLOSED'}
@@ -675,12 +681,11 @@ class VIEW3D_PT_body_utilities_subpanel(VIEW3D_PT_MuSkeMo, Panel):  #
         scene = context.scene
         muskemo = scene.muskemo
         
-        ## update display location using COM
+        row = layout.row()
         
+        row.label(text = "If you manually type in inertial properties, use the below button to update the display location")
+        row = layout.row()
+        row.operator("body.update_location_from_com", text="Update display location using COM")
          
         
-              
-        self.layout.row()
-        self.layout.row()
-        row = self.layout.row()
-        row.prop(muskemo, "axes_size")
+        

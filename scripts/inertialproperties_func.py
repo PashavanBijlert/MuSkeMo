@@ -199,6 +199,8 @@ def inertial_properties(obj):
     obj['COM'] = CoM_book
     obj.id_properties_ui('COM').update(description = 'COM location (in global frame)')
     
+    obj['default_pose'] = obj.matrix_world #set a default pose to track in what pose the in props were computed
+
     return(mass, CoM_book, mass_I_com, vol_book, volumetric_I_com)
 
 
