@@ -21,12 +21,12 @@ PA van Bijlert. MuSkeMo: Open-source software to construct, analyze, and visuali
 # **Inertial properties panel**
 
 Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
-Inertial properties are **not dynamic**, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated.
+Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this.
 
 # **Body panel**
 
 Define rigid bodies, assign precomputed inertial properties, or compute directly by selecting one or several volumetric meshes.
-Inertial properties are **not dynamic**, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated.
+Inertial properties are not dynamic, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this.
 
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. 
 
