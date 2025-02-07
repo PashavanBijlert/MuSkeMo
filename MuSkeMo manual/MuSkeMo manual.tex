@@ -192,7 +192,7 @@ Blender is quite stable, but it is possible for it to crash. Fortunately, by def
 
 \subsection{Default pose}
 \label{sec:defaultpose}
-Constructing a model in Blender provides the user with a lot of freedom to interactively repose model elements during model construction. However, many of the computations are only valid in the specific pose they are computed in. E.g., when computing mesh inertial properties using the inertial properties panel (\ref{sec:inproppanel}), the values reported in the global reference frame are only valid as long as the orientation and position of the mesh does not change. Similarly, object positions and orientations with respect to parent frames (\ref{sec:frame}) are only valid during export if their relative positions and orientations remain unchanged. 
+Constructing a model in Blender provides the user with a lot of freedom to interactively repose model elements during model construction. However, many of the computations are only valid in the specific pose they are computed in. For example, when computing mesh inertial properties using the inertial properties panel (\ref{sec:inproppanel}), the inertal properties in the global reference frame are only valid as long as the orientation and position (the pose) of the mesh do not change. Similarly, object positions and orientations with respect to parent frames (\ref{sec:frame}) are only valid during export if their relative positions and orientations remain unchanged. 
 
 To prevent incorrect exports, MuSkeMo keeps track of the 'default\_pose', which is the pose in which the relevant computation was performed. If the user tries to perform an operation that can only be performed in the default pose, the operation is cancelled (with an error message). In that situation, you must either reposition the model components back into the default pose before exporting, or alternatively recompute the parameters (for inertial properties and bodies, this means recomputing and reassigning the inertial properties, for other components it means detaching and reparenting the objects).
 
@@ -259,11 +259,31 @@ In this panel, you can also attach visualization geometry (eg., bone meshes) to 
 
 \subsection{Joint panel}
 
-Define joints, and assign (and remove) parent and child bodies. If you want to change a joint's position or orientation, detach the parent and child bodies first. If a parent or child body has an anatomical (local) reference frame assigned, MuSkeMo automatically computes the relative positions and orientations in these frames as well. Orientations are stored as body-fixed, XYZ-Euler angles and as quaternions. All data that are created are included during export (if local frames are not assigned, these values will be nan).
+Create new joints by typing in a unique name and pressing 'Create new joint'. To and assign a parent or child body, select the joint and the target body, and press the respective button. 
 
-It is also possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turned into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
-In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically.
+Until joints are parented, there is no 'default pose' state being tracked (see \ref{sec:defaultpose}), and the global positions and orientations are listed as NaN in the custom properties (but are exported correctly if the user wants to export unparented joints). If a parent or child body has an anatomical (local) reference frame assigned, MuSkeMo automatically computes the relative positions and orientations in these frames as well. Orientations are stored as body-fixed, XYZ-Euler angles and as quaternions. All data that are created are included during export (if local frames are not assigned, these values will be NaN).
+
+If you want to change a joint's position or orientation, detach the parent and child bodies first, or use the 'Match orientation' and 'Match position' buttons in the Joint utilities subpanel.
+
+\subsubsection*{Joint coordinate names}
+
+It is possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turned into an immobilized joint (e.g., WeldJoint in OpenSim). 
+
+\subsubsection*{Joint utilities}
+
+In this panel, there are buttons that fit geometric primitives to a selected mesh (sphere, cylinder, ellipsoid, plane). The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), go through the following steps:
+
+1) Select the target mesh
+2) Press Tab to go into 'edit mode' in Blender
+3) Select the portion of the mesh you would like to fit (easiest is to use face selection mode, and use the selection circle)
+4) press shift \+ D to duplicate the selection
+5) press P (for seParate), and then select "by selection".
+6) press Tab to go out of edit mode.
+
+You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions.
+
+It is possible to match the transformations of a joint to the fitted geometry. Child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically.
 
 \subsection{Muscle panel}
 
@@ -579,7 +599,7 @@ A joint in MuSkeMo represents the connection between two rigid bodies, allowing 
     \item \texttt{or\_in\_global\_quat}: The orientation of the joint in the global reference system, expressed as a quaternion (w, x, y, z).
 \end{itemize}
 
-These define the joint's position and orientation in the global reference frame. The position is given as a list of three floats (x, y, z) in meters. The orientation is expressed in both XYZ Euler angles (radians) and as a quaternion (w, x, y, z).
+These define the joint's position and orientation in the global reference frame. The position is given as a list of three floats (x, y, z) in meters. The orientation is expressed in both XYZ Euler angles (radians) and as a quaternion (w, x, y, z). If a joint has neither parent nor child body, the above are all set to nan, but exported correctly if the user exports Joint Data.
 
 If a \texttt{parent} or \texttt{child} body also has a local \texttt{FRAME} defined, MuSkeMo automatically computes the transformations with respect to that frame, resulting in six more paremeters:
 
@@ -600,7 +620,7 @@ Each joint also has six coordinates which can be named. These are meant to repre
     \item \texttt{coordinate\_Tz}: Translation along the z-axis
     \item \texttt{coordinate\_Rx}: Rotation along the x-axis
     \item \texttt{coordinate\_Ry}: Rotation along the y-axis
-    \item \texttt{coordinate\_Rz}: Rotation along the z-axis
+    \item \texttt{coordinate\_Rz}: Rotation along the  z-axis
 \end{itemize}
 
 The underlying object type in Blender is a UV sphere mesh. This object is essentially only for visualization purposes, but a future version of MuSkeMo may add the option to add axes as well.
