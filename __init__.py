@@ -55,7 +55,7 @@ from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_
                                 )
 
 #### joint panel
-from .scripts.joint_panel import ( CreateNewJointOperator, ReflectRightsideJointsOperator, 
+from .scripts.joint_panel import ( CreateNewJointOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,
                                       ClearParentBodyOperator,ClearChildBodyOperator,
                                       UpdateCoordinateNamesOperator,
@@ -189,7 +189,7 @@ classes = (  #Global settings panel
                                       UpdateLocationFromCOMOperator,
                                       AttachVizGeometryOperator, DetachVizGeometryOperator,
             #joint panel
-                                      CreateNewJointOperator, ReflectRightsideJointsOperator, 
+                                      CreateNewJointOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,
                                       ClearParentBodyOperator,ClearChildBodyOperator,
                                       UpdateCoordinateNamesOperator,

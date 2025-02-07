@@ -39,41 +39,14 @@ class CreateNewJointOperator(Operator):
             
         else:
             
-            self.report({'ERROR'}, "Joint with the name " + name + " already exists, please choose a different name")
-        
+            self.report({'ERROR'}, "Object with the name " + name + " already exists, please choose a different (unique) name")
+
+            
+        bpy.context.scene.muskemo.jointname = '' #reset joint name prop
         
         return {'FINISHED'}
 
 
-class ReflectRightsideJointsOperator(Operator):
-    bl_idname = "joint.reflect_rightside_joints"
-    bl_label = "Duplicates and reflects joints across XY plane if they contain '_r' in the name."
-    bl_description = "Duplicates and reflects joints across XY plane if they contain '_r' in the name."
-    
-    def execute(self, context):
-        colname = bpy.context.scene.muskemo.joint_collection
-
-        collection = bpy.data.collections[colname]
-
-
-        for obj in (obj for obj in collection.objects if '_r' in obj.name):  #for all the objects if '_r' is in the name
-            
-            if obj.name.replace('_r','_l') not in (obj.name for obj in collection.objects):  #make sure a left side doesn't already exist
-            
-            
-                new_obj = obj.copy()  #copy object
-                new_obj.data = obj.data.copy() #copy object data
-                new_obj.name = obj.name.replace('_r','_l') #rename to left
-                
-                collection.objects.link(new_obj)  #add to Muscles collection
-                
-                for point in new_obj.data.splines[0].points:   #reflect each point about z
-                    point.co = point.co*Vector((1,1,-1,1))
-                    
-                for mod in new_obj.modifiers: #loop through all modifiers
-                    mod.object = bpy.data.objects[mod.object.name.replace('_r','_l')]
-
-        return {'FINISHED'}
     
 class UpdateCoordinateNamesOperator(Operator):
     bl_idname = "joint.update_coordinate_names"
@@ -1495,9 +1468,7 @@ class VIEW3D_PT_joint_utilities_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class nami
 
         row = self.layout.row()
         
-        row = self.layout.row()
-        row.operator("joint.reflect_rightside_joints", text="Reflect right-side joints")
-
+       
         row = self.layout.row()
         row.operator("joint.fit_sphere_geometric", text="Fit a sphere (geometric)")
         row.operator("joint.fit_sphere_ls", text="Fit a sphere (least-squares)")
