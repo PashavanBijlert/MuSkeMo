@@ -21,12 +21,12 @@ PA van Bijlert. MuSkeMo: Open-source software to construct, analyze, and visuali
 # **Inertial properties panel**
 
 Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
-Inertial properties are **not dynamic**, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated.
+Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this.
 
 # **Body panel**
 
 Define rigid bodies, assign precomputed inertial properties, or compute directly by selecting one or several volumetric meshes.
-Inertial properties are **not dynamic**, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated.
+Inertial properties are not dynamic, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this.
 
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. 
 
@@ -81,7 +81,7 @@ OpenSim model geometry should either be placed in a subdirectory of the model di
 
 MuSkeMo includes a Gaitsym (2019) importer. It imports bodies, joints, muscles, and contact spheres (DampedSpring elements are treated as muscles). Muscles wrapping is currently not supported. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory. It is possible to rotate a Gaitsym model upon import.
 
-Future updates will also support Hyfydy model import.
+A MuJoCo importer is currently being developed, and future updates will also support Hyfydy model import.
 
 # **Visualization panel**
 
