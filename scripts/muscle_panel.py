@@ -108,32 +108,64 @@ class InsertMusclePointOperator(Operator):
         
         insert_after = bpy.context.scene.muskemo.insert_point_after
         
-        muscle_name = bpy.context.scene.muskemo.musclename
-        
+                
         active_obj = bpy.context.active_object  #should be the body that you want to parent the point to
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
 
-        # throw an error if no objects are selected     
-        if (len(sel_obj) < 1):
-            self.report({'ERROR'}, "Too few objects selected. Select one body to parent the muscle point to")
+         # throw an error if no objects are selected     
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select a muscle, and the target body to parent the new muscle point to. Operation cancelled")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
-        if (len(sel_obj) > 1):
-            self.report({'ERROR'}, "Too many objects selected. Select one body to parent the muscle point to")
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. Select a muscle, and the target body to parent the new muscle point to. Operation cancelled")
             return {'FINISHED'}
         
-        body = sel_obj[0]
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        # throw an error if no objects are selected     
+        if (len(muskemo_objects) < 2):
+            self.report({'ERROR'}, "One or more of the selected objects was not created by MuSkeMo. Select a muscle, and the target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}
+
+        selected_bodies = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='BODY']
+
+        # throw an error if two objects are selected     
+        if (len(selected_bodies) > 1):
+            self.report({'ERROR'}, "You selected two bodies. Select one muscle, and one target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}
+
+        # throw an error if no objects are selected     
+        if (len(selected_bodies) < 1):
+            self.report({'ERROR'}, "You didn't select a body. Select one muscle, and one target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}    
+
+        body = selected_bodies[0]
+
         body_name = body.name
 
-        if 'MuSkeMo_type' in body:
-            if 'BODY' != bpy.data.objects[body_name]['MuSkeMo_type']:
-                self.report({'ERROR'}, "Selected object '" + body_name + "' is not a BODY. Muscle point addition cancelled")
-                return {'FINISHED'} 
-        else:
-            self.report({'ERROR'}, "Selected object '" + body_name + "' was not an object created by MuSkeMo. Muscle point addition cancelled")
-            return {'FINISHED'}      
+        selected_muscles = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='MUSCLE']
 
+        # throw an error if two objects are selected     
+        if (len(selected_muscles) > 1):
+            self.report({'ERROR'}, "You selected two muscles. Select one muscle, and one target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}
+
+        # throw an error if no objects are selected     
+        if (len(selected_muscles) < 1):
+            self.report({'ERROR'}, "You didn't select a muscles. Select one muscle, and one target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}    
+
+        muscle = selected_muscles[0]
+
+        muscle_name = muscle.name  
+
+        # throw an error if insert after is bigger or equal to the length of the curve
+        if insert_after >= len(muscle.data.splines[0].points): 
+            self.report({'ERROR'}, "You are trying to add a point at the end of the curve. Use the 'Add muscle point' button for that. Operation cancelled")
+            return {'FINISHED'}
+        
 
         for obj in sel_obj:
             obj.select_set(False)
@@ -1119,12 +1151,16 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         CreateSelectedObjRow('MUSCLE', layout)
         CreateSelectedObjRow('BODY', layout)
 
-        row = self.layout.row()
-        row.label(text ='Muscle points are added at the 3D cursor location')
+
         row = self.layout.row()
         row.label(text = 'Shift + right click moves the 3D cursor to your mouse location')
         row = self.layout.row()
-        row.label(text = 'You must select a body before attempting to add a muscle point')
+        row.label(text ='Muscle points are added at the 3D cursor location')
+        row = self.layout.row()
+        row.label(text = 'You must select a body to parent the muscle point to')
+        row = self.layout.row()
+        row.label(text = 'Points can be moved in edit mode (select muscle and hit TAB)')
+
         
         
         row = self.layout.row()
