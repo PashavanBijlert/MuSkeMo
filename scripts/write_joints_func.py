@@ -1,8 +1,19 @@
 import bpy
-from mathutils import Vector
-def write_joints(context, filepath, collection_name, delimiter, number_format):
+from mathutils import (Vector, Matrix)
+def write_joints(context, filepath, collection_name, delimiter, number_format, self):
     from .euler_XYZ_body import euler_XYZbody_from_matrix
     from .quaternions import quat_from_matrix
+
+    coll = bpy.data.collections[collection_name]
+
+    for obj in coll.objects:
+        if 'default_pose' in obj: #If joints are exported without parenting they don't have a default pose
+
+            if obj.matrix_world != Matrix(obj['default_pose']):
+                self.report({'ERROR'}, "Joint '" + obj.name + "' has a parent or child assigned in a different pose than the current pose. Reset the model to the default pose, or reparent the joint. Operation cancelled")
+                return {'FINISHED'}
+
+
 
     file = open(filepath, 'w', encoding='utf-8') #create or open a file called muscle_landmarks,  "w" means it's writeable
     
@@ -24,10 +35,7 @@ def write_joints(context, filepath, collection_name, delimiter, number_format):
     file.write('\n') 
     
 
-    coll = bpy.data.collections[collection_name]
-    
-
-    joints = [i for i in bpy.data.collections[collection_name].objects] #make sure each contact is in the collection named 'joint centers'
+    joints = [i for i in coll.objects] #make sure each contact is in the collection named 'joint centers'
     
     for u in range(len(joints)): #for each joint
         

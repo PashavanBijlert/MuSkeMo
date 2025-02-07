@@ -192,7 +192,8 @@ class ExportJointsOperator(Operator, ExportHelperCustom): #inherits from ExportH
                 self.report({'WARNING'}, "Joint with the name '" + joint.name + "' has no parent body assigned. If this is intended as the root joint, manually type in 'ground' for OpenSim or 'World' for Gaitsym (without quotation marks)")
                 
 
-        write_joints(context, self.filepath, joint_colname, delimiter, self.number_format)
+
+        write_joints(context, self.filepath, joint_colname, delimiter, self.number_format, self)
         return {'FINISHED'}
 
 ## export muscles

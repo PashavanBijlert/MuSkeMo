@@ -159,6 +159,9 @@ def create_joint(name, radius, is_global = True, collection_name = 'Joint center
 
         if pos_in_global !=[nan]*3:  #if a global position is supplied
             obj.matrix_world.translation = pos_in_global    
+
+
+
         
         if parent_body in bpy.data.objects: #if the parent body exists
             parent_body_obj = bpy.data.objects[parent_body]
@@ -168,6 +171,8 @@ def create_joint(name, radius, is_global = True, collection_name = 'Joint center
                 obj.parent = parent_body_obj
                 obj.matrix_parent_inverse = parent_body_obj.matrix_world.inverted()                      
 
+                obj['default_pose'] = obj.matrix_world #### keep track of the default pose of the object
+                
 
         
         if child_body in bpy.data.objects: #if the child body exists
@@ -178,6 +183,10 @@ def create_joint(name, radius, is_global = True, collection_name = 'Joint center
                 child_body_obj.parent = obj
                 child_body_obj.matrix_parent_inverse = obj.matrix_world.inverted()
 
+                if 'default_pose' not in obj: #if it wasn't created during parent object setting, set it here
+                    obj['default_pose'] = obj.matrix_world #### keep track of the default pose of the object
+                
+                
         #if local frame is assigned, then you can assign the local orientation and position
         #otherwise give warning that it's ignored
     

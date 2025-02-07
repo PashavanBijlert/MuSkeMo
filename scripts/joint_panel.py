@@ -50,40 +50,38 @@ class CreateNewJointOperator(Operator):
     
 class UpdateCoordinateNamesOperator(Operator):
     bl_idname = "joint.update_coordinate_names"
-    bl_label = "Updates the display location of the body, using the COM property that was previously assigned (useful if you manually edit the COM property)"
-    bl_description = "Updates the display location of the body, using the COM property that was previously assigned (useful if you manually edit the COM property)"
+    bl_label = "Updates the coordinate names of the joint. Type the desired coordinate names into fields, select the target joint, then press the button"
+    bl_description = "Updates the coordinate names of the joint. Type the desired coordinate names into fields, select the target joint, then press the button"
     
     def execute(self, context):
         
         
-        joint_name = bpy.context.scene.muskemo.jointname
-        
-        
-        try: bpy.data.objects[joint_name]  #check if the body exists
-        
-        except:  #throw an error if it doesn't exist
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
+        sel_obj = bpy.context.selected_objects  
             
-        else:
+        #ensure that only the relevant body is selected, or no bodies are selected. The operations will use the user input body name, so this prevents that the user selects a different body and expects the button to operate on that body
+        if (len(sel_obj) != 1):  #if anything else than one joint is selected
+            self.report({'ERROR'}, "Incorrect number of objects selected. Please select only one target joint. Operation cancelled.")
+            return {'FINISHED'}
+        
+
+        target_obj = sel_obj[0]
+
+        if 'MuSkeMo_type' not in target_obj:
+            self.report({'ERROR'}, "Object with the name '" + target_obj.name + "' was not created by MuSkeMo. This operator only works on joints created by MuSkeMo. Operation cancelled.")
+            return {'FINISHED'}
             
-            sel_obj = bpy.context.selected_objects  
-            
-            #ensure that only the relevant body is selected, or no bodies are selected. The operations will use the user input body name, so this prevents that the user selects a different body and expects the button to operate on that body
-            if (len(sel_obj) == 0) or ((len(sel_obj) == 1) and sel_obj[0].name == joint_name):  #if no objects are selected, or the only selected object is also the correct body
+        if target_obj['MuSkeMo_type']!= 'JOINT':
+            self.report({'ERROR'}, "Object with the name '" + target_obj.name + "' is not a JOINT. This operator only works on joints created by MuSkeMo. Operation cancelled.")
+            return {'FINISHED'}
+        
+        target_obj['coordinate_Tx']=bpy.context.scene.muskemo.coor_Tx
+        target_obj['coordinate_Ty']=bpy.context.scene.muskemo.coor_Ty
+        target_obj['coordinate_Tz']=bpy.context.scene.muskemo.coor_Tz
+        target_obj['coordinate_Rx']=bpy.context.scene.muskemo.coor_Rx
+        target_obj['coordinate_Ry']=bpy.context.scene.muskemo.coor_Ry
+        target_obj['coordinate_Rz']=bpy.context.scene.muskemo.coor_Rz
                 
-                obj = bpy.data.objects[joint_name]
-                
-                obj['coordinate_Tx']=bpy.context.scene.muskemo.coor_Tx
-                obj['coordinate_Ty']=bpy.context.scene.muskemo.coor_Ty
-                obj['coordinate_Tz']=bpy.context.scene.muskemo.coor_Tz
-                obj['coordinate_Rx']=bpy.context.scene.muskemo.coor_Rx
-                obj['coordinate_Ry']=bpy.context.scene.muskemo.coor_Ry
-                obj['coordinate_Rz']=bpy.context.scene.muskemo.coor_Rz
-                  
-            
-            else:
-                self.report({'ERROR'}, "Joint with the name '" + joint_name + "' is not the (only) selected joint. Operation cancelled, please either deselect all objects or only select the '" + joint_name + "' joint. This button operates on the joint that corresponds to the user (text) input joint name")
-        
+       
         return {'FINISHED'}    
     
 class AssignParentBodyOperator(Operator):
@@ -93,22 +91,9 @@ class AssignParentBodyOperator(Operator):
    
     def execute(self, context):
         
-        joint_name = bpy.context.scene.muskemo.jointname
-        
-        active_obj = bpy.context.active_object  #should be the joint
+              
         sel_obj = bpy.context.selected_objects  #should be the parent body and the joint
-        
-        colname = bpy.context.scene.muskemo.joint_collection
-        bodycolname = bpy.context.scene.muskemo.body_collection
-        try: bpy.data.objects[joint_name]  #check if the body exists
-        
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
-        
-        joint = bpy.data.objects[joint_name]
-        
+                    
         # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
             self.report({'ERROR'}, "Too few objects selected. Select the parent body and the target joint.")
@@ -119,13 +104,23 @@ class AssignParentBodyOperator(Operator):
             self.report({'ERROR'}, "Too many objects selected. Select the parent body and the target joint.")
             return {'FINISHED'}
         
-        if joint not in sel_obj:
-            self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        joints = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='JOINT'] #get the joint
+
+        
+        if len(joints)!=1:
+            self.report({'ERROR'}, "Incorrect number of joints selected. Select one target joint and one parent body. Operation cancelled.")
             return {'FINISHED'}
         
-        parent_body = [s_obj for s_obj in sel_obj if s_obj.name not in bpy.data.collections[colname].objects][0]  #get the object that's not the joint
-        
-        
+        joint = joints[0]
+                
+        parent_body = [obj for obj in muskemo_objects if obj!=joint][0]  #get the object that's not the joint
+
+        if parent_body['MuSkeMo_type']!= 'BODY':
+            self.report({'ERROR'}, "You didn't select a target body. Select one target joint and one parent body. Operation cancelled")
+            return {'FINISHED'}
         
         try:
             joint.children[0]
@@ -136,12 +131,17 @@ class AssignParentBodyOperator(Operator):
                 self.report({'ERROR'}, "You are attempting to assign body '" + parent_body.name + "' as the parent body, but it is already the child body. Operation cancelled.")
                 return {'FINISHED'}
 
-
-        
-        if parent_body.name not in bpy.data.collections[bodycolname].objects:
-            self.report({'ERROR'}, "The parent body is not in the '" + bodycolname + "' collection. Make sure one of the two selected objects is a 'Body' as created by the bodies panel")
+        if joint['parent_body'] != 'not_assigned':
+            self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it already has a parent body. Unparent it first. Operation cancelled.")
             return {'FINISHED'}
-            
+           
+
+        if 'default_pose' in joint:
+
+            if Matrix(joint['default_pose'])!= joint.matrix_world:
+                self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it's not in its default pose. Either reposition the joint, or clear its current child body. Operation cancelled.")
+                return {'FINISHED'}
+
         ### if none of the previous scenarios triggered an error, set the parent body
         
         joint.parent = parent_body
@@ -150,6 +150,8 @@ class AssignParentBodyOperator(Operator):
         joint.matrix_parent_inverse = parent_body.matrix_world.inverted()
 
         joint['parent_body'] = parent_body.name
+
+        joint['default_pose'] = joint.matrix_world #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
 
         if parent_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
             
@@ -176,6 +178,8 @@ class AssignParentBodyOperator(Operator):
             joint['pos_in_parent_frame'] = joint_pos_in_parent
             joint['or_in_parent_frame_XYZeuler'] = joint_or_in_parent_euler
             joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat 
+
+
             
 
         return {'FINISHED'}
@@ -187,23 +191,9 @@ class AssignChildBodyOperator(Operator):
    
     def execute(self, context):
         
-        joint_name = bpy.context.scene.muskemo.jointname
-        
-        colname = bpy.context.scene.muskemo.joint_collection
-        bodycolname = bpy.context.scene.muskemo.body_collection
 
-        active_obj = bpy.context.active_object  #should be the joint
         sel_obj = bpy.context.selected_objects  #should be the parent body and the joint
-        
-        
-        try: bpy.data.objects[joint_name]  #check if the body exists
-        
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
-        joint = bpy.data.objects[joint_name]
-        
+                    
         # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
             self.report({'ERROR'}, "Too few objects selected. Select the child body and the target joint.")
@@ -214,19 +204,30 @@ class AssignChildBodyOperator(Operator):
             self.report({'ERROR'}, "Too many objects selected. Select the child body and the target joint.")
             return {'FINISHED'}
         
-        if joint not in sel_obj:
-            self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
-            return {'FINISHED'}
-        
-        child_body = [s_obj for s_obj in sel_obj if s_obj.name not in bpy.data.collections[colname].objects][0]  #get the object that's not the joint
-        
-        
-        if child_body.name not in bpy.data.collections[bodycolname].objects:
-            self.report({'ERROR'}, "The child body is not in the '" + bodycolname + "' collection. Make sure one of the two selected objects is a 'Body' as created by the bodies panel")
-            return {'FINISHED'}
 
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        joints = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='JOINT'] #get the joint
+
+        
+        if len(joints)!=1:
+            self.report({'ERROR'}, "Incorrect number of joints selected. Select one target joint and one child body. Operation cancelled.")
+            return {'FINISHED'}
+        
+        joint = joints[0]
+                
+        child_body = [obj for obj in muskemo_objects if obj!=joint][0]  #get the object that's not the joint
+
+        if child_body['MuSkeMo_type']!= 'BODY':
+            self.report({'ERROR'}, "You didn't select a body. Select one target joint and one child body. Operation cancelled")
+            return {'FINISHED'}
+        
+        if joint['child_body'] != 'not_assigned':
+            self.report({'ERROR'}, "You are attempting to assign a child body to joint '" + joint.name + "', but it already has a child body. Unparent it first. Operation cancelled.")
+            return {'FINISHED'}
+           
         if len(joint.children)>0:
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' already has a child body. Clear it first, before assigning a new one")
+            self.report({'ERROR'}, "Joint with the name '" + joint.name + "' already has a child body. Clear it first, before assigning a new one")
             return {'FINISHED'}
         
         if joint.parent == child_body:
@@ -234,7 +235,15 @@ class AssignChildBodyOperator(Operator):
             return {'FINISHED'}
 
 
-        ### if none of the previous scenarios triggered an error, set the parent body
+        if 'default_pose' in joint:
+
+            if Matrix(joint['default_pose'])!= joint.matrix_world:
+                self.report({'ERROR'}, "You are attempting to assign a child body to joint '" + joint.name + "', but the joint is not in its default pose. Either reposition the joint, or clear its current parent body. Operation cancelled.")
+                return {'FINISHED'}
+
+             
+
+        ### if none of the previous scenarios triggered an error, set the child body
         
         child_body.parent = joint
         
@@ -243,6 +252,9 @@ class AssignChildBodyOperator(Operator):
         child_body.matrix_parent_inverse = joint.matrix_world.inverted()
 
         joint['child_body'] = child_body.name
+
+        joint['default_pose'] = joint.matrix_world #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
+
 
         if child_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in child
             ## import functions euler angles and quaternions from matrix
@@ -279,49 +291,33 @@ class ClearParentBodyOperator(Operator):
     
     def execute(self, context):
         
-        joint_name = bpy.context.scene.muskemo.jointname
-        
-        colname = bpy.context.scene.muskemo.joint_collection
-
-
-        active_obj = bpy.context.active_object  #should be the joint
         sel_obj = bpy.context.selected_objects  #should be the only the joint
-        
-        
-        try: bpy.data.objects[joint_name]  #check if the body exists
-        
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
-        joint = bpy.data.objects[joint_name]
-
-        try: joint.parent.name
-        
-        except: #throw an error if the joint has no parent
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not have a parent body")
-            return {'FINISHED'}
         
         # throw an error if no objects are selected     
         if (len(sel_obj) == 0):
-            self.report({'ERROR'}, "No joint selected. Select the target joint and try again.")
+            self.report({'ERROR'}, "No joint selected. Select the target joint and try again. Operation cancelled")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
         if (len(sel_obj) > 1):
-            self.report({'ERROR'}, "Too many objects selected. Only select the target joint.")
+            self.report({'ERROR'}, "Too many objects selected. Only select the target joint. Operation cancelled")
             return {'FINISHED'}
         
-        if joint.name != active_obj.name:
-            self.report({'ERROR'}, "Selected joint and joint_name (text input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+        joint = sel_obj[0]
+
+        if 'MuSkeMo_type' not in joint:
+            self.report({'ERROR'}, "Selected object '" + joint.name + "' was not created by MuSkeMo. Only select the target joint. Operation cancelled")
             return {'FINISHED'}
         
-        if joint.name not in bpy.data.collections[colname].objects:
-            self.report({'ERROR'}, "Selected object is not in the '" + colname + "' collection. Make sure you have selected a joint in that collection.")
+        if joint['MuSkeMo_type'] != 'JOINT':
+            self.report({'ERROR'}, "Selected object '" + joint.name + "' is not a joint. Select the target joint. Operation cancelled")
+            return {'FINISHED'}
+         
+        if joint['parent_body'] == 'not_assigned':
+            self.report({'ERROR'}, "Joint with the name '" + joint.name + "' does not have a parent body. Operation cancelled")
             return {'FINISHED'}
         
         
-                
         ### if none of the previous scenarios triggered an error, clear the parent body
         
         
@@ -336,7 +332,9 @@ class ClearParentBodyOperator(Operator):
         joint['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
         joint['or_in_parent_frame_quat'] = [nan, nan, nan, nan]
 
-
+        ### If the joint is unparented after this, stop tracking default pose
+        if joint['child_body']== 'not_assigned' and 'default_pose' in joint:
+            del joint['default_pose']
 
         return {'FINISHED'}
     
@@ -348,46 +346,35 @@ class ClearChildBodyOperator(Operator):
     
     def execute(self, context):
         
-        joint_name = bpy.context.scene.muskemo.jointname
-        colname = bpy.context.scene.muskemo.joint_collection
-
-        active_obj = bpy.context.active_object  #should be the joint
+                       
         sel_obj = bpy.context.selected_objects  #should be the only the joint
-        
-        
-        try: bpy.data.objects[joint_name]  #check if the body exists
-        
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
-
-        joint = bpy.data.objects[joint_name]
-        if len(joint.children)==0:
-            self.report({'ERROR'}, "Joint with the name '" + joint_name + "' does not have a child body")
-            return {'FINISHED'}
-
         
         # throw an error if no objects are selected     
         if (len(sel_obj) == 0):
-            self.report({'ERROR'}, "No joint selected. Select the target joint and try again.")
+            self.report({'ERROR'}, "No joint selected. Select the target joint and try again. Operation cancelled")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
         if (len(sel_obj) > 1):
-            self.report({'ERROR'}, "Too many objects selected. Only select the target joint.")
+            self.report({'ERROR'}, "Too many objects selected. Only select the target joint. Operation cancelled")
             return {'FINISHED'}
         
-        if joint.name != active_obj.name:
-            self.report({'ERROR'}, "Selected joint and joint_name (text input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+        joint = sel_obj[0]
+
+        if 'MuSkeMo_type' not in joint:
+            self.report({'ERROR'}, "Selected object '" + joint.name + "' was not created by MuSkeMo. Only select the target joint. Operation cancelled")
             return {'FINISHED'}
         
-        if joint.name not in bpy.data.collections[colname].objects:
-            self.report({'ERROR'}, "Selected object is not in the '" + colname + "' collection. Make sure you have selected a joint in that collection.")
+        if joint['MuSkeMo_type'] != 'JOINT':
+            self.report({'ERROR'}, "Selected object '" + joint.name + "' is not a joint. Select the target joint. Operation cancelled")
+            return {'FINISHED'}
+         
+        if joint['child_body'] == 'not_assigned':
+            self.report({'ERROR'}, "Joint with the name '" + joint.name + "' does not have a child body. Operation cancelled")
             return {'FINISHED'}
         
         
-                
+                       
         ### if none of the previous scenarios triggered an error, clear the child body
         
         child_body = joint.children[0]
@@ -400,6 +387,10 @@ class ClearChildBodyOperator(Operator):
         joint['pos_in_child_frame'] = [nan, nan, nan]
         joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
         joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]
+
+        ### If the joint is unparented after this, stop tracking default pose
+        if joint['parent_body']== 'not_assigned' and 'default_pose' in joint:
+            del joint['default_pose']
         
         return {'FINISHED'}        
     
@@ -1102,28 +1093,35 @@ class MatchOrientationOperator(Operator):
         
     def execute(self, context):
         
-        joint_name = bpy.context.scene.muskemo.jointname
-
-
-        active_obj = bpy.context.active_object  #should be the joint
+        
         sel_obj = bpy.context.selected_objects  #should be the only the joint
 
          # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
-            self.report({'ERROR'}, "Too few objects selected. Select one fitted geometry, and one target joint")
+            self.report({'ERROR'}, "Too few objects selected. Select one joint and one (non-joint) object.")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
         if (len(sel_obj) > 2):
-            self.report({'ERROR'}, "Too many objects selected. Select one fitted geometry, and one target joint")
+            self.report({'ERROR'}, "Too many objects selected. Select one joint and one (non-joint) object.")
             return {'FINISHED'}
-        joint = bpy.data.objects[joint_name]
+        
+        muskemo_objects = [ob for ob in sel_obj if 'MuSkeMo_type' in ob]
 
-        if joint not in sel_obj:
-            self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+        joint_objects = [ob for ob in muskemo_objects if ob['MuSkeMo_type'] == 'JOINT']
+
+        # throw an error if no joints are selected     
+        if (len(joint_objects) < 1):
+            self.report({'ERROR'}, "You didn't select a joint. Select one joint and one (non-joint) object.")
+            return {'FINISHED'}
+        
+        # throw an error if 2 joints are selected     
+        if (len(joint_objects) > 1):
+            self.report({'ERROR'}, "You selected more than one joint. Select one joint and one (non-joint) object.")
             return {'FINISHED'}
 
-        target_obj = [ob for ob in sel_obj if ob.name != joint_name][0]
+        joint = joint_objects[0]
+        target_obj = [ob for ob in sel_obj if ob != joint][0]
 
         child_body = False #gets overwritten if there is a child
 
@@ -1217,6 +1215,10 @@ class MatchOrientationOperator(Operator):
                 joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat
          
 
+        #if the joint has a default pose, update it.
+        if 'default_pose' in joint:
+            joint['default_pose'] = joint.matrix_world
+
         return {'FINISHED'}
 
 class MatchPositionOperator(Operator):
@@ -1226,28 +1228,36 @@ class MatchPositionOperator(Operator):
         
     def execute(self, context):
         
-        joint_name = bpy.context.scene.muskemo.jointname
-
-
-        active_obj = bpy.context.active_object  #should be the joint
+       
         sel_obj = bpy.context.selected_objects  #should be the only the joint
 
          # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
-            self.report({'ERROR'}, "Too few objects selected. Select one fitted geometry, and one target joint")
+            self.report({'ERROR'}, "Too few objects selected. Select one joint and one (non-joint) object.")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
         if (len(sel_obj) > 2):
-            self.report({'ERROR'}, "Too many objects selected. Select one fitted geometry, and one target joint")
+            self.report({'ERROR'}, "Too many objects selected. Select one joint and one (non-joint) object.")
             return {'FINISHED'}
-        joint = bpy.data.objects[joint_name]
+        
+        muskemo_objects = [ob for ob in sel_obj if 'MuSkeMo_type' in ob]
 
-        if joint not in sel_obj:
-            self.report({'ERROR'}, "Neither of the selected objects is the target joint. Selected joint and joint_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+        joint_objects = [ob for ob in muskemo_objects if ob['MuSkeMo_type'] == 'JOINT']
+
+        # throw an error if no joints are selected     
+        if (len(joint_objects) < 1):
+            self.report({'ERROR'}, "You didn't select a joint. Select one joint and one (non-joint) object.")
+            return {'FINISHED'}
+        
+        # throw an error if 2 joints are selected     
+        if (len(joint_objects) > 1):
+            self.report({'ERROR'}, "You selected more than one joint. Select one joint and one (non-joint) object.")
             return {'FINISHED'}
 
-        target_obj = [ob for ob in sel_obj if ob.name != joint_name][0]
+        joint = joint_objects[0]
+        target_obj = [ob for ob in sel_obj if ob != joint][0]
+
 
 
         child_body = False #gets overwritten if there is a child
@@ -1336,7 +1346,11 @@ class MatchPositionOperator(Operator):
                 joint['pos_in_parent_frame'] = joint_pos_in_parent
                 joint['or_in_parent_frame_XYZeuler'] = joint_or_in_parent_euler
                 joint['or_in_parent_frame_quat'] = joint_or_in_parent_quat 
-                
+
+        #if the joint has a default pose, update it.
+        if 'default_pose' in joint:
+            joint['default_pose'] = joint.matrix_world
+        
 
         return {'FINISHED'}        
 
@@ -1482,6 +1496,12 @@ class VIEW3D_PT_joint_utilities_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class nami
         row = self.layout.row()
         row.operator("joint.fit_plane", text="Fit a plane")
 
+
+        ### selected objects that are not joints
+
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('NOTJOINT', layout)
         row = self.layout.row()
         row.operator("joint.match_position", text="Match position")
         row.operator("joint.match_orientation", text="Match orientation")
