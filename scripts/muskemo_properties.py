@@ -183,7 +183,14 @@ class MuSkeMoProperties(PropertyGroup):
         default = False,
     )
 
+### muscle panel extra tooltips
 
+
+    show_muscle_tooltips: BoolProperty(
+        name = 'Show Muscle Tooltips',
+        description = 'Press this button to display extra tooltips related to muscle creation',
+        default=True,
+    )
 
 # moment arms subpanel
 

@@ -16,10 +16,22 @@ import time
 from .. import VIEW3D_PT_MuSkeMo
 
 
+
+class CreateNewMuscleOperator(Operator):
+    bl_idname = "muscle.create_new_muscle"
+    bl_label = "Creates a new muscle, with a single point the 3D cursor location. Select the body to parent the new point to, then press the button."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Creates a new muscle, with a single point the 3D cursor location. Select the body to parent the new point to, then press the button."
+    
+    def execute(self, context):
+
+        
+        return {'FINISHED'}
+
+
 class AddMusclepointOperator(Operator):
     bl_idname = "muscle.add_muscle_point"
-    bl_label = "Adds a viapoint to the muscle (or creates a new muscle) at the 3D cursor location"  #not sure what bl_label does, bl_description gives a hover tooltip
-    bl_description = "Adds a viapoint to the muscle (or creates a new muscle) at the 3D cursor location"
+    bl_label = "Adds a viapoint to the muscle selected muscle at the 3D cursor location. Select the target muscle, and a body to parent the new point to, then press the button."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Adds a viapoint to the muscle selected muscle at the 3D cursor location. Select the target muscle, and a body to parent the new point to, then press the button."
     
     def execute(self, context):
 
@@ -1151,17 +1163,23 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         CreateSelectedObjRow('MUSCLE', layout)
         CreateSelectedObjRow('BODY', layout)
 
+        # Toggle button
+        layout.prop(muskemo, "show_muscle_tooltips", text="Show Muscle Tooltips")
 
-        row = self.layout.row()
-        row.label(text = 'Shift + right click moves the 3D cursor to your mouse location')
-        row = self.layout.row()
-        row.label(text ='Muscle points are added at the 3D cursor location')
-        row = self.layout.row()
-        row.label(text = 'You must select a body to parent the muscle point to')
-        row = self.layout.row()
-        row.label(text = 'Points can be moved in edit mode (select muscle and hit TAB)')
+        if muskemo.show_muscle_tooltips:
+            box = layout.box()
+            
+            
+            row  = box.row()
+            row.label(text = 'Shift + right click moves the 3D cursor to your mouse location')
+            row  = box.row()
+            row.label(text ='Muscle points are added at the 3D cursor location')
+            row  = box.row()
+            row.label(text = 'You must select a body to parent the muscle point to')
+            row  = box.row()
+            row.label(text = 'Points can be moved in edit mode (select muscle and hit TAB)')
+            
 
-        
         
         row = self.layout.row()
         split = row.split(factor=1/2)
@@ -1169,12 +1187,9 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         split.prop(muskemo, "musclename", text = "")
         
         row = self.layout.row()
-        split = row.split(factor=1/2)
-        split.label(text = "Muscle Collection")
-        split.prop(muskemo, "muscle_collection", text = "")
+        row.operator("muscle.create_new_muscle", text="Create new muscle")
 
         row = self.layout.row()
-
         row.operator("muscle.add_muscle_point", text="Add muscle point")
         
         self.layout.row()
@@ -1193,6 +1208,12 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         
         row = self.layout.row()
         row.operator("muscle.add_live_length_viewer", text = "View length in realtime")
+
+        row = self.layout.row()
+        split = row.split(factor=1/2)
+        split.label(text = "Muscle Collection")
+        split.prop(muskemo, "muscle_collection", text = "")
+
 
 
         

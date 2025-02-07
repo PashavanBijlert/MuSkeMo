@@ -68,7 +68,7 @@ from .scripts.joint_panel import ( CreateNewJointOperator,
                                       )
 
 #### muscle panel
-from .scripts.muscle_panel import (AddMusclepointOperator, 
+from .scripts.muscle_panel import (CreateNewMuscleOperator,AddMusclepointOperator, 
                                       InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                       CreateWrappingGeometryOperator, 
                                       AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
@@ -200,7 +200,7 @@ classes = (  #Global settings panel
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 
-                                    AddMusclepointOperator, 
+                                    CreateNewMuscleOperator, AddMusclepointOperator, 
                                     InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
                                     CreateWrappingGeometryOperator,
                                     AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
