@@ -287,15 +287,17 @@ It is possible to match the transformations of a joint to the fitted geometry. C
 
 \subsection{Muscle panel}
 
-Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies before creating muscles). Muscles points are added to whatever muscle name is currently active in the panel, and muscles are added to the user-designated "Muscles" collection.
+In this panel, you can define path-point muscles, view their lengths in realtime, analyze moment arms, and assign wrapping. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies before creating muscles). New muscle points are always attached to the selected body, and muscles are placed in the user-designated "Muscles" collection. New muscles points are always added to the 3D cursor location. Press shift + right mouse button to reposition the 3D cursor. 
 
-\subsubsection{Adding muscle points}
+\subsubsection{Creating a muscle and adding points}
 
-To add a point to the end of the muscle (or to create a new muscle), type in the muscle name, and select the target body. Press shift + right mouse button to position the 3D cursor at the desired location in 3D space, and then press "Add muscle point". Muscle points are added to the 3D cursor location.
-You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB", then select the relevant point and press "G" to move it around). If the parent bodies are repositioned, you must delete and redraw the muscles.
+To create a new muscle, type a unique (unused) name in the text box, select a body, place the 3D cursor at the desired location, and press "Create new muscle". For each subsqueten muscle points, select both the muscle and the target body, reposition the 3D cursor, and press "Add muscle point".
 
-\subsubsection{Inserting muscle points}
+\textbf{Important:} MuSkeMo creates muscles using Blender's curves, and automatically hooks each point to the target body (see \ref{sec:muscle}). It is impossible to reposition the whole muscle, it can only be repositioned one muscle at a time. To do this, select the muscle, and press "TAB" on your keyboard to go into \href{https://docs.blender.org/manual/en/latest/editors/3dview/modes.html}{EDIT mode}. In edit mode, you can select individual points and move them around by hitting G. Once you are satisfied, you can press TAB again to go out of edit mode.
+
 It is possible to insert muscle points (instead of adding them at the end). To insert a point, select the point index after which you would like to insert a point (starting at 1), and press "Insert muscle point".
+
+These instructions are also summarized in a "Muscle tooltips" box which can be hidden from view by deselecting the tick box.
 
 
 \subsubsection{Visualization radius}

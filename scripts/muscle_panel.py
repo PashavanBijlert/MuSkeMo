@@ -382,13 +382,10 @@ class AssignWrapGeomParentOperator(Operator):
    
     def execute(self, context):
         
-                
-       
         sel_obj = bpy.context.selected_objects  #should be the parent body and the wrap
         
         
-        
-                
+              
         # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
             self.report({'ERROR'}, "Too few objects selected. Select the parent body and the target wrapping geometry.")
