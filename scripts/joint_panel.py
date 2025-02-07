@@ -1390,9 +1390,6 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         from .selected_objects_panel_row_func import CreateSelectedObjRow
 
         CreateSelectedObjRow('JOINT', layout)
-        CreateSelectedObjRow('BODY', layout)
-
-
         ###
         
         ## user input joint name    
@@ -1401,6 +1398,12 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         split.label(text = "Joint Name")
         split.prop(muskemo, "jointname", text = "")
         
+
+        ## Create new joint
+        row = layout.row()
+        row.label(text ="Joint centers are initially placed in the world origin")
+        row = self.layout.row()
+        row.operator("joint.create_new_joint", text="Create new joint")
         
         row = self.layout.row()
         split = row.split(factor=1/2)
@@ -1411,14 +1414,12 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         row = self.layout.row()
 
 
-        row.label(text ="Joint centers are initially placed in the world origin")
-                
-        ## Create new joint
-        row = self.layout.row()
-        row.operator("joint.create_new_joint", text="Create new joint")
+        
         row = self.layout.row()
         row = self.layout.row()
 
+
+        CreateSelectedObjRow('BODY', layout)
         ## assign or clear parent and child
         row = self.layout.row()
         row.operator("joint.assign_parent_body", text="Assign parent body")

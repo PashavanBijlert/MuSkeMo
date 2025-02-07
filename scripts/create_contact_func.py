@@ -17,7 +17,7 @@ def create_contact(name, radius, collection_name,
         bpy.context.scene.collection.children.link(coll)     #add it to the scene
     
     #Make sure the "contacts" collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
+    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
 
 
     bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, enter_editmode=False, align='WORLD', location = (0,0,0)) #create a sphere
@@ -68,6 +68,8 @@ def create_contact(name, radius, collection_name,
 
     mat = bpy.data.materials[matname]
     obj.data.materials.append(mat)
+
+    
 
     ### viewport display color
 

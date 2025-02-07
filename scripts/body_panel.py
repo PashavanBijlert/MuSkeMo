@@ -48,7 +48,7 @@ class CreateNewBodyOperator(Operator):
         
         else: #if it already exists, throw an error
             
-            self.report({'ERROR'}, "Body with the name " + name + " already exists, please choose a different name")
+            self.report({'ERROR'}, "Object with the name " + name + " already exists, please choose a different (unique) name")
         
         
 
@@ -588,14 +588,19 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
 
         ## user input body name    
         row = self.layout.row()
-        split = row.split(factor=1/3)
+        split = row.split(factor=1/2)
         split.label(text = "Body Name:")
         ## Create new body
-        split = split.split(factor = 1/2)
+        # split = split.split(factor = 1/2)
         split.prop(muskemo, "bodyname", text = "")
-        split.operator("body.create_new_body", text="Create new body")
+        row = layout.row()
+        row.operator("body.create_new_body", text="Create new body")
+        row = self.layout.row()
+        row.prop(muskemo, "axes_size")
         
         ## body collection
+        row = self.layout.row()
+        row = self.layout.row()
         row = self.layout.row()
         split = row.split(factor=1/2)
         split.label(text = "Body collection:")
@@ -604,8 +609,7 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
 
 
        
-        row = self.layout.row()
-        row.prop(muskemo, "axes_size")
+        
              
         row = self.layout.row()
                    
@@ -614,7 +618,7 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         
         row = self.layout.row()
         row = self.layout.row()
-        row.label(text = "Source objects (Geometry) with precomputed inertial properties")
+        row.label(text = "Source object meshes with precomputed inertial properties")
         CreateSelectedObjRow('GEOMETRY_withdensity', layout)
 
                  

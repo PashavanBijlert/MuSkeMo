@@ -25,7 +25,7 @@ class CreateContactOperator(Operator):
             return {'FINISHED'}
 
         if name in bpy.data.objects: #if the object name already exists
-            self.report({'ERROR'}, "Object with the name '" + name + "' already exists. Choose a unique name. Operation aborted")
+            self.report({'ERROR'}, "Object with the name '" + name + "' already exists. Choose a different (unique) name. Operation aborted")
             return {'FINISHED'}
 
 
@@ -189,11 +189,6 @@ class VIEW3D_PT_contact_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convent
 
         CreateSelectedObjRow('CONTACT', layout)
         
-        
-        row = self.layout.row()
-        split = row.split(factor=0.5)
-        split.label(text="Contact Collection")
-        split.prop(muskemo, "contact_collection", text="")
 
         # Second row for contact name
         row = self.layout.row()
@@ -204,7 +199,19 @@ class VIEW3D_PT_contact_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convent
         
         row = self.layout.row()
         row.operator("contact.create_contact", text = 'Create contact sphere')
+        
 
+
+        row = self.layout.row()
+        split = row.split(factor=0.5)
+        split.label(text="Contact Collection")
+        split.prop(muskemo, "contact_collection", text="")
+
+       
+
+        row = self.layout.row()
+        CreateSelectedObjRow('BODY', layout)
+        row = self.layout.row()
         row = self.layout.row()
         row.operator("contact.assign_parent_body", text = 'Assign parent body')
 
