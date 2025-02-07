@@ -23,7 +23,71 @@ class CreateNewMuscleOperator(Operator):
     bl_description = "Creates a new muscle, with a single point the 3D cursor location. Select the body to parent the new point to, then press the button."
     
     def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
 
+        sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
+        colname = muskemo.muscle_collection #the collection in which the muscle should be placed
+        active_obj =  bpy.context.view_layer.objects.active
+        
+        muscle_name = muskemo.musclename
+
+        #error if no name
+        if not muscle_name:
+            self.report({'ERROR'}, "You forgot to enter a name for the new muscle. Operation cancelled")
+            return {'FINISHED'}
+        #error if non unique name
+        if muscle_name in bpy.data.objects:
+            self.report({'ERROR'}, "An object with the name '" + muscle_name + "' already exists in the scene. Please choose a different (unique) name for the new muscle. Operation cancelled")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "No objects selected. Select the target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Only select the target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}
+        
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        # throw an error if no objects are selected     
+        if (len(muskemo_objects) < 1):
+            self.report({'ERROR'}, "The selected object was not created by MuSkeMo. Select the target body to parent the new muscle point to and try again. Operation cancelled")
+            return {'FINISHED'}
+
+        selected_bodies = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='BODY']
+
+        
+        # throw an error if no objects are selected     
+        if (len(selected_bodies) < 1):
+            self.report({'ERROR'}, "You didn't select a body. Select one muscle, and one target body to parent the new muscle point to. Operation cancelled")
+            return {'FINISHED'}    
+
+        body = selected_bodies[0]
+
+        body_name = body.name
+
+        
+        for obj in sel_obj:
+            obj.select_set(False)
+
+        from .create_muscle_func import create_muscle  #import muscle creation function
+
+        point_position = bpy.context.scene.cursor.location
+        create_muscle(muscle_name = muscle_name, point_position = point_position, 
+                      collection_name=colname,
+                          body_name = body_name)
+        
+               
+        # restore saved state of selection
+        bpy.context.view_layer.objects.active = active_obj
+        for obj in sel_obj:
+            obj.select_set(True)
+
+        muskemo.musclename = '' #reset the muscle name after creation    
         
         return {'FINISHED'}
 
@@ -1178,7 +1242,7 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
             row.label(text = 'You must select a body to parent the muscle point to')
             row  = box.row()
             row.label(text = 'Points can be moved in edit mode (select muscle and hit TAB)')
-            
+
 
         
         row = self.layout.row()
