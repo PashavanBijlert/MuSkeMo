@@ -1,11 +1,19 @@
 import bpy
-from mathutils import Vector
-def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type, number_format):  #write location and parent body. This is reused for both contacts and landmarks.
+from mathutils import (Vector, Matrix)
+def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type, number_format, self):  #write location and parent body. This is reused for both contacts and landmarks.
     
     #### obj_type is a string, either "contact" or "landmark", or something else if you reuse this further
     #### the script will fail if you don't specify it when calling the function
 
+    coll = bpy.data.collections[collection_name]
     
+
+    for obj in coll.objects:
+        if 'default_pose' in obj: #remove this if statement once landmarks also have a default pose
+
+            if obj.matrix_world != Matrix(obj['default_pose']):
+                self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default pose, or reparent the contact. Operation cancelled")
+                return {'FINISHED'}
 
 
     file = open(filepath, 'w', encoding='utf-8') #create or open a file,  "w" means it's writeable
@@ -21,11 +29,6 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
     file.write(header) 
     
     file.write('\n') 
-    
-    
-    
-
-    coll = bpy.data.collections[collection_name]
     
 
     objects = [i for i in bpy.data.collections[collection_name].objects] #get each obj from the designated collection #ADD IF STATEMENT FOR MUSKEMO TYPE?
