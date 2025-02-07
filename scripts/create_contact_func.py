@@ -50,6 +50,11 @@ def create_contact(name, radius, collection_name,
                 obj.parent = parent_body_obj
                 obj.matrix_parent_inverse = parent_body_obj.matrix_world.inverted()      
 
+                # if we parent, we also track ['default_pose']
+
+                obj['default_pose'] = obj.matrix_world #track the default pose to ensure the exported values are in the same pose
+               
+
 
     matname = 'contact_material'
     color = tuple(bpy.context.scene.muskemo.contact_color)

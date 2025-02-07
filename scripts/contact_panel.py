@@ -112,7 +112,8 @@ class AssignContactParentOperator(Operator):
                     contact_pos_in_parent = bRg @ (contact_pos_g - frame_or_g) #location in parent of contact
                     contact['pos_in_parent_frame'] = contact_pos_in_parent
 
-                    
+                    contact['default_pose'] = contact.matrix_world #track the default pose to ensure the exported values are in the same pose
+               
             else: #if it does have a parent
                 self.report({'WARNING'}, "Contact '" + contact.name+ "' is already parented to a body. Skipping this contact.")
             
@@ -159,6 +160,8 @@ class ClearContactParentOperator(Operator):
 
             contact['pos_in_parent_frame'] = [nan, nan, nan]
             
+            del contact['default_pose'] #Remove the default pose
+               
             
 
         return {'FINISHED'}

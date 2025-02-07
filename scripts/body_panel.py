@@ -438,7 +438,7 @@ class AttachVizGeometryOperator(Operator):
 
 
             if geom_relpath in target_body['Geometry']:
-                self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' is already attached to target body with name '" + obj.name + "'. Skipped this geometry object.")    
+                self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' is already attached to target body with name '" + target_body.name + "'. Skipped this geometry object.")    
                 continue
             
             
@@ -507,27 +507,11 @@ class DetachVizGeometryOperator(Operator):
 
                 
         # throw an error if no objects are selected     
-        if (len(sel_obj) == 0):
-            self.report({'ERROR'}, "No objects selected. You must select 1+ geometry objects and their parent body")
-            return {'FINISHED'}
-        
-        if (len(sel_obj) == 1):
-            self.report({'ERROR'}, "Only 1 object selected. You must select 1+ geometry objects and their parent body")
+        if (len(sel_obj) < 0):
+            self.report({'ERROR'}, "No objects selected. You must select 1+ geometry objects")
             return {'FINISHED'}
         
         muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
-        
-        bodies = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='BODY']
-
-        if len(bodies)>1: #if multiple bodies selected
-            self.report({'ERROR'}, "More than one selected object is a 'BODY'. You can selected multiple geometry objects, but only one body (their parent). Operation cancelled.")
-            return {'FINISHED'}
-        
-        if len(bodies)<1: #if multiple bodies selected
-            self.report({'ERROR'}, "None of the selected object is a 'BODY'. Select multiple geometry objects and their parent body, and try again. Operation cancelled.")
-            return {'FINISHED'}
-        
-        parent_body = bodies[0]
         geom_objects = [obj for obj in muskemo_objects if obj['MuSkeMo_type'] == 'GEOMETRY']
                 
         if len(geom_objects)<1: #if less than 1 object is in the geometry collection
@@ -537,12 +521,16 @@ class DetachVizGeometryOperator(Operator):
         geom_delimiter = ';'
         for geom in geom_objects:
             geom_relpath = geom_colname + '/' + geom.name + '.obj'
+            
+            if geom['Attached to'] != 'no body':
+                parent_body = bpy.data.objects[geom['Attached to']]
 
-            if geom_relpath in parent_body['Geometry']:  #if geom is attached to the body
-                
+            
                 parent_body['Geometry'] = parent_body['Geometry'].replace(geom_relpath + geom_delimiter,'')  #remove the geom path from the body
                 geom['Attached to'] = 'no body'  #update the "attached to" state of the geometry
 
+                if not parent_body['Geometry']: #if the geometry list is now empty, state so explicitly
+                    parent_body['Geometry'] = 'no geometry'
 
                 ## unparent the geometry in blender, without moving the geometry
                 parented_worldmatrix =geom.matrix_world.copy() 
@@ -551,16 +539,15 @@ class DetachVizGeometryOperator(Operator):
 
                 
 
+
             else: 
                 
-                self.report({'WARNING'}, "Geometry file '" + geom.name +  "' does not appear to be attached to body '" + parent_body.name + "'. Geometry skipped.")
+                self.report({'WARNING'}, "Geometry file '" + geom.name +  "' does not appear to be attached to a body. Geometry skipped.")
 
 
 
 
-        if not parent_body['Geometry']: #if the geometry list is now empty, state so explicitly
-            parent_body['Geometry'] = 'no geometry'
-
+       
 
         return {'FINISHED'}
 
