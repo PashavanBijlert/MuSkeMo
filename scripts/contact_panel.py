@@ -20,7 +20,15 @@ class CreateContactOperator(Operator):
         
         colname = bpy.context.scene.muskemo.contact_collection #name for the collection that will contain the contacts
         
-                
+        if not name: #if the user didn't fill out a name
+            self.report({'ERROR'}, "Fill in a contact name first. Operation aborted")
+            return {'FINISHED'}
+
+        if name in bpy.data.objects: #if the object name already exists
+            self.report({'ERROR'}, "Object with the name '" + name + "' already exists. Choose a unique name. Operation aborted")
+            return {'FINISHED'}
+
+
         ## create the actual contact
         target_pos = bpy.context.scene.cursor.location  #3D cursor location is the target position of the contact
         
@@ -29,6 +37,8 @@ class CreateContactOperator(Operator):
         create_contact(name = name, radius = rad, collection_name = colname,
                         pos_in_global = target_pos)
         
+
+        bpy.context.scene.muskemo.contact_name = '' #reset the name
         return {'FINISHED'}
 
 
@@ -39,19 +49,12 @@ class AssignContactParentOperator(Operator):
    
     def execute(self, context):
         
-        contact_name = bpy.context.scene.muskemo.contact_name
-        
-       
+               
         sel_obj = bpy.context.selected_objects  #should be the parent body and the contact
         
         colname = bpy.context.scene.muskemo.contact_collection
         bodycolname = bpy.context.scene.muskemo.body_collection
-        try: bpy.data.objects[contact_name]  #check if the contact exists
-        
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Contact with the name '" + contact_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
+            
         
                 
         # throw an error if no objects are selected     
@@ -85,29 +88,34 @@ class AssignContactParentOperator(Operator):
             
         ### if none of the previous scenarios triggered an error, set the parent body
         for contact in target_contacts:
-            contact.parent = parent_body
-                
-            #this undoes the transformation after parenting
-            contact.matrix_parent_inverse = parent_body.matrix_world.inverted()
+            
+            if contact['parent_body'] == 'not_assigned': #if it doesn't already have a parent
+                contact.parent = parent_body
+                    
+                #this undoes the transformation after parenting
+                contact.matrix_parent_inverse = parent_body.matrix_world.inverted()
 
-            contact['parent_body'] = parent_body.name
+                contact['parent_body'] = parent_body.name
 
 
-            ### check if parent_body has a local frame, and if yes, compute contact location in parent frame 
-            if parent_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
-                
-                frame = bpy.data.objects[parent_body['local_frame']]
+                ### check if parent_body has a local frame, and if yes, compute contact location in parent frame 
+                if parent_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
+                    
+                    frame = bpy.data.objects[parent_body['local_frame']]
 
-                gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
-                bRg = gRb.copy()
-                bRg.transpose()
-        
-                frame_or_g = frame.matrix_world.translation                 
-                contact_pos_g = contact.matrix_world.translation #location of the contact
-                contact_pos_in_parent = bRg @ (contact_pos_g - frame_or_g) #location in parent of contact
-                contact['pos_in_parent_frame'] = contact_pos_in_parent
-               
+                    gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
+                    bRg = gRb.copy()
+                    bRg.transpose()
+            
+                    frame_or_g = frame.matrix_world.translation                 
+                    contact_pos_g = contact.matrix_world.translation #location of the contact
+                    contact_pos_in_parent = bRg @ (contact_pos_g - frame_or_g) #location in parent of contact
+                    contact['pos_in_parent_frame'] = contact_pos_in_parent
 
+                    
+            else: #if it does have a parent
+                self.report({'WARNING'}, "Contact '" + contact.name+ "' is already parented to a body. Skipping this contact.")
+            
             
         return {'FINISHED'}
     
@@ -151,7 +159,7 @@ class ClearContactParentOperator(Operator):
 
             contact['pos_in_parent_frame'] = [nan, nan, nan]
             
-
+            
 
         return {'FINISHED'}
 
