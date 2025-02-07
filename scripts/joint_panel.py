@@ -153,12 +153,27 @@ class AssignParentBodyOperator(Operator):
 
         joint['default_pose'] = joint.matrix_world #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
 
+
+        from .quaternions import quat_from_matrix
+        from .euler_XYZ_body import euler_XYZbody_from_matrix
+        
+        #global pos and or
+        #if global pos is NaN or simply incorrect
+        gRb_joint = joint.matrix_world.to_3x3() 
+
+        joint_or_in_global_quat = quat_from_matrix(gRb_joint)
+        joint_or_in_global_euler = euler_XYZbody_from_matrix(gRb_joint)
+
+        joint['pos_in_global'] = joint.matrix_world.translation
+        joint['or_in_global_quat'] = joint_or_in_global_quat
+        joint['or_in_global_XYZeuler'] = joint_or_in_global_euler
+
+
         if parent_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in parent
             
             ## import functions euler angles and quaternions from matrix
 
-            from .quaternions import quat_from_matrix
-            from .euler_XYZ_body import euler_XYZbody_from_matrix
+            
             
             frame = bpy.data.objects[parent_body['local_frame']]
             gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
@@ -255,13 +270,23 @@ class AssignChildBodyOperator(Operator):
 
         joint['default_pose'] = joint.matrix_world #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
 
+        from .quaternions import quat_from_matrix
+        from .euler_XYZ_body import euler_XYZbody_from_matrix      
+    
+        #update pos and or in global
+        gRb_joint = joint.matrix_world.to_3x3() 
+
+        joint_or_in_global_quat = quat_from_matrix(gRb_joint)
+        joint_or_in_global_euler = euler_XYZbody_from_matrix(gRb_joint)
+
+        joint['pos_in_global'] = joint.matrix_world.translation
+        joint['or_in_global_quat'] = joint_or_in_global_quat
+        joint['or_in_global_XYZeuler'] = joint_or_in_global_euler
 
         if child_body['local_frame'] != 'not_assigned':  #if there is a local reference frame assigned, compute location and rotation in child
             ## import functions euler angles and quaternions from matrix
 
-            from .quaternions import quat_from_matrix
-            from .euler_XYZ_body import euler_XYZbody_from_matrix
-            
+                       
             frame = bpy.data.objects[child_body['local_frame']]
             gRb = frame.matrix_world.to_3x3()  #rotation matrix of the frame, local to global
             bRg = gRb.copy()
@@ -332,9 +357,13 @@ class ClearParentBodyOperator(Operator):
         joint['or_in_parent_frame_XYZeuler'] = [nan, nan, nan]
         joint['or_in_parent_frame_quat'] = [nan, nan, nan, nan]
 
-        ### If the joint is unparented after this, stop tracking default pose
+        ### If the joint is unparented after this, stop tracking default pose and set global or and pos to nan
         if joint['child_body']== 'not_assigned' and 'default_pose' in joint:
             del joint['default_pose']
+            joint['pos_in_global'] = [nan, nan, nan]
+            joint['or_in_global_quat'] = [nan, nan, nan, nan]
+            joint['or_in_global_XYZeuler'] = [nan, nan, nan]
+            
 
         return {'FINISHED'}
     
@@ -388,9 +417,12 @@ class ClearChildBodyOperator(Operator):
         joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
         joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]
 
-        ### If the joint is unparented after this, stop tracking default pose
+        ### If the joint is unparented after this, stop tracking default pose and set global or and pos to nan
         if joint['parent_body']== 'not_assigned' and 'default_pose' in joint:
             del joint['default_pose']
+            joint['pos_in_global'] = [nan, nan, nan]
+            joint['or_in_global_quat'] = [nan, nan, nan, nan]
+            joint['or_in_global_XYZeuler'] = [nan, nan, nan]
         
         return {'FINISHED'}        
     
