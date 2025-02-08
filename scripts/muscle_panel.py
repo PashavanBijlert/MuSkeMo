@@ -1166,28 +1166,37 @@ class AddLiveLengthViewerNodeOperator(Operator):
     
     def execute(self, context):
         
-        muskemo = bpy.context.scene.muskemo
-
-        #error checking for muscle
-
-        muscle_name = muskemo.musclename
-        if not muscle_name:
-            self.report({'ERROR'}, "No muscle is currently active. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
+        sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "No objects selected. Select one muscle to add a live length viewer to. Operation cancelled")
             return {'FINISHED'}
         
-        if muscle_name not in bpy.data.objects:
-            self.report({'ERROR'}, "Object with the name '" + muscle_name + "' does not exist. Type the correct target muscle name into the 'Muscle Name' field of the muscle panel.")
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one muscle to add a live length viewer to. Operation cancelled")
+            return {'FINISHED'}
+        
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        # throw an error if no objects are selected     
+        if (len(muskemo_objects) != 1):
+            self.report({'ERROR'}, "The selected object was not created by MuSkeMo. Select one muscle to add a live length viewer to. Operation cancelled")
             return {'FINISHED'}
 
-        muscle = bpy.data.objects[muscle_name]
+        
+        selected_muscles = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='MUSCLE']
 
-        if 'MuSkeMo_type' in muscle:
-            if 'MUSCLE' != muscle['MuSkeMo_type']:
-                self.report({'ERROR'}, "Target muscle '" + muscle_name + "' is not a MUSCLE. Operation cancelled")
-                return {'FINISHED'} 
-        else:
-            self.report({'ERROR'}, "Target muscle '" + muscle_name + "' was not an object created by MuSkeMo. Operation cancelled")
+        # throw an error if two objects are selected     
+        if (len(selected_muscles) != 1):
+            self.report({'ERROR'}, "The selected object was not a muscle. Select one muscle to add a live length viewer to. Operation cancelled")
             return {'FINISHED'}
+
+       
+
+        muscle = selected_muscles[0]
+
         
 
         from .live_length_viewer_node import add_live_length_viewer_node
