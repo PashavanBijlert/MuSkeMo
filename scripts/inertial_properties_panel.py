@@ -83,10 +83,9 @@ class SelMeshesInertialProperties(Operator):
             ### check if all objects are triangulated. If not, throw an error and abort
                 
 
-            for p in s_obj.data.polygons:
-                if len(p.vertices) != 3:
-                    self.report({'ERROR'}, "Source object with the name '" + s_obj.name + "' has non-triangular mesh faces. You must manually triangulate this mesh before computing inertial properties. Operation cancelled.")
-                    total_mesh_errors.append([1])
+            if any(len(p.vertices) != 3 for p in s_obj.data.polygons):
+                self.report({'ERROR'}, "Source object with the name '" + s_obj.name + "' has non-triangular mesh faces. You must manually triangulate this mesh before computing inertial properties. Operation cancelled.")
+                total_mesh_errors.append([1])
                     #return {'FINISHED'}
                     
             ### Check if the mesh is manifold (does it have holes, or self-intersections?)
@@ -173,11 +172,11 @@ class CollectionMeshInertialProperties(Operator):
             ### check if all objects are triangulated. If not, throw an error and abort
                 
 
-            for p in s_obj.data.polygons:
-                if len(p.vertices) != 3:
-                    self.report({'ERROR'}, "Source object with the name '" + s_obj.name + "' has non-triangular mesh faces. You must manually triangulate this mesh before computing inertial properties. Operation cancelled.")
-                    total_mesh_errors.append([1])
-                    
+           
+            if any(len(p.vertices) != 3 for p in s_obj.data.polygons):
+                self.report({'ERROR'}, "Source object with the name '" + s_obj.name + "' has non-triangular mesh faces. You must manually triangulate this mesh before computing inertial properties. Operation cancelled.")
+                total_mesh_errors.append([1])
+                
                     
             ### Check if the mesh is manifold (does it have holes, or self-intersections?)
             ### Adapted from Blender built-in 3D-Print Toolbox
