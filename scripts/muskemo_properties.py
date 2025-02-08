@@ -563,7 +563,7 @@ class MuSkeMoProperties(PropertyGroup):
     contact_name: StringProperty(
         name = "Contact sphere name",
         description="Desired name of the contact sphere",
-        default = "contact",
+        default = "",
         maxlen = 1024,
         )
     

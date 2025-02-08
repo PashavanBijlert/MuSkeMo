@@ -139,54 +139,51 @@ class AssignFrameParentBodyOperator(Operator):
    
     def execute(self, context):
         
-        frame_name = bpy.context.scene.muskemo.framename
-        
-        active_obj = bpy.context.active_object  #
         sel_obj = bpy.context.selected_objects  #should be the parent body and the frame
-        
-        colname = bpy.context.scene.muskemo.frame_collection
-        bodycolname = bpy.context.scene.muskemo.body_collection
-        try: bpy.data.objects[frame_name]  #check if the frame exists
-        
-        except:  #throw an error if the frame doesn't exist
-            self.report({'ERROR'}, "Frame with the name '" + frame_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
-        
-        frame = bpy.data.objects[frame_name]
         
         # throw an error if no objects are selected     
         if (len(sel_obj) < 2):
-            self.report({'ERROR'}, "Too few objects selected. Select the parent body and the target frame.")
+            self.report({'ERROR'}, "Too few objects selected. Select the parent body and the frame.")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
         if (len(sel_obj) > 2):
-            self.report({'ERROR'}, "Too many objects selected. Select the parent body and the target frame.")
+            self.report({'ERROR'}, "Too many objects selected. Select the parent body and the frame.")
             return {'FINISHED'}
         
-        if frame not in sel_obj:
-            self.report({'ERROR'}, "Neither of the selected objects is the target frame. Selected frame and frame_name (input at the top) must correspond to prevent ambiguity. Operation cancelled.")
-            return {'FINISHED'}
-        
-        parent_body = [s_obj for s_obj in sel_obj if s_obj.name not in bpy.data.collections[colname].objects][0]  #get the object that's not the frame
-        
-        
-        
-        try:
-            frame.children[0]
-        except:
-            pass
-        else:
-            
-            self.report({'ERROR'}, "You are attempting to assign body '" + parent_body.name + "' as the parent body, but it is already the child body. Operation cancelled.")
-            return {'FINISHED'}
 
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        frames = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='FRAME'] #get the frame
 
         
-        if parent_body.name not in bpy.data.collections[bodycolname].objects:
-            self.report({'ERROR'}, "The parent body is not in the '" + bodycolname + "' collection. Make sure one of the two selected objects is a 'Body' as created by the bodies panel")
+        if len(frames)>1:
+            self.report({'ERROR'}, "You selected two frames and no body. Select one frame and one parent body. Operation cancelled.")
             return {'FINISHED'}
+        
+        if len(frames)<1:
+            self.report({'ERROR'}, "You didn't select a frame. Select one frame and one parent body. Operation cancelled.")
+            return {'FINISHED'}
+        
+        frame = frames[0]
+                
+        parent_body = [obj for obj in muskemo_objects if obj!=frame][0]  #get the object that's not the frame
+
+        if parent_body['MuSkeMo_type']!= 'BODY':
+            self.report({'ERROR'}, "You didn't select a target body. Select one target joint and one parent body. Operation cancelled")
+            return {'FINISHED'}
+        
+        
+        if frame['parent_body'] != 'not_assigned':
+            self.report({'ERROR'}, "You are attempting to assign a parent body to frame '" + frame.name + "', but it already has a parent body. Unparent it first. Operation cancelled.")
+            return {'FINISHED'}
+           
+
+        # if 'default_pose' in joint:
+
+        #     if Matrix(joint['default_pose'])!= joint.matrix_world:
+        #         self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it's not in its default pose. Either reposition the joint, or clear its current child body. Operation cancelled.")
+        #         return {'FINISHED'}
             
         ### if none of the previous scenarios triggered an error, set the parent body
         
@@ -317,28 +314,12 @@ class ClearFrameParentBodyOperator(Operator):
     
     def execute(self, context):
         
-        frame_name = bpy.context.scene.muskemo.framename
-        
-        colname = bpy.context.scene.muskemo.frame_collection
-
-
-        active_obj = bpy.context.active_object  #should be the frame
+       
         sel_obj = bpy.context.selected_objects  #should be the only the frame
         
         
-        try: bpy.data.objects[frame_name]  #check if the body exists
         
-        except:  #throw an error if the body doesn't exist
-            self.report({'ERROR'}, "Frame with the name '" + frame_name + "' does not exist yet, create it first")
-            return {'FINISHED'}
-        
-        frame = bpy.data.objects[frame_name]
-
-        try: frame.parent.name
-        
-        except: #throw an error if the frame has no parent
-            self.report({'ERROR'}, "Frame with the name '" + frame_name + "' does not have a parent body")
-            return {'FINISHED'}
+       
         
         # throw an error if no objects are selected     
         if (len(sel_obj) == 0):
@@ -350,15 +331,18 @@ class ClearFrameParentBodyOperator(Operator):
             self.report({'ERROR'}, "Too many objects selected. Only select the target frame.")
             return {'FINISHED'}
         
-        if frame.name != active_obj.name:
-            self.report({'ERROR'}, "Selected frame and frame_name (text input at the top) must correspond to prevent ambiguity. Operation cancelled.")
+        frame = sel_obj[0]
+
+        if frame.get('MuSkeMo_type') != 'FRAME':
+            self.report({'ERROR'}, "Object with name '" + frame.name + "' is not a FRAME. Only select the target frame.")
             return {'FINISHED'}
+
         
-        if frame.name not in bpy.data.collections[colname].objects:
-            self.report({'ERROR'}, "Selected object is not in the '" + colname + "' collection. Make sure you have selected a frame in that collection.")
+        try: frame.parent.name
+        
+        except: #throw an error if the frame has no parent
+            self.report({'ERROR'}, "Frame with the name '" + frame.name + "' does not have a parent body")
             return {'FINISHED'}
-        
-        
                 
         ### if none of the previous scenarios triggered an error, clear the parent body
         
