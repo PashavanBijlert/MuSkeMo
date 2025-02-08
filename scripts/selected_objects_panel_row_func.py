@@ -11,8 +11,8 @@ def CreateSelectedObjRow(type, layout):
         "MUSCLE": "Muscles",
         "CONTACT": "Contacts",
         "GEOMETRY": "Meshes",
-        "GEOMETRY_withdensity": "Meshes", #type GEOMETRY, but with precomputed inertial properties
         "MESH": "Meshes", #this is not a muskemo type
+        "MESH_withdensity": "Meshes", #not a muskemo type. Mesh with inertial properties assigned
         "NOTJOINT": "Source",
         # Add more mappings as needed
     }
@@ -22,14 +22,13 @@ def CreateSelectedObjRow(type, layout):
     # Filter selected objects of the given type
     selected_items = [ob for ob in bpy.context.selected_objects if ob.get('MuSkeMo_type') == type]
 
-    if type == 'GEOMETRY_withdensity': #
-        selected_items = [ob for ob in bpy.context.selected_objects if ob.get('MuSkeMo_type') == 'GEOMETRY']
-        selected_items = [ob for ob in selected_items if 'density' in ob]
-
+   
     if type == 'MESH':
        selected_items = [ob for ob in bpy.context.selected_objects if (ob.type == 'MESH' and 'MuSkeMo_type' not in ob)]
-       
-
+    
+    if type == 'MESH_withdensity': #
+        selected_items = [ob for ob in bpy.context.selected_objects if (ob.type == 'MESH' and 'density' in ob)]
+     
     if type == 'NOTJOINT':
         selected_items = [ob for ob in bpy.context.selected_objects if ob.get('MuSkeMo_type') != 'JOINT']
        

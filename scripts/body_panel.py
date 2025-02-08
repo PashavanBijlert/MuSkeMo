@@ -619,7 +619,7 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
         row = self.layout.row()
         row = self.layout.row()
         row.label(text = "Source object meshes with precomputed inertial properties")
-        CreateSelectedObjRow('GEOMETRY_withdensity', layout)
+        CreateSelectedObjRow('MESH_withdensity', layout)
 
                  
         row = self.layout.row()

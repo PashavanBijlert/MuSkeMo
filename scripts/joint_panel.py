@@ -26,7 +26,10 @@ class CreateNewJointOperator(Operator):
         colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the hulls
         
         
-        
+        if not name:
+            self.report({'ERROR'}, "You didn't type a joint name. Type the desired name into the panel and try again. Operation cancelled.")
+            return {'FINISHED'}
+
         
         try: bpy.data.objects[name] #check if the joint exists
         

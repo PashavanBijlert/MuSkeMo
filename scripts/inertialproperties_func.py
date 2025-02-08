@@ -32,7 +32,7 @@ def inertial_properties(obj):
 
     polygons = obj.data.polygons #connectivity list, so each polygon has three number that correspond to a row in vertices
     
-    if any(len(p.vertices) != 3 for p in s_obj.data.polygons):
+    if any(len(p.vertices) != 3 for p in obj.data.polygons):
         print("ERROR. Object with the name '" + obj.name + "' has non-triangular mesh faces. You must manually triangulate this mesh before computing inertial properties. Operation cancelled.")
         return{'FINISHED'}
         
