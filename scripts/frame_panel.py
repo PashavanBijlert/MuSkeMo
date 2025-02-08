@@ -508,6 +508,10 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         row = self.layout.row()
         row.operator("frame.construct_frame", text="Construct Frame from Landmark Positions")
         self.layout.row()
+
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+        CreateSelectedObjRow('BODY', layout)
+
         row = self.layout.row()
         row.operator("frame.assign_parent_body", text="Assign parent body")
         row.operator("frame.clear_parent_body", text="Clear parent body")

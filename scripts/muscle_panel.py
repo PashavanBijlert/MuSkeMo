@@ -391,8 +391,9 @@ class AssignWrapGeomParentOperator(Operator):
             self.report({'ERROR'}, "Too few objects selected. Select the parent body and the target wrapping geometry.")
             return {'FINISHED'}
         
+              
                 
-        target_wraps = [s_obj for s_obj in sel_obj if s_obj['MuSkeMo_type'] == 'WRAP']
+        target_wraps = [s_obj for s_obj in sel_obj if s_obj.get('MuSkeMo_type') == 'WRAP']
         if (len(target_wraps) < 1):
             self.report({'ERROR'}, "You did not select any wrapping geometries. Operation cancelled.")
             return {'FINISHED'}
@@ -409,8 +410,8 @@ class AssignWrapGeomParentOperator(Operator):
         
         parent_body = non_wrap_objects[0] #if len is 1
 
-        if parent_body['MuSkeMo_type'] != 'BODY':
-            self.report({'ERROR'}, "You did not select a target body. Operation cancelled.")
+        if parent_body.get('MuSkeMo_type') != 'BODY':
+            self.report({'ERROR'}, "You did not select a target body. Select 1+ wrap objects and a target body. Operation cancelled.")
             return {'FINISHED'}
         
         
@@ -473,7 +474,7 @@ class ClearWrapGeomParentOperator(Operator):
 
         for wrap in sel_obj:
             
-            if wrap['MuSkeMo_type'] != 'WRAP':
+            if wrap.get('MuSkeMo_type') != 'WRAP':
                 self.report({'ERROR'}, "Object with the name '" + wrap.name + "' is not a wrapping geometry. Skipping this object.")
                 continue
 
@@ -515,48 +516,61 @@ class AssignWrappingOperator(Operator):
         
         #insert_after = bpy.context.scene.muskemo.insert_point_after
         
-        muscle_name = bpy.context.scene.muskemo.musclename
-        
-        active_obj = bpy.context.active_object  #should be the wrap object you want to assign
-        sel_obj = bpy.context.selected_objects  #should be the wrap object you want to assign
+        sel_obj = bpy.context.selected_objects  #should be the wrap object and the muscle you want to assign it to
 
         # throw an error if no objects are selected     
-        if (len(sel_obj) < 1):
-            self.report({'ERROR'}, "Too few objects selected. Select one wrap geometry.")
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select a muscle, and the wrap you want to assign to it. Operation cancelled")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
-        if (len(sel_obj) > 1):
-            self.report({'ERROR'}, "Too many objects selected. Select one wrap geometry.")
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. Select a muscle, and the wrap you want to assign to it. Operation cancelled")
             return {'FINISHED'}
         
-        # throw an error if no muscle name is given
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
 
-        if not muscle_name:
-            self.report({'ERROR'}, "No muscle name is given. Type it into the 'Muscle name' panel input.")
-            return {'FINISHED'}
-        
-        if muscle_name not in bpy.data.objects:
-            self.report({'ERROR'}, "No object with the name '" + muscle_name + "' exists. Double check your spelling of the 'Muscle name' panel input.")
+        # throw an error if no objects are selected     
+        if (len(muskemo_objects) < 2):
+            self.report({'ERROR'}, "One or more of the selected objects was not created by MuSkeMo. Select a muscle, and the wrap you want to assign to it. Operation cancelled")
             return {'FINISHED'}
 
+        selected_muscles = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='MUSCLE']
 
-        wrap_obj = sel_obj[0]
+        # throw an error if two objects are selected     
+        if (len(selected_muscles) > 1):
+            self.report({'ERROR'}, "You selected two muscles. Select one muscle, and the wrap you want to assign to it. Operation cancelled")
+            return {'FINISHED'}
+
+        # throw an error if no objects are selected     
+        if (len(selected_muscles) < 1):
+            self.report({'ERROR'}, "You didn't select a muscle. Select one muscle, and the wrap you want to assign to it. Operation cancelled")
+            return {'FINISHED'}    
+
+        muscle_obj = selected_muscles[0]
+        muscle_name = muscle_obj.name
+       
+        selected_wraps = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='WRAP']
+
+        # throw an error if two objects are selected     
+        if (len(selected_wraps) > 1):
+            self.report({'ERROR'}, "You selected two wraps. Select one muscle, and the wrap you want to assign to it. Operation cancelled")
+            return {'FINISHED'}
+
+        # throw an error if no objects are selected     
+        if (len(selected_wraps) < 1):
+            self.report({'ERROR'}, "You didn't select a wrap. Select one muscle, and the wrap you want to assign to it. Operation cancelled")
+            return {'FINISHED'}    
+
+        wrap_obj = selected_wraps[0]
         wrap_obj_name = wrap_obj.name
-
-        if 'MuSkeMo_type' in wrap_obj:
-            if 'WRAP' != bpy.data.objects[wrap_obj_name]['MuSkeMo_type']:
-                self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' is not a WRAP. Wrap assignment cancelled.")
-                return {'FINISHED'} 
-        else:
-            self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' was not an object created by MuSkeMo. Wrap assignment cancelled")
-            return {'FINISHED'}      
-
+        
 
         for obj in sel_obj:
             obj.select_set(False)
 
-        
+        #############
+
         parametric_wraps = bpy.context.scene.muskemo.parametric_wraps
 
         ### everything below here can be a separate function
@@ -615,7 +629,7 @@ class AssignWrappingOperator(Operator):
                 wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Height'].default_value = height
 
             ## create a modifier for the muscle and set this node group
-            muscle_obj = bpy.data.objects[muscle_name]
+            
             geonode_name = muscle_name + '_wrap_' + wrap_obj_name
             if geonode_name in muscle_obj.modifiers: #if the object already has this wrap, we quit the code
                 self.report({'ERROR'}, "Wrap object with name '" + wrap_obj_name + "' is already assigned to the MUSCLE with name '" + muscle_name + "'. Wrap assignment cancelled")
@@ -721,37 +735,65 @@ class ClearWrappingOperator(Operator):
     def execute(self, context):
                 
         #insert_after = bpy.context.scene.muskemo.insert_point_after
-        
-        muscle_name = bpy.context.scene.muskemo.musclename
-        
-        sel_obj = bpy.context.selected_objects  #should be the wrap object you want to clear
 
+        sel_obj = bpy.context.selected_objects  #should be the wrap object and the muscle you want to assign it to
 
+        
         # throw an error if no objects are selected     
-        if (len(sel_obj) < 1):
-            self.report({'ERROR'}, "Too few objects selected. Select one wrap geometry.")
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select a muscle, and a wrap that is assigned to it. Operation cancelled")
             return {'FINISHED'}
         
         # throw an error if no objects are selected     
-        if (len(sel_obj) > 1):
-            self.report({'ERROR'}, "Too many objects selected. Select one wrap geometry.")
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. Select a muscle, and a wrap that is assigned to it. Operation cancelled")
             return {'FINISHED'}
         
-        wrap_obj = sel_obj[0]
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        # throw an error if no objects are selected     
+        if (len(muskemo_objects) < 2):
+            self.report({'ERROR'}, "One or more of the selected objects was not created by MuSkeMo. Select a muscle, and a wrap that is assigned to it. Operation cancelled")
+            return {'FINISHED'}
+
+        selected_muscles = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='MUSCLE']
+
+        # throw an error if two objects are selected     
+        if (len(selected_muscles) > 1):
+            self.report({'ERROR'}, "You selected two muscles. Select one muscle, and a wrap that is assigned to it. Operation cancelled")
+            return {'FINISHED'}
+
+        # throw an error if no objects are selected     
+        if (len(selected_muscles) < 1):
+            self.report({'ERROR'}, "You didn't select a muscle. Select one muscle, and a wrap that is assigned to it. Operation cancelled")
+            return {'FINISHED'}    
+
+        muscle_obj = selected_muscles[0]
+        muscle_name = muscle_obj.name
+       
+        selected_wraps = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='WRAP']
+
+        # throw an error if two objects are selected     
+        if (len(selected_wraps) > 1):
+            self.report({'ERROR'}, "You selected two wraps. Select one muscle, and a wrap that is assigned to it. Operation cancelled")
+            return {'FINISHED'}
+
+        # throw an error if no objects are selected     
+        if (len(selected_wraps) < 1):
+            self.report({'ERROR'}, "You didn't select a wrap. Select one muscle, and a wrap that is assigned to it. Operation cancelled")
+            return {'FINISHED'}    
+
+        wrap_obj = selected_wraps[0]
         wrap_obj_name = wrap_obj.name
+        
 
-        if 'MuSkeMo_type' in wrap_obj:
-            if 'WRAP' != bpy.data.objects[wrap_obj_name]['MuSkeMo_type']:
-                self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' is not a WRAP. Operation cancelled.")
-                return {'FINISHED'} 
-        else:
-            self.report({'ERROR'}, "Selected object '" + wrap_obj_name + "' was not an object created by MuSkeMo. Operation cancelled")
-            return {'FINISHED'}      
+        for obj in sel_obj:
+            obj.select_set(False)
+  
 
         geonode_name = muscle_name + '_wrap_' + wrap_obj_name #name of the geometry node modifier
 
-        muscle_obj = bpy.data.objects[muscle_name]
-
+       
         if geonode_name not in muscle_obj.modifiers: #if the modifier is not in the modifier stack
             self.report({'ERROR'}, "The wrap object '" + wrap_obj_name + "' is not currently assigned to the muscle '" + muscle_name + "', so it cannot be cleared. Operation cancelled")
             return {'FINISHED'}
@@ -782,54 +824,66 @@ class SingleDOFLengthMomentArmOperator(Operator):
         #insert_after = bpy.context.scene.muskemo.insert_point_after
         muskemo = bpy.context.scene.muskemo
 
-        muscle_name = muskemo.musclename
-        active_joint_1 = muskemo.active_joint_1
+        
         joint_1_dof = muskemo.joint_1_dof
         joint_1_ranges = muskemo.joint_1_ranges
         angle_step_size = muskemo.angle_step_size
 
-        ## error checking for muscles
-        if not muscle_name:
-            self.report({'ERROR'}, "No muscle is currently active. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
+        sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
+        ###########
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Too few objects selected. Select a muscle, and a joint you would like to rotate. Operation cancelled")
             return {'FINISHED'}
         
-        if muscle_name not in bpy.data.objects:
-            self.report({'ERROR'}, "Object with the name '" + muscle_name + "' does not exist. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
-            return {'FINISHED'}
-
-        muscle = bpy.data.objects[muscle_name]
-
-        if 'MuSkeMo_type' in muscle:
-            if 'MUSCLE' != muscle['MuSkeMo_type']:
-                self.report({'ERROR'}, "Target muscle '" + muscle_name + "' is not a MUSCLE. Operation cancelled")
-                return {'FINISHED'} 
-        else:
-            self.report({'ERROR'}, "Target muscle '" + muscle_name + "' was not an object created by MuSkeMo. Operation cancelled")
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. Select a muscle, and a joint you would like to rotate. Operation cancelled")
             return {'FINISHED'}
         
-        ## error checking for joint
-        if not active_joint_1:
-            self.report({'ERROR'}, "No joint is currently active. Type the target joint name into the 'Active Joint 1' field of the moment arm panel.")
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        # throw an error if no objects are selected     
+        if (len(muskemo_objects) < 2):
+            self.report({'ERROR'}, "One or more of the selected objects was not created by MuSkeMo. Select a muscle, and a joint you would like to rotate. Operation cancelled")
             return {'FINISHED'}
 
-        if active_joint_1 not in bpy.data.objects:
-            self.report({'ERROR'}, "Object with the name '" + active_joint_1 + "' does not exist. Type the target joint name into the 'Active Joint 1' field of the moment arm panel.")
+        selected_muscles = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='MUSCLE']
+
+        # throw an error if two objects are selected     
+        if (len(selected_muscles) > 1):
+            self.report({'ERROR'}, "You selected two muscles. Select one muscle, and a joint you would like to rotate. Operation cancelled")
             return {'FINISHED'}
 
-        joint = bpy.data.objects[active_joint_1]
+        # throw an error if no objects are selected     
+        if (len(selected_muscles) < 1):
+            self.report({'ERROR'}, "You didn't select a muscle. Select one muscle, and a joint you would like to rotate. Operation cancelled")
+            return {'FINISHED'}    
 
-        if 'MuSkeMo_type' in joint:
-            if 'JOINT' != joint['MuSkeMo_type']:
-                self.report({'ERROR'}, "Target joint '" + active_joint_1 + "' is not a JOINT. Operation cancelled")
-                return {'FINISHED'} 
-        else:
-            self.report({'ERROR'}, "Target joint '" + active_joint_1 + "' was not an object created by MuSkeMo. Operation cancelled")
-            return {'FINISHED'}
+        muscle = selected_muscles[0]
+        muscle_name = muscle.name
+       
+        selected_joints = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='JOINT']
 
+       
+        # throw an error if no objects are selected     
+        if (len(selected_joints) < 1):
+            self.report({'ERROR'}, "You didn't select a joint. Select one muscle, and a joint you would like to rotate. Operation cancelled")
+            return {'FINISHED'}    
+
+        joint = selected_joints[0]
+        active_joint_1 = joint.name
+        
+
+        for obj in sel_obj:
+            obj.select_set(False)
+        
 
         if joint_1_ranges[0] == joint_1_ranges[1]:
             self.report({'ERROR'}, "Joint 1 ranges should not be equal to each other. Operation cancelled")
             return {'FINISHED'}
+
+        #######
 
         muscle_with_wrap = False
         if any(['wrap' in x.name.lower() for x in muscle.modifiers]):### if the muscle has a wrap modifier, use the slightly slower approach to calc the muscle length
@@ -1057,12 +1111,6 @@ class SingleDOFLengthMomentArmOperator(Operator):
                 writer.writerow(headers)  # Write headers
                 writer.writerows(data)    # Write data rows
 
-
-        
-
-
-            
-
         time2 = time.time()
 
         print(str(time2-time1))    
@@ -1079,27 +1127,39 @@ class Regenerate2DMusclePlotOperator(Operator):
         
         muskemo = bpy.context.scene.muskemo
 
-        #error checking for muscle
-
-        muscle_name = muskemo.musclename
-        if not muscle_name:
-            self.report({'ERROR'}, "No muscle is currently active. Type the target muscle name into the 'Muscle Name' field of the muscle panel.")
+        sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "No objects selected. Select one muscle to regenerate a plot. Operation cancelled")
             return {'FINISHED'}
         
-        if muscle_name not in bpy.data.objects:
-            self.report({'ERROR'}, "Object with the name '" + muscle_name + "' does not exist. Type the correct target muscle name into the 'Muscle Name' field of the muscle panel.")
-            return {'FINISHED'}
-
-        muscle = bpy.data.objects[muscle_name]
-
-        if 'MuSkeMo_type' in muscle:
-            if 'MUSCLE' != muscle['MuSkeMo_type']:
-                self.report({'ERROR'}, "Target muscle '" + muscle_name + "' is not a MUSCLE. Operation cancelled")
-                return {'FINISHED'} 
-        else:
-            self.report({'ERROR'}, "Target muscle '" + muscle_name + "' was not an object created by MuSkeMo. Operation cancelled")
+        # throw an error if no objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Select one muscle to regenerate a plot. Operation cancelled")
             return {'FINISHED'}
         
+        muskemo_objects = [obj for obj in sel_obj if 'MuSkeMo_type' in obj]
+
+        # throw an error if no objects are selected     
+        if (len(muskemo_objects) != 1):
+            self.report({'ERROR'}, "The selected object was not created by MuSkeMo. Select one muscle to regenerate a plot. Operation cancelled")
+            return {'FINISHED'}
+
+        
+        selected_muscles = [obj for obj in muskemo_objects if obj['MuSkeMo_type']=='MUSCLE']
+
+        # throw an error if two objects are selected     
+        if (len(selected_muscles) != 1):
+            self.report({'ERROR'}, "The selected object was not a muscle.Select one muscle to regenerate a plot. Operation cancelled")
+            return {'FINISHED'}
+
+       
+
+        muscle = selected_muscles[0]
+        muscle_name = muscle.name
+
+
         if 'length_data' not in muscle:
             self.report({'ERROR'}, "Target muscle '" + muscle_name + "' does not have any length data associated to it yet which can be plotted. First create this in the Moment arms subpanel. Operation cancelled")
             return {'FINISHED'} 
@@ -1302,12 +1362,15 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
         scene = context.scene
         muskemo = scene.muskemo
 
-        row = self.layout.row()
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('WRAP', layout)
+        CreateSelectedObjRow('BODY', layout)
+        CreateSelectedObjRow('MUSCLE', layout)
 
         row = self.layout.row()
-        split = row.split(factor=1/2)
-        split.label(text = "Wrap Geometry Collection")
-        split.prop(muskemo, "wrap_geom_collection", text = "")
+
+        
 
         row = self.layout.row()
         split = row.split(factor = 1/2)
@@ -1335,6 +1398,11 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
         row = self.layout.row()
         row.prop(muskemo, 'parametric_wraps', text = "Parametric wraps")
 
+        row = self.layout.row()
+        split = row.split(factor=1/2)
+        split.label(text = "Wrap Geometry Collection")
+        split.prop(muskemo, "wrap_geom_collection", text = "")
+
 
 class VIEW3D_PT_moment_arm_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo
@@ -1352,12 +1420,15 @@ class VIEW3D_PT_moment_arm_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming co
         muskemo = scene.muskemo
 
         row = self.layout.row()
-        
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+
+        CreateSelectedObjRow('MUSCLE', layout)
+        CreateSelectedObjRow('JOINT', layout)
         #row.operator("muscle.assign_wrapping", text="Assign wrap object")
-        row = self.layout.row()
-        split = row.split(factor = 1/2)
-        split.label(text = 'Active Joint 1')
-        split.prop(muskemo, "active_joint_1", text = "")
+        # row = self.layout.row()
+        # split = row.split(factor = 1/2)
+        # split.label(text = 'Active Joint 1')
+        # split.prop(muskemo, "active_joint_1", text = "")
 
         row = self.layout.row()
         split = row.split(factor = 1/2)
@@ -1405,6 +1476,10 @@ class VIEW3D_PT_plotting_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conv
         scene = context.scene
         muskemo = scene.muskemo
 
+        from .selected_objects_panel_row_func import CreateSelectedObjRow
+        CreateSelectedObjRow('MUSCLE', layout)
+
+        
         row = self.layout.row()
         row.operator("muscle.regenerate_2d_plot", text = "(Re)generate a muscle plot")
 

@@ -194,12 +194,12 @@ class MuSkeMoProperties(PropertyGroup):
 
 # moment arms subpanel
 
-    active_joint_1: StringProperty(
-        name="Active Joint 1",
-        description="The name of the joint that will be rotated for moment arm computations",
-        default="",
-        maxlen=1024,
-        )
+    # active_joint_1: StringProperty(
+    #     name="Active Joint 1",
+    #     description="The name of the joint that will be rotated for moment arm computations",
+    #     default="",
+    #     maxlen=1024,
+    #     )
     
 
     joint_1_dof: EnumProperty(

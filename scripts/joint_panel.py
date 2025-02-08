@@ -1,5 +1,3 @@
-
-
 # give Python access to Blender's functionality
 import bpy
 from mathutils import (Matrix, Vector)
