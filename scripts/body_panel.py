@@ -293,7 +293,7 @@ class AssignInertialPropertiesOperator(Operator):
 
         
         if len(children)==0: #if the object has no children
-            target_body.location = target_body['COM']
+            target_body.matrix_world.translation = target_body['COM']
             target_body['default_pose'] = target_body.matrix_world #track the default pose to ensure the exported values are in the same pose
                 
             

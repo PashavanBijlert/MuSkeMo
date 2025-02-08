@@ -125,8 +125,7 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
 
         #### target muscles
         file.write(wrapobj['target_muscles']+ delimiter) # wrapobj name
-        print(wrapobj.name)
-        print(wrapobj['target_muscles'])
+        
         target_muscle_objects = [bpy.data.objects[x] for x in wrapobj['target_muscles'].split(';') if (x and x!='not_assigned')]
         
         pre_wrap_points = []
