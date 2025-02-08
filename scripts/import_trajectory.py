@@ -197,11 +197,17 @@ class ImportTrajectorySTO(Operator):
 
         activation_trajectories = traj_data[:,traj_muscle_act_ind]
 
-        #### MAKE INTO USER SWITCHES
+        #### USER SWITCHES
         number_of_repeats = bpy.context.scene.muskemo.number_of_repetitions # number of strides. Should be a user switch. Assumes final state is equal to initial state, except pelvis x translation, so a full stride.
         fps = bpy.context.scene.muskemo.fps #set to 60 if you want 50% slow motion (for a run)
         root_joint_name = bpy.context.scene.muskemo.root_joint_name
         forward_progression_coordinate = bpy.context.scene.muskemo.forward_progression_coordinate
+
+        #### SET SOME RENDER SETTINGS
+
+        bpy.context.scene.render.fps = fps #set the render fps
+        bpy.context.scene.sync_mode = 'FRAME_DROP' 
+
 
 
         ## IF ROOT_JOINT_NAME DOESN'T EXIST, SET N_REPEATS TO 0.    
@@ -262,6 +268,8 @@ class ImportTrajectorySTO(Operator):
 
         n_frames = round(time_end * fps )#number of frames. We will interpolate between 1 and n_frames+1, to ensure that time_end coincides with the start of n_frames+1
 
+        # set the render timeline to the end of the sequence
+        bpy.context.scene.frame_end = n_frames
         
         dt = time_end/(n_times-1)
         #x_p = np.arange(1, n_times + 1)  #List of indices in ascending order in steps of 1, from 1 to n_times (we add +1 at the end because arange stops 1 before the upper number)
@@ -340,6 +348,7 @@ class ImportTrajectorySTO(Operator):
             frame_number = i+1 
 
             coordinate_traj_row = coordinate_trajectories_rs[i,:] #row i of the resampled coordinate trajectory
+
             
             for joint_ind, joint in enumerate(unique_joints_in_traj):
 

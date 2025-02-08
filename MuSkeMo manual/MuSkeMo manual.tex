@@ -421,7 +421,9 @@ Rendering in Blender can be a complicated process. It is capable of professional
 \label{sec:trajectoryimport}
 MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. Currently, it is only possible to import trajectories using OpenSim .sto files. If you are importing a periodic stride, it is possible to automatically loop these in sequence to create a video using multiple strides, while progressing the (selectable) forward translation coordinate. In this case, you have to define the root joint (default =  groundPelvis) and the forward progression coordinate (default = coordinate\_Tx).
 
-OpenSim can have Transform Axes that do not align with the joint axes themselves (see \ref{sec:opensimimporter}). In the case of translations, these are simply added on to the joint position, but in the directions specified by the transform axes. For rotations, MuSkeMo defines three successive axis-angle Rotation matrices, and applies them in XYZ order (see \ref{sec:axisanglerotation}).
+Using the user-selected FPS and the trajectory's timebase and user-selected number of repetitions, MuSkeMo downsamples the trajectory to individual frames, and sets a \href{https://docs.blender.org/manual/en/latest/animation/keyframes/index.html}{keyframe} for each joint position and orientation. Frame 0 (in the playback timeline at the bottom of the screen) is always set as the default pose (see sec. \ref{sec:defaultpose}).
+
+OpenSim can have Transform Axes that do not align with the joint axes themselves (see \ref{sec:opensimimporter}). In the case of translations, these are simply added to the joint position in the directions specified by the transform axes. For rotations, MuSkeMo defines three successive axis-angle Rotation matrices, and applies them in XYZ order (see \ref{sec:axisanglerotation}).
 
 \subsubsection{Visualization options}
 
