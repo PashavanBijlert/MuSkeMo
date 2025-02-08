@@ -351,7 +351,8 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
                         bpy.ops.object.select_all(action='DESELECT')
                         new_wrapobj.select_set(True)
 
-                        muskemo.musclename = muscle_name_refl#THIS CAN BE DELETED LATER
+                        muscle_refl = bpy.data.objects[muscle_name_refl] #reflected muscle
+                        muscle_refl.select_set(True)
                         bpy.ops.muscle.assign_wrapping()
                         bpy.ops.object.select_all(action='DESELECT')
 
@@ -359,7 +360,7 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
                         muscle = bpy.data.objects[muscle_name]
                         modifier = muscle.modifiers[muscle_name + '_wrap_' + obj.name]
                         
-                        muscle_refl = bpy.data.objects[muscle_name_refl] #reflected muscle
+                        #reflected modifier
                         modifier_refl = muscle_refl.modifiers[muscle_name_refl + '_wrap_' + wrap_name]
 
                         for x in range(5,11): #automatically generate strings for Socket_5, Socket_6, etc. till 10
@@ -453,7 +454,7 @@ class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits
                     bpy.ops.object.select_all(action='DESELECT')
                     
                     [bpy.data.objects[x].select_set(True) for x in [frame_name, reflected_pbname]] #set the selection for the correct objects
-                    muskemo.framename = frame_name #THIS CAN BE DELETED LATER
+                    #muskemo.framename = frame_name #THIS CAN BE DELETED LATER
 
                     bpy.ops.frame.assign_parent_body()
                     bpy.ops.object.select_all(action='DESELECT')    	        
@@ -542,7 +543,7 @@ class ReflectUnilateralJointsOperator(Operator, ReflectionMixinClass): #inherits
                     bpy.ops.object.select_all(action='DESELECT')
                     
                     [bpy.data.objects[x].select_set(True) for x in [joint_name, reflected_pbname]] #set the selection for the correct objects
-                    muskemo.jointname = joint_name #THIS CAN BE DELETED LATER
+                    #muskemo.jointname = joint_name #THIS CAN BE DELETED LATER
 
                     bpy.ops.joint.assign_parent_body()
                     bpy.ops.object.select_all(action='DESELECT')    
@@ -569,7 +570,7 @@ class ReflectUnilateralJointsOperator(Operator, ReflectionMixinClass): #inherits
                     bpy.ops.object.select_all(action='DESELECT')
                     
                     [bpy.data.objects[x].select_set(True) for x in [joint_name, reflected_cbname]] #set the selection for the correct objects
-                    muskemo.jointname = joint_name #THIS CAN BE DELETED LATER
+                    #muskemo.jointname = joint_name #THIS CAN BE DELETED LATER
 
                     bpy.ops.joint.assign_child_body()
                     bpy.ops.object.select_all(action='DESELECT')    	           	        
@@ -655,7 +656,7 @@ class ReflectUnilateralContactsOperator(Operator, ReflectionMixinClass): #inheri
                     bpy.ops.object.select_all(action='DESELECT')
                     
                     [bpy.data.objects[x].select_set(True) for x in [contact_name, reflected_pbname]] #set the selection for the correct objects
-                    muskemo.contact_name = contact_name #THIS CAN BE DELETED LATER
+                    #muskemo.contact_name = contact_name #THIS CAN BE DELETED LATER
 
                     bpy.ops.contact.assign_parent_body()
                     bpy.ops.object.select_all(action='DESELECT')    
