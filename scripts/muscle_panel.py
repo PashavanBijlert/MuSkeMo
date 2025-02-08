@@ -1224,24 +1224,7 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         CreateSelectedObjRow('MUSCLE', layout)
         CreateSelectedObjRow('BODY', layout)
 
-        # Toggle button
-        layout.prop(muskemo, "show_muscle_tooltips", text="Show Muscle Tooltips")
-
-        if muskemo.show_muscle_tooltips:
-            box = layout.box()
-            
-            
-            row  = box.row()
-            row.label(text = 'Shift + right click moves the 3D cursor to your mouse location')
-            row  = box.row()
-            row.label(text ='Muscle points are added at the 3D cursor location')
-            row  = box.row()
-            row.label(text = 'You must select a body to parent the muscle point to')
-            row  = box.row()
-            row.label(text = 'Points can be moved in edit mode (select muscle and hit TAB)')
-
-
-        
+             
         row = self.layout.row()
         split = row.split(factor=1/2)
         split.label(text = "Muscle Name")
@@ -1274,6 +1257,22 @@ class VIEW3D_PT_muscle_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         split = row.split(factor=1/2)
         split.label(text = "Muscle Collection")
         split.prop(muskemo, "muscle_collection", text = "")
+
+         # Toggle button
+        layout.prop(muskemo, "show_muscle_tooltips", text="Show Muscle Tooltips")
+
+        if muskemo.show_muscle_tooltips:
+            box = layout.box()
+            
+            
+            row  = box.row()
+            row.label(text = 'Shift + right click moves the 3D cursor to your mouse location')
+            row  = box.row()
+            row.label(text ='Muscle points are added at the 3D cursor location')
+            row  = box.row()
+            row.label(text = 'You must select a body to parent the muscle point to')
+            row  = box.row()
+            row.label(text = 'Points can be moved in edit mode (select muscle and hit TAB)')
 
 
 
