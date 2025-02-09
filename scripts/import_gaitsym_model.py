@@ -173,7 +173,7 @@ class ImportGaitsymModel(Operator):
         
         import_iRg = import_gRi
 
-        gaitsym_import_euler = bpy.context.scene.muskemo.rotate_gaitsym_on_import
+        gaitsym_import_euler = bpy.context.scene.muskemo.rotate_on_import
         gaitsym_import_euler = (gaitsym_import_euler[0],gaitsym_import_euler[1],gaitsym_import_euler[2])
 
         from .quaternions import (matrix_from_quaternion, quat_from_matrix)

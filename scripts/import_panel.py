@@ -635,7 +635,7 @@ class VIEW3D_PT_import_Gaitsym_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
         row = layout.row()
         split= row.split(factor=1/2)
         split.label(text = 'Gaitsym import rotation')
-        split.prop(muskemo, "rotate_gaitsym_on_import", text = "")
+        split.prop(muskemo, "rotate_on_import", text = "")
 
         row = layout.row()
         row = layout.row()
@@ -673,6 +673,11 @@ class VIEW3D_PT_import_MuJoCo_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class
 
         
         row = layout.row()
+
+        row = layout.row()
+        split= row.split(factor=1/2)
+        split.label(text = 'MuJoCo import rotation')
+        split.prop(muskemo, "rotate_on_import", text = "")
         #row.prop(muskemo, "enable_wrapping_on_import") #boolean, yes or no
         
         row = self.layout.row()
