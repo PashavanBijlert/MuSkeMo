@@ -1,5 +1,5 @@
 InertialPropertiesPresets = {
-    "Arithmetic": {
+    "Arithmetic scale factor": { #each segment is directly scaled by the specified amount
         "Macaulay 2023 Bird": 
         (["head", "neck", "torso", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "foot"],
          [1.008,  3.825,  1.436,  1.970,  1.736,  1.303,  4.538,  1.729,  0.792,  1.716]),
@@ -12,8 +12,8 @@ InertialPropertiesPresets = {
         "Sellers 2012 Large Mammals":
         (["whole_body"],
          [1.206]),
-    },
-    "Logarithmic": {
+        },
+    "Logarithmic scale factor": { #each segment is scaled according to a power curve
         "Macaulay 2023 Logarithmic Bird": 
         (["head", "neck", "torso", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "foot"], #segment types
          [-0.085, 0.008, 0.213, 0.001, 0.017, 0.124, 0.487, 0.322, -0.402, 0.21], #log intercept
@@ -28,6 +28,33 @@ InertialPropertiesPresets = {
         (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "foot"],
          [0.002,    0.73,	  0.2,	0.387,     0.888,	  0.677,  1.127,   0.951,	0.788,	      0.908,  0.745],#log intercept
          [0.978,   0.961,	1.039,	0.984,	    1.09,	  1.045,  1.106,   1.051,	1.075,	      1.074,  1.067],#log slope
-         [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068])#log mean squared errors, MSE (can leave 0)
-    }
+         [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068]),#log mean squared errors, MSE (can leave 0)
+        },
+    "Logarithmic whole body mass": { #estimate whole body mass using a power curve of convex hulls of the whole body
+        "Brassey 2018 Logarithmic Primates":
+        (["whole_body"],
+         [3.17],#log intercept
+         [1.02],#log slope
+         [0.0]),#log mean squared errors, MSE (can leave 0)
+         "Brassey 2016 Logarithmic Pigeons, Eviscerated": #
+        (["whole_body"],
+         [2.7],#log intercept (converted from -2.31, because the original study uses mm3 as input and g as output)
+         [0.89],#log slope
+         [0.0]),#log mean squared errors, MSE (can leave 0)
+         "Brassey 2016 Logarithmic Pigeons, Combined": #
+        (["whole_body"],
+         [2.57],#log intercept (converted from -2.08, because the original study uses mm3 as input and g as output)
+         [0.85],#log slope
+         [0.0]),#log mean squared errors, MSE (can leave 0)
+         "Brassey 2014 Logarithmic Primates":
+        (["whole_body"],
+         [3.24],#log intercept
+         [1.07],#log slope
+         [0.004]),#log mean squared errors, MSE (can leave 0)
+        "Brassey 2014 Logarithmic Mammals": ##these should be split off for a "compute properties directly from hull" panel
+        (["whole_body"],
+         [3.09],#log intercept
+         [0.92],#log slope
+         [0.005]),#log mean squared errors, MSE (can leave 0)
+        }
 }

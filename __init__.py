@@ -85,6 +85,7 @@ from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel,
                                                   VIEW3D_PT_convex_hull_subpanel,
                                                   VIEW3D_PT_expand_convex_hulls_arith_subpanel,
                                                   VIEW3D_PT_expand_convex_hulls_logar_subpanel,
+                                                  VIEW3D_PT_whole_body_mass_from_convex_hull,
                                                   SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                                   CollectionConvexHull, 
                                                   SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
@@ -175,6 +176,7 @@ classes = (  #Global settings panel
                                     VIEW3D_PT_convex_hull_subpanel, 
                                      VIEW3D_PT_expand_convex_hulls_arith_subpanel,
                                     VIEW3D_PT_expand_convex_hulls_logar_subpanel,
+                                    VIEW3D_PT_whole_body_mass_from_convex_hull,
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                     CollectionConvexHull,
                                     SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY

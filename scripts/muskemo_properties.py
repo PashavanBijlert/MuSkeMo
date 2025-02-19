@@ -12,8 +12,10 @@ from bpy.props import (StringProperty,
 from bpy.types import (PropertyGroup,
                         )
 from .inertial_properties_panel import (SegmentParameterItem, #to fix the dependency for the scale factor list.
-                                        update_expansion_template_arithmetic,
-                                        update_expansion_template_logarithmic, InertialPropertiesPresets)
+                                        update_expansion_template_arithmetic, #arithmetic scaling
+                                        update_expansion_template_logarithmic, #logarithmic scaling
+                                        update_mass_from_CH_template_logarithmic, #whole body mass estimate from CH
+                                          InertialPropertiesPresets)
 class MuSkeMoProperties(PropertyGroup):
 
 ##### bodies
@@ -363,21 +365,30 @@ class MuSkeMoProperties(PropertyGroup):
     
 #### Dynamic scaling panel part of inertial properties panel
     segment_parameter_list_arithmetic: CollectionProperty(type=SegmentParameterItem) #imported class from the inprop panel script
-    segment_parameter_list_logarithmic: CollectionProperty(type=SegmentParameterItem)
+    segment_parameter_list_logarithmic: CollectionProperty(type=SegmentParameterItem) # for logarithmic per segment expansion
+    whole_body_mass_logarithmic_parameters: CollectionProperty(type=SegmentParameterItem)
 
     expansion_template_arithmetic: EnumProperty(
         name="Expansion Template (Arithmetic)",
-        items=[("Custom", "Custom", "")] + [(key, key, "") for key in InertialPropertiesPresets["Arithmetic"].keys()],
+        items=[("Custom", "Custom", "")] + [(key, key, "") for key in InertialPropertiesPresets["Arithmetic scale factor"].keys()],
         default="Custom",  # Ensure Custom is default
         update=update_expansion_template_arithmetic
     )
 
     expansion_template_logarithmic: EnumProperty(
         name="Expansion Template (Logarithmic)",
-        items=[("Custom", "Custom", "")] + [(key, key, "") for key in InertialPropertiesPresets["Logarithmic"].keys()],
+        items=[("Custom", "Custom", "")] + [(key, key, "") for key in InertialPropertiesPresets["Logarithmic scale factor"].keys()],
         default="Custom",  # Ensure Custom is default
         update=update_expansion_template_logarithmic
-    )    
+    )   
+
+
+    mass_from_CH_template_logarithmic: EnumProperty(
+        name="Mass from CH template (Logarithmic)",
+        items=[("Custom", "Custom", "")] + [(key, key, "") for key in InertialPropertiesPresets["Logarithmic whole body mass"].keys()],
+        default="Custom",  # Ensure Custom is default
+        update=update_mass_from_CH_template_logarithmic
+    )  
 
     expanded_hull_collection: StringProperty(
         name = "Expanded hull collection",

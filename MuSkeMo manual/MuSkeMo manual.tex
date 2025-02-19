@@ -214,7 +214,7 @@ To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of
 It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
 
 \subsubsection{Generate minimal convex hulls}
-Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons %{sellersMinimumConvexHull2012, BrasseyMOA2013, BrasseySELLERS2014, Brassey2016, Brassey2018, coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023, Bates2025}. 
+Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons \cite{sellersMinimumConvexHull2012a,brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,coathamConvexHullEstimation2021,macaulayDecouplingBodyShape2023,wrightVolumetricElementscalingMass2024,batesRunningPerformanceAustralopithecus2025}.
 In this subpanel, you can automatically generate convex hulls around (skeletal) meshes in a collection, and then apply methods from the literature to reconstruct the inertial properties.
 
 You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a separate collection. Each separate object in the collection will receive its own convex hull,
@@ -236,13 +236,20 @@ Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansio
     \item \textbf{Macaulay 2023 Bird:} The per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The per-segment "Croc\_Lizard" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The per-segment "Av." average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
-    \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012a}
+    \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012a}. This is the first introduction of this method, and the user is warned that the the Sellers 2012 curve was not calibrated using direct measurements of body mass for the analyzed skeletons \cite{sellersMinimumConvexHull2012a}.
+    \item  
 \end{itemize}
 
 Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log-transformed regression equations from the literature to scale your hulls. This functionality is currently disabled.
 
 %eventually, this section should deal with:
-% vol_skin = 10^(intercept + slope*log10(vol_CH) + MSE/2)
+% vol_skin = 10^(intercept)*vol_CH^slope * 10^(MSE/2)
+% y = 10**a * x**b * 10**(MSE/2)
+
+%Brassey 2016 pigeon equations have mm3 as input and g as output. To convert to kilograms (multiply output by 10**-3) and meters**3 (multiply the input by 10*9), use:
+% a_new = a -3 + 9*b
+
+
 
 \subsection{Body panel}
 \label{sec:bodypanel}
