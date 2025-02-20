@@ -594,8 +594,19 @@ class WholeBodyMassFromConvexHullsOperator (Operator):
     bl_description = "Use published equations to compute whole body mass, using convex hulls designated in a specific collection"
 
 
-    # Custom property to store whether the operator should use arithmetic or logarithmic behavior
-    #arithmetic_or_logarithmic: StringProperty()
+    total_body_mass: bpy.props.FloatProperty(precision=6)
+
+    def invoke(self, context, event): #this
+        self.execute(context)  # Run execute() before showing the dialog
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        estimation_type = context.scene.muskemo.mass_from_CH_template_logarithmic
+        layout.label(text='Computed total body mass from convex hulls')
+        row = layout.row()
+        row.label(text = 'Estimation type :"' + estimation_type + '"')
+        layout.prop(self, "total_body_mass", text="Total body mass (kg)")  # Copyable float property
 
     def execute(self, context):
         from .. import inertial_properties #import the function that computes inertial properties from a mesh
@@ -642,17 +653,25 @@ class WholeBodyMassFromConvexHullsOperator (Operator):
 
 
         
-        total_mass = 10**log_intercept * vol**log_slope * 10**(log_MSE/2)
+        total_body_mass = 10**log_intercept * vol**log_slope * 10**(log_MSE/2)
 
         if muskemo.mass_from_CH_template_logarithmic == 'Wright 2024 Logarithmic Tetrapods': 
             density = muskemo.segment_density
-            total_mass = total_mass * density **log_slope #Wright's equation assumes volume is multiplied by density before placing it in the power function.
+            total_body_mass = total_body_mass * density **log_slope #Wright's equation assumes volume is multiplied by density before placing it in the power function.
 
-
+        self.total_body_mass = total_body_mass
+        
+        ### insert code to compute inertial properties from convex hulls.
+        ### mass = volume ratio * total mass.
+        ### density = mass/volume
+        ### assign density to obj
+        ### run inertial_properties_func
         
 
-
         return {'FINISHED'}
+    
+
+    
 ### The panels
 
 
