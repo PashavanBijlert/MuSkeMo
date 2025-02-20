@@ -91,6 +91,7 @@ from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel,
                                                   SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
                                                   AddSegmentOperator, RemoveSegmentOperator,
                                                   ExpandConvexHullCollectionOperator,
+                                                  WholeBodyMassFromConvexHullsOperator,
                                                   
                                                   )
 
@@ -182,6 +183,7 @@ classes = (  #Global settings panel
                                     SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
                                     AddSegmentOperator, RemoveSegmentOperator,
                                     ExpandConvexHullCollectionOperator,
+                                    WholeBodyMassFromConvexHullsOperator,
 
             #body_panel
                                     VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,

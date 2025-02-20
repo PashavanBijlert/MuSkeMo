@@ -587,6 +587,72 @@ class ExpandConvexHullCollectionOperator (Operator):
         return {'FINISHED'}        
 
 
+
+class WholeBodyMassFromConvexHullsOperator (Operator):
+    bl_idname = "inprop.compute_whole_body_mass_ch"
+    bl_label = "Use published equations to compute whole body mass, using convex hulls designated in a specific collection"
+    bl_description = "Use published equations to compute whole body mass, using convex hulls designated in a specific collection"
+
+
+    # Custom property to store whether the operator should use arithmetic or logarithmic behavior
+    #arithmetic_or_logarithmic: StringProperty()
+
+    def execute(self, context):
+        from .. import inertial_properties #import the function that computes inertial properties from a mesh
+
+        #arithmetic_or_logarithmic = self.arithmetic_or_logarithmic
+
+        muskemo = bpy.context.scene.muskemo
+
+        CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
+        #eCH_colname = muskemo.expanded_hull_collection #Collection that will contain the expanded convex hulls
+
+
+        if CH_colname not in bpy.data.collections:
+            self.report({'ERROR'}, "A collection with the name '" + CH_colname + "' does not exist. Which collection contains the convex hulls? Type that into the 'Convex hull collection' field")
+            return {'FINISHED'}
+        
+        ## get the convex hull objects
+        convex_hulls = [x for x in bpy.data.collections[CH_colname].objects if 'MESH' in x.id_data.type] #get each object in collection 'Convex Hulls', if the data type is a 'MESH'
+        volumes = []
+        # get the volumes
+        for ch in convex_hulls:
+            bm = bmesh.new()
+            bm.from_mesh(ch.data) # create a bmesh using mesh data
+            volumes.append(bm.calc_volume())
+            bm.free()
+
+        vol = sum(volumes) #total volume in m3
+
+        logarithmic_parameters = muskemo.whole_body_mass_logarithmic_parameters
+        
+        if len(logarithmic_parameters)!= 1:
+            self.report({'ERROR'}, "This button only works with a single allometric equation for the whole body. You can only define one segment, and it has to be named 'whole_body'.")
+            return {'FINISHED'}
+        
+        if logarithmic_parameters[0].body_segment != 'whole_body':
+            self.report({'ERROR'}, "This button only works with a single allometric equation for the whole body. You can only define one segment, and it has to be named 'whole_body'.")
+            return {'FINISHED'}
+
+        logarithmic_parameters = logarithmic_parameters[0]
+
+        log_intercept = logarithmic_parameters['log_intercept']
+        log_slope = logarithmic_parameters['log_slope']
+        log_MSE = logarithmic_parameters['log_MSE']
+
+
+        
+        total_mass = 10**log_intercept * vol**log_slope * 10**(log_MSE/2)
+
+        if muskemo.mass_from_CH_template_logarithmic == 'Wright 2024 Logarithmic Tetrapods': 
+            density = muskemo.segment_density
+            total_mass = total_mass * density **log_slope #Wright's equation assumes volume is multiplied by density before placing it in the power function.
+
+
+        
+
+
+        return {'FINISHED'}
 ### The panels
 
 
@@ -814,6 +880,9 @@ class VIEW3D_PT_whole_body_mass_from_convex_hull(VIEW3D_PT_MuSkeMo, Panel):
         split.label(text = 'Mass estimation template:')
         split.prop(muskemo, "mass_from_CH_template_logarithmic", text = "")
 
+        
+        
+            
 
         ### Column labels
         row = layout.row()
@@ -849,15 +918,16 @@ class VIEW3D_PT_whole_body_mass_from_convex_hull(VIEW3D_PT_MuSkeMo, Panel):
             oper.mode = 'logarithmic_wholebodymass'
         layout.operator("inprop.add_segment", text="Add Segment", icon='ADD').mode = 'logarithmic_wholebodymass'
         ### dynamically sized panel
-
-        #### expanded hull collection
-        row = self.layout.row()
-        split = row.split(factor = 1/2)
-        split.label(text = 'Expanded Hull Collection')
-        split.prop(muskemo, "expanded_hull_collection", text = "")    
-           
+        if muskemo.mass_from_CH_template_logarithmic == 'Wright 2024 Logarithmic Tetrapods':
+            row = layout.row()
+            row = layout.row()
+            row = layout.row()
+            row.prop(muskemo, "segment_density")
         
-        #### expand hulls operator
+        
+               
+        
+        #### Compute whole body mass operator
         row = self.layout.row()
-        op = row.operator("inprop.expand_convex_hull_collection", text="Expand convex hulls")
-        op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
+        op = row.operator("inprop.compute_whole_body_mass_ch", text="Compute whole body mass")
+        #op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property

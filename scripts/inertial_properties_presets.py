@@ -31,6 +31,11 @@ InertialPropertiesPresets = {
          [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068]),#log mean squared errors, MSE (can leave 0)
         },
     "Logarithmic whole body mass": { #estimate whole body mass using a power curve of convex hulls of the whole body
+        "Wright 2024 Logarithmic Tetrapods":
+        (["whole_body"],
+         [0.215],#log intercept. They have density as a separate parameter, which would add 3*0.968 to this number
+         [0.968],#log slope
+         [0.0]),#log mean squared errors, MSE (can leave 0)
         "Brassey 2018 Logarithmic Primates":
         (["whole_body"],
          [3.17],#log intercept
