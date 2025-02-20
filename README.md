@@ -89,12 +89,6 @@ MuSkeMo enables you to import simulated trajectories back into Blender to create
 
 Users are able to define their desired default colors in this panel (currently only muscle color has been exposed to the user).
 
-# **Visualization panel**
-
-MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. This panel features a trajectory importer (currently OpenSim .sto format only) that has the optional feature to repeat the trajectory in a loop while progressing the forward translation coordinate (useful for simulations of a single stride). This panel also includes several convenience tools to aid users who are new to animations in Blender. 
-
-Users are able to define their desired default colors in this panel (currently only muscle color has been exposed to the user).
-
 # **Reflection panel**
 
 This panel allows you to create symmetric models, by only defining components on a single side and then reflecting them to the other side. The panel searches for objects that have a 'side string' (e.g. '_l' or '_r') at the end of their name. You can choose your own side string.
