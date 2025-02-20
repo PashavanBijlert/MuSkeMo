@@ -242,12 +242,45 @@ Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansio
 
 Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log-transformed regression equations from the literature to scale your hulls. This functionality is currently disabled.
 
-%eventually, this section should deal with:
-% vol_skin = 10^(intercept)*vol_CH^slope * 10^(MSE/2)
-% y = 10**a * x**b * 10**(MSE/2)
 
-%Brassey 2016 pigeon equations have mm3 as input and g as output. To convert to kilograms (multiply output by 10**-3) and meters**3 (multiply the input by 10*9), use:
-% a_new = a -3 + 9*b
+\subsubsection{Whole body mass from convex hulls}
+
+Several studies have regressed total body mass to summed convex hulls of the entire body, as an approach to estimate total body mass from skeletons \cite{brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,wrightVolumetricElementscalingMass2024}. The equations have the form:
+
+\begin{equation}
+y = 10^a \cdot x^{b} \cdot 10^{\epsilon /2}
+\end{equation}
+\label{eq:powercurve}
+
+This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the computed mass.  \(\epsilon\) is the mean squared error of the regression, which is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,newmanRegressionAnalysisLogtransformed1993}. Where \(\epsilon\) was not reported by the original studies, MuSkeMo sets it to 0, which implies a small, systematic, underestimation of the fitted power curve.
+
+For the mass estimation equations, x is the summed volume of the convex hulls of all the body segments in \si{m^3}, and y is the computed total body mass in \si{kg}.
+
+This subpanel sums all the convex hull volumes in a designated collection, then uses the user-selected empirical equation to compute total body mass (in kg). This assumes the convex hulls are of the complete skeleton (including both left and right sides). Available equations are:
+
+\begin{itemize}
+    \item \textbf{Wright 2024 Logarithmic Tetrapods:} Regression equation from \cite{wrightVolumetricElementscalingMass2024}, based on primary data, and reused data from \cite{coathamConvexHullEstimation2021} and \cite{sellersMinimumConvexHull2012a} (the latter includes estimates instead of measurements of total body mass)
+    \item \textbf{Brassey 2018 Logarithmic Primates:} from \cite{brasseyVolumetricTechniqueFossil2018}.
+    \item \textbf{Brassey 2016 Logarithmic Pigeons, Eviscerated:} from \cite{brasseyConvexhullMassEstimates2016}, using the eviscerated pigeons equation.
+    \item \textbf{Brassey 2016 Logarithmic Pigeons, Combined:} from \cite{brasseyConvexhullMassEstimates2016}, using the combined pigeons equation.
+    \item \textbf{Brassey 2014 Logarithmic Primates:} from \cite{brasseyScalingConvexHull2014}.
+    \item \textbf{Brassey 2014 Logarithmic Mammals:} from \cite{brasseyScalingConvexHull2014}, this reuses data from \cite{sellersMinimumConvexHull2012a} which includes body mass estimates instead of direct measurements.
+\end{itemize}
+
+The original Brassey et al. 2016 \cite{brasseyConvexhullMassEstimates2016} pigeon equations assume volume is  \si{mm^3}, and provide the mass in \si{g}. To convert the output to kilograms (multiply by \(10^{-3}\)) and allow the input to be in \si{m^3} (multiply input by \(10^9\)), it is possible to rewrite equation \ref{eq:powercurve}.
+
+\begin{equation}
+y = 10^{-3} \cdot 10^a \cdot (x \cdot 10^9 )^{b} \cdot 10^{\epsilon /2}
+\end{equation}
+
+After rewriting, this gives:
+
+\begin{equation}
+    a_{new} = a - 3 + 9\cdot b
+\end{equation}
+
+Wright et al. \cite{wrightVolumetricElementscalingMass2024} multiply the summed convex hull volume by a density of \(\rho\) = 1000 \si{kg m^{-3}} before applying their power curve. This implies that mass scales with \(\rho^b\) in their predictive model.
+
 
 
 
