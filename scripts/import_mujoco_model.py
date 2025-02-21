@@ -221,7 +221,7 @@ class ImportMuJoCoModel(Operator):
                 body_dict[body_name] = {} 
                 body_dict[body_name]['parent_frame_pos_in_global'] = [0,0,0] #world position
                 body_dict[body_name]['parent_frame_or_in_global_quat'] = [1,0,0,0] #world orientation
-
+                body_dict[body_name]['parent_body_name'] = 'world'
             ### get info for the attached local frame
             frame_pos_in_parent_frame = body_info.get('pos', [0,0,0]) #get pos, if it doesn't exist assume 0,0,0
             frame_or_in_parent_frame_quat = body_info.get('quat', [1,0,0,0])
@@ -304,14 +304,72 @@ class ImportMuJoCoModel(Operator):
                     parent_body = body_name,
                     collection_name = frame_colname) 
 
+            #add frame data to frame dict for easy access
 
+            frame_dict[frame_name] = {}
+            frame_dict[frame_name]['pos_in_global'] = frame_pos_in_glob
+            frame_dict[frame_name]['gRb'] = gRf
+            frame_dict[frame_name]['parent_body_name'] = body_name
 
             ### joint
+            joints = body_info.get('joint') 
+            if joints: #if sites are in body info, add them to the dict
+            
+                if isinstance(joints, dict): #if the body has a single joint, it's returned as a dict instead of a list
+                    
+                    joint = joints
+                    
+                    coordinate = joint['name']
+                    joint_pbody_name = body_dict[body_name]['parent_body_name']
+                    joint_cbody_name = body_name
+                    joint_name = joint_pbody_name + '_' + joint_cbody_name + '_joint' 
+                    joint_pos_in_body_frame = joint['pos'] #this is the parent frame in mujoco, but the child frame in MuSkeMo
+                    joint_pos_in_glob = gRf@Vector(joint_pos_in_body_frame) + frame_pos_in_glob
 
+                    create_joint(name = joint_name, radius = joint_rad, is_global = True, collection_name = joint_colname,
+                    parent_body=joint_pbody_name, child_body=joint_cbody_name, 
+                    pos_in_global=joint_pos_in_glob, 
+                    or_in_global_XYZeuler=[nan] * 3, 
+                    or_in_global_quat=[nan] * 4,
+                    pos_in_parent_frame=[nan] * 3,
+                    or_in_parent_frame_XYZeuler=[nan] * 3, or_in_parent_frame_quat=[nan] * 4,
+                    pos_in_child_frame=[nan] * 3, 
+                    or_in_child_frame_XYZeuler=[nan] * 3, or_in_child_frame_quat=[nan] * 4,
+                    coordinate_Tx='', coordinate_Ty='', coordinate_Tz='', 
+                    coordinate_Rx='', coordinate_Ry='', coordinate_Rz='',                  
+                    )
 
+                else:
 
+                    print('body has multiple joints, which is equivalent to coordinates in MuSkeMo. Combine them.')
+            
+            
+               
+            
+            ### add sites to the sites dict, so they're callable by name during muscle point construction
 
+            sites = body_info.get('site') 
+            if sites: #if sites are in body info, add them to the dict
+                
+                if  not isinstance(sites, dict): #if it's not a dict (so not a single site)
+                    for site in sites:
 
+                        print(body_name)
+                        print(site)
+                        site_name = site['name']
+
+                        site_dict[site_name]  = site #add each site in this body to the site dict, using the name as the dict entry   
+                        site_dict[site_name]['parent_body_name'] = body_name
+                        site_dict[site_name]['parent_frame_name'] = frame_name
+
+                else: #if it's a single site        
+                    print(body_name)
+                    print(site)
+                    site_name = site['name']
+
+                    site_dict[site_name]  = site #add each site in this body to the site dict, using the name as the dict entry   
+                    site_dict[site_name]['parent_body_name'] = body_name
+                    site_dict[site_name]['parent_frame_name'] = frame_name
 
 
             # If the body has children, add them to the stack
@@ -321,9 +379,11 @@ class ImportMuJoCoModel(Operator):
                     body_dict[child_name] = {}
                     body_dict[child_name]['parent_frame_pos_in_global'] = frame_pos_in_glob
                     body_dict[child_name]['parent_frame_or_in_global_quat'] = quat_from_matrix(gRf)
+                    body_dict[child_name]['parent_body_name'] = body_name
 
-
-
+            
+        print(site_dict)
+        print(frame_dict)
 
 
         return {'FINISHED'}
