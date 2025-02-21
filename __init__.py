@@ -85,13 +85,15 @@ from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel,
                                                   VIEW3D_PT_convex_hull_subpanel,
                                                   VIEW3D_PT_expand_convex_hulls_arith_subpanel,
                                                   VIEW3D_PT_expand_convex_hulls_logar_subpanel,
-                                                  VIEW3D_PT_whole_body_mass_from_convex_hull,
+                                                  VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel,
+                                                  VIEW3D_PT_segment_inprops_from_convex_hull_subpanel,
                                                   SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                                   CollectionConvexHull, 
                                                   SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
                                                   AddSegmentOperator, RemoveSegmentOperator,
                                                   ExpandConvexHullCollectionOperator,
                                                   WholeBodyMassFromConvexHullsOperator,
+                                                  PerSegmentInpropsFromConvexHullsOperator,
                                                   
                                                   )
 
@@ -177,13 +179,15 @@ classes = (  #Global settings panel
                                     VIEW3D_PT_convex_hull_subpanel, 
                                      VIEW3D_PT_expand_convex_hulls_arith_subpanel,
                                     VIEW3D_PT_expand_convex_hulls_logar_subpanel,
-                                    VIEW3D_PT_whole_body_mass_from_convex_hull,
+                                    VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel,
+                                    VIEW3D_PT_segment_inprops_from_convex_hull_subpanel,
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                     CollectionConvexHull,
                                     SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
                                     AddSegmentOperator, RemoveSegmentOperator,
                                     ExpandConvexHullCollectionOperator,
                                     WholeBodyMassFromConvexHullsOperator,
+                                    PerSegmentInpropsFromConvexHullsOperator,
 
             #body_panel
                                     VIEW3D_PT_body_panel, VIEW3D_PT_vizgeometry_subpanel,

@@ -669,7 +669,17 @@ class WholeBodyMassFromConvexHullsOperator (Operator):
         
 
         return {'FINISHED'}
-    
+
+
+class PerSegmentInpropsFromConvexHullsOperator (Operator):
+    bl_idname = "inprop.compute_segment_inprops_ch"
+    bl_label = "Use published equations to compute inertial properties directly from segment convex hulls, on a per-segment basis"
+    bl_description = "Use published equations to compute inertial properties directly from segment convex hulls, on a per-segment basis"
+
+    def execute(self, context):
+
+        return {'FINISHED'}
+
 
     
 ### The panels
@@ -755,13 +765,13 @@ class VIEW3D_PT_expand_convex_hulls_arith_subpanel(VIEW3D_PT_MuSkeMo, Panel):
 
         #### convex hull collection
         row = self.layout.row()
-        split = row.split(factor = 1/3)
+        split = row.split(factor = 1/2)
         split.label(text = 'Convex Hull Collection')
         split.prop(muskemo, "convex_hull_collection", text = "")
 
         ### dynamically sized panel
         row = self.layout.row()
-        split = row.split(factor = 1/3)
+        split = row.split(factor = 1/2)
         split.label(text = 'Expansion Template:')
         split.prop(muskemo, "expansion_template_arithmetic", text = "")
         
@@ -816,13 +826,13 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
 
         #### convex hull collection
         row = self.layout.row()
-        split = row.split(factor = 1/3)
+        split = row.split(factor = 1/2)
         split.label(text = 'Convex Hull Collection')
         split.prop(muskemo, "convex_hull_collection", text = "")
 
         ### dynamically sized panel
         row = self.layout.row()
-        split = row.split(factor = 1/3)
+        split = row.split(factor = 1/2)
         split.label(text = 'Expansion Template:')
         split.prop(muskemo, "expansion_template_logarithmic", text = "")
 
@@ -876,7 +886,7 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
 
 
 # Panel for whole body mass estimation from convex hulls
-class VIEW3D_PT_whole_body_mass_from_convex_hull(VIEW3D_PT_MuSkeMo, Panel):
+class VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
     bl_idname = "VIEW3D_PT_body_mass_from_convex_hull_subpanel"
     bl_label = "Whole body mass from convex hulls - logarithmic"
@@ -889,13 +899,13 @@ class VIEW3D_PT_whole_body_mass_from_convex_hull(VIEW3D_PT_MuSkeMo, Panel):
 
         #### convex hull collection
         row = self.layout.row()
-        split = row.split(factor = 1/3)
+        split = row.split(factor = 1/2)
         split.label(text = 'Convex Hull Collection')
         split.prop(muskemo, "convex_hull_collection", text = "")
 
         ### dynamically sized panel
         row = self.layout.row()
-        split = row.split(factor = 1/3)
+        split = row.split(factor = 1/2)
         split.label(text = 'Mass estimation template:')
         split.prop(muskemo, "mass_from_CH_template_logarithmic", text = "")
 
@@ -949,4 +959,80 @@ class VIEW3D_PT_whole_body_mass_from_convex_hull(VIEW3D_PT_MuSkeMo, Panel):
         #### Compute whole body mass operator
         row = self.layout.row()
         op = row.operator("inprop.compute_whole_body_mass_ch", text="Compute whole body mass")
+        #op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
+
+
+class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):
+    bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
+    bl_idname = "VIEW3D_PT_segment_inprops_from_convex_hull_subpanel"
+    bl_label = "Segment inertial properties from convex hull - logarithmic"
+    bl_options = {'DEFAULT_CLOSED'} 
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+        #### convex hull collection
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.label(text = 'Convex Hull Collection')
+        split.prop(muskemo, "convex_hull_collection", text = "")
+
+        ### dynamically sized panel
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.label(text = 'Mass estimation template:')
+        split.prop(muskemo, "mass_from_CH_template_logarithmic", text = "")
+
+        
+        
+            
+
+        ### Column labels
+        row = layout.row()
+        row = layout.row()
+        row = layout.row()
+        split = row.split(factor = 1/15)
+        split.label(text = "No")
+        split = split.split(factor = 1/4)
+        split.label(text = "Segment name")
+        split = split.split(factor = 3/10)
+        split.label(text = "Intercept")
+        split = split.split(factor = 3/7)
+        split.label(text = "Slope")
+        split = split.split(factor = 3/4)
+        split.label(text = "MSE")
+
+
+
+        for i, item in enumerate(muskemo.whole_body_mass_logarithmic_parameters):
+            row = layout.row()
+            split = row.split(factor = 1/15)
+            split.label(text = f"{i+1}")
+            split = split.split(factor = 1/4)
+            split.prop(item, "body_segment", text="")
+            split = split.split(factor = 3/10)
+            split.prop(item, "log_intercept", text="")
+            split = split.split(factor = 3/7)
+            split.prop(item, "log_slope", text="")
+            split = split.split(factor = 3/4)
+            split.prop(item, "log_MSE", text="")
+            oper = split.operator("inprop.remove_segment", text="", icon='REMOVE')
+            oper.index = i
+            oper.mode = 'logarithmic_wholebodymass'
+        layout.operator("inprop.add_segment", text="Add Segment", icon='ADD').mode = 'logarithmic_wholebodymass'
+        ### dynamically sized panel
+        if muskemo.mass_from_CH_template_logarithmic == 'Wright 2024 Logarithmic Tetrapods':
+            row = layout.row()
+            row = layout.row()
+            row = layout.row()
+            row.prop(muskemo, "segment_density")
+        
+        
+               
+        
+        #### Compute whole body mass operator
+        row = self.layout.row()
+        op = row.operator("inprop.compute_segment_inprops_ch", text="Compute segment inertial properties")
         #op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
