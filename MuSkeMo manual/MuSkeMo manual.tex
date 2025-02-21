@@ -209,9 +209,9 @@ The Blender user interface has several default settings that do not work well wi
 The main goal of this panel is to compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
 Inertial properties are not dynamic, if you move the 3D meshes or would like to change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo warns you if this has occured, by tracking the 'default\_pose' of each mesh as a custom property (see \ref{sec:defaultpose}). Density can only be changed by changing the 'Segment density' in the panel and recomputing the object's inertial properties.
 
-To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mesh, based on the Divergence Theorem. The volumetric tensor is multiplied by density to acquire the inertial tensor elements. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. 
+To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mesh, based on the Divergence Theorem. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. The volumetric tensor is multiplied by density (in \si{kg m^{-3}}) to acquire the inertial tensor elements (in units \si{kg m^2}). 
 
-It is possible to change the density property of an object, after which you'll have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
+It is possible to change the density property of an object, after which you will have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
 
 \subsubsection{Generate minimal convex hulls}
 Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons \cite{sellersMinimumConvexHull2012a,brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,coathamConvexHullEstimation2021,macaulayDecouplingBodyShape2023,wrightVolumetricElementscalingMass2024,batesRunningPerformanceAustralopithecus2025}.
@@ -240,7 +240,15 @@ Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansio
     \item  
 \end{itemize}
 
-Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log-transformed regression equations from the literature to scale your hulls. This functionality is currently disabled.
+Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log-transformed regression equations from the literature to scale your hulls. This functionality is currently disabled, pending clarification from the authors. See equation \ref{eq:powercurve} to see how the allometric power curves are treated.
+
+\begin{itemize}
+    \item \textbf{Custom:} Type in the segment names, and the desired scale factor.
+    \item \textbf{Macaulay 2023 Logarithmic Bird:} The logarithmic per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S4.
+    \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The logarithmic per-segment "Non avian sauropsid" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S5.
+    \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The logarithmic per-segment "all taxa" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S3.
+\end{itemize}
+
 
 
 \subsubsection{Whole body mass from convex hulls}
@@ -249,8 +257,9 @@ Several studies have regressed total body mass to summed convex hulls of the ent
 
 \begin{equation}
 y = 10^a \cdot x^{b} \cdot 10^{\epsilon /2}
-\end{equation}
 \label{eq:powercurve}
+\end{equation}
+
 
 This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the computed mass.  \(\epsilon\) is the mean squared error of the regression, which is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,newmanRegressionAnalysisLogtransformed1993}. Where \(\epsilon\) was not reported by the original studies, MuSkeMo sets it to 0, which implies a small, systematic, underestimation of the fitted power curve.
 
