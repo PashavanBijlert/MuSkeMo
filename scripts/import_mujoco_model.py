@@ -314,38 +314,127 @@ class ImportMuJoCoModel(Operator):
             ### joint
             joints = body_info.get('joint') 
             if joints: #if sites are in body info, add them to the dict
-            
+                
+                joint_pbody_name = body_dict[body_name]['parent_body_name']
+                joint_cbody_name = body_name
+                joint_name = joint_pbody_name + '_' + joint_cbody_name + '_joint' 
+                    
+
+
+                ## some MuJoCo joints have "user" defined in them, which appears to be a default pose
+                ## Find the user value (which is just a user in put coordinate value apparently), 
+                # multiply it by the axis, and add this to the joint position in body frame
+                ### Doing this only for slide_joints, it may be necessary to do a similar thing for pin joints in the future.
+
+                coordinate_offset = Vector([0,0,0]) #if 'user' is defined in a mujoco joint, which appears to be a coordinate offset, we save it in the joint dict and apply it to the model after model construction
+                slide_joints = []
+
+
                 if isinstance(joints, dict): #if the body has a single joint, it's returned as a dict instead of a list
                     
                     joint = joints
                     
                     coordinate = joint['name']
-                    joint_pbody_name = body_dict[body_name]['parent_body_name']
-                    joint_cbody_name = body_name
-                    joint_name = joint_pbody_name + '_' + joint_cbody_name + '_joint' 
-                    joint_pos_in_body_frame = joint['pos'] #this is the parent frame in mujoco, but the child frame in MuSkeMo
-                    joint_pos_in_glob = gRf@Vector(joint_pos_in_body_frame) + frame_pos_in_glob
 
-                    create_joint(name = joint_name, radius = joint_rad, is_global = True, collection_name = joint_colname,
-                    parent_body=joint_pbody_name, child_body=joint_cbody_name, 
-                    pos_in_global=joint_pos_in_glob, 
-                    or_in_global_XYZeuler=[nan] * 3, 
-                    or_in_global_quat=[nan] * 4,
-                    pos_in_parent_frame=[nan] * 3,
-                    or_in_parent_frame_XYZeuler=[nan] * 3, or_in_parent_frame_quat=[nan] * 4,
-                    pos_in_child_frame=[nan] * 3, 
-                    or_in_child_frame_XYZeuler=[nan] * 3, or_in_child_frame_quat=[nan] * 4,
-                    coordinate_Tx='', coordinate_Ty='', coordinate_Tz='', 
-                    coordinate_Rx='', coordinate_Ry='', coordinate_Rz='',                  
-                    )
+                    ##
+                    ## check if there is joint type, and if yes, use that to distinguish between T and R coordinate
+                    ## check if the transform axes are one of the unit directions, and if yes, use that to choose x, y, or z
+                    ## If transform axes are non-standard, treat like OpenSim
+                    ## if no subjoint defined but subbody defined, create a joint (for each body)
+
+
+                    
+                    joint_pos_in_body_frame = joint['pos'] #this is the parent frame in mujoco, but the child frame in MuSkeMo
+                    
+                    if 'slide' in joint: #if joint type is slide, we check later if 'user' is defined
+                        slide_joints = joint 
+
 
                 else:
+                    
 
-                    print('body has multiple joints, which is equivalent to coordinates in MuSkeMo. Combine them.')
+                    joint_names = [obj['name'] for obj in joints]
+                    
+                    ## see if there's a common part for the joint names that we can use to name this new joint.
+                    def common_sections(strings):
+                        # Split each string into sections based on '_'
+                        split_strings = [s.split('_') for s in strings]
+
+                        # Find the shortest list length (to avoid index errors)
+                        min_length = min(len(parts) for parts in split_strings)
+
+                        # Track common parts while allowing gaps
+                        common_parts = []
+                        
+                        for i in range(min_length):
+                            section = split_strings[0][i]  # Take section from first string
+                            
+                            # Check if this section appears in ALL strings at any position
+                            if all(section in parts for parts in split_strings):
+                                common_parts.append(section)
+
+                        return '_'.join(common_parts)  # Rejoin with '_'
+
+                    
+                    common_part = common_sections(joint_names) ## this is missing the side string
+                    if common_part:
+                        joint_name = common_part
+                        if joint_name in bpy.data.objects: #ensure unique names
+                            joint_name = joint_name + '_joint' #
+
+                    
+                    #check if all have the same pos defined
+                    joint_positions = [obj.get('pos') for obj in joints]
+
+                    if not all(joint_pos == joint_positions[0] for joint_pos in joint_positions):
+
+                        self.report({'WARNING'}, "The body '" + body_name + "' has MuJoCo joints (equivalent to MuSkeMo coordinates) with different positions defined. This is not currently possible in MuSkeMo, so MuSkeMo defaulted to using the first joint's position.")
+
+
+                    joint_pos_in_body_frame = joint_positions[0]
+                    
+                    #if joint type is slide, we check later if 'user' is defined
+                    slide_joints = [joint for joint in joints if joint.get('type')=='slide']
+                                         
+
+                joint_pos_in_glob = gRf@Vector(joint_pos_in_body_frame) + frame_pos_in_glob
+
+
+
+                create_joint(name = joint_name, radius = joint_rad, is_global = True, collection_name = joint_colname,
+                parent_body=joint_pbody_name, child_body=joint_cbody_name, 
+                pos_in_global=joint_pos_in_glob, 
+                or_in_global_XYZeuler=[nan] * 3, 
+                or_in_global_quat=[nan] * 4,
+                pos_in_parent_frame=[nan] * 3,
+                or_in_parent_frame_XYZeuler=[nan] * 3, or_in_parent_frame_quat=[nan] * 4,
+                pos_in_child_frame=[nan] * 3, 
+                or_in_child_frame_XYZeuler=[nan] * 3, or_in_child_frame_quat=[nan] * 4,
+                coordinate_Tx='', coordinate_Ty='', coordinate_Tz='', 
+                coordinate_Rx='', coordinate_Ry='', coordinate_Rz='',                  
+                )    
             
-            
-               
-            
+                ### Here we check if "user" is defined in the joints, and if so, we compute the global coordinate offset
+
+                for sj in slide_joints:
+                    if 'user' in sj:
+                        coordinate_offset += sj['user'][0] * Vector(sj['axis']) #coordinate offset is initially 0,0,0, here we add components to it
+
+                
+                ### add joint data to joint_dict
+                joint_dict[joint_name]     = {} #create as a new dict
+                joint_dict[joint_name]['joint_name'] = joint_name
+                joint_dict[joint_name]['parent_body_name'] = joint_pbody_name
+                joint_dict[joint_name]['child_body_name'] = joint_cbody_name
+                joint_dict[joint_name]['pos_in_global'] = joint_pos_in_glob
+                joint_dict[joint_name]['mujoco_bodyframe_gRf'] = gRf
+
+                if coordinate_offset !=  Vector([0,0,0]):
+                    coordinate_offset_global = gRf@coordinate_offset
+                    joint_dict[joint_name]['coordinate_offset_global'] = coordinate_offset_global
+
+
+
             ### add sites to the sites dict, so they're callable by name during muscle point construction
 
             sites = body_info.get('site') 
@@ -354,8 +443,7 @@ class ImportMuJoCoModel(Operator):
                 if  not isinstance(sites, dict): #if it's not a dict (so not a single site)
                     for site in sites:
 
-                        print(body_name)
-                        print(site)
+                        
                         site_name = site['name']
 
                         site_dict[site_name]  = site #add each site in this body to the site dict, using the name as the dict entry   
@@ -363,8 +451,7 @@ class ImportMuJoCoModel(Operator):
                         site_dict[site_name]['parent_frame_name'] = frame_name
 
                 else: #if it's a single site        
-                    print(body_name)
-                    print(site)
+                    
                     site_name = site['name']
 
                     site_dict[site_name]  = site #add each site in this body to the site dict, using the name as the dict entry   
@@ -382,9 +469,18 @@ class ImportMuJoCoModel(Operator):
                     body_dict[child_name]['parent_body_name'] = body_name
 
             
-        print(site_dict)
-        print(frame_dict)
+        
 
+
+        #apply the joint coordinate offsets after model construction, if they are defined for a specific joint
+        for j, data in joint_dict.items():  # Iterate over keys AND values
+            if 'coordinate_offset_global' in data:  # Check if the key exists in the nested dict
+                
+
+                joint_obj = bpy.data.objects[data['joint_name']]
+                coordinate_offset_global = data['coordinate_offset_global']
+
+                joint_obj.matrix_world.translation += coordinate_offset_global     
 
         return {'FINISHED'}
 
