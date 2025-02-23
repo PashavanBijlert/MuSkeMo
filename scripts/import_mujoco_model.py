@@ -324,6 +324,7 @@ class ImportMuJoCoModel(Operator):
                 ## some MuJoCo joints have "user" defined in them, which appears to be a default pose
                 ## Find the user value (which is just a user in put coordinate value apparently), 
                 # multiply it by the axis, and add this to the joint position in body frame
+                # this is done by creating a variable called coordinate_offset_global
                 ### Doing this only for slide_joints, it may be necessary to do a similar thing for pin joints in the future.
 
                 coordinate_offset = Vector([0,0,0]) #if 'user' is defined in a mujoco joint, which appears to be a coordinate offset, we save it in the joint dict and apply it to the model after model construction
