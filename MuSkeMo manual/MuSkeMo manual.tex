@@ -454,7 +454,24 @@ OpenSim models with \href{https://simtk.org/api_docs/opensim/api_docs/classOpenS
 
 MuSkeMo includes a Gaitsym (2019) importer. It currently imports bodies, joints, muscles (DampedSpring elements are treated as muscles), contacts, and markers (as frames). Muscles that include wrapping are currently not supported, but limited wrapping support is planned in a future update. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory, and the name of this subdirectory must currently be manually typed into the panel.
 
-It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq:changeofbasis} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old -Y-axis becomes the new Z-axis.
+It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq:changeofbasis} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old Y-axis becomes the new Z-axis.
+
+\subsubsection{MuJoCo model import}
+\label{sec:mujocoimporter}
+MuSkeMo provides a MuJoCo importer. It should import most of the components of a MuJoCo model. It has only been tested on MuJoCo models converted from OpenSim using MyoConverter, made available \href{https://github.com/MyoHub/myoconverter/tree/main}{here}.
+
+MuJoCo has a substantially different model format from most biomechanical simulators (see the \href{https://mujoco.readthedocs.io/en/stable/XMLreference.html}{documentation} of their model format). Although for the most part it is possible to convert MuJoCo models to MuSkeMo, the conversion will not result in a perfect correspondence in all cases. Apart from the hierarchical structure of the xml, this is because of the way joints are defined in the \href{https://mujoco.readthedocs.io/en/stable/modeling.html#ctree}{MuJoCo kinematic tree}. In MuSkeMo, two BODIES (sec. \ref{sec:body}) have to be connected by a joint, even if the joint has no Coordinates (degrees of freedom). In contrast, bodies in MuJoCo can be directly parented to each other (which welds them together, in essence creating a composite body). When \href{https://mujoco.readthedocs.io/en/stable/XMLreference.html#body-joint}{joints} are added to a model, they are listed as subelements of the body they act on in the xml, (even though they technically act as a parent joint to that body). MuJoCo also allows more flexibility in their joint definitions, each MuJoCo joint adds one (or multiple) degrees of freedom, which in principle could each have a distinct position (joint center), and non-perpendicular axis to the other degrees of freedom. Because joints in MuJoCo are more akin to degrees of freedom, they are not equivalent to MuSkeMo joints, but instead are more akin to Coordinates defined within joints in MuSkeMo (see sec. \ref{sec:joint}). Below is a list of conversions that MuSkeMo performs during MuJoCo import:
+
+\begin{itemize}
+\item MuJoCo bodies are more equivalent to MuSkeMo FRAMES (see sec. \ref{sec:frame}). The actual rigid body information in a MuJoCo body is defined in the (optional) 'inertial' element. During conversion, MuSkeMo treates the 'inertial' element as the body, and creates a frame with the name "frame\_of\_[body\_name]" for each body in the MuJoCo model.
+\item Joints in MuJoCo define degrees of freedom, and during import are combined into a single MuSkeMo JOINT. The MuJoCo joint names are treated as the Coordinate names in MuSkeMo, and no combined Joint name is actually defined in the MuJoCo model. MuSkeMo automatically names the joint "[parent\_body]\_[child\_body]\_joint", unless the MuJoCo body has several joints defined, and they have several sections in their name in common.
+\item MuJoCo in principle allows each "joint"  (i.e., degree of freedom) to have its own joint center (defined with the "pos" flag). This is not possible in MuSkeMo because the degrees of freedom are assigned to a single joint. MuSkeMo assumes all the degrees of freedom have the same center, and warns the user if the MuJoCo model defines it differently
+
+
+\end{itemize}
+
+
+
 
 \subsubsection{Other simulators}
 
@@ -641,6 +658,7 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 
 
 \subsection{JOINT}
+\label{sec:joint}
 
 A joint in MuSkeMo represents the connection between two rigid bodies, allowing them to articulate relative to each other. The joint position and orientation can be expressed in XYZ Euler angles or quaternions.
 
