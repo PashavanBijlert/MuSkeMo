@@ -335,6 +335,8 @@ class ImportMuJoCoModel(Operator):
 
             #### construct child frame
 
+            #potentially only import the frame if the body isn't skipped, so
+            # if body_name in bpy.data.objects:
             create_frame(name = frame_name, size = frame_size , 
                             pos_in_global=frame_pos_in_glob,
                     gRb = gRf, 
@@ -377,8 +379,7 @@ class ImportMuJoCoModel(Operator):
                     ## check if there is joint type, and if yes, use that to distinguish between T and R coordinate
                     ## check if the transform axes are one of the unit directions, and if yes, use that to choose x, y, or z
                     ## If transform axes are non-standard, treat like OpenSim
-                    ## if no subjoint defined but subbody defined, create a joint (for each body)
-
+                   
 
                     
                     joint_pos_in_body_frame = joint['pos'] #this is the parent frame in mujoco, but the child frame in MuSkeMo
@@ -512,6 +513,7 @@ class ImportMuJoCoModel(Operator):
                     body_dict[child_name]['parent_body_name'] = body_name
 
             
+        #once the rigid body system is constructed, create muscles
         
 
 
