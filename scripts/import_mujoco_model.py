@@ -312,25 +312,24 @@ class ImportMuJoCoModel(Operator):
             frame_dict[frame_name]['parent_body_name'] = body_name
 
             ### joint
-            joints = body_info.get('joint') 
-            if joints: #if sites are in body info, add them to the dict
-                
-                joint_pbody_name = body_dict[body_name]['parent_body_name']
-                joint_cbody_name = body_name
-                joint_name = joint_pbody_name + '_' + joint_cbody_name + '_joint' 
+            joints = body_info.get('joint')  #this can be empty, because if two bodies are welded, MuJoCo doesn't require a joint definition. MuSkeMo will create one in that case.
+
+            joint_pbody_name = body_dict[body_name]['parent_body_name']
+            joint_cbody_name = body_name
+            joint_name = joint_pbody_name + '_' + joint_cbody_name + '_joint' 
+
+            ## some MuJoCo joints have "user" defined in them, which appears to be a default pose
+            ## Find the user value (which is just a user in put coordinate value apparently), 
+            # multiply it by the axis, and add this to the joint position in body frame
+            # this is done by creating a variable called coordinate_offset_global
+            ### Doing this only for slide_joints, it may be necessary to do a similar thing for pin joints in the future.
+
+            coordinate_offset = Vector([0,0,0]) #if 'user' is defined in a mujoco joint, which appears to be a coordinate offset, we save it in the joint dict and apply it to the model after model construction
+            slide_joints = [] #
                     
-
-
-                ## some MuJoCo joints have "user" defined in them, which appears to be a default pose
-                ## Find the user value (which is just a user in put coordinate value apparently), 
-                # multiply it by the axis, and add this to the joint position in body frame
-                # this is done by creating a variable called coordinate_offset_global
-                ### Doing this only for slide_joints, it may be necessary to do a similar thing for pin joints in the future.
-
-                coordinate_offset = Vector([0,0,0]) #if 'user' is defined in a mujoco joint, which appears to be a coordinate offset, we save it in the joint dict and apply it to the model after model construction
-                slide_joints = []
-
-
+            if joints: #if joints are defined in body info, add them to the dict. Otherwise, we create a new joint anyway because MuSkeMo requires two bodies to be connected by a joint
+                
+              
                 if isinstance(joints, dict): #if the body has a single joint, it's returned as a dict instead of a list
                     
                     joint = joints
@@ -351,7 +350,7 @@ class ImportMuJoCoModel(Operator):
                         slide_joints = joint 
 
 
-                else:
+                else: #if the MuJoCo body has multiple joints (degrees of freedom), combine into a single MuSkeMo joint with assigned coordinates
                     
 
                     joint_names = [obj['name'] for obj in joints]
@@ -400,39 +399,45 @@ class ImportMuJoCoModel(Operator):
 
                 joint_pos_in_glob = gRf@Vector(joint_pos_in_body_frame) + frame_pos_in_glob
 
-
-
-                create_joint(name = joint_name, radius = joint_rad, is_global = True, collection_name = joint_colname,
-                parent_body=joint_pbody_name, child_body=joint_cbody_name, 
-                pos_in_global=joint_pos_in_glob, 
-                or_in_global_XYZeuler=[nan] * 3, 
-                or_in_global_quat=[nan] * 4,
-                pos_in_parent_frame=[nan] * 3,
-                or_in_parent_frame_XYZeuler=[nan] * 3, or_in_parent_frame_quat=[nan] * 4,
-                pos_in_child_frame=[nan] * 3, 
-                or_in_child_frame_XYZeuler=[nan] * 3, or_in_child_frame_quat=[nan] * 4,
-                coordinate_Tx='', coordinate_Ty='', coordinate_Tz='', 
-                coordinate_Rx='', coordinate_Ry='', coordinate_Rz='',                  
-                )    
-            
-                ### Here we check if "user" is defined in the joints, and if so, we compute the global coordinate offset
-
-                for sj in slide_joints:
-                    if 'user' in sj:
-                        coordinate_offset += sj['user'][0] * Vector(sj['axis']) #coordinate offset is initially 0,0,0, here we add components to it
-
+            else: #if the MuJoCo body has no joints defined, we need to create one, because MuSkeMo does not allow bodies to be parented to bodies
                 
-                ### add joint data to joint_dict
-                joint_dict[joint_name]     = {} #create as a new dict
-                joint_dict[joint_name]['joint_name'] = joint_name
-                joint_dict[joint_name]['parent_body_name'] = joint_pbody_name
-                joint_dict[joint_name]['child_body_name'] = joint_cbody_name
-                joint_dict[joint_name]['pos_in_global'] = joint_pos_in_glob
-                joint_dict[joint_name]['mujoco_bodyframe_gRf'] = gRf
+                joint_pos_in_glob = frame_pos_in_glob #align the new joint to the MuJoCo body frame (which is actually the joint child frame in MuSkeMo)
 
-                if coordinate_offset !=  Vector([0,0,0]):
-                    coordinate_offset_global = gRf@coordinate_offset
-                    joint_dict[joint_name]['coordinate_offset_global'] = coordinate_offset_global
+
+
+
+
+            create_joint(name = joint_name, radius = joint_rad, is_global = True, collection_name = joint_colname,
+            parent_body=joint_pbody_name, child_body=joint_cbody_name, 
+            pos_in_global=joint_pos_in_glob, 
+            or_in_global_XYZeuler=[nan] * 3, 
+            or_in_global_quat=[nan] * 4,
+            pos_in_parent_frame=[nan] * 3,
+            or_in_parent_frame_XYZeuler=[nan] * 3, or_in_parent_frame_quat=[nan] * 4,
+            pos_in_child_frame=[nan] * 3, 
+            or_in_child_frame_XYZeuler=[nan] * 3, or_in_child_frame_quat=[nan] * 4,
+            coordinate_Tx='', coordinate_Ty='', coordinate_Tz='', 
+            coordinate_Rx='', coordinate_Ry='', coordinate_Rz='',                  
+            )    
+        
+            ### Here we check if "user" is defined in the joints, and if so, we compute the global coordinate offset
+
+            for sj in slide_joints:
+                if 'user' in sj:
+                    coordinate_offset += sj['user'][0] * Vector(sj['axis']) #coordinate offset is initially 0,0,0, here we add components to it
+
+            
+            ### add joint data to joint_dict
+            joint_dict[joint_name]     = {} #create as a new dict
+            joint_dict[joint_name]['joint_name'] = joint_name
+            joint_dict[joint_name]['parent_body_name'] = joint_pbody_name
+            joint_dict[joint_name]['child_body_name'] = joint_cbody_name
+            joint_dict[joint_name]['pos_in_global'] = joint_pos_in_glob
+            joint_dict[joint_name]['mujoco_bodyframe_gRf'] = gRf
+
+            if coordinate_offset !=  Vector([0,0,0]):
+                coordinate_offset_global = gRf@coordinate_offset
+                joint_dict[joint_name]['coordinate_offset_global'] = coordinate_offset_global
 
 
 
