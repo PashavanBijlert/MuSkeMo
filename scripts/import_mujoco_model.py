@@ -151,7 +151,8 @@ class ImportMuJoCoModel(Operator):
         ### Bodies
         body_colname = muskemo.body_collection #name for the collection that will contain the hulls
         body_axes_size = muskemo.axes_size #axis length, in meters
-        #geometry_parent_dir = os.path.dirname(self.filepath)
+        
+        geometry_parent_dir = os.path.dirname(self.filepath)
         import_geometry = muskemo.import_visual_geometry #user switch for import geometry, true or false
 
         ### Wrap
@@ -240,7 +241,7 @@ class ImportMuJoCoModel(Operator):
                     MOI_inerframe.append(0.0)
 
                 else:
-                    MOI_inerframel = inertial.get('fullinertia')
+                    MOI_inerframe = inertial.get('fullinertia')
 
                 if any(orientationtype in inertial for orientationtype in ['axisangle', 'euler', 'xyaxes', 'zaxis']): #if the body has orientations defined using axisangle, euler etc. throw an error.
                     self.report({'ERROR'}, "The body '" + body_name + "' has orientations that aren't defined as quaternions. This is currently not yet supported for MuJoCo import. File an issue on the MuSkeMo Github or contact the developer.")
@@ -273,7 +274,43 @@ class ImportMuJoCoModel(Operator):
 
                 MOI_glob = gRf @ MOI_f @ gRf.transposed() #re-express MOI from local frame to global frame
 
+                ## geometry
 
+                geometry_string = ''
+                geometry_pos_in_glob = []
+                geometry_or_in_glob = [] 
+                geometry_scale = []
+                
+                geometries = body_info['geom'] #can be empty (no geometry), can be a single dict (one geometry), or a list of dicts
+
+                if geometries:
+
+                    if isinstance(geometries, dict): #if only a single geometry is defined, nest the dict in a list.
+
+                        geometries = [geometries]
+
+
+
+                for geom in geometries:
+
+                    if 'mesh' in geom:
+
+                        meshname = geom['mesh']
+                        geompath = [x['file'] for x in asset_data if x['name'] == meshname][0] #get the meshname and find the corresponding path from asset_data, which is a list of dicts
+
+                        geometry_string = geometry_string + geompath + ';'
+                        geometry_pos_in_glob.append(frame_pos_in_glob) #assuming the geometry is attached directly to the body frame in MuJoCo
+                        geometry_or_in_glob.append(gRf) #assuming the geometry is attached directly to the body frame in MuJoCo
+                        geometry_scale.append(Vector([1,1,1])) #assuming uniform scale in MuJoCo
+
+
+
+
+
+
+                if not geometry_string:
+                    geometry_string = 'no geometry'
+    
                 # Call create_body with the prepared geometry string
                 create_body(name=body_name, self = self,
                             is_global = True, size = body_axes_size,
@@ -283,13 +320,13 @@ class ImportMuJoCoModel(Operator):
                             COM_local=com_local,  
                             inertia_COM_local=[MOI_f[0][0], MOI_f[1][1], MOI_f[2][2], MOI_f[0][1], MOI_f[0][2], MOI_f[1][2]],
                             local_frame = frame_name, 
-                            #Geometry=geometry_string, 
+                            Geometry=geometry_string, 
                             collection_name=body_colname,  
-                            #import_geometry = import_geometry, #the bool property
-                            #geometry_parent_dir = geometry_parent_dir,
-                            #geometry_pos_in_glob = geometry_pos_in_glob,
-                            #geometry_or_in_glob = geometry_or_in_glob,
-                            #geometry_scale = geom_scale,
+                            import_geometry = import_geometry, #the bool property
+                            geometry_parent_dir = geometry_parent_dir,
+                            geometry_pos_in_glob = geometry_pos_in_glob,
+                            geometry_or_in_glob = geometry_or_in_glob,
+                            geometry_scale = geometry_scale,
                             )
             
             else:
