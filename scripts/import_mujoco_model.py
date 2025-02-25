@@ -484,24 +484,20 @@ class ImportMuJoCoModel(Operator):
             sites = body_info.get('site') 
             if sites: #if sites are in body info, add them to the dict
                 
-                if  not isinstance(sites, dict): #if it's not a dict (so not a single site)
-                    for site in sites:
+                if  isinstance(sites, dict): #if it's a single site, it's stored as a dict. If it's multiple, it's a list of dicts. Converting the single dict to a list of a single dict here to enable identical processing of both
+                    
+                    sites = [sites]
+                    
+                for site in sites:
 
-                        
-                        site_name = site['name']
-
-                        site_dict[site_name]  = site #add each site in this body to the site dict, using the name as the dict entry   
-                        site_dict[site_name]['parent_body_name'] = body_name
-                        site_dict[site_name]['parent_frame_name'] = frame_name
-
-                else: #if it's a single site        
                     
                     site_name = site['name']
 
                     site_dict[site_name]  = site #add each site in this body to the site dict, using the name as the dict entry   
                     site_dict[site_name]['parent_body_name'] = body_name
                     site_dict[site_name]['parent_frame_name'] = frame_name
-
+                    site_dict[site_name]['pos_in_global'] = gRf@Vector(site['pos']) + frame_pos_in_glob
+                
 
             # If the body has children, add them to the stack
             if "children" in body_info:
@@ -515,6 +511,31 @@ class ImportMuJoCoModel(Operator):
             
         #once the rigid body system is constructed, create muscles
         
+        for actuator in muscle_data['actuators']: #list of dicts
+            if actuator['class'] == 'muscle':
+                muscle_name = actuator['name']
+                tendon = [x for x in muscle_data['tendons'] if x['name'] == actuator['tendon']][0] #muscle_data['tendons'] is a list of dicts
+
+                for site in tendon['sites']: #again a list of dicts
+                    target_sitename = site['site']
+                    
+                    site_data = site_dict[target_sitename]
+                    mp_parent_body_name = site_data['parent_body_name']
+                    muscle_point_pos_in_glob = site_data['pos_in_global']
+
+
+                    create_muscle(muscle_name = muscle_name, 
+                            is_global =True, 
+                            body_name = mp_parent_body_name,
+                            point_position = muscle_point_pos_in_glob,
+                            collection_name=muscle_colname,
+                            optimal_fiber_length=0.1,
+                            tendon_slack_length=0.2,
+                            F_max = 100,
+                            pennation_angle = 0)    
+
+                    
+
 
 
         #apply the joint coordinate offsets after model construction, if they are defined for a specific joint
