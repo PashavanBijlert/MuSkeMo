@@ -511,6 +511,9 @@ class ImportMuJoCoModel(Operator):
             
         #once the rigid body system is constructed, create muscles
         
+        muscle_skipped_points = [] #Throw a warning about skipped muscle points
+
+
         for actuator in muscle_data['actuators']: #list of dicts
             if actuator['class'] == 'muscle':
                 muscle_name = actuator['name']
@@ -521,6 +524,16 @@ class ImportMuJoCoModel(Operator):
                     
                     site_data = site_dict[target_sitename]
                     mp_parent_body_name = site_data['parent_body_name']
+
+                    if  bpy.data.objects.get(mp_parent_body_name).get('MuSkeMo_type') != 'BODY': #points can be added to moving, massless bodies in MuJoCo (via constraints). These bodies are essentially frames, not bodies.
+                        #These bodies are ignored by MuSkeMo during import. This leaves the point unparented. It will be skipped for now.
+                        #Future version should loop through all the equality constraints and compute the polynomial value for the construction position
+                        muscle_skipped_points.append(muscle_name)
+                        continue
+
+                        #parent_parent_body_name = body_dict['mp_parent_body_name']['parent_body_name'] #
+                        #mp_parent_body_name = parent_parent_body_name
+
                     muscle_point_pos_in_glob = site_data['pos_in_global']
 
 
@@ -535,6 +548,9 @@ class ImportMuJoCoModel(Operator):
                             pennation_angle = 0)    
 
                     
+        if muscle_skipped_points: #throw a warning if muscle points were skipped
+            self.report({'WARNING'}, "The following muscles have points that were skipped because their positions are defined by a polynomial, which is not currently supported by MuSkeMo: " + ', '.join(dict.fromkeys(muscle_skipped_points)))
+
 
 
 
