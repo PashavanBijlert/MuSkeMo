@@ -912,7 +912,7 @@ class SingleDOFLengthMomentArmOperator(Operator):
                     #wrap object resolution
                     wrap_obj_res.append(wrapobj.modifiers["WrapObjMesh"].node_group.nodes['Cylinder'].inputs['Vertices'].default_value)
                     wrapmod = wrapobj.modifiers["WrapObjMesh"]
-                    wrapmod.node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 1000
+                    wrapmod.node_group.nodes['Cylinder'].inputs['Vertices'].default_value = 500
                     
                     wrapmod.show_render =not wrapmod.show_render# Toggle visibility to refresh
                     wrapmod.show_render =not wrapmod.show_render
@@ -970,7 +970,7 @@ class SingleDOFLengthMomentArmOperator(Operator):
             joint.matrix_world = new_wm
 
             #Compute length in this position
-            length.append(compute_curve_length(muscle_name, depsgraph, muscle_with_wrap))
+            length.append(compute_curve_length(muscle_name, depsgraph))
 
             #reset to original position.  ### we reset the position each time. This is not costlier than simply progressing from min to max, as long as you don't update the despgraph after resetting the joint position.
 
