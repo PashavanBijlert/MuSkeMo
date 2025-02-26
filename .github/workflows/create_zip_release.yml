@@ -12,7 +12,7 @@ jobs:
       run: |
         mkdir -p MuSkeMo
         cp -r __init__.py scripts README.md "MuSkeMo utilities" MuSkeMo/ 
-        cp "MuSkeMo manual/MuSkeMo manual.pdf" MuSkeMo/  # Only copy the PDF
+        cp "MuSkeMo manual/MuSkeMo manual.pdf" ./  # Only copy the PDF
     - name: Archive Release
       uses: thedoctor0/zip-release@0.7.6
       with:
