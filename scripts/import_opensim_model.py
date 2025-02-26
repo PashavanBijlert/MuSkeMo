@@ -1032,8 +1032,7 @@ class ImportOpenSimModel(Operator):
         renamed_wrap_warning = False #for an if statement that triggers a warning
 
         if enable_wrapping: #if the user wants wrapping
-            self.report({'WARNING'}, "Only cylinder wrapping is currently supported. It may be required to tune the wrapping settings after import, see the manual")
-
+            
             wrap_nodefilename = 'muscle_wrapper_v6.blend'
             directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
@@ -1082,7 +1081,7 @@ class ImportOpenSimModel(Operator):
 
                         else:
                             
-                            self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' is of the type '" + wrap_type + "', which is not yet supported. Skipping this wrapping geom.")
+                            self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' is of the type '" + wrap_type + "', which is not currently supported. Skipping this wrapping geom.")
                             continue
 
                         # Fill in global position/orientation if importing globally
@@ -1182,7 +1181,8 @@ class ImportOpenSimModel(Operator):
                             else:
 
                                 self.report({'WARNING'}, "Only cylinder wraps currently work in MuSkeMo. Other wrap objects can be imported for visualization, but they won't support wrapping.")
-                            
+
+                          
         if renamed_wrap_warning:
             # Find the names of objects whose name is not equal to 'wrap_obj_name_MuSkeMo'
             changed_name_objects = [
