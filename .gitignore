@@ -12,6 +12,7 @@ __pycache__/__init__.cpython-311.pyc
 utilities/opensim.log
 utilities/MuSkeMo_to_OpenSim.asv
 utilities/CreateOpenSimModelFunc.asv
+utilities/__pycache__
 MuSkeMo utilities/opensim.log
 MuSkeMo utilities/MuSkeMo_to_OpenSim.asv
 MuSkeMo utilities/CreateOpenSimModelFunc.asv
