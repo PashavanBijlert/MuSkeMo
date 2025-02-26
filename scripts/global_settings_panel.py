@@ -11,10 +11,10 @@ from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 
 #### Operators
 
-class SetRecommendedBlenderSettingsOperator(Operator):
-    bl_idname = "muskemo.set_recommended_blender_settings"
-    bl_label = "Set recommended Blender settings for using MuSkeMo. Sets view rotation to trackball, rotate around selected, and turns off object children filter in the outliner."  #not sure what bl_label does, bl_description gives a hover tooltip
-    bl_description = "Set recommended Blender settings for using MuSkeMo. Sets view rotation to trackball, rotate around selected, and turns off object children filter in the outliner."
+class SetRecommendedNavigationSettingsOperator(Operator):
+    bl_idname = "muskemo.set_recommended_navigation_settings"
+    bl_label = "Set recommended Blender navigation settings for using MuSkeMo with y-up models. Sets view rotation to trackball, and rotate around selected."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Set recommended Blender navigation settings for using MuSkeMo with y-up models. Sets view rotation to trackball, and rotate around selected."
     
     def execute(self, context):
 
@@ -23,6 +23,18 @@ class SetRecommendedBlenderSettingsOperator(Operator):
         
         bpy.ops.wm.save_userpref() #save these settings
 
+       
+        return {'FINISHED'}
+    
+
+class SetChildVisibilityInOutlinerOperator(Operator):
+    bl_idname = "muskemo.set_child_visibility_outliner"
+    bl_label = "Turns off the object children filter in the outliner, so that parented objects remain visible in their respective collections."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Turns off the object children filter in the outliner, so that parented objects remain visible in their respective collections."
+    
+    def execute(self, context):
+
+        
         #Toggle object children filter off in all outliners
         for screen in bpy.data.screens:
             # Loop through all the areas in each screen
@@ -33,7 +45,7 @@ class SetRecommendedBlenderSettingsOperator(Operator):
                             # Set 'use_filter_children' to False
                             space.use_filter_children = False
 
-        return {'FINISHED'}
+        return {'FINISHED'}    
 
 #### The panels
 
@@ -57,6 +69,8 @@ class VIEW3D_PT_global_settings_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming
         """define the layout of the panel"""
         
         row = self.layout.row()
-        row.operator("muskemo.set_recommended_blender_settings", text = 'Set recommended Blender settings')
+        row.operator("muskemo.set_recommended_navigation_settings", text = 'Set recommended navigation settings')
 
+        row = self.layout.row()
+        row.operator("muskemo.set_child_visibility_outliner", text = 'Set object children visibility')
 

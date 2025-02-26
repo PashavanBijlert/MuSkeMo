@@ -11,7 +11,10 @@ def create_muscle (muscle_name, point_position, body_name = '',
     #point position can be list, array or Vector. It gets cast to a Vector().to_4d() within the script
 
     if collection_name not in bpy.data.collections:
-            bpy.data.collections.new(collection_name)
+        bpy.data.collections.new(collection_name)
+        #If the collection didn't even exist yet, we're probably starting from scratch. Turn off the object children filter to help the user.
+        bpy.ops.muskemo.set_child_visibility_outliner()
+            
             
     coll = bpy.data.collections[collection_name] #Collection which will recieve the scaled  hulls
 

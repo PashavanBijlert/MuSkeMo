@@ -41,7 +41,9 @@ from .scripts.muskemo_properties import (MuSkeMoProperties)          ## all prop
 
 #### Global settings panel
 from .scripts.global_settings_panel import (VIEW3D_PT_global_settings_panel,
-                                            SetRecommendedBlenderSettingsOperator,)
+                                            SetRecommendedNavigationSettingsOperator,
+                                     SetChildVisibilityInOutlinerOperator,
+                                    )
 
 
 #### body panel
@@ -172,7 +174,8 @@ from .scripts.inertialproperties_func import (inertial_properties)  ## This func
 
 classes = (  #Global settings panel 
                                     VIEW3D_PT_global_settings_panel,
-                                     SetRecommendedBlenderSettingsOperator,
+                                     SetRecommendedNavigationSettingsOperator,
+                                     SetChildVisibilityInOutlinerOperator,
     
     #Inertial properties panel 
                                     VIEW3D_PT_inertial_prop_panel, 
