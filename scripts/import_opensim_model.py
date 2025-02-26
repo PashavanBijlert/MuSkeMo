@@ -677,6 +677,8 @@ class ImportOpenSimModel(Operator):
             # Initialize the stack with the root joints
             stack = list(joint_tree.items())
             frames = {} #initialize a frames dict
+
+            skipped_geoms = [] #empty list that will be populated if the geoms aren't found
             while stack:
                 # Get the current joint and its child tree
                 joint_name, joint_childtree = stack.pop()
@@ -768,13 +770,35 @@ class ImportOpenSimModel(Operator):
 
 
                 # If geometries exist, join them with semicolons, otherwise set a default string
+
                 if geometries:
-                    geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
+                    
+                    geometry_string = '' #should get populated in the for loop. If not, we assign 'no geometry' to this later
+                    #geometry_string = ';'.join([geometry['mesh_file'] for geometry in geometries]) + ';' 
                     
                     geometry_pos_in_glob = []
                     geometry_or_in_glob = []
                     geom_scale = []
                     for geometry in geometries: 
+
+
+
+                        ##
+                        path = geometry['mesh_file']
+
+                        filepath = geometry_parent_dir  + '/' + path
+                        if not os.path.exists(filepath): #if the above filepath doesn't exist, add /Geometry/ in front of it, and check again if it exists. This accounts for OpenSim models where the Geometry subdirectory is not explicitly named
+                            filepath = geometry_parent_dir + '/Geometry/' + path
+                        
+                            if not os.path.exists(filepath):
+                                
+                                skipped_geoms.append(path) #append the current geom to the "skipped_geoms" list for a single warning message at the end
+                                continue
+                            else:
+                                path = '/Geometry/' + path
+                        ##
+                        geometry_string = geometry_string + path + ';'
+
                         #if body has geometries attached
                         if 'translation' in geometry: #if translation is in a geometry, it was attached to an offsetframe wrt the body local frame (see the get_body_data function). We need to account for this during geometry import
                                                       
@@ -795,6 +819,11 @@ class ImportOpenSimModel(Operator):
 
                         geom_scale.append(Vector(geometry['scale_factors']))
 
+
+                    if not geometry_string: #if geometry string wasn't populated in the for loop, explicitly state we don't have geometry
+                        geometry_string = 'no geometry'
+                        geometry_pos_in_glob = ''
+                        geometry_or_in_glob = ''
 
 
                 else:
@@ -981,6 +1010,12 @@ class ImportOpenSimModel(Operator):
                 
         #### outside 
 
+        # Throw warning for skipped geometries
+        if skipped_geoms:
+            warning_message = f"The following geometries were not found in the model directory or 'Geometry' subdirectory and were skipped during import: {', '.join(skipped_geoms)}."
+            
+            self.report({'WARNING'}, warning_message)
+            
         # Throw warning about non-standard transform axes        
         if transform_axes_warning_list: #throw a warning if joints have non-standard transform axes.
             
@@ -988,6 +1023,7 @@ class ImportOpenSimModel(Operator):
 
             self.report({'WARNING'}, warning_message)
 
+        
 
         #### Wrapping
         # import the wrapping node template

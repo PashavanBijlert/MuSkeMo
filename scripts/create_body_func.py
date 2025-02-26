@@ -180,13 +180,13 @@ def create_body(name, size, self,
 
         filepath = geometry_parent_dir + '/' + path
 
-        if not os.path.exists(filepath): #if the above filepath doesn't exist, add Geometry/ in front of it. This accounts for OpenSim models where the Geometry subdirectory is not explicitly named
-            filepath = geometry_parent_dir + '/Geometry/' + path
+        #if not os.path.exists(filepath): #if the above filepath doesn't exist, add Geometry/ in front of it. This accounts for OpenSim models where the Geometry subdirectory is not explicitly named
+        #    filepath = geometry_parent_dir + '/Geometry/' + path
         
-        if not os.path.exists(filepath):
-            self.report({'WARNING'}, "Geometry '" + path + "' not found in model directory or 'Geometry' subdirectory. Geometry skipped")
+        #if not os.path.exists(filepath):
+        #    self.report({'WARNING'}, "Geometry '" + path + "' not found in model directory or 'Geometry' subdirectory. Geometry skipped")
 
-            continue
+        #    continue
         
         if filepath.endswith('.obj'): #if the file exists, and it is an obj file
 
