@@ -11,16 +11,15 @@ jobs:
     - name: Prepare MuSkeMo Directory
       run: |
         mkdir -p MuSkeMo
-        cp -r __init__.py scripts README.md "MuSkeMo utilities" MuSkeMo/ 
+        mv -r __init__.py scripts README.md "MuSkeMo utilities" MuSkeMo/ 
         cp "MuSkeMo manual/MuSkeMo manual.pdf" ./  # Only copy the PDF
-    
     - name: Archive Release
       uses: thedoctor0/zip-release@0.7.6
       with:
         type: 'zip'
         filename: 'MuSkeMo.zip'
-        path: '.'
-        exclusions: '*.git* /*node_modules/* .editorconfig citation.cff'
+        path: '.' #root
+        exclusions: '*.git* /*node_modules/* .editorconfig citation.cff "./MuSkeMo manual/**" '
     - name: Upload Release
       uses: ncipollo/release-action@v1.14.0
       with:
