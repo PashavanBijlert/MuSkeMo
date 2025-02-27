@@ -33,7 +33,7 @@ class SegmentParameterItem(PropertyGroup):
                                default=1.0, precision=3, step=0.1)
     log_MSE: FloatProperty(name="Log MSE", 
                            description = "Mean Squared Error of the log regression, used to correct the expansion when transforming from log back to arithmetic scale factors. Optional",
-                           default=0.0, precision=6, step=0.1)
+                           default=0.0, precision=3, step=0.1)
 ####
 
 
