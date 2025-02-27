@@ -84,7 +84,8 @@ from .scripts.muscle_panel import (CreateNewMuscleOperator,AddMusclepointOperato
 
 
 #### inertial properties panel
-from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel, 
+from .scripts.inertial_properties_panel import(MUSKEMO_UL_InPropSegmentList,
+                                               VIEW3D_PT_inertial_prop_panel, 
                                                   VIEW3D_PT_convex_hull_subpanel,
                                                   VIEW3D_PT_expand_convex_hulls_arith_subpanel,
                                                   VIEW3D_PT_expand_convex_hulls_logar_subpanel,
@@ -178,13 +179,15 @@ classes = (  #Global settings panel
                                      SetChildVisibilityInOutlinerOperator,
     
     #Inertial properties panel 
+                                    MUSKEMO_UL_InPropSegmentList,
                                     VIEW3D_PT_inertial_prop_panel, 
                                     VIEW3D_PT_convex_hull_subpanel, 
-                                     VIEW3D_PT_expand_convex_hulls_arith_subpanel,
+                                    VIEW3D_PT_expand_convex_hulls_arith_subpanel,
                                     VIEW3D_PT_expand_convex_hulls_logar_subpanel,
                                     VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel,
                                     VIEW3D_PT_segment_inprops_from_convex_hull_subpanel,
-                                    SelMeshesInertialProperties, CollectionMeshInertialProperties,
+                                    SelMeshesInertialProperties, 
+                                    CollectionMeshInertialProperties,
                                     CollectionConvexHull,
                                     AddSegmentOperator, RemoveSegmentOperator,
                                     ExpandConvexHullCollectionOperator,

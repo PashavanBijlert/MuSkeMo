@@ -20,6 +20,7 @@ import bmesh
 from bpy.types import (Panel,
                         Operator,
                         PropertyGroup,
+                        UIList,
                         )
 
 from bpy.props import (EnumProperty,
@@ -861,6 +862,29 @@ class VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
         op = row.operator("inprop.compute_whole_body_mass_ch", text="Compute whole body mass")
         #op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
 
+class MUSKEMO_UL_InPropSegmentList(UIList):
+    """Per segment inertial properties are so numerous that the data will be wrapped inside a scrollable box using this UI List"""
+    bl_idname = "MUSKEMO_UL_InPropSegmentList"
+
+
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        """Draws each row in the UI list"""
+        split = layout.split(factor=1/15)
+        split.label(text=f"{index + 1}")  # Index
+        split = split.split(factor=1/4)
+        split.prop(item, "body_segment", text="")  # Body segment
+        split = split.split(factor=3/10)
+        split.prop(item, "log_intercept", text="")  # Intercept
+        split = split.split(factor=3/7)
+        split.prop(item, "log_slope", text="")  # Slope
+        split = split.split(factor=3/4)
+        split.prop(item, "log_MSE", text="")  # MSE
+        oper = split.operator("inprop.remove_segment", text="", icon='REMOVE')
+        oper.index = index
+        oper.mode = 'logarithmic_segmentinprops'
+
+
 
 class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
@@ -875,64 +899,55 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
 
         #### convex hull collection
         row = self.layout.row()
-        split = row.split(factor = 1/2)
-        split.label(text = 'Convex Hull Collection')
-        split.prop(muskemo, "convex_hull_collection", text = "")
+        split = row.split(factor=1/2)
+        split.label(text='Convex Hull Collection')
+        split.prop(muskemo, "convex_hull_collection", text="")
 
-        ### dynamically sized panel
-        row = self.layout.row()
-        split = row.split(factor = 1/2)
-        split.label(text = 'Segment inertial properties estimation template:')
-        split.prop(muskemo, "segment_inprops_from_CH_template_logarithmic", text = "")
-
-        
-        
-            
-
-        ### Column labels
+        ### Segment properties template
         row = layout.row()
-        row = layout.row()
-        row = layout.row()
-        split = row.split(factor = 1/15)
-        split.label(text = "No")
-        split = split.split(factor = 1/4)
-        split.label(text = "Segment name")
-        split = split.split(factor = 3/10)
-        split.label(text = "Intercept")
-        split = split.split(factor = 3/7)
-        split.label(text = "Slope")
-        split = split.split(factor = 3/4)
-        split.label(text = "MSE")
+        split = row.split(factor=1/2)
+        split.label(text="Segment inertial properties estimation template:")
+        split.prop(muskemo, "segment_inprops_from_CH_template_logarithmic", text="")
 
+        ### Scrollable Box
+        box = layout.box()
+        row = box.row()
+        split = row.split(factor=1/15)
+        split.label(text="No")
+        split = split.split(factor=1/4)
+        split.label(text="Segment name")
+        split = split.split(factor=3/10)
+        split.label(text="Intercept")
+        split = split.split(factor=3/7)
+        split.label(text="Slope")
+        split = split.split(factor=3/4)
+        split.label(text="MSE")
 
-
+        # The scrollable list
         for i, item in enumerate(muskemo.segment_inertial_logarithmic_parameters):
-            row = layout.row()
-            split = row.split(factor = 1/15)
-            split.label(text = f"{i+1}")
-            split = split.split(factor = 1/4)
+            row = box.row()
+            split = row.split(factor=1/15)
+            split.label(text=f"{i+1}")
+            split = split.split(factor=1/4)
             split.prop(item, "body_segment", text="")
-            split = split.split(factor = 3/10)
+            split = split.split(factor=3/10)
             split.prop(item, "log_intercept", text="")
-            split = split.split(factor = 3/7)
+            split = split.split(factor=3/7)
             split.prop(item, "log_slope", text="")
-            split = split.split(factor = 3/4)
+            split = split.split(factor=3/4)
             split.prop(item, "log_MSE", text="")
             oper = split.operator("inprop.remove_segment", text="", icon='REMOVE')
             oper.index = i
             oper.mode = 'logarithmic_segmentinprops'
-        layout.operator("inprop.add_segment", text="Add Segment", icon='ADD').mode = 'logarithmic_segmentinprops'
-        ### dynamically sized panel
-        if muskemo.mass_from_CH_template_logarithmic == 'Wright 2024 Logarithmic Tetrapods':
-            row = layout.row()
-            row = layout.row()
+
+        # Add segment button
+        box.operator("inprop.add_segment", text="Add Segment", icon='ADD').mode = 'logarithmic_segmentinprops'
+
+        # Additional property
+        if muskemo.mass_from_CH_template_logarithmic == "Wright 2024 Logarithmic Tetrapods":
             row = layout.row()
             row.prop(muskemo, "segment_density")
-        
-        
-               
-        
+
         #### Compute whole body mass operator
         row = self.layout.row()
         op = row.operator("inprop.compute_segment_inprops_ch", text="Compute segment inertial properties")
-        #op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
