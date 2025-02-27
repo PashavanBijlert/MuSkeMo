@@ -80,7 +80,7 @@
     \textbf{Github Repository:} \href{https://github.com/PashavanBijlert/MuSkeMo}{Github} \\
     \textbf{Bug Reports and Feature Requests:} \href{https://github.com/PashavanBijlert/MuSkeMo/issues}{Submit an issue on Github} \\
     \vspace{20pt}
-    {\large Version 0.9.3} \\
+    {\large Version 0.9.4} \\
     {\large \today}
 \end{center}
 
@@ -103,10 +103,10 @@ PA van Bijlert. \textit{MuSkeMo: Open-source software to construct, analyze, and
 
 MuSkeMo is a tool for musculoskeletal modeling in \href{https://www.blender.org}{Blender}. MuSkeMo allows you to translate biological 3D scans to useful biomechanical information, in the form of full models or model components. These can then be used for further analysis within Blender, or exported for simulations in other biomechanical software. Simulation trajectories can be imported back into MuSkeMo to make publication-ready stills and videos, using Blender’s built-in raytracing rendering. MuSkeMo can also be used for 3D landmarking and for simply calculating inertia tensors from 3D scans.
 
-This MuSkeMo documentation file is meant to complement the \href{https://www.youtube.com/watch?v=9eMm9YalXtg&list=PLfgxaucAWlEp5-cavvXmdrTIWYT_tgZYK&pp=gAQBiAQB}{video tutorial series on YouTube}.
+This MuSkeMo documentation file is meant to complement the \href{https://www.youtube.com/watch?v=9eMm9YalXtg&list=PLfgxaucAWlEp5-cavvXmdrTIWYT_tgZYK&pp=gAQBiAQB}{video tutorial series on YouTube}. Users are encouraged to download the sample datasets and follow along with the video tutorials.
 This documentation is focused on features specific to MuSkeMo, and where necessary provides suggestions regarding Blender settings and features. Because Blender can be overwhelming at first, new users are recommended to follow the "Donut tutorial" series by BlenderGuru on Youtube. For Blender-specific questions, the reader is referred to the extensive \href{https://docs.blender.org/}{Blender documentation}. MuSkeMo currently officially supports Blender 4.0 -4.1, but will offer 4.2+ support in the future. 
 
-\section{Installation instructions}
+\subsection{Installation instructions}
 
 To download: Go to the \href{https://github.com/PashavanBijlert/MuSkeMo/releases}{releases page} on the Github repository, and download the most recent version of "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
@@ -119,7 +119,10 @@ To install (Fig. \ref{fig:installation}): In Blender v4-v4.1, go to Edit → pre
     \label{fig:installation}
 \end{figure}
 
-\section{Units}
+\subsection{Sample Datasets}
+Some of the \href{https://www.youtube.com/watch?v=9eMm9YalXtg&list=PLfgxaucAWlEp5-cavvXmdrTIWYT_tgZYK&pp=gAQBiAQB}{video tutorials} use sample datasets, in which case they are also made available from Github. Currently, there is only one \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1}{sample dataset}, which includes two OpenSim models created using MuSkeMo, and compatible simulation trajectories so the user can create a video.
+
+\subsection{Units}
 
 MuSkeMo uses the following units:
 
@@ -133,14 +136,14 @@ MuSkeMo uses the following units:
 
 \textbf{WARNING:} Blender's default units are in metres. Many of the calculations in MuSkeMo are derived from the spatial position of individual points (vertices) of the 3D meshes. If you change the base units of Blender, these calculations are also implicitly scaled, and the units will no longer be correct (e.g., if you change Blender’s base units to centimetres, linear dimensions will be off by a factor of 100, but volumetrics and inertial properties will be off by a factor of 100\(^3\)). MuSkeMo currently only officially supports metres as the base unit, correct scaling of the outputs if using other units is up to the user.
 
-\section{A Note on Precision}
+\subsection{A Note on Precision}
 \label{sec:precision}
 
 MuSkeMo is built using the Blender Python API, which internally uses double precision numbers (64-bit floating point, \(\sim16\) significant digits). However, Blender itself stores numbers using single precision (32-bit floating point, \(\sim8\) significant digits), including all 3D point and mesh data. This means that precision beyond 8 significant digits cannot be expected when using MuSkeMo. Single precision floats nevertheless have a very large range of numbers that can be represented—the smallest number that can be accurately reported is in the order of \(1\times10^{-38}\), approximately 1 million times smaller than the mass of an electron in kilograms.
 
 Because computing inertial properties from 3D vertex data involves successive multiplications of single precision numbers, mass and inertial properties have an expected accuracy of 5-6 digits (see \ref{sec:inpropvalidation}).
 
-\section{Orientations}
+\subsection{Orientations}
 
 Orientations are represented as XYZ body-fixed Euler angles (see Appendix \ref{sec:eulerangles}) and as unit quaternions (see Appendix \ref{sec:quaternions}). Internally, MuSkeMo avoids Euler angles where possible because they are prone to gimbal lock, but popular simulators often use Euler angles by default (e.g., OpenSim, SCONE).
 
@@ -195,6 +198,9 @@ Blender is quite stable, but it is possible for it to crash. Fortunately, by def
 Constructing a model in Blender provides the user with a lot of freedom to interactively repose model elements during model construction. However, many of the computations are only valid in the specific pose they are computed in. For example, when computing mesh inertial properties using the inertial properties panel (\ref{sec:inproppanel}), the inertal properties in the global reference frame are only valid as long as the orientation and position (the pose) of the mesh do not change. Similarly, object positions and orientations with respect to parent frames (\ref{sec:frame}) are only valid during export if their relative positions and orientations remain unchanged. 
 
 To prevent incorrect exports, MuSkeMo keeps track of the 'default\_pose', which is the pose in which the relevant computation was performed. If the user tries to perform an operation that can only be performed in the default pose, the operation is cancelled (with an error message). In that situation, you must either reposition the model components back into the default pose before exporting, or alternatively recompute the parameters (for inertial properties and bodies, this means recomputing and reassigning the inertial properties, for other components it means detaching and reparenting the objects).
+
+\section{MuSkeMo's Panels}
+This section describes all of MuSkeMo's panels and how to use them.
 
 \subsection{MuSkeMo Global Settings Panel}
 The Blender user interface has several default settings that do not work well with MuSkeMo. By default, Blender forces the Z-axis as the "up" direction in the viewport. The International Society of Biomechanics assumes Y as the up direction. To achieve this, the user should set the view rotation setting to "Trackball", and use "orbit around selection". The "MuSkeMo Global Settings" panel provides a button that does this automatically: "Set recommended navigation settings". 
