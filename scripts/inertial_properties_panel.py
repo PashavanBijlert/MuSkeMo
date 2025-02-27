@@ -863,10 +863,8 @@ class VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
         #op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
 
 class MUSKEMO_UL_InPropSegmentList(UIList):
-    """Per segment inertial properties are so numerous that the data will be wrapped inside a scrollable box using this UI List"""
+    """Per-segment inertial properties inside a scrollable box"""
     bl_idname = "MUSKEMO_UL_InPropSegmentList"
-
-
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         """Draws each row in the UI list"""
@@ -880,25 +878,26 @@ class MUSKEMO_UL_InPropSegmentList(UIList):
         split.prop(item, "log_slope", text="")  # Slope
         split = split.split(factor=3/4)
         split.prop(item, "log_MSE", text="")  # MSE
+        
+        # Remove button
         oper = split.operator("inprop.remove_segment", text="", icon='REMOVE')
         oper.index = index
         oper.mode = 'logarithmic_segmentinprops'
 
 
-
 class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):
-    bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'  #have to define this if you use multiple panels
+    bl_parent_id = 'VIEW3D_PT_inertial_properties_panel'
     bl_idname = "VIEW3D_PT_segment_inprops_from_convex_hull_subpanel"
     bl_label = "Segment inertial properties from convex hull - logarithmic"
-    bl_options = {'DEFAULT_CLOSED'} 
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
 
-        #### convex hull collection
-        row = self.layout.row()
+        #### Convex hull collection
+        row = layout.row()
         split = row.split(factor=1/2)
         split.label(text='Convex Hull Collection')
         split.prop(muskemo, "convex_hull_collection", text="")
@@ -909,8 +908,10 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
         split.label(text="Segment inertial properties estimation template:")
         split.prop(muskemo, "segment_inprops_from_CH_template_logarithmic", text="")
 
-        ### Scrollable Box
+        ### **Scrollable Box**
         box = layout.box()
+        
+        # Header row
         row = box.row()
         split = row.split(factor=1/15)
         split.label(text="No")
@@ -923,22 +924,9 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
         split = split.split(factor=3/4)
         split.label(text="MSE")
 
-        # The scrollable list
-        for i, item in enumerate(muskemo.segment_inertial_logarithmic_parameters):
-            row = box.row()
-            split = row.split(factor=1/15)
-            split.label(text=f"{i+1}")
-            split = split.split(factor=1/4)
-            split.prop(item, "body_segment", text="")
-            split = split.split(factor=3/10)
-            split.prop(item, "log_intercept", text="")
-            split = split.split(factor=3/7)
-            split.prop(item, "log_slope", text="")
-            split = split.split(factor=3/4)
-            split.prop(item, "log_MSE", text="")
-            oper = split.operator("inprop.remove_segment", text="", icon='REMOVE')
-            oper.index = i
-            oper.mode = 'logarithmic_segmentinprops'
+        # **Scrollable list using template_list**
+        row = box.row()
+        row.template_list("MUSKEMO_UL_InPropSegmentList", "", muskemo, "segment_inertial_logarithmic_parameters", muskemo, "segment_index")
 
         # Add segment button
         box.operator("inprop.add_segment", text="Add Segment", icon='ADD').mode = 'logarithmic_segmentinprops'
@@ -949,5 +937,5 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
             row.prop(muskemo, "segment_density")
 
         #### Compute whole body mass operator
-        row = self.layout.row()
-        op = row.operator("inprop.compute_segment_inprops_ch", text="Compute segment inertial properties")
+        row = layout.row()
+        row.operator("inprop.compute_segment_inprops_ch", text="Compute segment inertial properties")

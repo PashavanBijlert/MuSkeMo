@@ -33,7 +33,7 @@ class SegmentParameterItem(PropertyGroup):
                                default=1.0, precision=3, step=0.1)
     log_MSE: FloatProperty(name="Log MSE", 
                            description = "Mean Squared Error of the log regression, used to correct the expansion when transforming from log back to arithmetic scale factors. Optional",
-                           default=0.0, precision=3, step=0.1)
+                           default=0.0, precision=6, step=0.1)
 ####
 
 
@@ -535,13 +535,18 @@ class MuSkeMoProperties(PropertyGroup):
         update=update_segment_inprops_from_CH_template_logarithmic
     ) 
 
+    segment_index: IntProperty(name="Active Segment Index",  #this is used internally by the seg inprops from CH panel. THat is such a long list that it should be in a scrollable box in the panel, and that requires a UIList which needs to be passed the index as a property
+                               default=-1)
+
     expanded_hull_collection: StringProperty(
         name = "Expanded hull collection",
         description="Name of the collection (ie. folder) that contains (or will contain) scaled convex hulls, representing tissue outlines",
         default = "Expanded hulls",
         maxlen = 1024,
         )
+    
 
+    
 ####
 
 #### Export panel
