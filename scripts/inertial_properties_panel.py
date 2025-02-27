@@ -262,7 +262,7 @@ class CollectionConvexHull(Operator):
 
 ####
 #### for the dynamic panel that allows the user to input different scale factor templates
-####
+#### Probably these can and should be moved to muskemo_properties
 
 from .inertial_properties_presets import InertialPropertiesPresets 
 
@@ -318,7 +318,7 @@ def update_expansion_template_logarithmic(self, context):
             new_item.log_MSE = factors3[i]
 
 
-# Update function for Logarithmic expansion template
+# Update function for Logarithmic whole body mass template
 def update_mass_from_CH_template_logarithmic(self, context):
     muskemo = context.scene.muskemo
     segment_parameter_list = muskemo.whole_body_mass_logarithmic_parameters
@@ -343,7 +343,36 @@ def update_mass_from_CH_template_logarithmic(self, context):
             new_item.body_segment = segment
             new_item.log_intercept = factors1[i]
             new_item.log_slope = factors2[i]
+            new_item.log_MSE = factors3[i]  
+
+
+# Update function for Logarithmic segment in props template
+def update_segment_inprops_from_CH_template_logarithmic(self, context):
+    muskemo = context.scene.muskemo
+    segment_parameter_list = muskemo.segment_inertial_logarithmic_parameters
+    segment_parameter_list.clear()
+
+    preset_key = muskemo.segment_inprops_from_CH_template_logarithmic
+
+    if preset_key == "Custom":
+        # Custom case: no prefilling, just set default values
+        for i in range(3):  # Assuming 3 segments for custom
+            new_item = segment_parameter_list.add()
+            new_item.body_segment = f"Segment {i+1}"
+            new_item.log_intercept = 0.0
+            new_item.log_slope = 1.0
+            new_item.log_MSE = 0.0
+    else:
+        # Use preset data
+        preset_data = InertialPropertiesPresets["Logarithmic segment inertial properties"].get(preset_key, ([], [], []))
+        body_segments, factors1, factors2, factors3 = preset_data
+        for i, segment in enumerate(body_segments):
+            new_item = segment_parameter_list.add()
+            new_item.body_segment = segment
+            new_item.log_intercept = factors1[i]
+            new_item.log_slope = factors2[i]
             new_item.log_MSE = factors3[i]            
+
 
 
 # Define the properties for segment parameters
@@ -363,7 +392,9 @@ class SegmentParameterItem(PropertyGroup):
     log_MSE: FloatProperty(name="Log MSE", 
                            description = "Mean Squared Error of the log regression, used to correct the expansion when transforming from log back to arithmetic scale factors. Optional",
                            default=0.0, precision=3, step=0.1)
-
+####
+####
+####
 
 # Operators for adding and removing segments
 class AddSegmentOperator(Operator):
@@ -382,6 +413,9 @@ class AddSegmentOperator(Operator):
 
         elif self.mode == 'logarithmic_wholebodymass':
             context.scene.muskemo.whole_body_mass_logarithmic_parameters.add()  
+        
+        elif self.mode == 'logarithmic_segmentinprops':
+            context.scene.muskemo.segment_inertial_logarithmic_parameters.add()
 
 
         return {'FINISHED'}
@@ -402,14 +436,14 @@ class RemoveSegmentOperator(Operator):
             context.scene.muskemo.segment_parameter_list_logarithmic.remove(self.index)
 
         elif self.mode == 'logarithmic_wholebodymass':
-            context.scene.muskemo.whole_body_mass_logarithmic_parameters.remove(self.index)      
+            context.scene.muskemo.whole_body_mass_logarithmic_parameters.remove(self.index)     
+
+        elif self.mode == 'logarithmic_segmentinprops':
+            context.scene.muskemo.segment_inertial_logarithmic_parameters.remove(self.index)
 
         return {'FINISHED'}
 
 
-####
-####
-####
 
 # Expand Convex hulls operator
 
@@ -982,8 +1016,8 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
         ### dynamically sized panel
         row = self.layout.row()
         split = row.split(factor = 1/2)
-        split.label(text = 'Mass estimation template:')
-        split.prop(muskemo, "mass_from_CH_template_logarithmic", text = "")
+        split.label(text = 'Segment inertial properties estimation template:')
+        split.prop(muskemo, "segment_inprops_from_CH_template_logarithmic", text = "")
 
         
         
@@ -1006,7 +1040,7 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
 
 
 
-        for i, item in enumerate(muskemo.whole_body_mass_logarithmic_parameters):
+        for i, item in enumerate(muskemo.segment_inertial_logarithmic_parameters):
             row = layout.row()
             split = row.split(factor = 1/15)
             split.label(text = f"{i+1}")
@@ -1020,8 +1054,8 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
             split.prop(item, "log_MSE", text="")
             oper = split.operator("inprop.remove_segment", text="", icon='REMOVE')
             oper.index = i
-            oper.mode = 'logarithmic_wholebodymass'
-        layout.operator("inprop.add_segment", text="Add Segment", icon='ADD').mode = 'logarithmic_wholebodymass'
+            oper.mode = 'logarithmic_segmentinprops'
+        layout.operator("inprop.add_segment", text="Add Segment", icon='ADD').mode = 'logarithmic_segmentinprops'
         ### dynamically sized panel
         if muskemo.mass_from_CH_template_logarithmic == 'Wright 2024 Logarithmic Tetrapods':
             row = layout.row()

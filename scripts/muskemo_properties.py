@@ -12,9 +12,10 @@ from bpy.props import (StringProperty,
 from bpy.types import (PropertyGroup,
                         )
 from .inertial_properties_panel import (SegmentParameterItem, #to fix the dependency for the scale factor list.
-                                        update_expansion_template_arithmetic, #arithmetic scaling
+                                        update_expansion_template_arithmetic, #arithmetic scaling ###these update functions update the collectionproperties, which store the empirical equations in the Blender panel.
                                         update_expansion_template_logarithmic, #logarithmic scaling
                                         update_mass_from_CH_template_logarithmic, #whole body mass estimate from CH
+                                        update_segment_inprops_from_CH_template_logarithmic, #per segment inertial properties estimate from CH
                                           InertialPropertiesPresets)
 class MuSkeMoProperties(PropertyGroup):
 
@@ -364,10 +365,15 @@ class MuSkeMoProperties(PropertyGroup):
         ) 
     
 #### Dynamic scaling panel part of inertial properties panel
+#the collection property of type segmentparameteritem is imported from the inertial properties panel script
+    #the presets contain the actual parameters
     segment_parameter_list_arithmetic: CollectionProperty(type=SegmentParameterItem) #imported class from the inprop panel script
     segment_parameter_list_logarithmic: CollectionProperty(type=SegmentParameterItem) # for logarithmic per segment expansion
-    whole_body_mass_logarithmic_parameters: CollectionProperty(type=SegmentParameterItem)
+    whole_body_mass_logarithmic_parameters: CollectionProperty(type=SegmentParameterItem) #for logarithmic summed ch volume to estimate total body mass
+    segment_inertial_logarithmic_parameters: CollectionProperty(type=SegmentParameterItem) #for per segment log ch parameters to directly estimate inertial properties of the segment
 
+
+    #the templates are for extensible panel inputs
     expansion_template_arithmetic: EnumProperty(
         name="Expansion Template (Arithmetic)",
         items=[("Custom", "Custom", "")] + [(key, key, "") for key in InertialPropertiesPresets["Arithmetic scale factor"].keys()],
@@ -389,6 +395,13 @@ class MuSkeMoProperties(PropertyGroup):
         default="Custom",  # Ensure Custom is default
         update=update_mass_from_CH_template_logarithmic
     )  
+
+    segment_inprops_from_CH_template_logarithmic: EnumProperty(
+        name="Segment inertial properties from CH template (Logarithmic)",
+        items=[("Custom", "Custom", "")] + [(key, key, "") for key in InertialPropertiesPresets["Logarithmic segment inertial properties"].keys()],
+        default="Custom",  # Ensure Custom is default
+        update=update_segment_inprops_from_CH_template_logarithmic
+    ) 
 
     expanded_hull_collection: StringProperty(
         name = "Expanded hull collection",
