@@ -37,7 +37,8 @@ class VIEW3D_PT_MuSkeMo: # class naming convention ‘CATEGORY_PT_name’
 
 
 #### properties
-from .scripts.muskemo_properties import (MuSkeMoProperties)          ## all properties that are assigned by the user as part of the addon
+from .scripts.muskemo_properties import (SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
+                                            MuSkeMoProperties)          ## all properties that are assigned by the user as part of the addon
 
 #### Global settings panel
 from .scripts.global_settings_panel import (VIEW3D_PT_global_settings_panel,
@@ -90,8 +91,7 @@ from .scripts.inertial_properties_panel import(VIEW3D_PT_inertial_prop_panel,
                                                   VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel,
                                                   VIEW3D_PT_segment_inprops_from_convex_hull_subpanel,
                                                   SelMeshesInertialProperties, CollectionMeshInertialProperties,
-                                                  CollectionConvexHull, 
-                                                  SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
+                                                  CollectionConvexHull,
                                                   AddSegmentOperator, RemoveSegmentOperator,
                                                   ExpandConvexHullCollectionOperator,
                                                   WholeBodyMassFromConvexHullsOperator,
@@ -186,7 +186,6 @@ classes = (  #Global settings panel
                                     VIEW3D_PT_segment_inprops_from_convex_hull_subpanel,
                                     SelMeshesInertialProperties, CollectionMeshInertialProperties,
                                     CollectionConvexHull,
-                                    SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
                                     AddSegmentOperator, RemoveSegmentOperator,
                                     ExpandConvexHullCollectionOperator,
                                     WholeBodyMassFromConvexHullsOperator,
@@ -281,6 +280,7 @@ classes = (  #Global settings panel
                                        
 
             # properties
+                                   SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
                                    MuSkeMoProperties,
          
 )

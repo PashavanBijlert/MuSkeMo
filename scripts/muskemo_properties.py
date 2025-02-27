@@ -11,12 +11,34 @@ from bpy.props import (StringProperty,
                          )
 from bpy.types import (PropertyGroup,
                         )
-from .inertial_properties_panel import (SegmentParameterItem, #to fix the dependency for the scale factor list.
-                                        update_expansion_template_arithmetic, #arithmetic scaling ###these update functions update the collectionproperties, which store the empirical equations in the Blender panel.
-                                        update_expansion_template_logarithmic, #logarithmic scaling
-                                        update_mass_from_CH_template_logarithmic, #whole body mass estimate from CH
-                                        update_segment_inprops_from_CH_template_logarithmic, #per segment inertial properties estimate from CH
-                                          InertialPropertiesPresets)
+
+
+from .inertial_properties_presets import InertialPropertiesPresets  #import the presets, that can be extended by the user
+
+#### for the dynamic panel that allows the user to input different scale factor templates for inertial properties / convex hull scaling
+####  This group is used multiple times within MuSkeMoProperties, so it needs to be registered first! 
+#  Define the properties for segment parameters
+class SegmentParameterItem(PropertyGroup):
+    body_segment: StringProperty(name="Body Segment Name", 
+                                 description = "Body segment name, all objects in the convex hull collection that contain this string in their name will be expanded",
+                                 default="Segment")
+    scale_factor: FloatProperty(name="Scale Factor",
+                                description = 'Arithmetic scale factor. Convex hull volume will be scaled by this number',
+                                  default=1.0, precision=3, step=0.1)
+    log_intercept: FloatProperty(name="Log Intercept", 
+                                 description = "Y-intercept of the regression for the expansion factor in log mode",
+                                 default=0.0, precision=3, step=0.1)
+    log_slope: FloatProperty(name="Log Slope",
+                             description = "Slope of the regression for the expansion in log mode",
+                               default=1.0, precision=3, step=0.1)
+    log_MSE: FloatProperty(name="Log MSE", 
+                           description = "Mean Squared Error of the log regression, used to correct the expansion when transforming from log back to arithmetic scale factors. Optional",
+                           default=0.0, precision=3, step=0.1)
+####
+
+
+
+
 class MuSkeMoProperties(PropertyGroup):
 
 ##### bodies
@@ -364,13 +386,123 @@ class MuSkeMoProperties(PropertyGroup):
         maxlen = 1024,
         ) 
     
-#### Dynamic scaling panel part of inertial properties panel
-#the collection property of type segmentparameteritem is imported from the inertial properties panel script
+    #### Dynamic scaling panel part of inertial properties panel
+    #the collection property of type segmentparameteritem is defined at the top of this script, and has to be registered first so that MuSkeMoProperties can make use of it
     #the presets contain the actual parameters
     segment_parameter_list_arithmetic: CollectionProperty(type=SegmentParameterItem) #imported class from the inprop panel script
     segment_parameter_list_logarithmic: CollectionProperty(type=SegmentParameterItem) # for logarithmic per segment expansion
     whole_body_mass_logarithmic_parameters: CollectionProperty(type=SegmentParameterItem) #for logarithmic summed ch volume to estimate total body mass
     segment_inertial_logarithmic_parameters: CollectionProperty(type=SegmentParameterItem) #for per segment log ch parameters to directly estimate inertial properties of the segment
+
+
+    ###these update functions update the collectionproperties, which store the empirical equations in the Blender panel.
+    ### update functions for the template enumproperties (extensible panel inputs) below
+    # Update function for Arithmetic expansion template
+    def update_expansion_template_arithmetic(self, context):
+        muskemo = context.scene.muskemo
+        segment_parameter_list = muskemo.segment_parameter_list_arithmetic
+        segment_parameter_list.clear()
+
+        preset_key = muskemo.expansion_template_arithmetic
+
+        if preset_key == "Custom":
+            # Custom case: no prefilling, just set default values
+            for i in range(10):
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = f"Segment {i+1}"
+                new_item.scale_factor = 1.0
+        else:
+            # Use preset data
+            preset_data = InertialPropertiesPresets["Arithmetic scale factor"].get(preset_key, ([], []))
+            body_segments, factors = preset_data
+            for i, segment in enumerate(body_segments):
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = segment
+                new_item.scale_factor = factors[i]
+
+    # Update function for Logarithmic expansion template
+    def update_expansion_template_logarithmic(self, context):
+        muskemo = context.scene.muskemo
+        segment_parameter_list = muskemo.segment_parameter_list_logarithmic
+        segment_parameter_list.clear()
+
+        preset_key = muskemo.expansion_template_logarithmic
+
+        if preset_key == "Custom":
+            # Custom case: no prefilling, just set default values
+            for i in range(3):  # Assuming 3 segments for custom
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = f"Segment {i+1}"
+                new_item.log_intercept = 0.0
+                new_item.log_slope = 1.0
+                new_item.log_MSE = 0.0
+        else:
+            # Use preset data
+            preset_data = InertialPropertiesPresets["Logarithmic scale factor"].get(preset_key, ([], [], []))
+            body_segments, factors1, factors2, factors3 = preset_data
+            for i, segment in enumerate(body_segments):
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = segment
+                new_item.log_intercept = factors1[i]
+                new_item.log_slope = factors2[i]
+                new_item.log_MSE = factors3[i]
+
+
+    # Update function for Logarithmic whole body mass template #whole body mass estimate from CH
+    def update_mass_from_CH_template_logarithmic(self, context):
+        muskemo = context.scene.muskemo
+        segment_parameter_list = muskemo.whole_body_mass_logarithmic_parameters
+        segment_parameter_list.clear()
+
+        preset_key = muskemo.mass_from_CH_template_logarithmic
+
+        if preset_key == "Custom":
+            # Custom case: no prefilling, just set default values
+            for i in range(3):  # Assuming 3 segments for custom
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = f"Segment {i+1}"
+                new_item.log_intercept = 0.0
+                new_item.log_slope = 1.0
+                new_item.log_MSE = 0.0
+        else:
+            # Use preset data
+            preset_data = InertialPropertiesPresets["Logarithmic whole body mass"].get(preset_key, ([], [], []))
+            body_segments, factors1, factors2, factors3 = preset_data
+            for i, segment in enumerate(body_segments):
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = segment
+                new_item.log_intercept = factors1[i]
+                new_item.log_slope = factors2[i]
+                new_item.log_MSE = factors3[i]  
+
+
+    # Update function for Logarithmic segment in props template #per segment inertial properties estimate from CH
+    def update_segment_inprops_from_CH_template_logarithmic(self, context):
+        muskemo = context.scene.muskemo
+        segment_parameter_list = muskemo.segment_inertial_logarithmic_parameters
+        segment_parameter_list.clear()
+
+        preset_key = muskemo.segment_inprops_from_CH_template_logarithmic
+
+        if preset_key == "Custom":
+            # Custom case: no prefilling, just set default values
+            for i in range(3):  # Assuming 3 segments for custom
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = f"Segment {i+1}"
+                new_item.log_intercept = 0.0
+                new_item.log_slope = 1.0
+                new_item.log_MSE = 0.0
+        else:
+            # Use preset data
+            preset_data = InertialPropertiesPresets["Logarithmic segment inertial properties"].get(preset_key, ([], [], []))
+            body_segments, factors1, factors2, factors3 = preset_data
+            for i, segment in enumerate(body_segments):
+                new_item = segment_parameter_list.add()
+                new_item.body_segment = segment
+                new_item.log_intercept = factors1[i]
+                new_item.log_slope = factors2[i]
+                new_item.log_MSE = factors3[i]            
+
 
 
     #the templates are for extensible panel inputs
