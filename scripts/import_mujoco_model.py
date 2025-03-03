@@ -357,6 +357,17 @@ class ImportMuJoCoModel(Operator):
             joint_cbody_name = body_name
             joint_name = joint_pbody_name + '_' + joint_cbody_name + '_joint' 
 
+            #assume no coordinates, they get populated later if coordinates exist
+            coordinate_Tx=''
+            coordinate_Ty=''
+            coordinate_Tz='' 
+            coordinate_Rx=''
+            coordinate_Ry=''
+            coordinate_Rz=''
+
+            coordinate_names = [] #list will get populated with coordinate names if they can be mapped correctly
+            coordinate_mappings = [] #list will get populated if coordinates can be mapped correctly
+
             ## some MuJoCo joints have "user" defined in them, which appears to be a default pose
             ## Find the user value (which is just a user in put coordinate value apparently), 
             # multiply it by the axis, and add this to the joint position in body frame
@@ -368,24 +379,63 @@ class ImportMuJoCoModel(Operator):
                     
             if joints: #if joints are defined in body info, add them to the dict. Otherwise, we create a new joint anyway because MuSkeMo requires two bodies to be connected by a joint
                 
+
+                def get_muskemo_coordinate_type(joint, coordinate, axis): #input a joint dict. Check if axis matches one of the unit vectors,
+                    #and check if it's a rotational (hinge) coordinate or a translational (slide) coordinate (joint in MuJoCo)
+                    
+                    coordinate_axis = ''#empty string at first, can be either X, Y, or Z
+                    coordinate_type = '' #empty string at first, can be either T(ranslation) or R(otation)
+                    
+                    # Check if axis matches any of the unit vectors
+                    if axis == [1, 0, 0]:
+                        coordinate_axis = 'X'
+                    elif axis == [0, 1, 0]:
+                        coordinate_axis = 'Y'
+                    elif axis == [0, 0, 1]:
+                        coordinate_axis = 'Z'
+                    else:
+                        coordinate_axis = 'non_standard'
+                        
+                                        
+                    #check if the joint type is a hinge (R) or slide (T) coordinate
+                    if joint.get('type') == 'slide': #if joint type is slide, we know it's a translational joint, and we also check later if 'user' is defined
+                        slide_joints.append(joint)
+                        coordinate_type = 'T' 
+
+                    elif joint.get('type') == 'hinge':
+                        coordinate_type = 'R'
+
+                    elif not joint.get('type'): #if no type is defined, it's a rotational coordinate
+                        coordinate_type = 'R'    
+
+                    elif joint.get('type') == 'ball':
+                        self.report({'Warning'}, "The MuJoCo joint '" + coordinate + "' is of type 'ball'. This is not yet supported by MuSkeMo. Contact the developer if you need to visualize trajectories using ball joints.")
+
+
+                    elif joint.get('type') == 'free':    
+                        self.report({'Warning'}, "The MuJoCo joint '" + coordinate + "' is of type 'free'. This is not yet supported by MuSkeMo. Contact the developer if you need to visualize trajectories using ball joints.")
+
+                    muskemo_joint_coordinate_mapping = coordinate_type + coordinate_axis #can be RX, TX, etc, or potentially Rnon_standard etc.
+
+                    return muskemo_joint_coordinate_mapping
+
               
                 if isinstance(joints, dict): #if the body has a single joint, it's returned as a dict instead of a list
                     
                     joint = joints
+                    joint_pos_in_body_frame = joint['pos'] #this is the parent frame in mujoco, but the child frame in MuSkeMo
                     
                     coordinate = joint['name']
 
-                    ##
-                    ## check if there is joint type, and if yes, use that to distinguish between T and R coordinate
-                    ## check if the transform axes are one of the unit directions, and if yes, use that to choose x, y, or z
-                    ## If transform axes are non-standard, treat like OpenSim
-                   
+                    axis = joint['axis']
+                    
+                    #find a coordinate mapping, can be RX, TZ, etc, or Rnon_standard if it's a non-standard axis
+                    muskemo_joint_coordinate_mapping = get_muskemo_coordinate_type(joint, coordinate, axis)
+                    #populate the actual coordinate
 
-                    
-                    joint_pos_in_body_frame = joint['pos'] #this is the parent frame in mujoco, but the child frame in MuSkeMo
-                    
-                    if 'slide' in joint: #if joint type is slide, we check later if 'user' is defined
-                        slide_joints = joint 
+                    coordinate_mappings.append(muskemo_joint_coordinate_mapping)
+                    coordinate_names.append(coordinate)
+
 
 
                 else: #if the MuJoCo body has multiple joints (degrees of freedom), combine into a single MuSkeMo joint with assigned coordinates
@@ -432,7 +482,22 @@ class ImportMuJoCoModel(Operator):
                     joint_pos_in_body_frame = joint_positions[0]
                     
                     #if joint type is slide, we check later if 'user' is defined
-                    slide_joints = [joint for joint in joints if joint.get('type')=='slide']
+
+                    for joint in joints:
+                        
+                        coordinate = joint['name']
+
+                        axis = joint['axis']
+                        
+                        #find a coordinate mapping, can be RX, TZ, etc, or Rnon_standard if it's a non-standard axis
+                        muskemo_joint_coordinate_mapping = get_muskemo_coordinate_type(joint, coordinate, axis)
+                        #populate the actual coordinate
+
+                        coordinate_mappings.append(muskemo_joint_coordinate_mapping)
+                        coordinate_names.append(coordinate)
+                        #slide_joints = [joint for joint in joints if joint.get('type')=='slide']
+
+                    
                                          
 
                 joint_pos_in_glob = gRf@Vector(joint_pos_in_body_frame) + frame_pos_in_glob
@@ -440,22 +505,47 @@ class ImportMuJoCoModel(Operator):
             else: #if the MuJoCo body has no joints defined, we need to create one, because MuSkeMo does not allow bodies to be parented to bodies
                 
                 joint_pos_in_glob = frame_pos_in_glob #align the new joint to the MuJoCo body frame (which is actually the joint child frame in MuSkeMo)
+                
+
+            #joint orientation is always equal to the body-attached frame orientation defined in the MuJoCo file. 
+            #If the transform axis is not one of the unit directions, we deal with it separately in non-standard coordinate axes
+            joint_or_in_glob_quat = quat_from_matrix(gRf)
+            joint_or_in_glob_XYZeuler = euler_XYZbody_from_matrix(gRf)
 
 
 
+            ### populate coordinates if we found a mapping above
+            for muskemo_joint_coordinate_mapping,coordinate in zip(coordinate_mappings,coordinate_names):
+                if muskemo_joint_coordinate_mapping == 'TX':
+                    coordinate_Tx = coordinate
+
+                elif muskemo_joint_coordinate_mapping == 'TY':
+                    coordinate_Ty = coordinate
+
+                elif muskemo_joint_coordinate_mapping == 'TZ':
+                    coordinate_Tz = coordinate
+
+                elif muskemo_joint_coordinate_mapping == 'RX':
+                    coordinate_Rx = coordinate
+
+                elif muskemo_joint_coordinate_mapping == 'RY':
+                    coordinate_Ry = coordinate
+
+                elif muskemo_joint_coordinate_mapping == 'RZ':
+                    coordinate_Rz = coordinate
 
 
             create_joint(name = joint_name, radius = joint_rad, is_global = True, collection_name = joint_colname,
             parent_body=joint_pbody_name, child_body=joint_cbody_name, 
             pos_in_global=joint_pos_in_glob, 
-            or_in_global_XYZeuler=[nan] * 3, 
-            or_in_global_quat=[nan] * 4,
+            or_in_global_XYZeuler=joint_or_in_glob_XYZeuler, 
+            or_in_global_quat=joint_or_in_glob_quat,
             pos_in_parent_frame=[nan] * 3,
             or_in_parent_frame_XYZeuler=[nan] * 3, or_in_parent_frame_quat=[nan] * 4,
             pos_in_child_frame=[nan] * 3, 
             or_in_child_frame_XYZeuler=[nan] * 3, or_in_child_frame_quat=[nan] * 4,
-            coordinate_Tx='', coordinate_Ty='', coordinate_Tz='', 
-            coordinate_Rx='', coordinate_Ry='', coordinate_Rz='',                  
+            coordinate_Tx=coordinate_Tx, coordinate_Ty=coordinate_Ty, coordinate_Tz=coordinate_Tz, 
+            coordinate_Rx=coordinate_Rx, coordinate_Ry=coordinate_Ry, coordinate_Rz=coordinate_Rz,                  
             )    
         
             ### Here we check if "user" is defined in the joints, and if so, we compute the global coordinate offset
@@ -471,7 +561,13 @@ class ImportMuJoCoModel(Operator):
             joint_dict[joint_name]['parent_body_name'] = joint_pbody_name
             joint_dict[joint_name]['child_body_name'] = joint_cbody_name
             joint_dict[joint_name]['pos_in_global'] = joint_pos_in_glob
+            joint_dict[joint_name]['or_in_global_quat'] = joint_or_in_glob_quat
+            joint_dict[joint_name]['or_in_global_XYZeuler'] = joint_or_in_glob_XYZeuler
             joint_dict[joint_name]['mujoco_bodyframe_gRf'] = gRf
+            #joint_dict coordinate type?
+            #joint_dict coordinate axis?
+
+
 
             if coordinate_offset !=  Vector([0,0,0]):
                 coordinate_offset_global = gRf@coordinate_offset
