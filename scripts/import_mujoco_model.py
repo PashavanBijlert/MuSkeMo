@@ -211,6 +211,9 @@ class ImportMuJoCoModel(Operator):
         joint_dict = {} # joint in a dict, as their data are extracted from the MuJoCo bodies
         site_dict = {} #muscles sites in a dict, as their data are extracted from the MuJoCo bodies
 
+        transform_axes_warning_list = [] #list to which we will add MuJoCo joints for a warning about transform axes that were not aligned with the joint itself.
+
+
         while stack:
             body_info, depth = stack.pop()  # Get the next body in the stack
 
@@ -367,6 +370,8 @@ class ImportMuJoCoModel(Operator):
 
             coordinate_names = [] #list will get populated with coordinate names if they can be mapped correctly
             coordinate_mappings = [] #list will get populated if coordinates can be mapped correctly
+            axes = [] #list will be populated with axes. We only use the axes list if the joint has non-standard axes
+            has_standard_axes = True #standard axes are unit principal direction vectors. If the axis different, we need to store it in the joint.
 
             ## some MuJoCo joints have "user" defined in them, which appears to be a default pose
             ## Find the user value (which is just a user in put coordinate value apparently), 
@@ -376,7 +381,8 @@ class ImportMuJoCoModel(Operator):
 
             coordinate_offset = Vector([0,0,0]) #if 'user' is defined in a mujoco joint, which appears to be a coordinate offset, we save it in the joint dict and apply it to the model after model construction
             slide_joints = [] #
-                    
+           
+
             if joints: #if joints are defined in body info, add them to the dict. Otherwise, we create a new joint anyway because MuSkeMo requires two bodies to be connected by a joint
                 
 
@@ -431,10 +437,14 @@ class ImportMuJoCoModel(Operator):
                     
                     #find a coordinate mapping, can be RX, TZ, etc, or Rnon_standard if it's a non-standard axis
                     muskemo_joint_coordinate_mapping = get_muskemo_coordinate_type(joint, coordinate, axis)
-                    #populate the actual coordinate
-
+                    
                     coordinate_mappings.append(muskemo_joint_coordinate_mapping)
                     coordinate_names.append(coordinate)
+                    axes.append(axis)
+
+                    if 'non_standard' in muskemo_joint_coordinate_mapping:
+
+                        has_standard_axes = False #if this is false we have to treat the coordinate and axes assignment separately
 
 
 
@@ -491,10 +501,17 @@ class ImportMuJoCoModel(Operator):
                         
                         #find a coordinate mapping, can be RX, TZ, etc, or Rnon_standard if it's a non-standard axis
                         muskemo_joint_coordinate_mapping = get_muskemo_coordinate_type(joint, coordinate, axis)
-                        #populate the actual coordinate
-
+                        
                         coordinate_mappings.append(muskemo_joint_coordinate_mapping)
                         coordinate_names.append(coordinate)
+                        axes.append(axis)
+
+
+                        if 'non_standard' in muskemo_joint_coordinate_mapping:
+
+                            has_standard_axes = False #if this is false we have to treat the coordinate and axes assignment separately
+
+                        
                         #slide_joints = [joint for joint in joints if joint.get('type')=='slide']
 
                     
@@ -515,24 +532,28 @@ class ImportMuJoCoModel(Operator):
 
 
             ### populate coordinates if we found a mapping above
-            for muskemo_joint_coordinate_mapping,coordinate in zip(coordinate_mappings,coordinate_names):
-                if muskemo_joint_coordinate_mapping == 'TX':
-                    coordinate_Tx = coordinate
 
-                elif muskemo_joint_coordinate_mapping == 'TY':
-                    coordinate_Ty = coordinate
+            if has_standard_axes:
+                for muskemo_joint_coordinate_mapping,coordinate in zip(coordinate_mappings,coordinate_names):
+                    if muskemo_joint_coordinate_mapping == 'TX':
+                        coordinate_Tx = coordinate
 
-                elif muskemo_joint_coordinate_mapping == 'TZ':
-                    coordinate_Tz = coordinate
+                    elif muskemo_joint_coordinate_mapping == 'TY':
+                        coordinate_Ty = coordinate
 
-                elif muskemo_joint_coordinate_mapping == 'RX':
-                    coordinate_Rx = coordinate
+                    elif muskemo_joint_coordinate_mapping == 'TZ':
+                        coordinate_Tz = coordinate
 
-                elif muskemo_joint_coordinate_mapping == 'RY':
-                    coordinate_Ry = coordinate
+                    elif muskemo_joint_coordinate_mapping == 'RX':
+                        coordinate_Rx = coordinate
 
-                elif muskemo_joint_coordinate_mapping == 'RZ':
-                    coordinate_Rz = coordinate
+                    elif muskemo_joint_coordinate_mapping == 'RY':
+                        coordinate_Ry = coordinate
+
+                    elif muskemo_joint_coordinate_mapping == 'RZ':
+                        coordinate_Rz = coordinate
+
+                  
 
 
             create_joint(name = joint_name, radius = joint_rad, is_global = True, collection_name = joint_colname,
@@ -547,7 +568,60 @@ class ImportMuJoCoModel(Operator):
             coordinate_Tx=coordinate_Tx, coordinate_Ty=coordinate_Ty, coordinate_Tz=coordinate_Tz, 
             coordinate_Rx=coordinate_Rx, coordinate_Ry=coordinate_Ry, coordinate_Rz=coordinate_Rz,                  
             )    
-        
+            
+            ### deal with non-standard transform axes
+
+            if not has_standard_axes:
+
+                joint_obj = bpy.data.objects[joint_name]
+                joint_obj['transform_axes'] = {}
+                joint_obj['transform_axes']['type'] = 'MuJoCo' #to track from what type of model the 'transform_axes' are defined 
+                
+                transform_axes_warning_list.append(joint_name) #add to the warning list
+                # Determine the dominant axis
+                principal_directions = [Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1))]
+                
+                for ind in range(len(coordinate_mappings)):
+                    incomplete_mapping = coordinate_mappings[ind]
+                    axis = Vector(axes[ind]) #get the respective axis
+                    alignments = [abs(axis.dot(ax)) for ax in principal_directions]  # Compare dot product with principal_directions
+                
+                    best_index = alignments.index(max(alignments))  # Find the closest major axis
+                    #Now we know if it should be x, y, or z coordinate. Update the mapping
+
+                    if best_index == 0:
+                        muskemo_joint_coordinate_mapping = incomplete_mapping.replace('non_standard','X')
+                    elif best_index == 1:
+                        muskemo_joint_coordinate_mapping = incomplete_mapping.replace('non_standard','Y')
+                    elif best_index == 2:
+                        muskemo_joint_coordinate_mapping = incomplete_mapping.replace('non_standard','Z')         
+
+                    #populate the coordinate correctly, and create a dict as custom property to save the coordinate axis.
+                    if muskemo_joint_coordinate_mapping == 'TX':
+                        joint_obj['coordinate_Tx'] = coordinate_names[ind]
+                        joint_obj['transform_axes']['transform_axis_Tx'] = axis 
+
+                    elif muskemo_joint_coordinate_mapping == 'TY':
+                        joint_obj['coordinate_Ty'] = coordinate_names[ind]
+                        joint_obj['transform_axes']['transform_axis_Ty'] = axis 
+
+                    elif muskemo_joint_coordinate_mapping == 'TZ':
+                        joint_obj['coordinate_Tz'] = coordinate_names[ind]
+                        joint_obj['transform_axes']['transform_axis_Tz'] = axis
+
+                    elif muskemo_joint_coordinate_mapping == 'RX':
+                        joint_obj['coordinate_Rx'] = coordinate_names[ind]
+                        joint_obj['transform_axes']['transform_axis_Rx'] = axis 
+
+                    elif muskemo_joint_coordinate_mapping == 'RY':
+                        joint_obj['coordinate_Ry'] = coordinate_names[ind]
+                        joint_obj['transform_axes']['transform_axis_Ry'] = axis 
+
+                    elif muskemo_joint_coordinate_mapping == 'RZ':
+                        joint_obj['coordinate_Rz'] = coordinate_names[ind]
+                        joint_obj['transform_axes']['transform_axis_Rz'] = axis
+
+                    
             ### Here we check if "user" is defined in the joints, and if so, we compute the global coordinate offset
 
             for sj in slide_joints:
@@ -647,7 +721,12 @@ class ImportMuJoCoModel(Operator):
         if muscle_skipped_points: #throw a warning if muscle points were skipped
             self.report({'WARNING'}, "The following muscles have points that were skipped because their positions are defined by a polynomial, which is not currently supported by MuSkeMo: " + ', '.join(dict.fromkeys(muscle_skipped_points)))
 
+        # Throw warning about non-standard transform axes        
+        if transform_axes_warning_list: #throw a warning if joints have non-standard transform axes.
+            
+            warning_message= f"The following joints have transform axes that were not principal directions: {', '.join(transform_axes_warning_list)}. See the manual"
 
+            self.report({'WARNING'}, warning_message)
 
 
         #apply the joint coordinate offsets after model construction, if they are defined for a specific joint
