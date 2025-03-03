@@ -958,6 +958,7 @@ class ImportOpenSimModel(Operator):
                     print(joint_name)
                     joint_obj = bpy.data.objects[joint_name] #get the newly created joint in Blender
                     joint_obj['transform_axes'] = {}
+                    joint_obj['transform_axes']['type'] = 'OpenSim' #to track from what type of model the 'transform_axes' are defined 
                     axis_names = ['rotation1', 'rotation2', 'rotation3', 'translation1', 'translation2', 'translation3']
 
                     for axis_name  in axis_names: #a spatial transform has 6 transform axes. Loop through each explicitly
