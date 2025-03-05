@@ -475,13 +475,14 @@ MuJoCo has a substantially different model format from most biomechanical simula
 \item Joints in MuJoCo define degrees of freedom, and during import are combined into a single MuSkeMo JOINT. The MuJoCo joint names are treated as the Coordinate names in MuSkeMo, and no combined Joint name is actually defined in the MuJoCo model. MuSkeMo automatically names the joint "[parent\_body]\_[child\_body]\_joint", unless the MuJoCo body has several joints defined, and they have several sections in their name in common. MuSkeMo also creates a joint if a MuJoCo body has no joints defined (because in MuJoCo, this implies two welded bodies, which in MuSkeMo is equivalent to a joint without coordinates). 
 \item MuJoCo in principle allows each "joint"  (i.e., degree of freedom) to have its own joint center (defined with the "pos" flag). This is not possible in MuSkeMo because the degrees of freedom are assigned to a single joint. MuSkeMo assumes all the degrees of freedom have the same center, and warns the user if the MuJoCo model defines it differently.
 \item MuJoCo in principle allows each "joint" (i.e., degree of freedom) to have an "axis" that is not mutually orthogonal to the other joint axes. During import, MuSkeMo checks whether all the axes are positive, principal unit vectors (so [1,0,0], [0,1,0], or [0,0,1]). If not, MuSkeMo creates a Python dict 'transform\_axes' in the joint's custom properties that stores the axes as defined in the MuJoCo model. MuSkeMo will warn the user that this has occured. The python dict can be used during trajectory import (using axis-angle representations) to correctly visualize trajectories (although this is currently not yet supported for MuJoCo models).
-\item MuJoCo allows joints to have \href{https://mujoco.readthedocs.io/en/stable/modeling.html#cuser}{user parameters}, which the MyoConverter models appear to use to define a default coordinate value. MuSkeMo creates the model then uses the "user parameters" defined in the joints to transform the joints along their respective coordinate axes.
+\item MuJoCo models can have kinematic constraints that couple one coordinate's ("joint" in MuJoCo) motions to another. This is currently not yet possible in MuSkeMo, and the joint is thus imported assuming a coordinate value of 0. The user is warned if this occured.
+\item DEPCRECATED - WILL REMOVE AFTER TESTING MuJoCo allows joints to have \href{https://mujoco.readthedocs.io/en/stable/modeling.html#cuser}{user parameters}, which the MyoConverter models appear to use to define a default coordinate value. MuSkeMo creates the model then uses the "user parameters" defined in the joints to transform the joints along their respective coordinate axes.
 \item Muscles are imported, but points whose positions move are skipped during import. In MuJoCo, these points (called sites) can move using joint constraints, which is equivalent to 'MovingPathPoint' in OpenSim 
 
 
 \end{itemize}
 
-The MuJoCo model importer is still missing the following features: joint coordinate assignment, (non-standard) transform axes, conversion of moving path points to static path points.
+The MuJoCo model importer is still missing the following features: conversion of moving path points to static path points.
 
 \subsubsection{Other simulators}
 
