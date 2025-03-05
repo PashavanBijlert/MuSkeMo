@@ -132,7 +132,19 @@ class ImportMuJoCoModel(Operator):
 
             return asset_data
 
+        def get_equality_data(root):
+            """ Extracts equality constraints data from the XML root, converting numerical attributes. Only extracts joint constraints currently"""
+            
+            equality_data = {"joints": []}
 
+            # Extract equality data
+            equality_section = root.find("equality")
+            if equality_section is not None:
+                for joint in equality_section.findall("joint"):
+                    joint_info = {key: parse_numerical(value) for key, value in joint.attrib.items()}
+                    equality_data["joints"].append(joint_info)
+
+            return equality_data
 
         # Find the worldbody (where all bodies are defined)
         worldbody = root.find("worldbody")
@@ -145,6 +157,11 @@ class ImportMuJoCoModel(Operator):
              
         # Extract asset data
         asset_data = get_asset_data(root)
+
+        # Extract equality data
+        equality_data = get_equality_data(root)
+
+        
             
         ########## MuSkeMo settings, user switches, MuSkeMo scripts, etc.
         muskemo = bpy.context.scene.muskemo
@@ -596,6 +613,8 @@ class ImportMuJoCoModel(Operator):
                     elif best_index == 2:
                         muskemo_joint_coordinate_mapping = incomplete_mapping.replace('non_standard','Z')         
 
+                    coordinate_mappings[ind] = muskemo_joint_coordinate_mapping #update it for the joint dict later
+
                     #populate the coordinate correctly, and create a dict as custom property to save the coordinate axis.
                     if muskemo_joint_coordinate_mapping == 'TX':
                         joint_obj['coordinate_Tx'] = coordinate_names[ind]
@@ -638,6 +657,10 @@ class ImportMuJoCoModel(Operator):
             joint_dict[joint_name]['or_in_global_quat'] = joint_or_in_glob_quat
             joint_dict[joint_name]['or_in_global_XYZeuler'] = joint_or_in_glob_XYZeuler
             joint_dict[joint_name]['mujoco_bodyframe_gRf'] = gRf
+            joint_dict[joint_name]['coordinate_names'] = coordinate_names
+            joint_dict[joint_name]['axes'] = axes
+            joint_dict[joint_name]['coordinate_mappings'] = coordinate_mappings
+
             #joint_dict coordinate type?
             #joint_dict coordinate axis?
 
@@ -728,16 +751,56 @@ class ImportMuJoCoModel(Operator):
 
             self.report({'WARNING'}, warning_message)
 
+        #### Apply the joint equality constraints as delta transforms.
+
+        joint_names = [joint for joint in joint_dict]
+
+        for jc in equality_data['joints']:
+            dependent_coordinate = jc['joint1']
+            driving_coordinate = jc['joint2']
+            polycoef = jc['polycoef'] #polynomial coefficients
+
+            constraint_polynomial = np.polynomial.Polynomial(polycoef) #this is a np.polynomial class. Evaluate it in x using  y = constraint_polynomial(x)
+
+            constraint_val0 = constraint_polynomial(0) #This is the value of the dependent coordinate, when driving coordinate equals 0 (which we assume as the default pose)
+            
+            [j for j in joint_names  if 'hoi' in joint_dict[j]['coordinate_names']]
+
+            #j1 and j2 can be the same
+            j1_name = [j for j in joint_names  if dependent_coordinate in joint_dict[j]['coordinate_names']][0]
+            j1 = joint_dict[j1_name]
+            
+
+            joint_obj = bpy.data.objects[j1_name]
+            
+            coordinate_ind = j1['coordinate_names'].index(dependent_coordinate)
+
+            if 'T' in j1['coordinate_mappings'][coordinate_ind]: #if it's a translational coordinate
+                axis = Vector(j1['axes'][coordinate_ind])
+
+                coordinate_offset_local = float(constraint_val0)*axis
+                coordinate_offset_global = j1['mujoco_bodyframe_gRf'] @coordinate_offset_local  #get the frame matrix, multiply by the local offset vector
+                joint_obj.delta_location += coordinate_offset_global    
+
+
+
+            #j2_name = [j for j in joint_names  if driving_coordinate in joint_dict[j]['coordinate_names']][0]
+            #j2 = joint_dict[j2_name]
+
+            
+
+
+
 
         #apply the joint coordinate offsets after model construction, if they are defined for a specific joint
-        for j, data in joint_dict.items():  # Iterate over keys AND values
-            if 'coordinate_offset_global' in data:  # Check if the key exists in the nested dict
+        # for j, data in joint_dict.items():  # Iterate over keys AND values
+        #     if 'coordinate_offset_global' in data:  # Check if the key exists in the nested dict
                 
 
-                joint_obj = bpy.data.objects[data['joint_name']]
-                coordinate_offset_global = data['coordinate_offset_global']
+        #         joint_obj = bpy.data.objects[data['joint_name']]
+        #         coordinate_offset_global = data['coordinate_offset_global']
 
-                joint_obj.matrix_world.translation += coordinate_offset_global     
+        #         joint_obj.delta_location = coordinate_offset_global     
 
         return {'FINISHED'}
 
