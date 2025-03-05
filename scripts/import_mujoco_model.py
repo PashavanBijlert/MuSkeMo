@@ -704,8 +704,8 @@ class ImportMuJoCoModel(Operator):
             
         #once the rigid body system is constructed, create muscles
         
-        muscle_skipped_points = [] #Throw a warning about skipped muscle points
-
+        muscle_wrongparented_points = [] #Throw a warning about muscles that have points not parented to BODIES
+        #skipped_sites = []
 
         for actuator in muscle_data['actuators']: #list of dicts
             if actuator['class'] == 'muscle':
@@ -721,8 +721,13 @@ class ImportMuJoCoModel(Operator):
                     if  bpy.data.objects.get(mp_parent_body_name).get('MuSkeMo_type') != 'BODY': #points can be added to moving, massless bodies in MuJoCo (via constraints). These bodies are essentially frames, not bodies.
                         #These bodies are ignored by MuSkeMo during import. This leaves the point unparented. It will be skipped for now.
                         #Future version should loop through all the equality constraints and compute the polynomial value for the construction position
-                        muscle_skipped_points.append(muscle_name)
-                        continue
+                        muscle_wrongparented_points.append(muscle_name)
+                        
+                        
+                        #site_data['muscle_name'] = muscle_name
+                        #skipped_sites.append(site_data)
+
+
 
                         #parent_parent_body_name = body_dict['mp_parent_body_name']['parent_body_name'] #
                         #mp_parent_body_name = parent_parent_body_name
@@ -741,8 +746,8 @@ class ImportMuJoCoModel(Operator):
                             pennation_angle = 0)    
 
                     
-        if muscle_skipped_points: #throw a warning if muscle points were skipped
-            self.report({'WARNING'}, "The following muscles have points that were skipped because their positions are defined by a polynomial, which is not currently supported by MuSkeMo: " + ', '.join(dict.fromkeys(muscle_skipped_points)))
+        if muscle_wrongparented_points: #throw a warning if muscle points were skipped
+            self.report({'WARNING'}, "The following muscles have points that were parented to joints: " + ', '.join(dict.fromkeys(muscle_wrongparented_points)) + '. This issue will be resolved by creating massless bodies in the future.')
 
         # Throw warning about non-standard transform axes        
         if transform_axes_warning_list: #throw a warning if joints have non-standard transform axes.
@@ -753,6 +758,7 @@ class ImportMuJoCoModel(Operator):
 
         #### Apply the joint equality constraints as delta transforms.
 
+        coordinates_with_skipped_constraints = []
         joint_names = [joint for joint in joint_dict]
 
         for jc in equality_data['joints']:
@@ -780,27 +786,27 @@ class ImportMuJoCoModel(Operator):
 
                 coordinate_offset_local = float(constraint_val0)*axis
                 coordinate_offset_global = j1['mujoco_bodyframe_gRf'] @coordinate_offset_local  #get the frame matrix, multiply by the local offset vector
-                joint_obj.delta_location += coordinate_offset_global    
+                joint_obj.delta_location += coordinate_offset_global
+
+                coordinates_with_skipped_constraints.append(dependent_coordinate)    
 
 
+            else: #if it's a rotational coordinate, give an error because it is not implemented yet
+                warning_message = dependent_coordinate + " is an angle that is driven by another joint coordinate. This is not yet supported and is thus skipped during import, please contact the developer."
+                self.report({'WARNING'}, warning_message)
 
+        # Throw warning about non-standard transform axes        
+        if coordinates_with_skipped_constraints: #throw a warning if joint kinematic constraints were converted to static positions
+            
+            warning_message= f"The following joint coordinates that are driven by kinematic constraints, that were converted to static positions: {', '.join(coordinates_with_skipped_constraints)}. See the manual"
+
+            self.report({'WARNING'}, warning_message)
+
+        
             #j2_name = [j for j in joint_names  if driving_coordinate in joint_dict[j]['coordinate_names']][0]
             #j2 = joint_dict[j2_name]
 
-            
-
-
-
-
-        #apply the joint coordinate offsets after model construction, if they are defined for a specific joint
-        # for j, data in joint_dict.items():  # Iterate over keys AND values
-        #     if 'coordinate_offset_global' in data:  # Check if the key exists in the nested dict
-                
-
-        #         joint_obj = bpy.data.objects[data['joint_name']]
-        #         coordinate_offset_global = data['coordinate_offset_global']
-
-        #         joint_obj.delta_location = coordinate_offset_global     
+        
 
         return {'FINISHED'}
 
