@@ -866,22 +866,22 @@ Similarly, the first and second columns of \( \mathbf{R}_z \) give the \( x \)- 
 
 If we decompose the full rotation into three successive rotations about the body-fixed \( X \)-axis, \( Y \)-axis, and \( Z \)-axis (denoted as \( \mathbf{R}_x \), \( \mathbf{R}_y \), and \( \mathbf{R}_z \) respectively), the combined rotation matrix is:
 
-\[
+\begin{equation}
 {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} = \mathbf{R}_x \mathbf{R}_y \mathbf{R}_z
-\]
+\end{equation}
 
 \textbf{We said that we were starting with a rotation about \(X \), but the vector will first be multiplied by Rz Why is this?}
 
 
-Consider we want to rotate a vector \( \vec{v}_{\mathcal{B}} \) (expressed in the body-fixed frame \( \mathcal{B} \)) by arbitrary angles about body-fixed \( X \), \( Y \), and \( Z \)-axes, in that order. After the rotations, what will \( \vec{v}_{\mathcal{G}} \) (the vector in the global frame \( \mathcal{G} \)) be?
+Consider that we want to rotate a vector \( \vec{v}_{\mathcal{B}} \) (expressed in the body-fixed frame \( \mathcal{B} \)) by arbitrary angles about body-fixed \( X \), \( Y \), and \( Z \)-axes, in that order. After the rotations, what will \( \vec{v}_{\mathcal{G}} \) (the vector in the global frame \( \mathcal{G} \)) be?
 
 When the two frames are aligned (i.e., when all rotation angles are zero), \( \vec{v}_{\mathcal{B}} = \vec{v}_{\mathcal{G}} \).
 
 We start by rotating about the body-fixed \( x \)-axis. Thus, we have:
 
-\[
+\begin{equation}
 \vec{v}_{\mathcal{G}} = \mathbf{R}_x \vec{v}_{\mathcal{B}}
-\]
+\end{equation}
 
 At this point, the vector \( \vec{v}_{\mathcal{B}} \) is rotated about the \( x_{\mathcal{B}} \)-axis, which was coincident with the global \( x_{\mathcal{G}} \)-axis.
 
@@ -889,17 +889,17 @@ At this point, the vector \( \vec{v}_{\mathcal{B}} \) is rotated about the \( x_
 
 The next rotation becomes less intuitive. It may be tempting to add the rotation about the \( y \)-axis as follows:
 
-\[
+\begin{equation}
     \cancel{\mathbf{R}_y \mathbf{R}_x \vec{v}_{\mathcal{B}}}
-\]
+\end{equation}
 
 However, this is incorrect! This formulation would result in a rotation about the global \( y_{\mathcal{G}} \)-axis, because the first rotation was about the global \( x_{\mathcal{G}} \)-axis (since \( x_{\mathcal{B}} \) and \( x_{\mathcal{G}} \) were coincident before the first rotation).
 
 Given that we want to rotate about the local \( y_{\mathcal{B}} \)-axis (which coincides with \( y_{\mathcal{G}} \) before the first rotation), we must instead insert \( \mathbf{R}_y \) between \( \mathbf{R}_x \) and \( \vec{v}_{\mathcal{B}} \), as follows:
 
-\[
+\begin{equation}
 \vec{v}_{\mathcal{G}} = \mathbf{R}_x \mathbf{R}_y \vec{v}_{\mathcal{B}}
-\]
+\end{equation}
 
 \textbf{Note:} This implies that successively rotating about body-fixed \( x \)- and \( y \)-axes is equivalent to successively rotating about the global \( y \)- and \( x \)-axes, but the order is reversed depending on the frame of reference! Rotations about body-fixed axes are called \emph{intrinsic}, whereas rotations about global axes are called \emph{extrinsic}.
 
@@ -907,34 +907,75 @@ Given that we want to rotate about the local \( y_{\mathcal{B}} \)-axis (which c
 
 A similar argument applies to the third rotation about the local \( z_{\mathcal{B}} \)-axis. Therefore, the total equation for the vector in the global frame after all three rotations is:
 
-\[
+\begin{equation}
 \vec{v}_{\mathcal{G}} = \mathbf{R}_x \mathbf{R}_y \mathbf{R}_z \vec{v}_{\mathcal{B}}
-\]
+\end{equation}
 
 Thus, a body-fixed \( XYZ \)-sequence of rotations (intrinsic) is identical to a global-frame \( ZYX \)-sequence of rotations (extrinsic), with the rotation order reversed!
 
 In body-fixed notation, the successive rotation matrices are multiplied from left to right when rotating from the body-fixed frame \( \mathcal{B} \) to the global frame \( \mathcal{G} \). In the above example, using \( XYZ \) about the body-fixed axes gives:
 
-\[
+\begin{equation}
 {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} = \mathbf{R}_x \mathbf{R}_y \mathbf{R}_z
-\]
+\end{equation}
 
 The inverse operation, which rotates from the global frame back to the body-fixed frame, is given by:
 
-\[
+\begin{equation}
 {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} = ({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}})^{-1} = ({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}})^{T} = \mathbf{R}_z^T \mathbf{R}_y^T \mathbf{R}_x^T
-\]
-
+\end{equation}
 
 
 \section{Rotation quaternions}
 \label{sec:quaternions}
 
-To be written. MuSkeMo uses algorithms based on \cite{eberlyGamePhysics2004}.
+
+The rotation matrix \( {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} \) derived from a unit quaternion \( (w, x, y, z) \) is given by:
+
+\begin{equation}
+{}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} =
+\begin{bmatrix}
+1 - 2(z^2 + y^2) & 2(xy - wz) & 2(zx + wy) \\
+2(xy + wz) & 1 - 2(x^2 + z^2) & 2(yz - wx) \\
+2(zx - wy) & 2(yz + wx) & 1 - 2(x^2 + y^2)
+\end{bmatrix}
+\end{equation}
+
+To convert a rotation matrix to a quaternion, MuSkeMo implements the algorithm described on page 537 of \cite{eberlyGamePhysics2004}.
 
 \section{Axis angle rotation matrix}
 \label{sec:axisanglerotation}
-To be written. MuSkeMo uses an algorithm adapted from \cite{valleryAdvancedDynamics2019}
+ MuSkeMo uses the axis-angle approach described in \cite{valleryAdvancedDynamics2019}, also known as Rodrigues' rotation formula, or Euler's finite rotation formula. It allows us to construct a rotation matrix from an axis vector \( \hat{\mathbf{n}} \), and an angle \( \phi \) about which we would like to rotate.
+
+We must first define the cross-product matrix:
+
+\begin{equation}
+\tilde{\mathbf{N}} = 
+\begin{bmatrix}
+0 & -n_{z} & n_{y} \\
+n_{z} & 0 & -n_{x} \\
+-n_{y} & n_{x} & 0
+\end{bmatrix}
+\end{equation}
+
+where \( \hat{\mathbf{n}} = (n_x, n_y, n_z) \) is the unit axis vector expressed in the global frame.
+
+The identity matrix is:
+
+\begin{equation}
+\mathbf{I} = 
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\end{equation}
+
+The rotation matrix is then acquired using:
+
+\begin{equation}
+{}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} = \mathbf{I} + (1 - \cos\phi) \tilde{\mathbf{N}} \tilde{\mathbf{N}} + \sin\phi \tilde{\mathbf{N}}
+\end{equation}
 
 
 \section{Validation tests}
