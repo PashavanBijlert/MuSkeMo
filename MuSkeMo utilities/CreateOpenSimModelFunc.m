@@ -374,7 +374,16 @@ for j = 1:height(joint_data)
         parentbody = model.getGround();
         
     else
-        parentbody = model.getBodySet.get(joint_data.parent_body{j});
+        
+        joint_parent_body_name = joint_data.parent_body{j};
+        if strcmp(joint_parent_body_name, 'not_assigned') %if the joint has no parent assigned, set it to ground
+
+           parentbody = model.getGround();
+
+        else
+
+            parentbody = model.getBodySet.get(joint_parent_body_name);
+        end
         
     end
     childbody = model.getBodySet.get(joint_data.child_body{j});

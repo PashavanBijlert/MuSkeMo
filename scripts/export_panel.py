@@ -189,7 +189,7 @@ class ExportJointsOperator(Operator, ExportHelperCustom): #inherits from ExportH
                 return{'FINISHED'}
 
             if joint['parent_body'] == 'not_assigned':
-                self.report({'WARNING'}, "Joint with the name '" + joint.name + "' has no parent body assigned. If this is intended as the root joint, manually type in 'ground' for OpenSim or 'World' for Gaitsym (without quotation marks)")
+                self.report({'WARNING'}, "Joint with the name '" + joint.name + "' has no parent body assigned. If you use one of MuSkeMo's conversion scripts, this joint will be treated as a root joint (its parent will be 'ground', 'World', etc., depending on the simulator)")
                 
 
 
