@@ -200,7 +200,7 @@ Constructing a model in Blender provides the user with a lot of freedom to inter
 To prevent incorrect exports, MuSkeMo keeps track of the 'default\_pose', which is the pose in which the relevant computation was performed. If the user tries to perform an operation that can only be performed in the default pose, the operation is cancelled (with an error message). In that situation, you must either reposition the model components back into the default pose before exporting, or alternatively recompute the parameters (for inertial properties and bodies, this means recomputing and reassigning the inertial properties, for other components it means detaching and reparenting the objects).
 
 \section{MuSkeMo's Panels}
-This section describes all of MuSkeMo's panels and how to use them.
+This section describes all of MuSkeMo's panels and how to use them. Most of MuSkeMo's features work by selecting the correct combination of objects, and then pressing one of the buttons in the panels. MuSkeMo's panels show you how many and what types of objects (e.g., "BODY") you have selected, and will give an explanatory error message if you try to use a panel incorrectly (e.g.,: assigning a parent body to a joint requires selecting one body and one joint, and MuSkeMo informs you if you didn't do this). Most of the panels also allow you to create new objects, which means you have to type in a (unique!) object name and press a button. 
 
 \subsection{MuSkeMo Global Settings Panel}
 The Blender user interface has several default settings that do not work well with MuSkeMo. By default, Blender forces the Z-axis as the "up" direction in the viewport. The International Society of Biomechanics assumes Y as the up direction. To achieve this, the user should set the view rotation setting to "Trackball", and use "orbit around selection". The "MuSkeMo Global Settings" panel provides a button that does this automatically: "Set recommended navigation settings". 
@@ -348,7 +348,7 @@ In this panel, you can define path-point muscles, view their lengths in realtime
 
 \subsubsection{Creating a muscle and adding points}
 
-To create a new muscle, type a unique (unused) name in the text box, select a body, place the 3D cursor at the desired location, and press "Create new muscle". For each subsqueten muscle points, select both the muscle and the target body, reposition the 3D cursor, and press "Add muscle point".
+To create a new muscle, type a unique (unused) name in the text box, select a body, place the 3D cursor at the desired location, and press "Create new muscle". For each subsequent muscle points, select both the muscle and the target body, reposition the 3D cursor, and press "Add muscle point".
 
 \textbf{Important:} MuSkeMo creates muscles using Blender's curves, and automatically hooks each point to the target body (see \ref{sec:muscle}). It is impossible to reposition the whole muscle, it can only be repositioned one muscle point at a time. To do this, select the muscle, and press "TAB" on your keyboard to go into \href{https://docs.blender.org/manual/en/latest/editors/3dview/modes.html}{EDIT mode}. In edit mode, you can select individual points and move them around by hitting G. Once you are satisfied, you can press TAB again to go out of edit mode.
 
