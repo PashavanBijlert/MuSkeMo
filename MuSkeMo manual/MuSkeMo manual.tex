@@ -80,7 +80,7 @@
     \textbf{Github Repository:} \href{https://github.com/PashavanBijlert/MuSkeMo}{Github} \\
     \textbf{Bug Reports and Feature Requests:} \href{https://github.com/PashavanBijlert/MuSkeMo/issues}{Submit an issue on Github} \\
     \vspace{20pt}
-    {\large Version 0.9.45} \\
+    {\large Version 0.9.5} \\
     {\large \today}
 \end{center}
 
@@ -418,10 +418,10 @@ For an arbitrary matrix \(\mathbf{I}\) expressed in \(\mathcal{G}\) (e.g., an in
 
 \begin{equation}
 \mathbf{I}_{\mathcal{B}} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \;\mathbf{I}_{\mathcal{G}} \; {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}
-\label{eq:changeofbasis}
+\label{eq:similaritytransformation}
 \end{equation}
 
-Readers familiar with linear algebra will recognize this as a similarity transformation, that defines a change of basis.
+Readers familiar with linear algebra will recognize this as a similarity transformation, using a change of basis matrix.
 
 \subsection{Landmark \& marker panel}
 
@@ -462,7 +462,7 @@ OpenSim models with \href{https://simtk.org/api_docs/opensim/api_docs/classOpenS
 
 MuSkeMo includes a Gaitsym (2019) importer. It currently imports bodies, joints, muscles (DampedSpring elements are treated as muscles), contacts, and markers (as frames). Muscles that include wrapping are currently not supported, but limited wrapping support is planned in a future update. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory, and the name of this subdirectory must currently be manually typed into the panel.
 
-It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq:changeofbasis} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old Y-axis becomes the new Z-axis.
+It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq:similaritytransformation} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old Y-axis becomes the new Z-axis.
 
 \subsubsection{MuJoCo model import}
 \label{sec:mujocoimporter}
@@ -533,7 +533,7 @@ The reflection panel enables symmetric model construction, by only constructing 
 
 \textbf{Warning:} All the reflection functions use a case-sensitive string search to check whether the side string is at the end of object's name. Because this can potentially cause conflicts (e.g., the name "dorsal\_rib\_l" contains both '\_l' and '\_r'), MuSkeMo only looks for the side string at the end of the object name. Because it is impossible to account for all naming conventions, a workaround can be to place the target component in its own collection and temporarily changing the name(s). In particular with muscles, where each point is parented to a body with a HOOK modifier (see \ref{sec:muscle}), conflicts may need to be resolved manually.
 
-Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis with the reflection matrix, using equation \ref{eq:changeofbasis}.
+Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis with the reflection matrix, using equation \ref{eq:similaritytransformation}.
 
 \subsection{MuSkeMo utilities}
 \label{sec:muskemoutilities}
@@ -765,9 +765,9 @@ Just like JOINTS, WRAPS have parent bodies, and orientations and positions with 
 \label{sec:eulerangles}
 
 \subsection{Conventions used by MuSkeMo}
-Euler angles define rotation matrices that transform between reference frames. Conceptually, they are relatively straightforward: 3D rotations are defined by three successive rotations about different axes in space. However, Euler angles are ambiguous without explicitly defining what convention is being used. It is possible to choose twelve different sets of axes about which we perform the successive rotations (e.g., XYZ, XYX, etc). It is furthermore possible to define these axes with respect to the rotating body (body-fixed, intrinsic), or the global frame (space-fixed, extrinsic). This determines the order of the application of the individual rotations. The rotations can also be defined to rotate the body itself (active rotations), or rotate the frame around a stationary vector (passive rotations). Active and passive rotation matrices are related by being each others' transpose.
+Euler angles define rotation matrices that transform between reference frames. Conceptually, they are relatively straightforward: 3D rotations are defined by three successive rotations about different axes in space. However, Euler angles are ambiguous without explicitly defining what convention is being used. It is possible to choose twelve different sets of axes about which we perform the successive rotations (e.g., XYZ, XYX, etc). It is furthermore possible to define these axes with respect to the rotating body (body-fixed, intrinsic), or the global frame (space-fixed, extrinsic). This determines the order of the application of the individual rotations. The rotations can also be defined to rotate the body itself (active rotations), or rotate the frame around a stationary body (passive rotations). Active and passive rotation matrices are related by being each others' transpose.
 
-To enable cross-compatibility with OpenSim, MuSkeMo uses the same convention as OpenSim. This convention uses a body-fixed (intrinsic) XYZ-decomposition using active rotations (so the object is being rotated, not the reference frame). OpenSim is built on Simbody, and the \href{https://simtk.org/api_docs/molmodel/api_docs22/Simbody/html/classSimTK_1_1Rotation__.html}{Simbody Documentation} cites page 423 of \cite{kaneSpacecraftDynamics1983} as their source.
+To enable cross-compatibility with OpenSim, MuSkeMo uses the same convention as OpenSim. This convention uses a body-fixed (intrinsic) XYZ-decomposition using active rotations (so the object is being rotated, not the reference frame). This is also sometimes referred to as \(X-Y'-Z''\), to signify that the three successive rotations are about different frames. OpenSim is built on Simbody, and the \href{https://simtk.org/api_docs/molmodel/api_docs22/Simbody/html/classSimTK_1_1Rotation__.html}{Simbody Documentation} cites page 423 of \cite{kaneSpacecraftDynamics1983} as their source.
 
 The full rotation matrix ${}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}$ that MuSkeMo uses to rotate a vector from a body-fixed frame (the ${\mathcal{B}}$-frame) to the global reference frame (the ${\mathcal{G}}$-frame) is presented here to prevent ambiguity:
 
@@ -783,21 +783,42 @@ The full rotation matrix ${}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}$ that MuSkeM
 \end{equation}
 
 
-Here, \( \phi_x \), \( \phi_y \), and \( \phi_z \) represent rotations about the body-fixed, right-handed \( x \)-, \( y \)-, and \( z \)-axes. Brackets are omitted because each cosine and sine only has one term inside it. A vector \( {}^{\mathcal{B}}\vec{v} \) expressed in the \( \mathcal{B} \)-frame (hence the \( {}^\mathcal{B} \)-prefix), can be rotated to the \( \mathcal{G} \)-frame by pre-multiplying it with \( {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} \). In other words:
+Here, \( \phi_x \), \( \phi_y \), and \( \phi_z \) represent rotations about the body-fixed, right-handed \( X \)-, \( Y \)-, and \( Z \)-axes. This is equivalent to successive rotations by the same angles about global \( z \)-, \( y \)-, and \( x \)-axes (note the reversed order of the rotations). Brackets are omitted because each cosine and sine only has one term inside it.
+
+A vector \( {}^{\mathcal{B}}\vec{v} \) expressed in the \( \mathcal{B} \)-frame (hence the \( {}^\mathcal{B} \)-prefix), can be rotated to the \( \mathcal{G} \)-frame by pre-multiplying it with \( {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} \). In other words:
 
 \begin{equation}
-{}^{\mathcal{G}}\vec{v} = {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} { }^{\mathcal{B}}\vec{v}
+{}^{\mathcal{G}}\vec{v} = {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} \; { }^{\mathcal{B}}\vec{v}
 \end{equation}
 
-Blender itself also implements Euler angles, but uses the convention of space-fixed (extrinsic) rotations. \textbf{As a result, what Blender refers to as ZYX-Euler angles is the same as the body-fixed XYZ-Euler angles used by MuSkeMo, OpenSim, SCONE, etc.}
+
+
+To rotate a vector from the \( \mathcal{G} \)-frame to the the \( \mathcal{B} \)-frame, we need a rotation matrix that performs the inverse operation:
+
+\begin{equation}
+    {}^{\mathcal{B}}\vec{v} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \; { }^{\mathcal{G}}\vec{v}
+\end{equation}
+
+Rotation matrices are orthogonal (the columns and rows are orthogonal unit vectors). Thus, the inverse or transpose of a rotation matrix performs the inverse of the rotation. This means that you can use both the inverse or the transpose of the rotation matrix to find the inverse operation
+
+\begin{equation}
+    {{}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}}^{-1} \; = {{}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}}^\mathrm{T} \;  = {{}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}}} \;   
+    \label{sec:inversermatrix}    
+\end{equation}
+
+
+So OpenSim, MuSkeMo, SCONE, etc., all implement Euler angles using an intrinsic (body-fixed), active (rotating the object) convention, in XYZ-order. Blender itself also implements Euler angles, but uses the convention of space-fixed (extrinsic) rotations. \textbf{As a result, what Blender refers to as ZYX-Euler angles is the same rotation matrix as the body-fixed XYZ-Euler angles used by MuSkeMo, OpenSim, SCONE, etc.}
 
 \subsection{Understanding decomposed successive rotations}
 
-The different Euler-angle conventions in use were the source of much confusion for the author. A step-by-step explanation is provided in the next sections of this Appendix. For further reading, the reader is referred to \cite{kaneSpacecraftDynamics1983, valleryAdvancedDynamics2019}.
+The different Euler-angle conventions in use were the source of much confusion for the author. The confusion comes from three characteristics of Euler-angles. First, there are many ways in which Euler-angles can be used to construct rotation matrices (technically, the XYZ convention is not an Euler-angle convention, but a Tait-Bryan convention. True Euler angles reuse the first axis as the third axis). The second source of confusion can come from the order of matrix application, whereas we write down the successive rotations in letter form (e.g., XYZ) from left to right. The third source of confusion is the unintuitive order in which the rotation matrices must be applied to achieve intrinsic rotations (about body-fixed axes).
 
-\subsubsection*{Rotation About the \( x \)-axis}
+A step-by-step explanation is provided in the next sections of this Appendix. For further reading, the reader is referred to textbooks on dynamics (e.g., \cite{kaneSpacecraftDynamics1983, valleryAdvancedDynamics2019}), and D. Rose's \href{https://danceswithcode.net/engineeringnotes/rotations_in_3d/rotations_in_3d_part1.html}{engineering notes website} for a particularly accessible description of the conventions that exist for Euler angles \cite{roseRotationsThreeDimensionsEuler2015}.
 
-To rotate by \( \phi_x \) about the \( x \)-axis, the rotation matrix \( \mathbf{R}_x \) is given by:
+
+\subsubsection*{Rotation About the global \( x \)-axis}
+We will use the lower case letters to signify rotations about global axes. So for example, the global \( x \)- axis (expressed in the \(\mathcal{G} \)-frame).
+To rotate by \( \phi_x \) about the global \( x \)-axis (this is an \textbf{extrinsic} rotation), the rotation matrix \( \mathbf{R}_x \) is given by:
 
 \begin{equation}
 \mathbf{R}_x = \mqty(
@@ -805,9 +826,10 @@ To rotate by \( \phi_x \) about the \( x \)-axis, the rotation matrix \( \mathbf
 0 & \cos \phi_x & -\sin \phi_x \\
 0 & \sin \phi_x & \cos \phi_x
 )
+\label{eq:Rx}
 \end{equation}
 
-For example, applying this to a unit vector initially pointing in the \( y \)-axis direction:
+For example, applying this to a unit vector initially aligned with the the global \( y \)-axis direction:
 
 \begin{equation}
 \mathbf{R}_x \mqty( 0 \\ 1 \\ 0 )
@@ -819,11 +841,12 @@ If \( \phi_x = \frac{\pi}{4} \), this results in:
 \mqty( 0 \\ \cos \frac{\pi}{4} \\ \sin \frac{\pi}{4} ) = \mqty( 0 \\ \frac{1}{\sqrt{2}} \\ \frac{1}{\sqrt{2}} )
 \end{equation}
 
-Thus, the second and third columns give the new \( y \)- and \( z \)-axes after rotating by \( \phi_x \) in the \( yz \)-plane.
 
-\subsubsection*{Rotation About the \( y \)-axis}
+Thus, the second column of  \( \mathbf{R}_x \) (the \( y \) column of the matrix), gives the new direction of the new \(y\)-axis after rotation. This is true for all the columns of a rotation matrix: the columns give the direction vectors for the \(x\),\(y\), and \(z\) -axes of the rotated object, expressed in the original frame (in this case, the global frame).
 
-To rotate by \( \phi_y \) about the \( y \)-axis, the rotation matrix \( \mathbf{R}_y \) is:
+\subsubsection*{Rotation About the global \( y \)-axis}
+
+To rotate by \( \phi_y \) about the global \( y \)-axis, the rotation matrix \( \mathbf{R}_y \) is:
 
 \begin{equation}
 \mathbf{R}_y = \mqty(
@@ -831,6 +854,7 @@ To rotate by \( \phi_y \) about the \( y \)-axis, the rotation matrix \( \mathbf
 0 & 1 & 0 \\
 -\sin \phi_y & 0 & \cos \phi_y
 )
+\label{eq:Ry}
 \end{equation}
 
 Similarly, applying this to a unit vector initially pointing in the \( x \)-axis direction:
@@ -847,9 +871,9 @@ If \( \phi_y = \frac{\pi}{4} \), this results in:
 
 Thus, the first and third columns of \( \mathbf{R}_y \) give the \( x \)- and \( z \)-axes directions after the rotation.
 
-\subsubsection*{Rotation About the \( z \)-axis}
+\subsubsection*{Rotation about the global \( z \)-axis}
 
-To rotate by \( \phi_z \) about the \( z \)-axis, the rotation matrix \( \mathbf{R}_z \) is:
+To rotate by \( \phi_z \) about the global \( z \)-axis, the rotation matrix \( \mathbf{R}_z \) is:
 
 \begin{equation}
 \mathbf{R}_z = \mqty(
@@ -857,72 +881,108 @@ To rotate by \( \phi_z \) about the \( z \)-axis, the rotation matrix \( \mathbf
 \sin \phi_z & \cos \phi_z & 0 \\
 0 & 0 & 1
 )
+\label{eq:Rz}
 \end{equation}
 
-Similarly, the first and second columns of \( \mathbf{R}_z \) give the \( x \)- and \( y \)-axes directions after rotating about the \( z \)-axis.
+Similarly, the first and second columns of \( \mathbf{R}_z \) give the \( x \)- and \( y \)-axes directions after rotating about the global \( z \)-axis.
 
 
-\subsubsection*{Three Successive Rotations about Body-Fixed \( X \), \( Y \), and then \( Z \)}
+\subsubsection*{Three Successive Rotations about Body-Fixed \(X\), \(Y\), and then \(Z\)}
 
-If we decompose the full rotation into three successive rotations about the body-fixed \( X \)-axis, \( Y \)-axis, and \( Z \)-axis (denoted as \( \mathbf{R}_x \), \( \mathbf{R}_y \), and \( \mathbf{R}_z \) respectively), the combined rotation matrix is:
+The previous sections provided the elemental rotation matrices to rotate an object about axes in the \textbf{Global} reference frame, these were thus \textbf{extrinsic} rotations. These rotation matrices can nonetheless be chained to represent rotations about axes in a reference frame attached to the rotating body (body-fixed, the \( \mathcal{B} \)-frame, \textbf{intrinsic} rotations as used by MuSkeMo).
+
+In such a body-fixed convention, if we decide to use XYZ-Euler angles, we are in essence stating "I first align the body-fixed axes with the global reference frame. Then, I will first rotate my object about its local X axis, then about its local Y axis, and lastly about its local Z axis, after which the body will be in its correct orientation with respect to the global reference frame".
+
+We can still use our previously defined rotation matrices about global axes to achieve the desired rotation:
 
 \begin{equation}
 {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} = \mathbf{R}_x \mathbf{R}_y \mathbf{R}_z
+\label{eq:xyz_global_successive}
 \end{equation}
 
-\textbf{We said that we were starting with a rotation about \(X \), but the vector will first be multiplied by Rz Why is this?}
+\textbf{We said that we were starting with a rotation about \(X \), but the vector will first be multiplied by \(R_z\) (remember the right to left application order of matrices). Why is this?}. 
 
+This occurs because instead of rotating about local-axes (expressed in the body-fixed frame \( \mathcal{B} \)), we are rotating about the global axes. I will now demonstrate that this is simplifies to eq. \ref{eq:xyz_global_successive}.
 
-Consider that we want to rotate a vector \( \vec{v}_{\mathcal{B}} \) (expressed in the body-fixed frame \( \mathcal{B} \)) by arbitrary angles about body-fixed \( X \), \( Y \), and \( Z \)-axes, in that order. After the rotations, what will \( \vec{v}_{\mathcal{G}} \) (the vector in the global frame \( \mathcal{G} \)) be?
+%The explanation lies with the fact that pre-multiplication by one of the principal rotation matrices enacts a rotation about the global axes, as established in equations \ref{eq:Rx} - \ref{eq:Rz}. 
 
+Consider that we want to rotate a vector \( \vec{v}_{\mathcal{B}} \) (expressed in the body-fixed frame \( \mathcal{B} \)) by arbitrary angles about body-fixed \( X\), \(Y\), and \(Z\)-axes, in that order. After the rotations, we acquire \( \vec{v}_{\mathcal{G}} \), the vector in the global frame \( \mathcal{G} \). 
 When the two frames are aligned (i.e., when all rotation angles are zero), \( \vec{v}_{\mathcal{B}} = \vec{v}_{\mathcal{G}} \), but this is a trivial case that gives no insight.
 
-If the \( \mathcal{B} \)-frame is not aligned with the \( \mathcal{G} \)-frame, we start by rotating about the body-fixed \( x \)-axis. Thus, we have:
+If we start by rotating about the body-fixed \(X\)-axis, we have:
 
 \begin{equation}
-\vec{v}_{\mathcal{G}} = \mathbf{R}_x \vec{v}_{\mathcal{B}}
+\vec{v}_{\mathcal{G}} = \mathbf{R}_X \vec{v}_{\mathcal{B}}
 \end{equation}
 
-At this point, the vector \( \vec{v}_{\mathcal{B}} \) is rotated about the \( x_{\mathcal{B}} \)-axis, which was coincident with the global \( x_{\mathcal{G}} \)-axis.
+Because frames were initially aligned, the body-fixed \( X\)-axis, was coincident with the global \( x\)-axis. In other words (note the upper and lower case subscripts):
+
+\begin{equation}
+    \mathbf{R}_X = \mathbf{R}_x
+    \label{eq:locglobRx}
+\end{equation}
+    
 
 \textbf{Why Can't We Simply Add the Next Rotation by pre-multiplying the previous equation?}
 
-The next rotation becomes less intuitive. It may be tempting to add the rotation about the \( y \)-axis as follows:
+The next rotation becomes less intuitive. It may be tempting to add the rotation about the \(Y\)-axis as follows:
 
 \begin{equation}
-    \cancel{\mathbf{R}_y \mathbf{R}_x \vec{v}_{\mathcal{B}}}
+    \cancel{\mathbf{R}_y \mathbf{R}_X \vec{v}_{\mathcal{B}}}
 \end{equation}
 
-However, this is incorrect! This formulation would result in a rotation about the global \( y_{\mathcal{G}} \)-axis, because the first rotation was about the global \( x_{\mathcal{G}} \)-axis (since \( x_{\mathcal{B}} \) and \( x_{\mathcal{G}} \) were coincident before the first rotation).
-
-Given that we want to rotate about the local \( y_{\mathcal{B}} \)-axis (which coincides with \( y_{\mathcal{G}} \) before the first rotation), we must instead insert \( \mathbf{R}_y \) between \( \mathbf{R}_x \) and \( \vec{v}_{\mathcal{B}} \), as follows:
+However, this is incorrect! This formulation would result in a rotation about the global \( y\)-axis, as established previously. We need to re-express \( \mathbf{R}_y \) so that it acts about the local \(Y\)-axis. We can use eq. \ref{eq:similaritytransformation} to achieve this (filling in eq. \ref{eq:locglobRx} as well):
 
 \begin{equation}
-\vec{v}_{\mathcal{G}} = \mathbf{R}_x \mathbf{R}_y \vec{v}_{\mathcal{B}}
+    \mathbf{R}_Y = \mathbf{R}_X \mathbf{R}_y {\mathbf{R}_X}^\mathrm{T}
+    \label{eq:Rmatreexpress}
 \end{equation}
 
-\textbf{Note:} This implies that successively rotating about body-fixed \( x \)- and \( y \)-axes is equivalent to successively rotating about the global \( y \)- and \( x \)-axes, but the order is reversed depending on the frame of reference! Rotations about body-fixed axes are called \emph{intrinsic}, whereas rotations about global axes are called \emph{extrinsic}.
+This can be interpreted as "undoing" the first rotation (about \(X\)), ensuring that local and global \( y\) axes coincide, which allows us to applying the global \(y\) rotation, and then redoing the first rotation.
+
+Because rotation matrices are orthogonal matrices, multiplying by its own transpose gives the identity matrix. That means that our first two rotations can be described as:
+
+\begin{equation}
+    \mathbf{R}_Y \mathbf{R}_X  = \mathbf{R}_x \mathbf{R}_y {\mathbf{R}_x}^\mathrm{T} \mathbf{R}_x = \mathbf{R}_x \mathbf{R}_y
+    \label{eq:Rmatcancelout}
+\end{equation}
+
+In other words: successive rotations about body-fixed \( X\) and \(Y\) axes can be described by the same rotation matrices that describe succesive rotations about global \(y\) and \(x\) axes! Once again, remember that matrix application should be read from right to left. Rotations about body-fixed axes are called \emph{intrinsic}, whereas rotations about global axes are called \emph{extrinsic}, but they can be described by applying the same rotation matrices in reverse.
 
 \subsubsection*{Adding the Third Rotation}
 
-A similar argument applies to the third rotation about the local \( z_{\mathcal{B}} \)-axis. Therefore, the total equation for the vector in the global frame after all three rotations is:
+Before we can rotate our body about local \(Z\), we need to re-express eq. \ref{eq:Rz} so that it acts about the body-fixed axis. Similar to eq. \ref{eq:Rmatreexpress}, we can apply a similarity transformation, now "undoing" the successive rotations about local \(X\) and \(Y\): 
+
+\begin{equation}
+    \mathbf{R}_Z = \mathbf{R}_Y \mathbf{R}_X \mathbf{R}_z {\mathbf{R}_X}^\mathrm{T} {\mathbf{R}_Y}^\mathrm{T}
+\end{equation}
+
+We can also fill in the result from eq. \ref{eq:Rmatreexpress} to expand the expression in terms global rotation matrices, and then simplify as much as possible:
+
+\begin{equation}
+    \mathbf{R}_Y \mathbf{R}_X \mathbf{R}_z {\mathbf{R}_X}^\mathrm{T} {\mathbf{R}_Y}^\mathrm{T} = \mathbf{R}_X \mathbf{R}_y {\mathbf{R}_X}^\mathrm{T} \mathbf{R}_X \mathbf{R}_z {\mathbf{R}_X}^\mathrm{T} \mathbf{R}_X {\mathbf{R}_y}^\mathrm{T} {\mathbf{R}_X}^\mathrm{T} = \mathbf{R}_x \mathbf{R}_y  \mathbf{R}_z {\mathbf{R}_y}^\mathrm{T} {\mathbf{R}_x}^\mathrm{T} 
+    \label{eq:Rmatzreexpressed}
+\end{equation}
+
+We can combine the results from eqs. \ref{eq:locglobRx}, \ref{eq:Rmatreexpress}, and \ref{eq:Rmatzreexpressed} to write out the entire expanded matrix multiplication:
+
+\begin{equation}
+    \mathbf{R}_Z \mathbf{R}_Y \mathbf{R}_X  = \mathbf{R}_x \mathbf{R}_y  \mathbf{R}_z {\mathbf{R}_y}^\mathrm{T} {\mathbf{R}_x}^\mathrm{T} \; \;  \mathbf{R}_x \mathbf{R}_y {\mathbf{R}_x}^\mathrm{T} \; \; \mathbf{R}_x = \mathbf{R}_x \mathbf{R}_y  \mathbf{R}_z 
+\end{equation}
+
+Thus, a body-fixed \( XYZ \)-sequence of rotations (intrinsic) is identical to a global-frame \(zyx\)-sequence of (extrinsic) rotations!
+
+Therefore, the total equation for the vector in the global frame after all three rotations is:
 
 \begin{equation}
 \vec{v}_{\mathcal{G}} = \mathbf{R}_x \mathbf{R}_y \mathbf{R}_z \vec{v}_{\mathcal{B}}
 \end{equation}
 
-Thus, a body-fixed \( XYZ \)-sequence of rotations (intrinsic) is identical to a global-frame \( ZYX \)-sequence of rotations (extrinsic), with the rotation order reversed!
-
-In body-fixed notation, the successive rotation matrices are multiplied from left to right when rotating from the body-fixed frame \( \mathcal{B} \) to the global frame \( \mathcal{G} \). In the above example, using \( XYZ \) about the body-fixed axes gives:
-
-\begin{equation}
-{}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}} = \mathbf{R}_x \mathbf{R}_y \mathbf{R}_z
-\end{equation}
 
 The inverse operation, which rotates from the global frame back to the body-fixed frame, is given by:
 
 \begin{equation}
-{}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} = ({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}})^{-1} = ({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}})^{T} = \mathbf{R}_z^T \mathbf{R}_y^T \mathbf{R}_x^T
+{}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} = ({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}})^{-1} = ({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}})^\mathrm{T} = \mathbf{R}_z^\mathrm{T} \mathbf{R}_y^\mathrm{T} \mathbf{R}_x\mathrm{T}
 \end{equation}
 
 
@@ -1144,7 +1204,7 @@ To express the combined center of mass \(\vec{c_{c}}\) from \ref{sec:compositebo
 
 Calculated manually, this gives: (0.813771, -2.18287, -0.825374) \si{m}. When assigning the local frame to the composite body, MuSkeMo computes: (0.813736, -2.18285, -0.825365) \si{m}. 
 
-To re-express \(\mathbf{I}_{c/c,{\mathcal{G}}}\) in the \(mathcal{B}\)-frame (but still with respect to the combined center of mass), we apply equation \ref{eq:changeofbasis} (as can be found in standard mechanics textbooks \cite{valleryAdvancedDynamics2019}):
+To re-express \(\mathbf{I}_{c/c,{\mathcal{G}}}\) in the \(mathcal{B}\)-frame (but still with respect to the combined center of mass), we apply equation \ref{eq:similaritytransformation} (as can be found in standard mechanics textbooks \cite{valleryAdvancedDynamics2019}):
 
 \begin{equation}
     \mathbf{I}_{c/c,{\mathcal{B}}} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \cdot \mathbf{I}_{c/c,{\mathcal{G}}} \cdot {}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}.
