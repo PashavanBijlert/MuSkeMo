@@ -814,7 +814,7 @@ So OpenSim, MuSkeMo, SCONE, etc., all implement Euler angles using an intrinsic 
 
 \subsection{Understanding decomposed successive rotations}
 
-The different Euler-angle conventions in use were the source of much confusion for the author. The confusion comes from three characteristics of Euler-angles. First, there are many ways in which Euler-angles can be used to construct rotation matrices (technically, the XYZ convention is not an Euler-angle convention, but a Tait-Bryan convention. True Euler angles reuse the first axis as the third axis). The second source of confusion can come from the order of matrix application, whereas we write down the successive rotations in letter form (e.g., XYZ) from left to right. The third source of confusion is the unintuitive order in which the rotation matrices must be applied to achieve intrinsic rotations (about body-fixed axes).
+The different Euler-angle conventions in use were the source of much confusion for the author. The confusion comes from three characteristics of Euler-angles. First, there are many ways in which Euler-angles can be used to construct rotation matrices (technically, the XYZ convention is not an Euler-angle convention, but a Tait-Bryan convention --- true Euler angles reuse the first axis as the third axis). The second source of confusion can come from the order of matrix application, whereas we write down the successive rotations in letter form (e.g., XYZ) from left to right. The third source of confusion is the unintuitive order in which the rotation matrices must be applied to achieve intrinsic rotations (about body-fixed axes).
 
 A step-by-step explanation is provided in the next sections of this Appendix. For further reading, the reader is referred to textbooks on dynamics (e.g., \cite{kaneSpacecraftDynamics1983, valleryAdvancedDynamics2019}), and D. Rose's \href{https://danceswithcode.net/engineeringnotes/rotations_in_3d/rotations_in_3d_part1.html}{engineering notes website} for a particularly accessible description of the conventions that exist for Euler angles \cite{roseRotationsThreeDimensionsEuler2015}.
 
@@ -910,7 +910,7 @@ This occurs because instead of rotating about local-axes (expressed in the body-
 %The explanation lies with the fact that pre-multiplication by one of the principal rotation matrices enacts a rotation about the global axes, as established in equations \ref{eq:Rx} - \ref{eq:Rz}. 
 
 Consider that we want to rotate a vector \( \vec{v}_{\mathcal{B}} \) (expressed in the body-fixed frame \( \mathcal{B} \)) by arbitrary angles about body-fixed \( X\), \(Y\), and \(Z\)-axes, in that order. After the rotations, we acquire \( \vec{v}_{\mathcal{G}} \), the vector in the global frame \( \mathcal{G} \). 
-When the two frames are aligned (i.e., when all rotation angles are zero), \( \vec{v}_{\mathcal{B}} = \vec{v}_{\mathcal{G}} \), but this is a trivial case that gives no insight.
+When the two frames are aligned (i.e., when all rotation angles are zero), \( \vec{v}_{\mathcal{B}} = \vec{v}_{\mathcal{G}} \), but this trivial case gives no insight.
 
 If we start by rotating about the body-fixed \(X\)-axis, we have:
 
@@ -918,7 +918,7 @@ If we start by rotating about the body-fixed \(X\)-axis, we have:
 \vec{v}_{\mathcal{G}} = \mathbf{R}_X \vec{v}_{\mathcal{B}}
 \end{equation}
 
-Because frames were initially aligned, the body-fixed \( X\)-axis, was coincident with the global \( x\)-axis. In other words (note the upper and lower case subscripts):
+Because frames were initially aligned, the body-fixed \( X\)-axis was coincident with the global \( x\)-axis. In other words (note the upper and lower case subscripts):
 
 \begin{equation}
     \mathbf{R}_X = \mathbf{R}_x
@@ -950,7 +950,7 @@ Because rotation matrices are orthogonal matrices, multiplying by its own transp
     \label{eq:Rmatcancelout}
 \end{equation}
 
-In other words: successive rotations about body-fixed \( X\) and \(Y\) axes can be described by the same rotation matrices that describe succesive rotations about global \(y\) and \(x\) axes! Once again, remember that matrix application should be read from right to left. Rotations about body-fixed axes are called \emph{intrinsic}, whereas rotations about global axes are called \emph{extrinsic}, but they can be described by applying the same rotation matrices in reverse.
+In other words: successive rotations about body-fixed \( X\) and \(Y\) axes can be described by the same rotation matrices that describe succesive rotations about global \(y\) and \(x\) axes! Once again, remember that matrix application should be read from right to left. Rotations about body-fixed axes are called \emph{intrinsic}, whereas rotations about global axes are called \emph{extrinsic}, but they can be described by applying the same rotation matrices in reverse order.
 
 \subsubsection*{Adding the Third Rotation}
 
@@ -960,14 +960,14 @@ Before we can rotate our body about local \(Z\), we need to re-express eq. \ref{
     \mathbf{R}_Z = \mathbf{R}_Y \mathbf{R}_X \mathbf{R}_z {\mathbf{R}_X}^\mathrm{T} {\mathbf{R}_Y}^\mathrm{T}
 \end{equation}
 
-We can also fill in the result from eq. \ref{eq:Rmatreexpress} to expand the expression in terms global rotation matrices, and then simplify as much as possible:
+We can also fill in the result from eqs. \ref{eq:locglobRx} and \ref{eq:Rmatreexpress} to expand the expression for \( \mathbf{R}_Z \) in terms of global rotation matrices, and simplify as much as possible:
 
 \begin{equation}
     \mathbf{R}_Y \mathbf{R}_X \mathbf{R}_z {\mathbf{R}_X}^\mathrm{T} {\mathbf{R}_Y}^\mathrm{T} = \mathbf{R}_X \mathbf{R}_y {\mathbf{R}_X}^\mathrm{T} \mathbf{R}_X \mathbf{R}_z {\mathbf{R}_X}^\mathrm{T} \mathbf{R}_X {\mathbf{R}_y}^\mathrm{T} {\mathbf{R}_X}^\mathrm{T} = \mathbf{R}_x \mathbf{R}_y  \mathbf{R}_z {\mathbf{R}_y}^\mathrm{T} {\mathbf{R}_x}^\mathrm{T} 
     \label{eq:Rmatzreexpressed}
 \end{equation}
 
-We can combine the results from eqs. \ref{eq:locglobRx}, \ref{eq:Rmatreexpress}, and \ref{eq:Rmatzreexpressed} to write out the entire expanded matrix multiplication:
+We can combine the results from eqs.  \ref{eq:Rmatreexpress} and \ref{eq:Rmatzreexpressed} to write out the entire expanded matrix multiplication for our three successive rotations:
 
 \begin{equation}
     \mathbf{R}_Z \mathbf{R}_Y \mathbf{R}_X  = \mathbf{R}_x \mathbf{R}_y  \mathbf{R}_z {\mathbf{R}_y}^\mathrm{T} {\mathbf{R}_x}^\mathrm{T} \; \;  \mathbf{R}_x \mathbf{R}_y {\mathbf{R}_x}^\mathrm{T} \; \; \mathbf{R}_x = \mathbf{R}_x \mathbf{R}_y  \mathbf{R}_z 
