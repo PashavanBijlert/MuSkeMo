@@ -564,8 +564,10 @@ The Python script "ComputeClosestPointBetweenMeshes.py" can be run in the Blende
 Run this script in the Blender script editor (after filling in a target muscle) to get its current length. Can be used in more elaborate scripts and functions (e.g., for computing moment arms).
 
 
-\subsubsection{Moment arm analysis}
-The Python script "moment\_arm\_analysis.py" can be opened in the Blender Python script editor to perform and export a moment-arm analyses. The script is set up to perform the moment-arm analysis plotted in Figs. \ref{fig:momentarmscombined} \& \ref{fig:momentarmsindividual}, and thus assumes the emu model from \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1}{Sample Dataset 1} is imported into the scene. It exports the analysis to a subfolder called "muscle\_analysis" (which you can configure). The folder also contains a Matlab script that you can use to plot the outputs. The scripts can be used as a starting point for analyzing moment arms of your own models.
+\subsubsection{Moment arms analysis}
+The Python script "moment\_arm\_analysis.py" can be opened in the Blender Python script editor to perform a moment arms analysis on the model in the scene. The script is set up to perform the analysis plotted in Figs. \ref{fig:momentarmscombined} \& \ref{fig:momentarmsindividual}, and thus assumes the emu model from \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1}{Sample Dataset 1} is imported into the scene. It exports the analysis to a subfolder called "muscle\_analysis" (which you can configure). The folder also contains a Matlab script that you can use to plot the outputs. The scripts can be used as a starting point for analyzing moment arms of your own models.
+
+The moment arms analysis script loops through the target joints and finds all muscles that cross it (by checking which muscles change in length when moving the joint through its coordinates).
 
 
 \section{MuSkeMo Data Types}
