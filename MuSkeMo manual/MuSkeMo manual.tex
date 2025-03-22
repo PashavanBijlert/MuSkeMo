@@ -120,6 +120,7 @@ To install (Fig. \ref{fig:installation}): In Blender v4-v4.1, go to Edit → pre
 \end{figure}
 
 \subsection{Sample Datasets}
+\label{sec:sampledataset}
 Some of the \href{https://youtube.com/playlist?list=PLfgxaucAWlEp5-cavvXmdrTIWYT_tgZYK&si=Cdl9MchuLP5aRJNL}{video tutorials} use sample datasets, in which case they are also made available from Github. Currently, there is only one \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1}{sample dataset}, which includes two OpenSim models created using MuSkeMo, and compatible simulation trajectories so the user can create a video.
 
 \subsection{Units}
@@ -563,8 +564,8 @@ The Python script "ComputeClosestPointBetweenMeshes.py" can be run in the Blende
 Run this script in the Blender script editor (after filling in a target muscle) to get its current length. Can be used in more elaborate scripts and functions (e.g., for computing moment arms).
 
 
-\subsubsection{MuSkeMo version updater}
-The folder also contains an updater (Python) script to update older MuSkeMo scenes to v0.6.3 and up. To run this, open the python script in the Blender script editor and run it. Back up your work first. This script will be removed in a future update.
+\subsubsection{Moment arm analysis}
+The Python script "moment\_arm\_analysis.py" can be opened in the Blender Python script editor to perform and export a moment-arm analyses. The script is set up to perform the moment-arm analysis plotted in Figs. \ref{fig:momentarmscombined} \& \ref{fig:momentarmsindividual}, and thus assumes the emu model from \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1}{Sample Dataset 1} is imported into the scene. It exports the analysis to a subfolder called "muscle\_analysis" (which you can configure). The folder also contains a Matlab script that you can use to plot the outputs. The scripts can be used as a starting point for analyzing moment arms of your own models.
 
 
 \section{MuSkeMo Data Types}
@@ -1225,7 +1226,7 @@ r_m = -dl_m / d\phi_j
 
 The minus sign in eq. \ref{eq:momentarm} appears due to the convention in musculoskeletal simulators to define muscle contractile force as a positive scalar, even though muscle contraction results in a negative change in length.
 
-Accurate computations of moment arms therefore require correct application of local frames, positions and orientations, require accurate changes in muscle point positions when the joints are rotated, and also require accurate computations of the instantaneous muscle lengths in all of the different joint poses. Fig. \ref{fig:momentarmsinvididual} compares the moment arms computed by MuSkeMo after importing an OpenSim model, to the moment arms of the same model computed by OpenSim 4.0 using the Matlab api. These are the same data that are combined into three plots in Fig. \ref{fig:momentarmscombined}.
+Accurate computations of moment arms therefore require correct application of local frames, positions and orientations, require accurate changes in muscle point positions when the joints are rotated, and also require accurate computations of the instantaneous muscle lengths in all of the different joint poses. Fig. \ref{fig:momentarmsindividual} compares the moment arms computed by MuSkeMo after importing an OpenSim model, to the moment arms of the same model computed by OpenSim 4.0 using the Matlab api. These are the same data that are combined into three plots in Fig. \ref{fig:momentarmscombined}.
 
 \begin{figure}[htbp]
     %\vspace{-155pt}
@@ -1234,16 +1235,16 @@ Accurate computations of moment arms therefore require correct application of lo
     \caption{Individual muscle moment arms of the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, computed by MuSkeMo and exported as .csv files, compared to those computed by OpenSim 4.0 using the Matlab API. nrmsd stands for "normalized root mean squared differences", rmsd is normalized by the mean value of the moment arm. The average nmrsd over all muscles was 0.0052\% of the moment arm magnitudes.
     Panels A and L show that the moment arms are slightly noisy (in the order of 0.015\% the magnitude of the moment arm) when wrapping determines the moment arms in question. As evidenced by similar values of nrmsd, this noise is too small to be relevant in most practical applications (e.g., compare this figure to the same data plotted in Fig. \ref{fig:momentarmscombined}, where the noise is not perceptible over a larger range).   
     The python script that performs this moment arm analysis is provided in the Utilities folder \ref{sec:muskemoutilities}}.
-    \label{fig:momentarmsinvididual}
+    \label{fig:momentarmsindividual}
 \end{figure}
 
-The OpenSim model used for this comparison was the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, specifically \texttt{Dromaius\_model\_ \allowbreak v4\_intermed.\allowbreak osim}. Fig. \ref{fig:momentarmsinvididual} shows that all the moment arms are numerically identical within expected precision for Blender, as evidenced by the normalized root mean square differences (nrmsd) not exceeding \(9.2 \cdot 10^{-4}\), or 0.0092\% of the moment arm magnitudes, with an average of 0.0052\% over all the muscles. To compute nrmsd, rmsd was normalized by the mean of the moment arm of each muscle.
+The OpenSim model used for this comparison was the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, specifically \texttt{Dromaius\_model\_ \allowbreak v4\_intermed.\allowbreak osim}. Fig. \ref{fig:momentarmsindividual} shows that all the moment arms are numerically identical within expected precision for Blender, as evidenced by the normalized root mean square differences (nrmsd) not exceeding \(9.2 \cdot 10^{-4}\), or 0.0092\% of the moment arm magnitudes, with an average of 0.0052\% over all the muscles. To compute nrmsd, rmsd was normalized by the mean of the moment arm of each muscle.
 
-Fig. \ref{fig:momentarmsinvididual} also shows that the moment arms in panels A and L are somewhat noisy. Closer inspection of the vertical axes of those panels reveals that the moment arms are nearly constant for those muscles (\~ -0.03 \si{m}), because the moment arms are determined by a cylinder with constant diameter radius (0.03 \si{m}). Thus, the noise is numerically insignificant (in the order of ~0.015\% of the moment arm magnitude). The noise is so small in magnitude that it is not visible when plotting multiple muscles in the same plot, with more informative ranges on the y axis (Fig. \ref{fig:momentarmscombined}).
+Fig. \ref{fig:momentarmsindividual} also shows that the moment arms in panels A and L are somewhat noisy. Closer inspection of the vertical axes of those panels reveals that the moment arms are nearly constant for those muscles (\~ -0.03 \si{m}), because the moment arms are determined by a cylinder with constant diameter radius (0.03 \si{m}). Thus, the noise is numerically insignificant (in the order of ~0.015\% of the moment arm magnitude). The noise is so small in magnitude that it is not visible when plotting multiple muscles in the same plot, with more informative ranges on the y axis (Fig. \ref{fig:momentarmscombined}).
 
 While the noise is small enough to make no difference in a practical sense, it is explicitly pointed out here, because readers who want to use MuSkeMo's moment arms directly for their own simulations may want to smooth the moment arms first. The noisy moment arms for wrapping muscles are likely caused by wrapping node (see sec. \ref{sec:musclewrapping}). A likely possibility is that the many mathematical operations that are performed in the node on single precision digits introduces a floating point error (see \nameref{sec:precision}). Another possible culprit may be inaccuracy of the Raycasting operation that geometrically determines intersections between a wrapping geometry and a muscle curve.
 
-The python script (to be run in Blender's script editor) that generates the muscle analysis is provided in MuSkeMo's utilities folder as an example script that calls MuSkeMo's API (sec. \ref{sec:muskemoutilities}). The Matlab script that generates the plots from Figs. \ref{fig:momentarmscombined} and \ref{fig:momentarmsinvididual} is also provided.
+The python script (to be run in Blender's script editor) that generates the muscle analysis is provided in MuSkeMo's utilities folder as an example script that calls MuSkeMo's API (sec. \ref{sec:muskemoutilities}). The Matlab script that generates the plots from Figs. \ref{fig:momentarmscombined} and \ref{fig:momentarmsindividual} is also provided.
 
 \newpage
 \section{Acknowledgements}
