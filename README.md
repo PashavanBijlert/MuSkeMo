@@ -2,7 +2,7 @@
 
 ![Horse multipanel figure](./MuSkeMo%20manual/figures/Multipanel%20figure%20cropped.png?raw=true)
 
-Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in Blender versions between 4.1+.
+Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in Blender versions between 4.1-4.3.
 
 To download: Click on the latest release on the right, and download "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
@@ -10,9 +10,9 @@ To install: In Blender, go to Edit > preferences > Add-ons and then click "Insta
 
 # **How to use**
 
-**Check out the [video tutorial on YouTube](https://www.youtube.com/watch?v=9eMm9YalXtg)**. More videos and updated tutorials will be added after MuSkeMo reaches v0.9.3.
+**Check out the [video tutorial series on YouTube](https://youtube.com/playlist?list=PLfgxaucAWlEp5-cavvXmdrTIWYT_tgZYK&si=PxcQh2DkdoQNeOAC)**. 
 
-**Download the [MuSkeMo user manual](https://github.com/PashavanBijlert/MuSkeMo/blob/main/MuSkeMo%20manual/MuSkeMo%20manual.pdf)**. This document is being updated and extended in preparation for the first full release (v1.0).
+**Download the [MuSkeMo user manual](https://github.com/PashavanBijlert/MuSkeMo/blob/main/MuSkeMo%20manual/MuSkeMo%20manual.pdf)**. The user manual gives detailed instructions on how to use the plugin, and is also included with MuSkeMo.zip. 
 
 # **Preprint**
 
@@ -20,17 +20,18 @@ I am preparing a publication to submit for peer-review describing MuSkeMo. Until
 
 PA van Bijlert. MuSkeMo: Open-source software to construct, analyze, and visualize human and animal musculoskeletal models and movements in Blender. bioRxiv (preprint) 2024.12.10.627828; doi: https://doi.org/10.1101/2024.12.10.627828 
 
+# **Using MuSkeMo**
+
+After installation, all of MuSkeMo's features can be accessed via its panels. The user manual gives detailed instructions on how to use them, but they are summarized below in this README. In general, MuSkeMo's panels work by selection and button pressing, and MuSkeMo gives informative error messages if you did something incorrectly.
+
+
 # **Inertial properties panel**
 
-Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
-Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this.
+Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans. Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this. 
 
 # **Body panel**
 
-Define rigid bodies, assign precomputed inertial properties, or compute directly by selecting one or several volumetric meshes.
-Inertial properties are not dynamic, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body. Otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this.
-
-In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. 
+Define rigid bodies, assign precomputed inertial properties, or compute directly by selecting one or several volumetric meshes. In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. 
 
 # **Joint panel**
 
@@ -38,12 +39,12 @@ Define joints, and assign (and remove) parent and child bodies. If you want to c
 
 It is also possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo_to_OpenSim) will only add DOFs to model if they are named (e.g. hip_angle_r). If no coordinates are named for a joint, the joint is turne into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
-In the joint panel (under joint utilities), you can also mirror right side joints, fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos_in_child) are recomputed automatically.
+In the joint panel (under joint utilities), you can also fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos_in_child) are recomputed automatically.
 
 # **Muscle panel**
 
 Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies first). 
-To add a point, type in the muscle name, and select the target body. Press shift + right mouse button to position the 3D cursor. Muscle points are added to the 3D cursor location.
+To add a point, select the muscle and the target body. Press shift + right mouse button to position the 3D cursor. Muscle points are added to the 3D cursor location.
 You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB").
 
 Within the muscle panel, it is also possible to create wrapping geometry (currently, only cylinders are supported), and assign these to muscles.
@@ -97,4 +98,4 @@ This panel allows you to create symmetric models, by only defining components on
 
 # **MuSkeMo utilities**
 
-The MuSkeMo.zip release contains a folder with MuSkeMo utlities. This includes a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. You must have the [OpenSim Matlab API](https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab) installed. This folder also includes python scripts that can be run in Blender's script editor, including a muscle line of action fitter, and some demo scripts that show you how to access MuSkeMo functionality via the Python API.
+The MuSkeMo.zip release contains a folder with MuSkeMo utlities. This includes a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. You must have the [OpenSim Matlab API](https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab) installed. This folder also includes python scripts that can be run in Blender's script editor, including a muscle line of action fitter and a moment arms analysis, and some demo scripts that show you how to access MuSkeMo functionality via the Python API.
