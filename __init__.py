@@ -137,8 +137,10 @@ from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_
                                     )
 #### Anatomical (local) reference frame panel
 from .scripts.frame_panel import (VIEW3D_PT_frame_panel,
-                                AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
-                                AssignYZPlaneLandmarkOperator, 
+                                AssignOrLandmarkOperator, 
+                                AssignPrimaryAxisStartLandmarkOperator,
+                                AssignPrimaryAxisEndLandmarkOperator,
+                                AssignPlaneLandmarkOperator, 
                                 ConstructFrameOperator, 
                                 AssignFrameParentBodyOperator,ClearFrameParentBodyOperator,)
 
@@ -258,8 +260,10 @@ classes = (  #Global settings panel
 
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_frame_panel,
-                                AssignOrLandmarkOperator, AssignYDirLandmarkOperator,
-                                AssignYZPlaneLandmarkOperator,
+                                AssignOrLandmarkOperator,
+                                AssignPrimaryAxisStartLandmarkOperator,
+                                AssignPrimaryAxisEndLandmarkOperator,
+                                AssignPlaneLandmarkOperator,
                                 ConstructFrameOperator,
                                 AssignFrameParentBodyOperator,ClearFrameParentBodyOperator,
 

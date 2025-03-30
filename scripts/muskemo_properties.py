@@ -661,6 +661,27 @@ class MuSkeMoProperties(PropertyGroup):
         default="",
         maxlen=1024,
         )
+    
+    primary_axis_start_landmark_name: StringProperty(
+        name="Primary axis start",
+        description="Name of the landmark that defines the start of the primary axis",
+        default="",
+        maxlen=1024,
+        )
+    
+    primary_axis_end_landmark_name: StringProperty(
+        name="Primary axis end",
+        description="Name of the landmark that defines the end of the primary axis",
+        default="",
+        maxlen=1024,
+        )
+    
+    plane_landmark_name: StringProperty(
+        name="Temp axis (plane marker)",
+        description="Name of the landmark that defines the temporary axis (the plane marker)",
+        default="",
+        maxlen=1024,
+        )
 
     ydir_landmark_name: StringProperty(
         name="Y direction",
@@ -692,6 +713,18 @@ class MuSkeMoProperties(PropertyGroup):
         precision = 5,
         )
 
+    frame_construction_mode: EnumProperty(
+        name="Frame construction mode",
+        description="Specify which axes you want to define to construct your reference frame. E.g.: X-Ytemp means you specify the X-direction with two markers, and a third marker for the temporary Y-direction, defining the XY plane. The Z and Y axes are computed using cross-products.",
+        items=[ ('X-Yt', "Specify X-axis and Y-temp direction (for XY plane)", ""),
+                ('X-Zt', "Specify X-axis and Z-temp direction (for XZ plane)", ""),
+                ('Y-Zt', "Specify Y-axis and Z-temp direction (for YZ plane)", ""),
+                ('Y-Xt', "Specify Y-axis and X-temp direction (for XY plane)", ""),
+                ('Z-Xt', "Specify Z-axis and X-temp direction (for XZ plane)", ""),
+                ('Z-Yt', "Specify Z-axis and Y-temp direction (for YZ plane)", ""),
+              ],
+        default = "X-Yt",
+        )
 
 #### landmark and marker panel
 

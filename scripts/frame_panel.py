@@ -29,29 +29,39 @@ class AssignOrLandmarkOperator(Operator):
         bpy.context.scene.muskemo.or_landmark_name = bpy.context.active_object.name  #assigns the name of the active object as the origin landmark
         return {'FINISHED'}
     
-    
-    
-class AssignYDirLandmarkOperator(Operator):
-    bl_idname = "frame.assign_ydir_landmark"
-    bl_label = "Assign the selected landmark as the Y-direction (long axis) of the frame."
-    bl_description = "Assign the selected landmark as the Y-direction (long axis) of the frame."
+
+class AssignPrimaryAxisStartLandmarkOperator(Operator):
+    bl_idname = "frame.assign_primary_axis_start_landmark"
+    bl_label = "Assign the selected landmark as the start of the primary axis of the frame."
+    bl_description = "Assign the selected landmark as the start of the primary axis of the frame."
 
     def execute(self, context):
 
-        bpy.context.scene.muskemo.ydir_landmark_name = bpy.context.active_object.name  #assigns the name of the active object as the origin landmark
+        bpy.context.scene.muskemo.primary_axis_start_landmark_name = bpy.context.active_object.name  #assigns the name of the active object as the origin landmark
         return {'FINISHED'}    
-    
-class AssignYZPlaneLandmarkOperator(Operator):
-    bl_idname = "frame.assign_yz_plane_landmark"
-    bl_label = "Assign the selected landmark as the YZ plane landmark (direction of the temporary Z-axis)"
-    bl_description = "Assign the selected landmark as the YZ plane landmark (direction of the temporary Z-axis)"
-    
+
+class AssignPrimaryAxisEndLandmarkOperator(Operator):
+    bl_idname = "frame.assign_primary_axis_end_landmark"
+    bl_label = "Assign the selected landmark as the end of the primary axis of the frame."
+    bl_description = "Assign the selected landmark as the end of the primary axis of the frame."
+
     def execute(self, context):
 
-        bpy.context.scene.muskemo.yz_plane_landmark_name = bpy.context.active_object.name  #assigns the name of the active object as the origin landmark
+        bpy.context.scene.muskemo.primary_axis_end_landmark_name = bpy.context.active_object.name  #assigns the name of the active object as the origin landmark
+        return {'FINISHED'}
+
+
+class AssignPlaneLandmarkOperator(Operator):
+    bl_idname = "frame.assign_plane_landmark"
+    bl_label = "Assign the selected landmark as the temp axis (plane) landmark."
+    bl_description = "Assign the selected landmark as the temp axis (plane) landmark."
+
+    def execute(self, context):
+
+        bpy.context.scene.muskemo.plane_landmark_name = bpy.context.active_object.name  #assigns the name of the active object as the origin landmark
         return {'FINISHED'}        
 
-    
+   
 
 class ConstructFrameOperator(Operator):
     bl_idname = "frame.construct_frame"
@@ -63,33 +73,53 @@ class ConstructFrameOperator(Operator):
         muskemo = bpy.context.scene.muskemo
 
         origin_landmark_name =  muskemo.or_landmark_name
-        ydir_landmark_name = muskemo.ydir_landmark_name
-        yzplane_landmark_name = muskemo.yz_plane_landmark_name  #landmark to define YZ plane
+        primary_axis_start_landmark_name = muskemo.primary_axis_start_landmark_name
+        primary_axis_end_landmark_name = muskemo.primary_axis_end_landmark_name
+        plane_landmark_name = muskemo.plane_landmark_name  #landmark to define YZ plane
 
         refframe_name = muskemo.framename
 
+        construction_mode = muskemo.frame_construction_mode
+        axes_strings = construction_mode.split('-')
+        primary_axis = axes_strings[0]
+        temp_axis = axes_strings[1]
+        
+        if 'X' and 'Y' in construction_mode:
+            plane = 'XY'
+        elif 'X' and 'Z' in construction_mode:
+            plane = 'XZ'
+        elif 'Y' and 'Z' in construction_mode:
+            plane = 'YZ'
+
+        #Ensure unique name
+        if refframe_name in bpy.data.objects:
+            self.report({'ERROR'}, "An object with the name '" + refframe_name + "' already exists in the scene. Choose a unique (unused) name for the new FRAME. Operation cancelled.")
+            return {'FINISHED'}
+
+        
+
         #Check if everything exists
 
-        for x,y in zip ([origin_landmark_name, ydir_landmark_name, yzplane_landmark_name, refframe_name],
-                        ["n Origin marker"," Y direction marker", " YZ plane marker"," Frame name"]):
+        for x,y in zip ([origin_landmark_name, primary_axis_start_landmark_name, primary_axis_end_landmark_name, plane_landmark_name, refframe_name],
+                        ["n Origin marker", " " + primary_axis + " start marker"," " + primary_axis + " end marker"," " +temp_axis.replace('t',' ') + "temp axis (plane) marker"," Frame name"]):
             if not x:
                 
-                self.report({'ERROR'}, "You did not input a" + y + ". Type in a frame name, and assign three unique markers to create a new frame. Operation cancelled.")
+                self.report({'ERROR'}, "You did not input a" + y + ". Type in a frame name, and assign four unique markers to create a new frame. Operation cancelled.")
                 return {'FINISHED'}
             
 
         #Check if the markers are unique
 
-        if origin_landmark_name == ydir_landmark_name:
-            self.report({'ERROR'}, "Origin and Y direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+        if primary_axis_start_landmark_name == primary_axis_end_landmark_name:
+            self.report({'ERROR'}, primary_axis + " start and end currently defined with the same marker. You must assign two unique markers to define the axis. Operation cancelled.")
             return {'FINISHED'}
         
-        if origin_landmark_name == yzplane_landmark_name:
-            self.report({'ERROR'}, "Origin and YZ plane direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+        if primary_axis_start_landmark_name == plane_landmark_name:
+            self.report({'ERROR'}, primary_axis + " start and temp axis currently defined with the same marker. You must assign unique markers to define the plane. Operation cancelled.")
             return {'FINISHED'}
         
-        if ydir_landmark_name == yzplane_landmark_name:
-            self.report({'ERROR'}, "Y direction and YZ plane direction have the same marker. You must assign three unique markers to create a new frame. Operation cancelled.")
+        if primary_axis_end_landmark_name == plane_landmark_name:
+            self.report({'ERROR'}, primary_axis + " end and temp axis currently defined with the same marker. You must assign unique markers to define the plane. Operation cancelled.")
             return {'FINISHED'}
 
 
@@ -99,35 +129,59 @@ class ConstructFrameOperator(Operator):
         size = muskemo.frame_axes_size
 
        
-        origin = bpy.data.objects[origin_landmark_name].location
-        y_axis = bpy.data.objects[ydir_landmark_name].location - origin
-        z_axis_temp = bpy.data.objects[yzplane_landmark_name].location - origin
+        origin = bpy.data.objects[origin_landmark_name].matrix_world.translation
+        primary_start = bpy.data.objects[primary_axis_start_landmark_name].matrix_world.translation
+        primary_end = bpy.data.objects[primary_axis_end_landmark_name].matrix_world.translation
+        plane_marker_pos = bpy.data.objects[plane_landmark_name].matrix_world.translation
+        
+        primary_axis_vector = primary_end - primary_start
+        primary_axis_vector.normalize() #make it unit length
+        temp_axis_vector = plane_marker_pos - primary_end #Together with primary axis, this spans a plane
+        
+        if construction_mode in ['X-Yt', 'Y-Zt', 'Z-Xt']: #
 
-        x_axis = cross(y_axis, z_axis_temp)
+            secondary_axis_vector = primary_axis_vector.cross(temp_axis_vector)
+            secondary_axis_vector.normalize()#make it unit length
+            
+            tertiary_axis_vector = secondary_axis_vector.cross(primary_axis_vector) #the tertiary axis has the same letter as the temp axis
+            tertiary_axis_vector.normalize() #make it unit length
 
-        x_axis = x_axis/norm(x_axis)
-        y_axis = y_axis/norm(y_axis)
-        z_axis = cross(x_axis,y_axis)
+        elif construction_mode in ['X-Zt', 'Y-Xt', 'Z-Yt']:     
+            
+            secondary_axis_vector = temp_axis_vector.cross(primary_axis_vector)
+            secondary_axis_vector.normalize()#make it unit length
+            
+            tertiary_axis_vector = primary_axis_vector.cross(secondary_axis_vector) #the tertiary axis has the same letter as the temp axis
+            tertiary_axis_vector.normalize() #make it unit length 
+       
 
-        #turn into standing vectors
-        x_axis = x_axis.reshape(3,1)
-        y_axis = np.array(y_axis).reshape(3,1)  #y_axis is still of type Vector, turn into np.array
-        z_axis = z_axis.reshape(3,1)
+        if construction_mode == 'X-Yt':
+            gRl = Matrix((primary_axis_vector, tertiary_axis_vector, secondary_axis_vector)).transposed() # X, Y, Z. Transposed because vectors placed next to each other in Blender Python define rows, not columns
 
+        elif construction_mode == 'X-Zt':
+            gRl = Matrix((primary_axis_vector, secondary_axis_vector, tertiary_axis_vector)).transposed() # 
 
+        elif construction_mode == 'Y-Zt':
+            gRl = Matrix((secondary_axis_vector, primary_axis_vector, tertiary_axis_vector)).transposed() # 
 
-        #print(z_axis)
+        elif construction_mode == 'Y-Xt':
+            gRl = Matrix((tertiary_axis_vector, primary_axis_vector, secondary_axis_vector)).transposed() #   
 
-        gRl= np.concatenate((x_axis, y_axis, z_axis), axis = 1) # gRl = global from local rotation matrix, is a matrix of [x_vec y_vec z_vec]
+        elif construction_mode == 'Z-Xt':
+            gRl = Matrix((tertiary_axis_vector, secondary_axis_vector, primary_axis_vector)).transposed() #
+        
+        elif construction_mode == 'Z-Yt':
+            gRl = Matrix((secondary_axis_vector, tertiary_axis_vector, primary_axis_vector)).transposed() #        
 
-        #print(gRl)
-
+        #local to global rotation matrix, 3x3. Columns are the axes directions in the global frame.
+        
         from .create_frame_func import create_frame
         create_frame(name=refframe_name, size = size, 
                      pos_in_global = origin, gRb = gRl,
                      collection_name = colname,
                      parent_body = 'not_assigned',)
         
+        muskemo.framename = ''
         
         return {'FINISHED'}
 
@@ -317,10 +371,7 @@ class ClearFrameParentBodyOperator(Operator):
        
         sel_obj = bpy.context.selected_objects  #should be the only the frame
         
-        
-        
-       
-        
+      
         # throw an error if no objects are selected     
         if (len(sel_obj) == 0):
             self.report({'ERROR'}, "No frame selected. Select the target frame and try again.")
@@ -448,6 +499,21 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         from .selected_objects_panel_row_func import CreateSelectedObjRow
 
         CreateSelectedObjRow('FRAME', layout)
+        CreateSelectedObjRow('LANDMARK', layout)
+        
+        #
+        construction_mode = muskemo.frame_construction_mode
+        axes_strings = construction_mode.split('-')
+        primary_axis = axes_strings[0]
+        temp_axis = axes_strings[1]
+        
+        if 'X' and 'Y' in construction_mode:
+            plane = 'XY'
+        elif 'X' and 'Z' in construction_mode:
+            plane = 'XZ'
+        elif 'Y' and 'Z' in construction_mode:
+            plane = 'YZ'
+
 
         # Row for frame collection
         row = self.layout.row()
@@ -460,32 +526,44 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         split = row.split(factor=0.5)
         split.label(text="Frame Name")
         split.prop(muskemo, "framename", text="")
-
         
+        # Construction mode
+        row = self.layout.row()
+        split = row.split(factor=0.25)
+        split.label(text="Construction mode")
+        split.prop(muskemo,  "frame_construction_mode", text = "")
         
         # Row for Assign as frame origin
         row = self.layout.row()
-        split = row.split(factor=0.5)
-        split.operator("frame.assign_origin", text="Assign as frame origin")
-        sub_split = split.split(factor=0.6)
+        split = row.split(factor=1/3)
+        split.operator("frame.assign_origin", text="Assign frame origin")
+        sub_split = split.split(factor=0.5)
         sub_split.label(text="Origin Landmark")
         sub_split.prop(muskemo, "or_landmark_name", text="")
 
-        # Row for Assign as Y direction
+        # Row for primary axis marker 1
         row = self.layout.row()
-        split = row.split(factor=0.5)
-        split.operator("frame.assign_ydir_landmark", text="Assign as Y direction")
-        sub_split = split.split(factor=0.6)
-        sub_split.label(text="Y Direction Landmark")
-        sub_split.prop(muskemo, "ydir_landmark_name", text="")
+        split = row.split(factor=1/3)
+        split.operator("frame.assign_primary_axis_start_landmark", text="Assign " + primary_axis + " start")
+        sub_split = split.split(factor=0.5)
+        sub_split.label(text= primary_axis + " Direction Start Landmark")
+        sub_split.prop(muskemo, "primary_axis_start_landmark_name", text="")
 
-        # Row for Assign as YZ plane landmark
+        # Row for primary axis marker 2
         row = self.layout.row()
-        split = row.split(factor=0.5)
-        split.operator("frame.assign_yz_plane_landmark", text="Assign as YZ plane landmark")
-        sub_split = split.split(factor=0.6)
-        sub_split.label(text="YZ Plane Landmark")
-        sub_split.prop(muskemo, "yz_plane_landmark_name", text="")
+        split = row.split(factor=1/3)
+        split.operator("frame.assign_primary_axis_end_landmark", text="Assign " + primary_axis + " end")
+        sub_split = split.split(factor=0.5)
+        sub_split.label(text= primary_axis + " Direction End Landmark")
+        sub_split.prop(muskemo, "primary_axis_end_landmark_name", text="")
+
+        # Row for Assign temp axis /  plane landmark 2
+        row = self.layout.row()
+        split = row.split(factor=1/3)
+        split.operator("frame.assign_plane_landmark", text="Assign " + temp_axis.replace('t', '-temp') + " ("+ plane +" plane)")
+        sub_split = split.split(factor=0.5)
+        sub_split.label(text=temp_axis.replace('t', '-temp') + " ("+ plane +" Plane) Landmark")
+        sub_split.prop(muskemo, "plane_landmark_name", text="")
 
         
         
@@ -500,6 +578,7 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         row.operator("frame.assign_parent_body", text="Assign parent body")
         row.operator("frame.clear_parent_body", text="Clear parent body")
 
+        
         
         row = self.layout.row()
         

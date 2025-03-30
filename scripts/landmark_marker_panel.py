@@ -13,11 +13,12 @@ class CreateLandmarkOperator(Operator):
     
     def execute(self, context):
 
+        muskemo = bpy.context.scene.muskemo
 
-        landmark_name = bpy.context.scene.muskemo.landmark_name
-        landmark_radius = bpy.context.scene.muskemo.landmark_radius #in meters
+        landmark_name = muskemo.landmark_name
+        landmark_radius = muskemo.landmark_radius #in meters
 
-        colname = bpy.context.scene.muskemo.landmark_collection #name for the collection that will contain the landmarks
+        colname = muskemo.landmark_collection #name for the collection that will contain the landmarks
 
         if colname not in bpy.data.collections:
             bpy.data.collections.new(colname)
@@ -32,6 +33,11 @@ class CreateLandmarkOperator(Operator):
 
         active_obj = bpy.context.active_object  #should be the body that you want to parent the point to
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
+
+         #Ensure unique name
+        if landmark_name in bpy.data.objects:
+            self.report({'ERROR'}, "An object with the name '" + landmark_name + "' already exists in the scene. Choose a unique (unused) name for the new LANDMARK. Operation cancelled.")
+            return {'FINISHED'}
 
         if len(sel_obj)<1:
             self.report({'ERROR'}, "Landmarks must be parented to a mesh, select the mesh you would like to parent the landmark to. Operation cancelled")
@@ -49,8 +55,6 @@ class CreateLandmarkOperator(Operator):
 
 
 
-
-        
 
         target_loc = bpy.context.scene.cursor.location
         
@@ -80,7 +84,7 @@ class CreateLandmarkOperator(Operator):
 
         ##### Assign a material
         matname = 'marker_material'
-        color = tuple(bpy.context.scene.muskemo.marker_color)
+        color = tuple(muskemo.marker_color)
         transparency = 0.5
             
                
@@ -96,6 +100,10 @@ class CreateLandmarkOperator(Operator):
         obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
         
         
+        ### Empty the landmark name input
+
+        muskemo.landmark_name = ''
+
         
         return {'FINISHED'}
             

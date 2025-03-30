@@ -10,6 +10,7 @@ def CreateSelectedObjRow(type, layout):
         "JOINT": "Joints",
         "MUSCLE": "Muscles",
         "CONTACT": "Contacts",
+        "LANDMARK": "Landmarks",
         "GEOMETRY": "Meshes",
         "MESH": "Meshes", #this is not a muskemo type
         "MESH_withdensity": "Meshes", #not a muskemo type. Mesh with inertial properties assigned
