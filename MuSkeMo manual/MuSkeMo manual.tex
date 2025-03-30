@@ -403,11 +403,36 @@ The plotting subpanel provides the user with some flexibility to alter the plots
 
 \subsection{Anatomical \& local reference frames panel}
 
-Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. Local reference frames have a position and an orientation with respect to the global reference frame. If the global frame is denoted with the letter \(\mathcal{G}\), then the position of an arbitrary frame in the global reference frame can be written as the following vector: \(\vec{v}_{\mathcal{G}}\). Internally, orientations are stored through rotation matrices. The rotation matrix that rotates a vector from the local \(\mathcal{B}\)-frame to the global \(\mathcal{G}\)-frame can be written as: \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\).
+Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. The user defines a primary axis and a temporary axis direction, which together span a plane. The secondary axis is computed as perpendicular to the plane, and then the tertiary axis is mutually perpendicular to the first two axes. The reference frame is placed at the user-specified origin position.
 
-Orientations are exported as rotation (unit) quaternions (w, x, y, z), and also as body-fixed (intrinsic, active) XYZ-Euler angles (phi\_x, phi\_y, phi\_z, in rad) (see Appendices \ref{sec:eulerangles} \& \ref{sec:quaternions}). The latter is prone to gimbal lock. 
+The user has to define four positions (using \ref{sec:landmarks} is recommended, but not required):
 
-If anatomical / local frames are assigned to a body, MuSkeMo also computes inertial properties, joint positions and orientations, contact positions, and muscle path points with respect to these frames. This requires the transpose of matrix \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\), namely: \({}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}}\). This rotates a vector from the global \(\mathcal{G}\)-frame to the local \(\mathcal{B}\)-frame.
+\begin{itemize}
+\item Primary axis start
+\item Primary axis end
+\item Temp axis (to define the plane together with the primary axis)
+\item Frame origin (this can be the same marker as any of the previous three, if desired)
+\end{itemize}
+
+All three axes ( \(X\), \(Y\) and \(Z\)) can be selected as the primary axis, or the temporary axis to define the plane. The panel thus has six "Construction modes" which can be selected from a dropdown menu:
+
+\begin{itemize}
+    \item "Specify X-axis and Y-temp direction (for XY plane)".  
+    \item "Specify X-axis and Z-temp direction (for XZ plane)".
+    \item "Specify Y-axis and Z-temp direction (for YZ plane)".
+    \item "Specify Y-axis and X-temp direction (for XY plane)".
+    \item "Specify Z-axis and X-temp direction (for XZ plane)".
+    \item "Specify Z-axis and Y-temp direction (for YZ plane)".
+\end{itemize}
+
+
+As an example, when selecting the mode "Specify X-axis and Y-temp direction (for XY plane)": The frame will have its \(X\)-axis aligned to the direction specified by the primary axis start and end markers. The temp axis marker is used to define the \(XY\)-plane, and the \(Z\)-axis will be perpendicular to that plane (using a cross-product). The \(Y\) axis is found using another cross-product between the \(Z\) and \(X\) axes.
+
+Local reference frames have a position and an orientation with respect to the global reference frame. If the global frame is denoted with the letter \(\mathcal{G}\), then the position of an arbitrary frame in the global reference frame can be written as the following vector: \(\vec{v}_{\mathcal{G}}\). Internally, orientations are stored through rotation matrices. The rotation matrix that rotates a vector from the local \(\mathcal{B}\)-frame to the global \(\mathcal{G}\)-frame can be written as: \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\).
+
+Orientations are exported as rotation (unit) quaternions (w, x, y, z), and also as body-fixed (intrinsic, active) XYZ-Euler angles (phi\_x, phi\_y, phi\_z, in rad) (see Appendices \ref{sec:eulerangles} \& \ref{sec:quaternions}). Euler angles are prone to gimbal lock. 
+
+Anatomical / local frames can be assigned to a body by selecting one body and one frame, and pressing "Assign parent body". During parent body assignment, MuSkeMo computes inertial properties, joint positions and orientations, contact positions, and muscle path points with respect to these frames. This requires the transpose of matrix \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\), namely: \({}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}}\). This rotates a vector from the global \(\mathcal{G}\)-frame to the local \(\mathcal{B}\)-frame.
 
 For an arbitrary point \(p\) expressed in \(\mathcal{G}\), MuSkeMo computes the transformation to \(\mathcal{B}\) as follows: 
 
