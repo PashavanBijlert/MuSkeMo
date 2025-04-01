@@ -514,13 +514,48 @@ class ReflectUnilateralJointsOperator(Operator, ReflectionMixinClass): #inherits
             or_in_global_quat_refl = quat_from_matrix(gRb_refl)
             or_in_global_XYZeuler_refl = euler_XYZbody_from_matrix(gRb_refl)
 
+            ## reflect coordinate names
+            #preallocate as empty coordinates
+            coordinate_Tx=''
+            coordinate_Ty=''
+            coordinate_Tz=''
+            coordinate_Rx=''
+            coordinate_Ry=''
+            coordinate_Rz=''
+
+            #populate with actual values if the joint has coordinates
+            if obj['coordinate_Tx']:
+                coordinate_Tx = obj['coordinate_Tx'][0:-len(currentside)] + otherside
+                    
+            if obj['coordinate_Ty']:
+                coordinate_Ty = obj['coordinate_Ty'][0:-len(currentside)] + otherside
+
+            if obj['coordinate_Tz']:
+                coordinate_Tz = obj['coordinate_Tz'][0:-len(currentside)] + otherside
+            
+            if obj['coordinate_Rx']:
+                coordinate_Rx = obj['coordinate_Rx'][0:-len(currentside)] + otherside
+                    
+            if obj['coordinate_Ry']:
+                coordinate_Ry = obj['coordinate_Ry'][0:-len(currentside)] + otherside
+
+            if obj['coordinate_Rz']:
+                coordinate_Rz = obj['coordinate_Rz'][0:-len(currentside)] + otherside
+
             create_joint(name = joint_name,
-                             radius = radius,
-                 pos_in_global = pos_in_global_refl,
-                   or_in_global_quat = or_in_global_quat_refl, 
-                   or_in_global_XYZeuler=or_in_global_XYZeuler_refl,
+                    radius = radius,
+                    pos_in_global = pos_in_global_refl,
+                    or_in_global_quat = or_in_global_quat_refl, 
+                    or_in_global_XYZeuler=or_in_global_XYZeuler_refl,
                     collection_name = colname,
-                    parent_body = 'not_assigned',)
+                    parent_body = 'not_assigned',
+                    coordinate_Tx = coordinate_Tx,
+                    coordinate_Ty = coordinate_Ty,
+                    coordinate_Tz = coordinate_Tz,
+                    coordinate_Rx = coordinate_Rx,
+                    coordinate_Ry = coordinate_Ry,
+                    coordinate_Rz = coordinate_Rz,
+                    )
             
             #check if the mirrored parent exists
             if obj['parent_body'] !='not_assigned':
