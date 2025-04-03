@@ -153,8 +153,12 @@ class ImportTrajectorySTO(Operator):
 
         ## get the muscles in the model
         # get the joints and associated joint coordinates in the model
-        muscle_col = bpy.data.collections[bpy.context.scene.muskemo.muscle_collection]
-        muscles = [x for x in muscle_col.objects if 'MuSkeMo_type' in x and x['MuSkeMo_type']=='MUSCLE']
+        muscle_col = bpy.data.collections.get(bpy.context.scene.muskemo.muscle_collection)
+        if muscle_col: #if the muscle col is not an empty object
+            muscles = [x for x in muscle_col.objects if 'MuSkeMo_type' in x and x['MuSkeMo_type']=='MUSCLE']
+        else:
+            muscles = []
+
 
         ## get the muscle activations in the trajectory
 
