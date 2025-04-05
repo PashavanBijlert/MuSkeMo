@@ -431,6 +431,11 @@ class VIEW3D_PT_export_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventi
         split = row.split(factor = 1/2)
         split.label(text = 'Model export directory')
         split.prop(muskemo, "model_export_directory", text = "")
+
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+        row.operator("muskemo.reset_model_default_pose", text = 'Reset to default pose')
         return
 
 ## Export bodies subpanel

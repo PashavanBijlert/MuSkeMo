@@ -10,7 +10,7 @@ def write_joints(context, filepath, collection_name, delimiter, number_format, s
         if 'default_pose' in obj: #If joints are exported without parenting they don't have a default pose
 
             if obj.matrix_world != Matrix(obj['default_pose']):
-                self.report({'ERROR'}, "Joint '" + obj.name + "' has a parent or child assigned in a different pose than the current pose. Reset the model to the default pose, or reparent the joint. Operation cancelled")
+                self.report({'ERROR'}, "Joint '" + obj.name + "' has a parent or child assigned in a different pose than the current pose. Reset the model to the default pose (using the button), or reparent the joint. Operation cancelled")
                 return {'FINISHED'}
 
 

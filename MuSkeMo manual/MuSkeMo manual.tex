@@ -198,17 +198,21 @@ Blender is quite stable, but it is possible for it to crash. Fortunately, by def
 \label{sec:defaultpose}
 Constructing a model in Blender provides the user with a lot of freedom to interactively repose model elements during model construction. However, many of the computations are only valid in the specific pose they are computed in. For example, when computing mesh inertial properties using the inertial properties panel (\ref{sec:inproppanel}), the inertal properties in the global reference frame are only valid as long as the orientation and position (the pose) of the mesh do not change. Similarly, object positions and orientations with respect to parent frames (\ref{sec:frame}) are only valid during export if their relative positions and orientations remain unchanged. 
 
-To prevent incorrect exports, MuSkeMo keeps track of the 'default\_pose', which is the pose in which the relevant computation was performed. If the user tries to perform an operation that can only be performed in the default pose, the operation is cancelled (with an error message). In that situation, you must either reposition the model components back into the default pose before exporting, or alternatively recompute the parameters (for inertial properties and bodies, this means recomputing and reassigning the inertial properties, for other components it means detaching and reparenting the objects).
+To prevent incorrect exports, MuSkeMo keeps track of the 'default\_pose', which is the pose in which the relevant computation was performed. If the user tries to perform an operation that can only be performed in the default pose, the operation is cancelled (with an error message). In that situation, you must reposition the model components back into the default pose before exporting. MuSkeMo provides a button for this: "Reset to default pose", available from the Global settings panel (sec. \ref{sec:MSM_glob_settings}), the Joint panel (sec. \ref{sec:jointpanel}), the Body panel (sec. \ref{sec:bodypanel}), the inertial properties panel (sec. \ref{sec:inproppanel}), and the export panel (sec. \ref{sec:exportpanel}). The button works by selecting one or multiple objects that have a default pose, and then pressing the button. If a single object is selected and it is part of a model, MuSkeMo traverses the model until it finds the root joint or body (i.e., the component at the top of the parent hierarchy), and then resets all the joints and bodies to their default pose. If multiple components of the same model are selected, MuSkeMo only performs the operation once (because they will both have the same root). If multiple disjointed objects are selected, MuSkeMo will reset the default pose for all the separate sections (including individual meshes with inertial properties).
+
+Alternatively, if the user wishes to export the model in the changed pose, it is necessary to recompute all the model parameters in this new pose. For inertial properties and bodies, this means recomputing and reassigning the inertial properties, for other components it means detaching and reparenting the objects.
+
 
 \section{MuSkeMo's Panels}
 This section describes all of MuSkeMo's panels and how to use them. Most of MuSkeMo's features work by selecting the correct combination of objects, and then pressing one of the buttons in the panels. MuSkeMo's panels show you how many and what types of objects (e.g., "BODY") you have selected, and will give an explanatory error message if you try to use a panel incorrectly (e.g.,: assigning a parent body to a joint requires selecting one body and one joint, and MuSkeMo informs you if you didn't do this). Most of the panels also allow you to create new objects, which means you have to type in a (unique!) object name and press a button. 
 
 \subsection{MuSkeMo Global Settings Panel}
+\label{sec:MSM_glob_settings}
 The Blender user interface has several default settings that do not work well with MuSkeMo. By default, Blender forces the Z-axis as the "up" direction in the viewport. The International Society of Biomechanics assumes Y as the up direction. To achieve this, the user should set the view rotation setting to "Trackball", and use "orbit around selection". The "MuSkeMo Global Settings" panel provides a button that does this automatically: "Set recommended navigation settings". 
 
 The panel also has a button named "Set object children visibility". This toggles off "Object Children" in the outliner. In Blender's behavior, objects are placed under their parents in the outliner, but this would for instance result in a body being placed under the parent joint in the "Joint collection", instead of in the "Body collection". Turning off "Object children" avoids this behavior. MuSkeMo automatically calls the "Set object children visibility" operator when the user creates a Body, Joint, or Muscle for the first, so in most cases, you will not need to set this yourself. However, if you find yourself in a situation where you cannot find your objects in the outliner, even though you can clearly see them in the scene, this button may solve your problem.
 
-\label{sec:MSM_glob_settings}
+
 
 
 
@@ -316,6 +320,7 @@ Inertial properties are not dynamic, if you move the source objects that the rig
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. Select the meshes and the target body, and press the button.
 
 \subsection{Joint panel}
+\label{sec:jointpanel}
 
 Create new joints by typing in a unique name and pressing 'Create new joint'. To and assign a parent or child body, select the joint and the target body, and press the respective button. 
 
@@ -339,7 +344,7 @@ In this panel, there are buttons that fit geometric primitives to a selected mes
 5) press P (for seParate), and then select "by selection".
 6) press Tab to go out of edit mode.
 
-You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions.
+You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions. The duplicated section of the mesh is in the same collection as the original, and if the original mesh was attached to a BODY, so will this copied section. To prevent it being exported, move it to a different collection, and detach the mesh from the body using the button in the panel.
 
 It is possible to match the transformations of a joint to the fitted geometry. Child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically.
 

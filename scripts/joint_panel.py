@@ -1454,7 +1454,10 @@ class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention
         row = self.layout.row()
         row.prop(muskemo, "jointsphere_size")
         
-        
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+        row.operator("muskemo.reset_model_default_pose", text = 'Reset to default pose')
             
         #row = self.layout.row()
         #self.layout.prop(muskemo, "musclename_string")

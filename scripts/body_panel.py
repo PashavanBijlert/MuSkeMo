@@ -624,6 +624,11 @@ class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention
                  
         row = self.layout.row()
         row.operator("body.assign_inertial_properties", text="Assign precomputed inertial properties")
+
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+        row.operator("muskemo.reset_model_default_pose", text = 'Reset to default pose')
         
         
         

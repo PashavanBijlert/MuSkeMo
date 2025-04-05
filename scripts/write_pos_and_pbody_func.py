@@ -12,7 +12,7 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
         if 'default_pose' in obj: #remove this if statement once landmarks also have a default pose
 
             if obj.matrix_world != Matrix(obj['default_pose']):
-                self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default pose, or reparent the contact. Operation cancelled")
+                self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default  (using the button), or reparent the contact. Operation cancelled")
                 return {'FINISHED'}
 
 

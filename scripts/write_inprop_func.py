@@ -1,5 +1,5 @@
 def write_inprop(context, filepath, collection_name, delimiter, obj_type, number_format, self):
-    #### obj_type is a string, either "body" or "mesh", or something if you reuse this further
+    #### obj_type is a string, either "body" or "mesh", or something else if you reuse this further
     #### the script will fail if you don't specify it when calling the function.
     #### currently, the script gives inertial properties for bodies or meshes
 
@@ -12,7 +12,7 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
 
     for obj in coll.objects:
         if obj.matrix_world != Matrix(obj['default_pose']):
-            self.report({'ERROR'}, "Inertial properties of '" + obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. Operation cancelled")
+            self.report({'ERROR'}, "Inertial properties of '" + obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose (using the button), or recompute the inertial properties. Operation cancelled")
             return {'FINISHED'}
 
 

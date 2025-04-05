@@ -128,4 +128,4 @@ class VIEW3D_PT_global_settings_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming
 
 
         row = self.layout.row()
-        row.operator("muskemo.reset_model_default_pose", text = 'Reset default pose')
+        row.operator("muskemo.reset_model_default_pose", text = 'Reset to default pose')

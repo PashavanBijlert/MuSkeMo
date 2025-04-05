@@ -615,6 +615,11 @@ class VIEW3D_PT_inertial_prop_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming c
         row = self.layout.row()
         row.operator("inprop.inertial_properties_collection", text="Compute for all meshes in collection")
 
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+        row.operator("muskemo.reset_model_default_pose", text = 'Reset to default pose')
+
         return
 
 
