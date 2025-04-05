@@ -10,8 +10,9 @@ from math import nan
 from .. import VIEW3D_PT_MuSkeMo
 
 
-class ReflectionMixinClass: #mixin class to share functionality across all the reflection operators
-    
+class ReflectionOperatorBase(Operator): #Define a Base class based on Operator, so that we only have to enable the Undoing once for all the reflection panels
+    bl_options = {"UNDO"} #enable undoing
+
     def get_reflection_vector(self, plane):
         """Returns the reflection vector based on the selected plane that gets passed to this function."""
         if plane == 'XY':
@@ -40,11 +41,13 @@ class ReflectionMixinClass: #mixin class to share functionality across all the r
             )
 
         return unilateral_objects
-class ReflectUnilateralBodiesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+class ReflectUnilateralBodiesOperator(ReflectionOperatorBase): #inherits functions from the super class
     bl_idname = "body.reflect_unilateral_bodies"
     bl_label = "Reflects unilateral bodies across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     bl_description = "Reflects unilateral bodies across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     
+
+
     def execute(self, context):
         
         muskemo = bpy.context.scene.muskemo
@@ -115,7 +118,7 @@ class ReflectUnilateralBodiesOperator(Operator, ReflectionMixinClass): #inherits
 
                                     
 
-class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+class ReflectUnilateralMusclesOperator(ReflectionOperatorBase): #inherits functions from the super class
     bl_idname = "muscle.reflect_unilateral_muscles"
     bl_label = "Reflects unilateral muscles across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     bl_description = "Reflects unilateral muscles across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
@@ -211,7 +214,7 @@ class ReflectUnilateralMusclesOperator(Operator, ReflectionMixinClass): #inherit
         return {'FINISHED'}
     
 
-class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+class ReflectUnilateralWrapsOperator(ReflectionOperatorBase): #inherits functions from the super class
     bl_idname = "muscle.reflect_unilateral_wraps"
     bl_label = "Reflects unilateral wrapping geometries across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
     bl_description = "Reflects unilateral muscles across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version. If the target muscles exist, also assigns the wraps to designated muscles."
@@ -378,7 +381,7 @@ class ReflectUnilateralWrapsOperator(Operator, ReflectionMixinClass): #inherits 
         return {'FINISHED'}    
 
 
-class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+class ReflectUnilateralFramesOperator(ReflectionOperatorBase): #inherits functions from the super class
     bl_idname = "frame.reflect_unilateral_frames"
     bl_label = "Reflects unilateral frames across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     bl_description = "Reflects unilateral frame across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
@@ -462,7 +465,7 @@ class ReflectUnilateralFramesOperator(Operator, ReflectionMixinClass): #inherits
             
         return {"FINISHED"}
 
-class ReflectUnilateralJointsOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+class ReflectUnilateralJointsOperator(ReflectionOperatorBase): #inherits functions from the super class
     bl_idname = "joint.reflect_unilateral_joints"
     bl_label = "Reflects unilateral joints across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     bl_description = "Reflects unilateral joints across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
@@ -617,11 +620,12 @@ class ReflectUnilateralJointsOperator(Operator, ReflectionMixinClass): #inherits
 
         return {"FINISHED"}
 
-class ReflectUnilateralContactsOperator(Operator, ReflectionMixinClass): #inherits functions from the mixin class
+class ReflectUnilateralContactsOperator(ReflectionOperatorBase): #inherits functions from the super class
     bl_idname = "contact.reflect_unilateral_contacts"
     bl_label = "Reflects unilateral contacts across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     bl_description = "Reflects unilateral contacts across desired reflection plane if their names end with the right or left side string, and there is not already a reflected version."
     
+
     def execute(self, context):
         
         muskemo = bpy.context.scene.muskemo
