@@ -6,6 +6,8 @@ from bpy.types import (Panel,
                         Operator,
                         )
 
+from mathutils import (Matrix)
+
 
 from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 
@@ -46,6 +48,56 @@ class SetChildVisibilityInOutlinerOperator(Operator):
                             space.use_filter_children = False
 
         return {'FINISHED'}    
+    
+class ResetToDefaultPoseOperator(Operator): #the operator also works on disjointed sections of the model, and/or tissue outlines that have default_pose but are not connected to the model.
+    bl_idname = "muskemo.reset_model_default_pose"
+    bl_label = "Resets all connected components to their default pose (the pose in which inertial properties were computed or objects were parented). Select 1+ objects with a default_pose and press the button."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Resets all connected components to their default pose (the pose in which inertial properties were computed or objects were parented). Select 1+ objects with a default_pose and press the button."
+    
+    
+    def execute(self, context):
+
+        def unique_objects(obj_list):
+            seen = set()
+            unique = []
+            for obj in obj_list:
+                if obj not in seen:
+                    unique.append(obj)
+                    seen.add(obj)
+            return unique
+
+        def apply_default_pose(obj):
+            # Restore matrix_world if 'default_pose' is stored
+            if 'default_pose' in obj:
+                obj.matrix_world = Matrix(obj['default_pose'])
+
+            # Recursively do this for all children
+            for child in obj.children:
+                apply_default_pose(child)
+
+
+
+        # Get selected object
+        sel_obj = bpy.context.selected_objects
+
+        root_obj = [] #list
+        for n in range(len(sel_obj)):
+
+            # Find the top-most parent (root)
+            curr_obj = sel_obj[n]
+            while curr_obj.parent:
+                curr_obj = curr_obj.parent
+            
+            if 'default_pose' in curr_obj: #check if the selected object has a default_pose
+                root_obj.append(curr_obj) 
+            
+            
+        root_objects = unique_objects(root_obj) #list of unique root objects
+        print(root_objects)
+        for obj in root_objects:
+            apply_default_pose(obj)
+
+        return {'FINISHED'}    
 
 #### The panels
 
@@ -74,3 +126,6 @@ class VIEW3D_PT_global_settings_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming
         row = self.layout.row()
         row.operator("muskemo.set_child_visibility_outliner", text = 'Set object children visibility')
 
+
+        row = self.layout.row()
+        row.operator("muskemo.reset_model_default_pose", text = 'Reset default pose')
