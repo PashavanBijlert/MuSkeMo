@@ -197,7 +197,7 @@ class ImportOpenSimModel(Operator):
                 # Extract frames within the joint
                 frames_data = []
                 frames = joint.find('frames')
-                if frames is not None:
+                if frames is not None: #if there are frames defined
                     for frame in frames.findall('PhysicalOffsetFrame'):
                         frame_name = frame.get('name')
                         translation = tuple(map(float, frame.find('translation').text.split()))
@@ -220,7 +220,39 @@ class ImportOpenSimModel(Operator):
                             'orientation': orientation,
                             'socket_parent': socket_parent
                         })
+                else: #if there are no frames defined in the joint, assume socket_parent_frame and child are the bodies themselves
+                    #and that the positions and orientations are both zero
 
+                    print(joint_name + ' has no frames defined. Automatically creating them. This may cause inconsistencies.')
+                    translation = tuple([0.0, 0.0, 0.0])
+                    orientation = tuple([0.0, 0.0, 0.0])
+                    
+                    ## parent
+                    parent_body = parent_frame.split('/bodyset/')[-1]
+
+                    if parent_body == '/ground':
+                        parent_body = 'ground'
+
+                    parent_frame = parent_body + '_offset', #opensim naming convention
+                    frames_data.append({
+                    'frame_name': parent_frame,
+                    'translation': translation,
+                    'orientation': orientation,
+                    'socket_parent': parent_body
+
+                    })
+
+                    ## Child
+                    child_body  = child_frame.split('/bodyset/')[-1]
+                    child_frame = child_body + '_offset'#opensim naming convention
+                    frames_data.append({
+                    'frame_name': child_frame, 
+                    'translation': translation,
+                    'orientation': orientation,
+                    'socket_parent': child_body
+
+                    })
+                
                 # Extract coordinates if any
                 coordinates = []
                 coords_element = joint.find('coordinates')
