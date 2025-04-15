@@ -27,7 +27,7 @@ After installation, all of MuSkeMo's features can be accessed via its panels. Th
 
 # **Inertial properties panel**
 
-Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans. Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you attempt this. 
+Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans. Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you ignore this. 
 
 # **Body panel**
 
@@ -48,6 +48,8 @@ To add a point, select the muscle and the target body. Press shift + right mouse
 You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB").
 
 Within the muscle panel, it is also possible to create wrapping geometry (currently, only cylinders are supported), and assign these to muscles.
+
+It is possible to compute moment arms and muscle lengths in the Muscle Panel, and these can be recomputed on the fly when changing muscle paths. A live length viewer can help tune musculotendon parameters, especially when combined with imported kinematics.
 
 # **Anatomical & local reference frames panel**
 
