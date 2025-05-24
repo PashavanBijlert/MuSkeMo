@@ -402,6 +402,8 @@ class ImportTrajectorySTO(Operator):
                 else:
                     transform_axes = joint['transform_axes'].to_dict()  #dict with the transform axes
                     
+                    
+
                     #pre-allocate translation and identity matrices for rotations
                     translation = Vector([Tx, Ty, Tz])
 
@@ -461,7 +463,10 @@ class ImportTrajectorySTO(Operator):
 
 
                     # X Y Z, maybe this should be flipped
-                    jRta = Rmat_x @ Rmat_y @ Rmat_z #matrix from transform axis to joint 
+                    #jRta = Rmat_x @ Rmat_y @ Rmat_z #matrix from transform axis to joint 
+
+                    jRta = Rmat_z @ Rmat_y @ Rmat_x #should it be flipped like this?
+                    
 
                     [gRj, jRg] = matrix_from_euler_XYZbody(base_orientation[joint_ind])
 
@@ -472,9 +477,13 @@ class ImportTrajectorySTO(Operator):
                     rotated_joint_euler = euler_XYZbody_from_matrix(rotated_joint)
 
                     #Unpack into separate euler angles
-                    Rx = rotated_joint_euler[0]
-                    Ry = rotated_joint_euler[1]
-                    Rz = rotated_joint_euler[2]
+                    #In the normal case, the base orientation is implicit, and since we are calculating a relative orientation with respect to it,
+                    # we add the base orientation to each euler angle. In the non-standard transform axes case, since we are creating a matrix
+                    #from the base orientation about which to compute the actual orientation, maybe we shouldn't be adding it to Rx when setting the keyframe?
+                    # That's why I subtract it here, because it gets added later.
+                    Rx = rotated_joint_euler[0] -base_orientation[joint_ind][0] 
+                    Ry = rotated_joint_euler[1] -base_orientation[joint_ind][1]
+                    Rz = rotated_joint_euler[2] -base_orientation[joint_ind][2]
 
                                       
            
@@ -484,9 +493,13 @@ class ImportTrajectorySTO(Operator):
                 joint.rotation_euler = (base_orientation[joint_ind][0] + Rx,
                                         base_orientation[joint_ind][1] + Ry, 
                                         base_orientation[joint_ind][2] + Rz)
+                
+                #joint.rotation_euler = ( Rx,  Ry,  Rz) # should we not be adding the base_orientation to the euler angles?
                
                 joint.keyframe_insert('rotation_euler', frame = frame_number)
                 joint.keyframe_insert('location', frame = frame_number)
+                if joint.name == 'L_hip':
+                        print('hoi')
 
             activation_traj_row = activation_trajectories_rs[i,:] #row i of the resampled coordinate trajectory
             
