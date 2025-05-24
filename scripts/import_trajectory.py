@@ -426,7 +426,7 @@ class ImportTrajectorySTO(Operator):
                         if traj_model_coordinate_types[idx] == 'coordinate_Tz':
                             translation += Vector(transform_axes['transform_axis_Tz'])*coordinate_traj_row[idx]
 
-                        #for the rotation coordinates, set up an axis angle rotatin matrix, and replace the ID matrix with it
+                        #for the rotation coordinates, set up an axis angle rotation matrix, and replace the ID matrix with it
                         if traj_model_coordinate_types[idx] == 'coordinate_Rx':
                             if in_degrees:
                                 angle = np.deg2rad(coordinate_traj_row[idx])
