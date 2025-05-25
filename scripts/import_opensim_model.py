@@ -790,6 +790,8 @@ class ImportOpenSimModel(Operator):
                     or_in_global_XYZeuler = orientation_in_parent_frame
                     or_in_global_quat = quat_from_matrix(matrix_from_euler_XYZbody(or_in_global_XYZeuler)[0])
 
+                    or_in_parent_frame_quat = or_in_global_quat #assuming the ground is never rotated
+
                 else:
                     
                     parent_frame = frames[parent_frame_name]  #this calls the dictionary that is created earlier. Since we start at root, this is populated by the time we get here
@@ -980,8 +982,12 @@ class ImportOpenSimModel(Operator):
                             has_standard_axes = False
                             transform_axes_warning_list.append(joint_name)                                       
                         
-
-               
+                if parent_body_name == 'ground': #if it's a root joint and it is rotated with respect to world, we need to treat this as a non-standard joint so that trajectory importing goes along local transformations
+                    if orientation_in_parent_frame != (0,0,0):
+                               
+                        has_standard_axes = False
+                        transform_axes_warning_list.append(joint_name)
+                
                 if has_standard_axes:
                     
                     # Loop through each transform axis in the joint's spatial_transform data
@@ -1024,12 +1030,7 @@ class ImportOpenSimModel(Operator):
 
 
 
-                if parent_body_name == 'ground': #set position and orientation in parent to nan, since these are equal to global.
-                    #I'm assuming ground never has a rotation or orientation.
-                    pos_in_parent_frame = [nan]*3 
-                    or_in_parent_frame_XYZeuler = [nan]*3
-                    or_in_parent_frame_quat= [nan]*4
-
+                
 
 
 
@@ -1056,56 +1057,67 @@ class ImportOpenSimModel(Operator):
                 )
 
                 #Deal with non-standard axes explicitly            
-                if not has_standard_axes and joint['joint_type'] == 'CustomJoint':
+                if not has_standard_axes:
+                    
+                    if joint['joint_type'] == 'CustomJoint':
                     
                     
-                    joint_obj = bpy.data.objects[joint_name] #get the newly created joint in Blender
-                    joint_obj['transform_axes'] = {}
-                    joint_obj['transform_axes']['type'] = 'OpenSim' #to track from what type of model the 'transform_axes' are defined 
-                    axis_names = ['rotation1', 'rotation2', 'rotation3', 'translation1', 'translation2', 'translation3']
+                        joint_obj = bpy.data.objects[joint_name] #get the newly created joint in Blender
+                        joint_obj['transform_axes'] = {}
+                        joint_obj['transform_axes']['type'] = 'OpenSim CustomJoint' #to track from what type of model the 'transform_axes' are defined 
+                        axis_names = ['rotation1', 'rotation2', 'rotation3', 'translation1', 'translation2', 'translation3']
 
-                    for axis_name  in axis_names: #a spatial transform has 6 transform axes. Loop through each explicitly
-                        transform = [x for x in joint['spatial_transform'] if x['axis_name']==axis_name][0]
-                                       
-                        axis_vector = transform['axis_vector']
-                        coordinates = transform['axis_coordinates']
-                        
-                        if coordinates: #if coordinates aren't none
-                            # assign the coordinate accordingly
-
-                              
-                            #joint_obj.id_properties_ui('transform_axes').update(description="Transform axes defined in the OpenSim custom joint, if they don't align with the joint's own axes. See MuSkeMo manual for details. Optional.")
-                            #Python custom properties can't have a tooltip overlay.
-
-                            if axis_name == 'rotation1':
-                                joint_obj['coordinate_Rx'] = coordinates
-                                joint_obj['transform_axes']['transform_axis_Rx'] = axis_vector
-
-                            elif axis_name == 'rotation2':
-                                joint_obj['coordinate_Ry'] = coordinates
-                                joint_obj['transform_axes']['transform_axis_Ry'] = axis_vector
-
-
-                            elif axis_name == 'rotation3':
-                                joint_obj['coordinate_Rz'] = coordinates
-                                joint_obj['transform_axes']['transform_axis_Rz'] = axis_vector
+                        for axis_name  in axis_names: #a spatial transform has 6 transform axes. Loop through each explicitly
+                            transform = [x for x in joint['spatial_transform'] if x['axis_name']==axis_name][0]
+                                        
+                            axis_vector = transform['axis_vector']
+                            coordinates = transform['axis_coordinates']
+                            
+                            if coordinates: #if coordinates aren't none
+                                # assign the coordinate accordingly
 
                                 
-                            elif axis_name == 'translation1':
-                                joint_obj['coordinate_Tx'] = coordinates
-                                joint_obj['transform_axes']['transform_axis_Tx'] = axis_vector
+                                #joint_obj.id_properties_ui('transform_axes').update(description="Transform axes defined in the OpenSim custom joint, if they don't align with the joint's own axes. See MuSkeMo manual for details. Optional.")
+                                #Python custom properties can't have a tooltip overlay.
+
+                                if axis_name == 'rotation1':
+                                    joint_obj['coordinate_Rx'] = coordinates
+                                    joint_obj['transform_axes']['transform_axis_Rx'] = axis_vector
+
+                                elif axis_name == 'rotation2':
+                                    joint_obj['coordinate_Ry'] = coordinates
+                                    joint_obj['transform_axes']['transform_axis_Ry'] = axis_vector
 
 
-                            elif axis_name == 'translation2':
-                                joint_obj['coordinate_Ty'] = coordinates
-                                joint_obj['transform_axes']['transform_axis_Ty'] = axis_vector
+                                elif axis_name == 'rotation3':
+                                    joint_obj['coordinate_Rz'] = coordinates
+                                    joint_obj['transform_axes']['transform_axis_Rz'] = axis_vector
+
+                                    
+                                elif axis_name == 'translation1':
+                                    joint_obj['coordinate_Tx'] = coordinates
+                                    joint_obj['transform_axes']['transform_axis_Tx'] = axis_vector
 
 
-                            elif axis_name == 'translation3':
-                                joint_obj['coordinate_Tz'] = coordinates
-                                joint_obj['transform_axes']['transform_axis_Tz'] = axis_vector
+                                elif axis_name == 'translation2':
+                                    joint_obj['coordinate_Ty'] = coordinates
+                                    joint_obj['transform_axes']['transform_axis_Ty'] = axis_vector
+
+
+                                elif axis_name == 'translation3':
+                                    joint_obj['coordinate_Tz'] = coordinates
+                                    joint_obj['transform_axes']['transform_axis_Tz'] = axis_vector
 
                                 
+                    elif joint['joint_type'] == 'PlanarJoint': #Planar joints are always about Rz, Tx, and Ty, but if it's a root joint and rotated wrt Global, we need to assign Transform axes for the trajectory importer
+
+                        joint_obj = bpy.data.objects[joint_name] #get the newly created joint in Blender
+                        joint_obj['transform_axes'] = {}
+                        joint_obj['transform_axes']['type'] = 'OpenSim PlanarJoint' #to track from what type of model the 'transform_axes' are defined 
+                    
+                        joint_obj['transform_axes']['transform_axis_Rz'] = (0,0,1)
+                        joint_obj['transform_axes']['transform_axis_Tx'] = (1,0,0)
+                        joint_obj['transform_axes']['transform_axis_Ty'] = (0,1,0)
 
 
                 # Add child joints to the stack to be processed

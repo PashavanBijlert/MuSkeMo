@@ -402,8 +402,6 @@ class ImportTrajectorySTO(Operator):
                 else:
                     transform_axes = joint['transform_axes'].to_dict()  #dict with the transform axes
                     
-                    
-
                     #pre-allocate translation and identity matrices for rotations
                     translation = Vector([Tx, Ty, Tz])
 
@@ -416,6 +414,8 @@ class ImportTrajectorySTO(Operator):
 
                     for idx in entries_in_traj_coor_list:
                         
+                        if joint.name == 'GroundToBody':
+                            print('hoi')
                         #for the translation coordinates, multiply the coordinate value by the transform axis vector
                         if traj_model_coordinate_types[idx] == 'coordinate_Tx':
                             #Tx = coordinate_traj_row[traj_coordinate_ind[idx] -1]
@@ -456,12 +456,6 @@ class ImportTrajectorySTO(Operator):
                             axis =  transform_axes['transform_axis_Rz']
                             Rmat_z = matrix_from_axis_angle(axis, angle)
 
-                    #unpack translations
-                    Tx = translation[0]
-                    Ty = translation[1]
-                    Tz = translation[2]
-
-
                     # X Y Z, maybe this should be flipped
                     jRta = Rmat_x @ Rmat_y @ Rmat_z #matrix from transform axis to joint 
 
@@ -484,6 +478,16 @@ class ImportTrajectorySTO(Operator):
                     Rx = rotated_joint_euler[0] -base_orientation[joint_ind][0] 
                     Ry = rotated_joint_euler[1] -base_orientation[joint_ind][1]
                     Rz = rotated_joint_euler[2] -base_orientation[joint_ind][2]
+
+                    ## Rotate the translations. We only rotate about base orientation, which means the translation is assumed to be with respect to the parent frame.
+                   
+                    global_translation = gRj @ translation
+
+
+                    #unpack translations. Compensate for the base position being added to it
+                    Tx = global_translation[0] #- base_position[joint_ind][0]
+                    Ty = global_translation[1] #- base_position[joint_ind][1]
+                    Tz = global_translation[2] #- base_position[joint_ind][2]
 
                                       
            
