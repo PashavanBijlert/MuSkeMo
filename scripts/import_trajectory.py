@@ -414,8 +414,7 @@ class ImportTrajectorySTO(Operator):
 
                     for idx in entries_in_traj_coor_list:
                         
-                        if joint.name == 'GroundToBody':
-                            print('hoi')
+                        
                         #for the translation coordinates, multiply the coordinate value by the transform axis vector
                         if traj_model_coordinate_types[idx] == 'coordinate_Tx':
                             #Tx = coordinate_traj_row[traj_coordinate_ind[idx] -1]
