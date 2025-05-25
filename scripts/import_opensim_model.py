@@ -1072,7 +1072,7 @@ class ImportOpenSimModel(Operator):
         # Throw warning about non-standard transform axes        
         if transform_axes_warning_list: #throw a warning if joints have non-standard transform axes.
             
-            warning_message= f"The following joints have transform axes that were not aligned with the joint-axes: {', '.join(transform_axes_warning_list)}. See the manual"
+            warning_message= f"The following joints have transform axes that were not applied in x,y,z order, and/or not about positive principal directions: {', '.join(transform_axes_warning_list)}. See the manual"
 
             self.report({'WARNING'}, warning_message)
 
