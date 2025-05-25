@@ -14,6 +14,8 @@ import pprint
 
 import time
 
+from collections import defaultdict #for the uniqueness checker
+
 class ImportOpenSimModel(Operator):
     bl_description = "Import an OpenSim 4.0+ model"
     bl_idname = "import.import_opensim_model"
@@ -298,6 +300,53 @@ class ImportOpenSimModel(Operator):
                     'spatial_transform': spatial_transform
                 }
 
+
+            
+            ## check if any of the child frames are non-unique            
+            #Collect all child_frames and where they occur
+            frame_usage = defaultdict(list)
+
+            for joint_name, joint in joint_data.items():
+                child_frame = joint['child_frame']
+                frame_usage[child_frame].append(joint_name)
+
+            #Find duplicates
+            duplicates = {frame: joints for frame, joints in frame_usage.items() if len(joints) > 1}
+
+            # Step 3: Rename and collect original duplicated names, if they exist
+            if duplicates:
+                renamed_original_frames = set()
+
+                #Loop through duplicate frames
+                for duplicate_frame, joints in duplicates.items():
+                    renamed_original_frames.add(duplicate_frame)
+                    for joint_name in joints:
+                        joint = joint_data[joint_name]
+                        child_body = joint['child_body']
+                        new_frame_name = child_body + "_offset_renamed"
+
+                        # Rename this joint's child_frame
+                        joint['child_frame'] = new_frame_name
+                        #also rename it in the easy access dict nested within each joint. First is the parent, second is the child. We want the child
+                        joint['frames_data'][1]['frame_name'] = new_frame_name
+
+                        # Now rename parent_frame of any joints that use this child_body as their parent_body
+                        for other_joint in joint_data.values():
+                            if other_joint['parent_body'] == child_body:
+                                other_joint['parent_frame'] = new_frame_name
+                                #also rename it in the easy access dict nested within each joint. First is the parent, second is the child. We want the parent
+                                other_joint['frames_data'][0]['frame_name'] = new_frame_name
+
+
+                # Convert to list
+                renamed_list = list(renamed_original_frames)
+
+                # Issue warning
+                warning_message = (
+                    f"The following child_frames were used more than once and were renamed during import: "
+                    f"{', '.join(renamed_list)}."
+                )
+                self.report({'WARNING'}, warning_message)
             return joint_data
 
 
@@ -711,6 +760,9 @@ class ImportOpenSimModel(Operator):
             frames = {} #initialize a frames dict
 
             skipped_geoms = [] #empty list that will be populated if the geoms aren't found
+            
+            
+
             while stack:
                 # Get the current joint and its child tree
                 joint_name, joint_childtree = stack.pop()
@@ -880,8 +932,7 @@ class ImportOpenSimModel(Operator):
                             )
 
 
-                #### construct child frame
-
+                
                 create_frame(name = child_frame_name, size = frame_size , 
                              pos_in_global=frame_pos_in_global,
                         gRb = gRc, 
