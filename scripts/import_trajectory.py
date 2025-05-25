@@ -463,9 +463,9 @@ class ImportTrajectorySTO(Operator):
 
 
                     # X Y Z, maybe this should be flipped
-                    #jRta = Rmat_x @ Rmat_y @ Rmat_z #matrix from transform axis to joint 
+                    jRta = Rmat_x @ Rmat_y @ Rmat_z #matrix from transform axis to joint 
 
-                    jRta = Rmat_z @ Rmat_y @ Rmat_x #should it be flipped like this?
+                    #jRta = Rmat_z @ Rmat_y @ Rmat_x #should it be flipped like this?
                     
 
                     [gRj, jRg] = matrix_from_euler_XYZbody(base_orientation[joint_ind])

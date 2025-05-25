@@ -910,10 +910,24 @@ class ImportOpenSimModel(Operator):
                 for transform in joint['spatial_transform']:
                     axis_vector = tuple(transform['axis_vector'])  # Ensure axis_vector is a tuple
 
-                    # Check if the axis_vector is not a standard axis
-                    if axis_vector not in [(1, 0, 0), (0, 1, 0), (0, 0, 1)]:
-                        has_standard_axes = False
-                        transform_axes_warning_list.append(joint_name)
+                    # Check if the axis_vector is not a standard axis. Standard is the following order: R1 = (1,0,0), R = (0,1,0), R3 = (0,0,1). Same for T1. If the order is different, or the axes are different, the axes are "non standard"
+                    # Check this for the three axes separately.
+                    # R1 and T1
+                    if transform['axis_name'] == ('rotation1' or 'translation1'):
+                        if axis_vector != (1,0,0):
+                            has_standard_axes = False
+                            transform_axes_warning_list.append(joint_name)
+                    # R2 and T2
+                    if transform['axis_name'] == ('rotation2' or 'translation2'):
+                        if axis_vector != (0,1,0):
+                            has_standard_axes = False
+                            transform_axes_warning_list.append(joint_name)
+
+
+                    if transform['axis_name'] == ('rotation3' or 'translation3'):
+                        if axis_vector != (0,0,1):
+                            has_standard_axes = False
+                            transform_axes_warning_list.append(joint_name)                                       
                         
 
                
