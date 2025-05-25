@@ -952,6 +952,12 @@ class ImportOpenSimModel(Operator):
                     coordinate_Rz = joint['coordinates'][0]
 
 
+                if joint['joint_type'] == 'PlanarJoint': #if the joint type is a PlanarJoint, manually set the coordinates
+                    coordinate_Rz = joint['coordinates'][0]
+                    coordinate_Tx = joint['coordinates'][1]
+                    coordinate_Ty = joint['coordinates'][2]
+
+
 
                 if parent_body_name == 'ground': #set position and orientation in parent to nan, since these are equal to global.
                     #I'm assuming ground never has a rotation or orientation.
@@ -987,7 +993,7 @@ class ImportOpenSimModel(Operator):
                 #Deal with non-standard axes explicitly            
                 if not has_standard_axes and joint['joint_type'] == 'CustomJoint':
                     
-                    print(joint_name)
+                    
                     joint_obj = bpy.data.objects[joint_name] #get the newly created joint in Blender
                     joint_obj['transform_axes'] = {}
                     joint_obj['transform_axes']['type'] = 'OpenSim' #to track from what type of model the 'transform_axes' are defined 

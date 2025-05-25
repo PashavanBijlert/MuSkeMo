@@ -498,8 +498,7 @@ class ImportTrajectorySTO(Operator):
                
                 joint.keyframe_insert('rotation_euler', frame = frame_number)
                 joint.keyframe_insert('location', frame = frame_number)
-                if joint.name == 'L_hip':
-                        print('hoi')
+                
 
             activation_traj_row = activation_trajectories_rs[i,:] #row i of the resampled coordinate trajectory
             
