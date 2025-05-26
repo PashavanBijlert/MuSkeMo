@@ -136,9 +136,10 @@ class SetCompositorBackgroundGradient(Operator):
 
 class ConvertMusclesToVolumetricViz(Operator):
     bl_idname = "visualization.convert_muscles_to_volumetric"
-    bl_label = "Use volumetric visualizations for all the muscles in the model. Currently not reversible."  #not sure what bl_label does, bl_description gives a hover tooltip
-    bl_description = "Use volumetric visualizations for all the muscles in the model. Currently not reversible."
-    
+    bl_label = "Use volumetric visualizations for all the muscles in the model."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Use volumetric visualizations for all the muscles in the model. "
+    bl_options = {"UNDO"} #enable undoing
+
     def execute(self, context):
         
         muskemo = bpy.context.scene.muskemo
@@ -161,28 +162,40 @@ class ConvertMusclesToVolumetricViz(Operator):
 
         for muscle in coll.objects:
 
-            if muscle['MuSkeMo_type']== 'MUSCLE':
+            if muscle.get('MuSkeMo_type')== 'MUSCLE':
                 muscle_name = muscle.name #eg cfl1_r
                 
+                if muscle_name + '_VolumetricMuscleViz' in muscle.modifiers: #if it already has volumetric muscles, skip this muscle
+                    continue
+                # Get modifier index in stack
+                mod_index = list(muscle.modifiers).index(muscle.modifiers[muscle_name + '_SimpleMuscleViz'])
+
                 ## remove simple muscle viz node
-                muscle.modifiers.remove(muscle.modifiers[ muscle_name + '_SimpleMuscleViz'])
-                
+                muscle.modifiers.remove(muscle.modifiers[muscle_name + '_SimpleMuscleViz'])
+                                
                 ## get muscle volume
                 vol = muscle['F_max']/specific_tension*muscle['optimal_fiber_length']
                 
-                #set up the muscle node tree and set volume 
-                node_tree_copy = node_tree.copy() #copy of node_tree from the template
-                node_tree_copy.name = muscle_name + '_musclenodetree'
-                
-                #node_tree_copy.nodes['Muscle volume'].outputs['Value'].default_value = vol #set volume
-                #print(node_tree_copy)
-                #node_tree_copy.nodes['Group Input'].outputs['MuscleVolume'].default_value = vol #set volume
-                #node_tree_copy.nodes['MuscleVolume'].inputs[0].default_value = vol #set volume
+                #
+                node_tree_name = muscle_name + '_musclenodetree'
+
+                if node_tree_name not in bpy.data.node_groups: #if the node group doesn't exist (creating it for the first ime)
+                    #set up the muscle node tree and set volume 
+                    node_tree_copy = node_tree.copy() #copy of node_tree from the template
+                    node_tree_copy.name = node_tree_name
                     
-                ### set the existing muscle material in the node
-                mat = bpy.data.materials[muscle_name]
-                node_tree_copy.nodes['Set muscle material'].inputs['Material'].default_value = mat
-                
+                    #node_tree_copy.nodes['Muscle volume'].outputs['Value'].default_value = vol #set volume
+                    #print(node_tree_copy)
+                    #node_tree_copy.nodes['Group Input'].outputs['MuscleVolume'].default_value = vol #set volume
+                    #node_tree_copy.nodes['MuscleVolume'].inputs[0].default_value = vol #set volume
+                        
+                    ### set the existing muscle material in the node
+                    mat = bpy.data.materials[muscle_name]
+                    node_tree_copy.nodes['Set muscle material'].inputs['Material'].default_value = mat
+
+                else: #if the node tree already exists (multiple successive conversions from tube to volumetric and back)
+                    node_tree_copy = bpy.data.node_groups[node_tree_name]
+                    
                 #create a new geometry node for the muscle, and set the node tree we just made
                 geonode = muscle.modifiers.new(name = muscle_name + '_VolumetricMuscleViz', type = 'NODES') #add modifier to muscle
                 geonode.node_group = node_tree_copy
@@ -191,8 +204,58 @@ class ConvertMusclesToVolumetricViz(Operator):
                 
                 #Ensure the last modifier is the bevel modifier
                 n_modifiers = len(muscle.modifiers)
-                muscle.modifiers.move(n_modifiers-1, n_modifiers-2) #new modifiers are placed at the end, index is n_modifiers-1. Place it at n_modifiers-2
+       
+                muscle.modifiers.move(n_modifiers-1, mod_index) #new modifiers are placed at the end, place it at where the original visualization modifier was.
         return {"FINISHED"}
+    
+
+
+class ConvertMusclesToSimpleViz(Operator):
+    bl_idname = "visualization.convert_muscles_to_simple_tube"
+    bl_label = "Use simple tube visualizations for all the muscles in the model."  #not sure what bl_label does, bl_description gives a hover tooltip
+    bl_description = "Use simple tube visualizations for all the muscles in the model."
+    bl_options = {"UNDO"} #enable undoing
+
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+        
+        coll_name = muskemo.muscle_collection
+        coll = bpy.data.collections[coll_name]
+
+        ### add simple muscle visualization modifier
+        if "SimpleMuscleNode" not in bpy.data.node_groups: #if the node group doesn't exist
+            from .simple_muscle_viz_node import (create_simple_muscle_node_group, add_simple_muscle_node)
+            create_simple_muscle_node_group() #create the node group
+            
+
+        else:
+            from .simple_muscle_viz_node import add_simple_muscle_node
+ 
+        
+        for muscle in coll.objects:
+
+            if muscle.get('MuSkeMo_type')== 'MUSCLE':
+                muscle_name = muscle.name #eg cfl1_r
+                
+                if muscle_name + '_SimpleMuscleViz' in muscle.modifiers: #if it already has simple tube muscles, skip this muscle
+                    continue
+
+                # Get modifier index in stack
+                mod_index = list(muscle.modifiers).index(muscle.modifiers[muscle_name + '_VolumetricMuscleViz'])
+
+                ## remove simple muscle viz node
+                muscle.modifiers.remove(muscle.modifiers[muscle_name + '_VolumetricMuscleViz'])         
+
+                ## add the node group
+
+                add_simple_muscle_node(muscle_name)
+                
+                #Ensure the last modifier is the bevel modifier
+                n_modifiers = len(muscle.modifiers)
+       
+                muscle.modifiers.move(n_modifiers-1, mod_index) #new modifiers are placed at the end, placs are placed at the end, place it at where the original visualization modifier was.
+        return {"FINISHED"}    
 
 
 from .. import VIEW3D_PT_MuSkeMo  #the super class in which all panels will be placed
@@ -241,6 +304,12 @@ class VIEW3D_PT_visualization_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cla
 
         row = self.layout.row()
         row.operator("visualization.convert_muscles_to_volumetric",text = 'Convert to volumetric muscles')
+
+        row = self.layout.row()
+        row.operator("visualization.convert_muscles_to_simple_tube",text = 'Convert to simple (tube) muscles')
+
+
+
         ### ground plane
         row = self.layout.row()
         row = self.layout.row()
@@ -248,7 +317,7 @@ class VIEW3D_PT_visualization_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cla
         row.operator("visualization.create_ground_plane", text = 'Create a ground plane')
 
         row = self.layout.row()
-        row.operator("visualization.set_recommended_render_settings", text = 'Set recommended render settings')
+        #row.operator("visualization.set_recommended_render_settings", text = 'Set recommended render settings')
 
         
         row = self.layout.row()

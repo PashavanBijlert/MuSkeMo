@@ -170,38 +170,45 @@ def add_simple_muscle_node(muscle_name):
     
     # Create a new node group for the geometry node
     node_group_name = f"{muscle_name}_SimpleMuscleViz"
-    node_group = bpy.data.node_groups.new(node_group_name, 'GeometryNodeTree')
 
-    # Create Group Input and Group Output nodes
-    group_input = node_group.nodes.new('NodeGroupInput')
-    group_output = node_group.nodes.new('NodeGroupOutput')
+    if node_group_name not in bpy.data.node_groups: #if the node group is new
 
-    # Set locations for Group Input and Output nodes
-    group_input.location = (-400, 0)
-    group_output.location = (400, 0)
+        node_group = bpy.data.node_groups.new(node_group_name, 'GeometryNodeTree')
 
-    # Create input sockets using the provided code snippet
-    node_group.interface.new_socket(name='Geometry', description="", in_out='INPUT', socket_type='NodeSocketGeometry', parent=None)  # Create Geometry input socket
-    node_group.interface.new_socket(name='Radius', description="", in_out='INPUT', socket_type='NodeSocketFloat', parent=None)  # Create Radius input socket
+        # Create Group Input and Group Output nodes
+        group_input = node_group.nodes.new('NodeGroupInput')
+        group_output = node_group.nodes.new('NodeGroupOutput')
 
-    # Create output socket for Geometry
-    node_group.interface.new_socket(name='Geometry', description="", in_out='OUTPUT', socket_type='NodeSocketGeometry', parent=None)  # Create Geometry output socket
+        # Set locations for Group Input and Output nodes
+        group_input.location = (-400, 0)
+        group_output.location = (400, 0)
 
-    # Add the existing SimpleMuscleNode
-    simple_muscle_node = node_group.nodes.new('GeometryNodeGroup')
-    simple_muscle_node.node_tree = bpy.data.node_groups.get('SimpleMuscleNode')
-    simple_muscle_node.location = (0, 0)
+        # Create input sockets using the provided code snippet
+        node_group.interface.new_socket(name='Geometry', description="", in_out='INPUT', socket_type='NodeSocketGeometry', parent=None)  # Create Geometry input socket
+        node_group.interface.new_socket(name='Radius', description="", in_out='INPUT', socket_type='NodeSocketFloat', parent=None)  # Create Radius input socket
 
-    # Create Set Material node
-    set_material_node = node_group.nodes.new('GeometryNodeSetMaterial')
-    set_material_node.location = (200, 0)
-    set_material_node.inputs['Material'].default_value = bpy.data.materials.get(muscle_name)  # Set material to muscle_name
+        # Create output socket for Geometry
+        node_group.interface.new_socket(name='Geometry', description="", in_out='OUTPUT', socket_type='NodeSocketGeometry', parent=None)  # Create Geometry output socket
 
-    # Link the nodes: Input -> SimpleMuscleNode -> Set Material -> Output
-    node_group.links.new(group_input.outputs['Geometry'], simple_muscle_node.inputs['Curve'])  # Geometry link
-    node_group.links.new(group_input.outputs['Radius'], simple_muscle_node.inputs['Radius'])      # Radius link
-    node_group.links.new(simple_muscle_node.outputs['Geometry'], set_material_node.inputs['Geometry'])  # SimpleMuscleNode to Set Material link
-    node_group.links.new(set_material_node.outputs['Geometry'], group_output.inputs['Geometry'])  # Set Material to Group Output link
+        # Add the existing SimpleMuscleNode
+        simple_muscle_node = node_group.nodes.new('GeometryNodeGroup')
+        simple_muscle_node.node_tree = bpy.data.node_groups.get('SimpleMuscleNode')
+        simple_muscle_node.location = (0, 0)
+
+        # Create Set Material node
+        set_material_node = node_group.nodes.new('GeometryNodeSetMaterial')
+        set_material_node.location = (200, 0)
+        set_material_node.inputs['Material'].default_value = bpy.data.materials.get(muscle_name)  # Set material to muscle_name
+
+        # Link the nodes: Input -> SimpleMuscleNode -> Set Material -> Output
+        node_group.links.new(group_input.outputs['Geometry'], simple_muscle_node.inputs['Curve'])  # Geometry link
+        node_group.links.new(group_input.outputs['Radius'], simple_muscle_node.inputs['Radius'])      # Radius link
+        node_group.links.new(simple_muscle_node.outputs['Geometry'], set_material_node.inputs['Geometry'])  # SimpleMuscleNode to Set Material link
+        node_group.links.new(set_material_node.outputs['Geometry'], group_output.inputs['Geometry'])  # Set Material to Group Output link
+
+
+    else: #if the node group already exists in the scene (multiple successive conversions between volumetric and tube)
+        node_group = bpy.data.node_groups[node_group_name]
 
     # Create a new Geometry Nodes modifier on the object and assign the node group
     modifier = obj.modifiers.new(name=node_group_name, type='NODES')

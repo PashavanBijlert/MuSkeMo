@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build and visualize musculoskeletal models for use in 3rd party physics simulators",
     "blender" : (4, 0, 0),
-    "version" : (0, 9, 6),
+    "version" : (0, 9, 7),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
@@ -133,7 +133,7 @@ from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_mode
 from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel,
                                           VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                           CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
-                                           ConvertMusclesToVolumetricViz,
+                                           ConvertMusclesToVolumetricViz,ConvertMusclesToSimpleViz,
                                     ImportTrajectorySTO,#these are separate scripts)
                                     )
 #### Anatomical (local) reference frame panel
@@ -256,7 +256,7 @@ classes = (  #Global settings panel
                                 VIEW3D_PT_visualization_panel, VIEW3D_PT_import_trajectory_subpanel, 
                                 VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                 CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
-                               ConvertMusclesToVolumetricViz,
+                               ConvertMusclesToVolumetricViz,ConvertMusclesToSimpleViz,
 
                                 ImportTrajectorySTO, # separate script
 
