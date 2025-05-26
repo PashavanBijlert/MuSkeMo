@@ -2,11 +2,11 @@
 
 ![Horse multipanel figure](./MuSkeMo%20manual/figures/Multipanel%20figure%20cropped.png?raw=true)
 
-Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in Blender versions between 4.1-4.3.
+Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in Blender versions between 4.1-4.4.
 
-To download: Click on the latest release on the right, and download "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
+To download: Navigate to the [releases page](https://github.com/PashavanBijlert/MuSkeMo/releases) and download the most recent version of "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
-To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, you may need to use the legacy installer.
+To install: In Blender, go to Edit > preferences > Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, you may need to use the legacy installer. Installation (including without administrator privileges) is covered in the first video tutorial.
 
 # **How to use**
 
