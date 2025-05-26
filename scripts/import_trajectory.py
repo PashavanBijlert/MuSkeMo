@@ -22,6 +22,7 @@ class ImportTrajectorySTO(Operator):
     bl_description = "Import a trajectory in .sto file format to create an animation"
     bl_idname = "visualization.import_trajectory_sto"
     bl_label = "Import .sto strajectory to create an animation"
+    bl_options = {"UNDO"} #enable undoing
 
 
     # This section is based on importhelper
