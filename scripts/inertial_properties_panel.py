@@ -402,6 +402,12 @@ class ExpandConvexHullCollectionOperator (Operator):
                     continue
 
             hull = bpy.data.objects[CH_name[h]]
+            bpy.context.view_layer.objects.active = hull
+            hull.select_set(True)
+            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+            hull.select_set(False)
+
+
             eCH_name = CH_name[h] + "_expanded" #expanded convex hull object name
 
             if eCH_name in bpy.data.objects: #ensure a unique name, just in case the name is already in use.
@@ -418,6 +424,8 @@ class ExpandConvexHullCollectionOperator (Operator):
         
             hull_copy = copy_object(hull, eCH_name) #copy the mesh
             eCH_coll.objects.link(hull_copy)  #add the new mesh to the eCH collection
+
+            
             ## ADD a check for if it already exists
         
             obj = bpy.data.objects[eCH_name]   #
@@ -432,6 +440,10 @@ class ExpandConvexHullCollectionOperator (Operator):
             vol_mirrored = vol_before #vol mirrored gets overwritten if it's an axial segment
             #### symmetrization ####
             if any([s in obj.name for s in ['head', 'neck', 'torso', 'tail']]):     #If head, neck, torso or tail are in the name
+                bpy.ops.object.select_all(action='DESELECT') #Deselect all, then select desired object  
+                obj.select_set(True)               # select the hull
+                bpy.ops.object.transform_apply()
+                
                 obj.modifiers.new('mirror','MIRROR')     #add a mirror modifier to generate a symmetric hull
                 obj.modifiers['mirror'].use_axis[0] = False
                 obj.modifiers['mirror'].use_axis[2] = True # set to 1 if z up
@@ -477,12 +489,14 @@ class ExpandConvexHullCollectionOperator (Operator):
             
             #### directional scaling ####
             if any([s in obj.name for s in ['head', 'neck', 'torso', 'tail', 'forearm', 'hand', 'toe']]):        
-                bpy.ops.transform.resize(value=(1,sf,sf))   # scale along y and z
-                bpy.ops.object.transform_apply()
+                obj.scale = (1, sf, sf)
+                #bpy.ops.transform.resize(value=(1,sf,sf))   # scale along y and z
+                
             else:
-                bpy.ops.transform.resize(value=(sf,1,sf))   # scale along x and z
-                bpy.ops.object.transform_apply()
-                    
+                obj.scale = (sf, 1, sf)
+                #bpy.ops.transform.resize(value=(sf,1,sf))   # scale along x and z
+                
+            bpy.ops.object.transform_apply()        
             mass, CoM_book, mass_I_com, vol_after, volumetric_I_com   = inertial_properties(obj) #this recomputes the volume of the mirrored duplicated object, which is probably larger
 
         return {'FINISHED'}        
