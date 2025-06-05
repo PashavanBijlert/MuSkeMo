@@ -477,8 +477,8 @@ class ExpandConvexHullCollectionOperator (Operator):
                 expansion_factor_allo = MSE_corr_vol / vol_before
                 expansion_factor = expansion_factor_allo
 
-                self.report({'ERROR'}, "Logarithmic per-segment expansion is currently disabled awaiting clarification from the lead authors")
-                return {'FINISHED'}
+                self.report({'WARNING'}, "Logarithmic per-segment expansion is currently experimental, pending clarification from the lead authors. It is recommended you double-check the acquired results")
+                #return {'FINISHED'}
                 
 
                 

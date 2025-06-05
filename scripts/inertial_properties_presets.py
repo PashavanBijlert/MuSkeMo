@@ -29,7 +29,22 @@ InertialPropertiesPresets = {
          [0.002,    0.73,	  0.2,	0.387,     0.888,	  0.677,  1.127,   0.951,	0.788,	      0.908,  0.745],#log intercept
          [0.978,   0.961,	1.039,	0.984,	    1.09,	  1.045,  1.106,   1.051,	1.075,	      1.074,  1.067],#log slope
          [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068]),#log mean squared errors, MSE (can leave 0)
+        "Macaulay 2023 Logarithmic Non-Avian Sauropsid":
+        (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"],
+         [0.002,    0.73,	  0.2,	0.387,     0.888,	  0.677,  1.127,   0.951,	0.788,	      0.908,  0.745],#log intercept
+         [0.978,   0.961,	1.039,	0.984,	    1.09,	  1.045,  1.106,   1.051,	1.075,	      1.074,  1.067],#log slope
+         [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068]),#log mean squared errors, MSE (can leave 0)
+        "Coatham 2021 Logarithmic Mammal (rewritten volumetric)":
+        (["upperarm", "forearm",  "hand",	"thigh",	"shank",	"foot",	"head",	"neck",	"torso", "tail1", "tail2", "tail3",	"tail4"],
+         [-0.0576,   -0.02998,      -0.237,  0.378,   -0.0631,    -0.0368, -0.0908, 0.0898,-0.0338,-0.0375,  -0.287,  -0.361,   -0.411],#log intercept
+         [8.79E-01, 9.09E-01,  9.51E-01,   9.43E-01,  9.21E-01,  9.90E-01,9.35E-01, 8.71E-01,9.35E-01,8.90E-01,8.70E-01,8.84E-01,8.74E-01],#log slope
+         [5.72E-02, 4.96E-02, 4.11E-04, 1.10E-01,  2.56E-03,   7.80E-04, 2.22E-02, 2.06E-01, 0, 2.37E-04, 1.15E-03, 1.98E-04, 8.93E-05]),#log mean squared errors, MSE (can leave 0)
+       
         },
+
+
+
+
     "Logarithmic whole body mass": { #estimate whole body mass using a power curve of convex hulls of the whole body
         "Wright 2024 Logarithmic Tetrapods":
         (["whole_body"],
