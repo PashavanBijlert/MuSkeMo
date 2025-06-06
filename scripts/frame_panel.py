@@ -507,11 +507,11 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         primary_axis = axes_strings[0]
         temp_axis = axes_strings[1]
         
-        if 'X' and 'Y' in construction_mode:
+        if ('X' in construction_mode and 'Y' in construction_mode):
             plane = 'XY'
-        elif 'X' and 'Z' in construction_mode:
+        elif ('X' in construction_mode and 'Z' in construction_mode):
             plane = 'XZ'
-        elif 'Y' and 'Z' in construction_mode:
+        elif ('Y' in construction_mode and 'Z' in construction_mode):
             plane = 'YZ'
 
 
