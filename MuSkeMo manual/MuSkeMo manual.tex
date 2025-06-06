@@ -135,6 +135,7 @@ MuSkeMo uses the following units:
     \item \textbf{Angle:} Degrees (\si{\degree}, only for pennation angle). Internally MuSkeMo uses radians during computations.
 \end{itemize}
 
+
 \textbf{WARNING:} Blender's default units are in metres. Many of the calculations in MuSkeMo are derived from the spatial position of individual points (vertices) of the 3D meshes. If you change the base units of Blender, these calculations are also implicitly scaled, and the units will no longer be correct (e.g., if you change Blender’s base units to centimetres, linear dimensions will be off by a factor of 100, but volumetrics and inertial properties will be off by a factor of 100\(^3\)). MuSkeMo currently only officially supports metres as the base unit, correct scaling of the outputs if using other units is up to the user.
 
 \subsection{A Note on Precision}
@@ -230,8 +231,9 @@ It is possible to change the density property of an object, after which you will
 Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons \cite{sellersMinimumConvexHull2012a,brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,coathamConvexHullEstimation2021,macaulayDecouplingBodyShape2023,wrightVolumetricElementscalingMass2024,batesRunningPerformanceAustralopithecus2025}.
 In this subpanel, you can automatically generate convex hulls around (skeletal) meshes in a collection, and then apply methods from the literature to reconstruct the inertial properties.
 
-You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a separate collection. Each separate object in the collection will receive its own convex hull,
- so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012a,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection.
+You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a different collection. Each separate object in the collection will receive its own convex hull, so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012a,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection. 
+
+The recommended workflow is to organize all the skeletal meshes in a single collection. Ensure that all the skeletal meshes contain the correct segment names in their full name (see below). Then, generate the minimal convex hulls, and use one of the expansion modes to expand those convex hulls.
 
 
 \subsubsection{Expand convex hulls} 
@@ -240,7 +242,7 @@ Both the expansion panels (arithmetic and logarithmic) work with segment names a
 
 If segment 1 is not "whole\_body", or if you have more than one segment name defined in the panel, MuSkeMo tries to match whatever segment names you have typed into the panel to the names of the objects in your target collection. E.g., if you've typed "neck" as one of the segment names in the panel, with a corresponding scale factor, all the objects in Convex hull collection that have the case-sensitive word "neck" in their name will be expanded by the scale factor (e.g., "neck\_1", "neck\_prox.obj", but not "Neck\_1" and also not "torso"). The "Expansion Template" dropdown menu gives several presets from the literature, and you can customize them if desired.
 
-MuSkeMo assumes you want bilaterally symmetric models, and therefore when using the expansion functions, MuSkeMo generates bilaterally symmetric expanded hulls for the following segments: "head", "neck", "torso", "tail". Furthermore, MuSkeMo also applies directional scaling. The following segments are scaled about the Y and Z axes (and thus not the X axis): "head", "neck", "torso", "tail", "forearm", "hand", "toe". All other segments are scaled about the X and Z axes. The resultant scaled shapes may not be very biologically realistic. You could add a "Maintain volume" constraint and change the shape in Blender (this was a suggestion by Matt Dempsey). Apply the constraint after you are satisfied.
+MuSkeMo assumes you want bilaterally symmetric models, and therefore when using the expansion functions, MuSkeMo generates bilaterally symmetric expanded hulls for the following segments: "head", "neck", "torso", "tail" (meaning the target skeletal objects should have those strings in their names). Furthermore, MuSkeMo also applies directional scaling. The following segments are scaled about the Y and Z axes (and thus not the X axis): "head", "neck", "torso", "tail", "forearm", "hand", "toe". All other segments are scaled about the X and Z axes. The resultant scaled shapes may not be very biologically realistic. You could add a "Maintain volume" constraint and change the shape in Blender (this was a suggestion by Matt Dempsey). Apply the constraint after you are satisfied.
 
 Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansion factors (i.e., linear scale factors) to scale your hulls. If a segment initially has a volume of 1 \si{m^3} and a scale factor of 1.2, the resultant segment will have a volume of 1.2 \si{m^3}. 
 
@@ -250,23 +252,10 @@ Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansio
     \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The per-segment "Croc\_Lizard" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The per-segment "Av." average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012a}. This is the first introduction of this method, and the user is warned that the the Sellers 2012 curve was not calibrated using direct measurements of body mass for the analyzed skeletons \cite{sellersMinimumConvexHull2012a}.
-    \item  
 \end{itemize}
 
-Under \textbf{Expand convex hulls - logarithmic}, it will be possible to use log-transformed regression equations from the literature to scale your hulls. This functionality is currently disabled, pending clarification from the authors. See equation \ref{eq:powercurve} to see how the allometric power curves are treated.
-
-\begin{itemize}
-    \item \textbf{Custom:} Type in the segment names, and the desired scale factor.
-    \item \textbf{Macaulay 2023 Logarithmic Bird:} The logarithmic per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S4.
-    \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The logarithmic per-segment "Non avian sauropsid" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S5.
-    \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The logarithmic per-segment "all taxa" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S3.
-\end{itemize}
-
-
-
-\subsubsection{Whole body mass from convex hulls}
-
-Several studies have regressed total body mass to summed convex hulls of the entire body, as an approach to estimate total body mass from skeletons \cite{brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,wrightVolumetricElementscalingMass2024}. The equations have the form:
+Under \textbf{Expand convex hulls - logarithmic}, it is possible to use log-transformed regression equations from the literature to scale your hulls. 
+The equations have the form:
 
 \begin{equation}
 y = 10^a \cdot x^{b} \cdot 10^{\epsilon /2}
@@ -274,7 +263,43 @@ y = 10^a \cdot x^{b} \cdot 10^{\epsilon /2}
 \end{equation}
 
 
-This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the computed mass.  \(\epsilon\) is the mean squared error of the regression, which is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,newmanRegressionAnalysisLogtransformed1993}. Where \(\epsilon\) was not reported by the original studies, MuSkeMo sets it to 0, which implies a small, systematic, underestimation of the fitted power curve.
+This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the scaled hull volume.  \(\epsilon\) is the mean squared error of the regression, which is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,newmanRegressionAnalysisLogtransformed1993}. Where \(\epsilon\) was not or inconsistenly reported by the original studies, MuSkeMo sets it to 0, which implies a small, systematic, underestimation of the predictions by the power curve.
+
+
+\begin{itemize}
+    \item \textbf{Custom:} Type in the segment names, and the desired scale factor.
+    \item \textbf{Macaulay 2023 Logarithmic Bird:} The logarithmic per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S4.
+    \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The logarithmic per-segment "Non avian sauropsid" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S5.
+    \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The logarithmic per-segment "all taxa" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S3.
+    \item \textbf{Coatham 2021 Logarithmic Mammal (rewritten volumetric):} The logarithmic per-segment mammal equations from Coatham et al. 2021 \cite{coathamConvexHullEstimation2021}. This implementation factors out the density to transform them into volumetric expansions, see below. 
+\end{itemize}
+
+
+
+Coatham et al. directly regressed convex hull mass against CT-based tissue outline mass, assuming a constant density of \(\rho\) = 1000 \si{kg m^{-3}}. Because this essentially gives a constant factor, these can be factored out to create volumetric equations as follows:
+
+\begin{equation}
+\begin{aligned}
+y \cdot \rho &= 10^a \cdot (x \cdot \rho )^{b} \cdot 10^{\epsilon / 2} \\
+y &= 10^a \cdot \rho^{b} / \rho  \cdot x^{b} \cdot 10^{\epsilon / 2} \\
+y &= 10^a \cdot \rho^{b - 1} \cdot x^{b} \cdot 10^{\epsilon / 2}
+\end{aligned}
+\end{equation}
+
+
+Here, y is still the expanded volume, and x is the convex hull volume. The original a can then be replaced with: 
+
+
+\begin{equation}
+a_{\text{new}} = \log_{10} \left( 10^a \cdot \rho^{b - 1} \right)
+\end{equation}
+
+
+
+
+\subsubsection{Whole body mass from convex hulls}
+
+Several studies have regressed total body mass to summed convex hulls of the entire body, as an approach to estimate total body mass from skeletons \cite{brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,wrightVolumetricElementscalingMass2024}. 
 
 For the mass estimation equations, x is the summed volume of the convex hulls of all the body segments in \si{m^3}, and y is the computed total body mass in \si{kg}.
 
