@@ -544,7 +544,11 @@ class MuSkeMoProperties(PropertyGroup):
         default = "Expanded hulls",
         maxlen = 1024,
         )
-    
+    apply_bias_correction: BoolProperty(
+        name = 'Apply bias correction',
+        description='Apply the retransformation bias correction with the mean squared errors when using the logarithmic prediction equations. Deselecting this ignored the values for mean squared errors.',
+        default = True,
+    )
 
     
 ####

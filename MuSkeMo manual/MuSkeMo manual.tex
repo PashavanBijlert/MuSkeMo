@@ -263,7 +263,7 @@ y = 10^a \cdot x^{b} \cdot 10^{\epsilon /2}
 \end{equation}
 
 
-This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the scaled hull volume.  \(\epsilon\) is the mean squared error of the regression, which is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,newmanRegressionAnalysisLogtransformed1993}. Where \(\epsilon\) was not or inconsistenly reported by the original studies, MuSkeMo sets it to 0, which implies a small, systematic, underestimation of the predictions by the power curve.
+This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the scaled hull volume.  \(\epsilon\) is the mean squared error (MSE) of the regression, which is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,newmanRegressionAnalysisLogtransformed1993}. Where \(\epsilon\) was not or inconsistenly reported by the original studies, MuSkeMo sets it to 0 in the expansion templates, which implies a small, systematic, underestimation of the predictions by the power curve. By unticking the box "Apply Bias Correction", the bias correction is not applied during expansion even if the template has a value pre-filled (i.e., setting MSE to zero during the computations).
 
 
 \begin{itemize}
@@ -271,7 +271,7 @@ This is known as an allometric power curve, and is the result of an ordinary lea
     \item \textbf{Macaulay 2023 Logarithmic Bird:} The logarithmic per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S4.
     \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The logarithmic per-segment "Non avian sauropsid" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S5.
     \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The logarithmic per-segment "all taxa" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S3.
-    \item \textbf{Coatham 2021 Logarithmic Mammal (rewritten volumetric):} The logarithmic per-segment mammal equations from Coatham et al. 2021 \cite{coathamConvexHullEstimation2021}. This implementation factors out the density to transform them into volumetric expansions, see below. 
+    \item \textbf{Coatham 2021 Logarithmic Mammal (rewritten volumetric):} The logarithmic per-segment mammal equations from Coatham et al. 2021 \cite{coathamConvexHullEstimation2021}. This implementation factors out the density to transform them into volumetric expansions, see below. MuSkeMo squares their ``root mean squared errors'' (RMSE) to acquire mean squared errors (\(\epsilon\) in eq. \ref{eq:powercurve}), but sets it to zero for the torso segment because the reported RMSE for the torso (3.42) leads to a bias correction factor of \(7 \cdot 10^{5}\).
 \end{itemize}
 
 

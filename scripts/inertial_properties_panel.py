@@ -804,6 +804,9 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         op = row.operator("inprop.expand_convex_hull_collection", text="Expand convex hulls")
         op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
 
+        row = self.layout.row()
+
+        row.operator("apply_bias_correction", text = "Apply bias correction")
 
 # Panel for whole body mass estimation from convex hulls
 class VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):
