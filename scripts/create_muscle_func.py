@@ -30,13 +30,21 @@ def create_muscle (muscle_name, point_position, body_name = '',
         if 'MUSCLE' == bpy.data.objects[muscle_name]['MuSkeMo_type']: #if the existing object is a MuSkeMo type MUSCLE
             new_musc = False  #new_musc is false, we add a point to the existing muscle
 
-
-    
+ 
 
 
     if new_musc:  #if new_musc is true, we first create a new muscle
 
-                
+
+        if muscle_name in bpy.data.curves:
+            #If a muscle was deleted, its curve data can remain until restarting the scene.
+            #If the user tries to recreate a muscle with the same name, the existing curve data will cause a conflict. 
+            #Here we delete it manually
+            old_curve = bpy.data.curves[muscle_name]
+            bpy.data.curves.remove(old_curve)
+
+        
+
         bpy.data.curves.new(muscle_name, type='CURVE') #create new curve data
         curve = bpy.data.curves[muscle_name] #direct reference to the curve
 
