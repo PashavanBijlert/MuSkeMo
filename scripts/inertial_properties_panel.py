@@ -332,6 +332,7 @@ class ExpandConvexHullCollectionOperator (Operator):
         CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
         eCH_colname = muskemo.expanded_hull_collection #Collection that will contain the expanded convex hulls
 
+        apply_bias_correction = muskemo.apply_bias_correction #bool for if we should correct for retransformation bias using 10**(MSE/2)
 
         if CH_colname not in bpy.data.collections:
             self.report({'ERROR'}, "A collection with the name '" + CH_colname + "' does not exist. Which collection contains the convex hulls? Type that into the 'Convex hull collection' field")
@@ -472,6 +473,9 @@ class ExpandConvexHullCollectionOperator (Operator):
                 slope = log_slopes[ind]
                 MSE = log_MSEs[ind]
 
+                if not apply_bias_correction: #if apply_bias_correction is False, we set MSE to zero
+                    MSE = 0
+
                 uncorrected_vol = 10**intercept *vol_before**slope #volume without MSE correction
                 MSE_corr_vol = uncorrected_vol*10**(MSE/2) #MSE corrected volume
                 expansion_factor_allo = MSE_corr_vol / vol_before
@@ -533,6 +537,8 @@ class WholeBodyMassFromConvexHullsOperator (Operator):
         CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
         #eCH_colname = muskemo.expanded_hull_collection #Collection that will contain the expanded convex hulls
 
+        apply_bias_correction = muskemo.apply_bias_correction #bool for if we should correct for retransformation bias using 10**(MSE/2)
+
 
         if CH_colname not in bpy.data.collections:
             self.report({'ERROR'}, "A collection with the name '" + CH_colname + "' does not exist. Which collection contains the convex hulls? Type that into the 'Convex hull collection' field")
@@ -566,7 +572,8 @@ class WholeBodyMassFromConvexHullsOperator (Operator):
         log_slope = logarithmic_parameters['log_slope']
         log_MSE = logarithmic_parameters['log_MSE']
 
-
+        if not apply_bias_correction: #if apply_bias_correction is False, we set MSE to zero
+            log_MSE = 0
         
         total_body_mass = 10**log_intercept * vol**log_slope * 10**(log_MSE/2)
 
@@ -806,7 +813,7 @@ class VIEW3D_PT_expand_convex_hulls_logar_subpanel(VIEW3D_PT_MuSkeMo, Panel):
 
         row = self.layout.row()
 
-        row.operator("apply_bias_correction", text = "Apply bias correction")
+        row.prop(muskemo, "apply_bias_correction")
 
 # Panel for whole body mass estimation from convex hulls
 class VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Panel):
@@ -882,6 +889,9 @@ class VIEW3D_PT_whole_body_mass_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
         #### Compute whole body mass operator
         row = self.layout.row()
         op = row.operator("inprop.compute_whole_body_mass_ch", text="Compute whole body mass")
+        
+        row = self.layout.row()
+        row.prop(muskemo, "apply_bias_correction")
         #op.arithmetic_or_logarithmic = 'logarithmic' #set the custom property
 
 class MUSKEMO_UL_InPropSegmentList(UIList):
@@ -960,4 +970,4 @@ class VIEW3D_PT_segment_inprops_from_convex_hull_subpanel(VIEW3D_PT_MuSkeMo, Pan
 
         #### Compute whole body mass operator
         row = layout.row()
-        row.operator("inprop.compute_segment_inprops_ch", text="Compute segment inertial properties")
+        #row.operator("inprop.compute_segment_inprops_ch", text="Compute segment inertial properties")

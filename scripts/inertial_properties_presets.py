@@ -18,22 +18,19 @@ InertialPropertiesPresets = {
         (["head", "neck", "torso", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"], #segment types
          [-0.085, 0.008, 0.213, 0.001, 0.017, 0.124, 0.487, 0.322, -0.402, 0.21], #log intercept
          [0.982, 0.892, 1.018, 0.95, 0.963, 1.012, 0.975, 1.021, 0.946, 1.002], #log slope
-         [0.021, 0.037, 0.017, 0.044, 0.04, 0.057, 0.038, 0.022, 0.018, 0.034]), #log mean squared errors, MSE (can leave 0)
-        "Macaulay 2023 Logarithmic All Taxa (Bird and Non-Avian Sauropsid)": 
-        (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"],
-         [-0.085,  0.008,	0.213,	0.387,	   0.001,	  0.017,  0.124,   0.487,	0.322,	     -0.402,   0.21], #log intercept
-         [ 0.982,  0.892,	1.018,	0.984,	    0.95,	  0.963,  1.012,   0.975,	1.021,        0.946,  1.002], #log slope
-         [ 0.027,  0.033,	0.016,	0.079,	    0.04,	  0.037,  0.051,   0.032,	0.021,	      0.022,  0.038]),#log mean squared errors, MSE (can leave 0)
+#         [0.021, 0.037, 0.017, 0.044, 0.04, 0.057, 0.038, 0.022, 0.018, 0.034]), #log mean squared errors, MSE (can leave 0)
+         [0.0,    0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,   0.0]), #log mean squared errors, set to 0 because Macaulay et al reported a different error estimate
+#        "Macaulay 2023 Logarithmic All Taxa (Bird and Non-Avian Sauropsid)": 
+#        (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"],
+#         [-0.085,  0.008,	0.213,	0.387,	   0.001,	  0.017,  0.124,   0.487,	0.322,	     -0.402,   0.21], #log intercept
+#         [ 0.982,  0.892,	1.018,	0.984,	    0.95,	  0.963,  1.012,   0.975,	1.021,        0.946,  1.002], #log slope
+#         [ 0.027,  0.033,	0.016,	0.079,	    0.04,	  0.037,  0.051,   0.032,	0.021,	      0.022,  0.038]),#log mean squared errors, MSE (can leave 0)
         "Macaulay 2023 Logarithmic Non-Avian Sauropsid":
         (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"],
          [0.002,    0.73,	  0.2,	0.387,     0.888,	  0.677,  1.127,   0.951,	0.788,	      0.908,  0.745],#log intercept
          [0.978,   0.961,	1.039,	0.984,	    1.09,	  1.045,  1.106,   1.051,	1.075,	      1.074,  1.067],#log slope
-         [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068]),#log mean squared errors, MSE (can leave 0)
-        "Macaulay 2023 Logarithmic Non-Avian Sauropsid":
-        (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"],
-         [0.002,    0.73,	  0.2,	0.387,     0.888,	  0.677,  1.127,   0.951,	0.788,	      0.908,  0.745],#log intercept
-         [0.978,   0.961,	1.039,	0.984,	    1.09,	  1.045,  1.106,   1.051,	1.075,	      1.074,  1.067],#log slope
-         [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068]),#log mean squared errors, MSE (can leave 0)
+#         [0.034,   0.028,	0.017,	0.079,	   0.041,	  0.038,   0.04,   0.029,	0.029,	      0.046,  0.068]),#log mean squared errors, MSE (can leave 0)
+         [0.0,    0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,   0.0]), #log mean squared errors, set to 0 because Macaulay et al reported a different error estimate
         "Coatham 2021 Logarithmic Mammal (rewritten volumetric)":
         (["upperarm", "forearm",  "hand",	"thigh",	"shank",	"foot",	"head",	"neck",	"torso", "tail1", "tail2", "tail3",	"tail4"],
          [-0.0576,   -0.02998,      -0.237,  0.378,   -0.0631,    -0.0368, -0.0908, 0.0898,-0.0338,-0.0375,  -0.287,  -0.361,   -0.411],#log intercept
