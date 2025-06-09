@@ -1,5 +1,6 @@
 import bpy
 from mathutils import (Vector, Matrix)
+import numpy as np
 def write_joints(context, filepath, collection_name, delimiter, number_format, self):
     from .euler_XYZ_body import euler_XYZbody_from_matrix
     from .quaternions import quat_from_matrix
@@ -8,8 +9,11 @@ def write_joints(context, filepath, collection_name, delimiter, number_format, s
 
     for obj in coll.objects:
         if 'default_pose' in obj: #If joints are exported without parenting they don't have a default pose
+            worldmat = np.array(obj.matrix_world)
+            default_pose = np.array(obj['default_pose'])
 
-            if obj.matrix_world != Matrix(obj['default_pose']):
+            if not np.allclose(worldmat, default_pose, atol = 1e-6): #compare matrices with abstol of 1e-6, to account for single precision in Blender
+       
                 self.report({'ERROR'}, "Joint '" + obj.name + "' has a parent or child assigned in a different pose than the current pose. Reset the model to the default pose (using the button), or reparent the joint. Operation cancelled")
                 return {'FINISHED'}
 

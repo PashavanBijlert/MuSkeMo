@@ -1,5 +1,6 @@
 import bpy
 from mathutils import (Vector, Matrix)
+import numpy as np
 def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type, number_format, self):  #write location and parent body. This is reused for both contacts and landmarks.
     
     #### obj_type is a string, either "contact" or "landmark", or something else if you reuse this further
@@ -10,8 +11,11 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
 
     for obj in coll.objects:
         if 'default_pose' in obj: #remove this if statement once landmarks also have a default pose
+            worldmat = np.array(obj.matrix_world)
+            default_pose = np.array(obj['default_pose'])
 
-            if obj.matrix_world != Matrix(obj['default_pose']):
+            if not np.allclose(worldmat, default_pose, atol = 1e-6): #compare matrices with abstol of 1e-6, to account for single precision in Blender
+       
                 self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default  (using the button), or reparent the contact. Operation cancelled")
                 return {'FINISHED'}
 
