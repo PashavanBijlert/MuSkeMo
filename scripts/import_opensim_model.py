@@ -622,6 +622,11 @@ class ImportOpenSimModel(Operator):
         # Frame related user inputs
         frame_colname = bpy.context.scene.muskemo.frame_collection
         frame_size = bpy.context.scene.muskemo.frame_axes_size
+
+        # Lists that tracks errors or warnings
+        skipped_geoms = [] #empty list that will be populated if the geoms aren't found, only in the local import mode
+        transform_axes_warning_list = [] #list to which we will add OpenSim joints for a warning about transform axes that were not aligned with the joint itself. Only in local import mode
+
         
         if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions
             
@@ -734,8 +739,7 @@ class ImportOpenSimModel(Operator):
          
         else: #if using local definitions
             
-            transform_axes_warning_list = [] #list to which we will add OpenSim joints for a warning about transform axes that were not aligned with the joint itself.
-
+           
             def build_joint_tree(joint_data, parent_body):
                 # Find all joints where the parent_body is the current body
                 child_joints = {}
@@ -759,7 +763,7 @@ class ImportOpenSimModel(Operator):
             stack = list(joint_tree.items())
             frames = {} #initialize a frames dict
 
-            skipped_geoms = [] #empty list that will be populated if the geoms aren't found
+            
             
             
 
