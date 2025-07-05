@@ -726,6 +726,7 @@ class MuSkeMoProperties(PropertyGroup):
                 ('Y-Xt', "Specify Y-axis and X-temp direction (for XY plane)", ""),
                 ('Z-Xt', "Specify Z-axis and X-temp direction (for XZ plane)", ""),
                 ('Z-Yt', "Specify Z-axis and Y-temp direction (for YZ plane)", ""),
+                ('Manual placement', "Manual placement (at 3D cursor position)", ""),
               ],
         default = "X-Yt",
         )
