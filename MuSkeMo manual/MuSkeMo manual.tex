@@ -9,6 +9,7 @@
 \usepackage{geometry}   % To set page dimensions
 \usepackage{wrapfig}
 
+\usepackage{placeins}   % For the use of floatbarrier for figure placement
 \usepackage{fancyhdr}   % For custom headers/footers
 \usepackage{parskip}    % For paragraph spacing
 \usepackage{enumitem}   % For better itemize/enumerate spacing
@@ -417,7 +418,7 @@ If "Export length and moment arm" is selected, a CSV (or other file, see \ref{se
 
 \textbf{Warning:} While the moment arms computed by MuSkeMo are physically accurate (Fig. \ref{fig:momentarmscombined}), they are slightly noisy when using wrapping, in the order of 0.015\% of the value of the moment arm, see \ref{sec:momentarmvalidation} for details. Readers intending to perform simulations using the exported moment arms themselves (instead of exporting full models for simulations), may want to smooth the wrapping moment arms before use.
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
     %\vspace{-155pt}
     \centering
     \includegraphics[width=1\textwidth]{figures/HKA_momentarms_emu.eps} % Add image
@@ -431,11 +432,13 @@ If "Export length and moment arm" is selected, a CSV (or other file, see \ref{se
 
 The plotting subpanel provides the user with some flexibility to alter the plots. Change the parameters in the panel, and then press "(Re)generate a muscle plot", which updates the length or moment arm plot of the muscle in question. The plotter can only (re)generate a plot for muscles where "length\_data" were previously computed in the moment arms subpanel.
 
+\FloatBarrier %forces the figure to display before starting the next section
+
 \subsection{Anatomical \& local reference frames panel}
+\label{sec:framepanel}
 
 Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. The user defines a primary axis using two markers, and a temporary axis direction using a third, which together span a plane. The secondary axis is computed as perpendicular to the plane, and then the tertiary axis is mutually perpendicular to the first two axes. The reference frame is placed at the user-specified origin position.
-
-The user has to define four positions (using \ref{sec:landmarks} is recommended, but not required):
+The user has to define four positions (using landmarks, sec. \ref{sec:landmark} and \ref{sec:landmarkpanel} is recommended, but not required):
 
 \begin{itemize}
 \item Primary axis start
@@ -481,12 +484,20 @@ For an arbitrary matrix \(\mathbf{I}\) expressed in \(\mathcal{G}\) (e.g., an in
 Readers familiar with linear algebra will recognize this as a similarity transformation, using a change of basis matrix.
 
 \subsection{Landmark \& marker panel}
+\label{sec:landmarkpanel}
 
-Similar to muscle points, landmarks are added to the 3D cursor location.
+Similar to muscle points, landmarks (sec. \ref{sec:landmark}) are added to the 3D cursor location. Type in a unique name for the landmark, place the 3D cursor in the desired location (shift + right mouse button), select the target mesh, and press the "create landmark" button. If the target mesh already has a parent body, you can also select the parent body instead. 
+
+Landmarks are always parented to bodies (sec. \ref{sec:body}), not to the meshes themselves. Thus, if your target mesh does not have a parent body, MuSkeMo automatically creates one, and attaches the target mesh to that body as visual geometry (sec. \ref{sec:geometry}). MuSkeMo warns the user when this has occured. The newly created body will have the name ``[meshname]\_pbody''. When the user attempts to add a landmark to a mesh, MuSkeMo informs the user that the landmark was instead attached to the parent body.
+
+If you are adding landmarks to visual geometry so that you can define local frames in the Anatomical \& local reference frames panel (sec. \ref{sec:framepanel}), it is recommended that you first create bodies with your desired names, and attach those visual geometry to those bodies. Otherwise, MuSkeMo will automatically parent the meshes to newly created bodies, and you will have to detach them later on.
+
+Some people make a distinction between a landmark (projected onto a bone surface) and a marker (any reference position), hence the name of the panel.
+
 
 \subsection{Contact panel}
 
-Similar to muscle points, contacts are added to the 3D cursor location. Contacts can also be assigned a parent body.
+Similar to muscle points, contacts are added to the 3D cursor location. Type in a unique name for the landmark, place the 3D cursor in the desired location (shift + right mouse button), and press the "create contact" button. Contacts can also be assigned a parent body, similar to joints.
 
 \subsection{Export panel}
 \label{sec:exportpanel}
@@ -503,17 +514,18 @@ You can currently import bodies, joints, muscles, frames, and contacts, if they 
 
 \subsubsection{OpenSim model import}
 \label{sec:opensimimporter}
-MuSkeMo provides an OpenSim importer. This can import most of the components of an OpenSim model. Although the default behavior is to import models using local definitions, it is also possible to import models using global definitions (i.e., all the component positions are defined as their position in the global frame, and for joints specifically, transformations in parent and child are both set to the global position and orientation). Global definition import is probably only useful for models that were created using MuSkeMo's conversion script, using the "Global definitions" option.
+MuSkeMo provides an OpenSim importer. This can import most of the components of an OpenSim model. The default behavior is to import models using local definitions, which means that all the local frames are created expicitly during model import. Each body's local \ref{sec:frame} a distinct object in the scene. If you are unsure which import mode to use, this is the option to select (which is why it is the default).
+
+It is also possible to import models using global definitions - this is only useful for \textit{models created using MuSkeMo's conversion scripts, using the ``Global definitions" option}. In essence, this import mode assumes that all the component positions are defined as their position in the global frame, and for joints specifically, transformations in parent and child are both set to the global position and orientation. Local frames are not created. Because this mode assumes a very particular OpenSim model setup, there is less robust support for error-checking of the Geometry folder, and ``non-standard'' transform axes are not supported (see below).
 
 During import, cylinder wrapping is supported (see \ref{sec:musclewrapping} and \ref{sec:wrapgeom}). MuSkeMo's wrapping definitions are different from OpenSim, and the importer tries to convert wrapping definitions. If the wrapping does not visualize correctly, it may be necessary to change the projection angle (combined with enabling "force wrap"), selecting "flip wrap", or "shortest wrap", depending on the situation. See \ref{sec:musclewrapping} for a full description of MuSkeMo's wrapping.
 
-\textbf{Warning:} Blender does not allow \textit{any} object name to be reused. This means that all of your model components need to have unique names in MuSkeMo (so e.g., if a body is named 'shank\_r', and it has only one wrapping object, it still cannot be named 'shank\_r'. It would need a unique name such as 'shank\_wrap\_r'). If all components don't have unique names, the OpenSim importer may fail. The importer currently checks whether frames and wrapping objects have non-unique names, but not other model components.
+\textbf{Warning:} Blender does not allow \textit{any} object name to be reused. This means that all of your model components need to have unique names in MuSkeMo (so e.g., if a body is named 'shank\_r', and it has only one wrapping object, it still cannot be named 'shank\_r'. It would need a unique name such as 'shank\_wrap\_r'). If any component has a non-unique name, the OpenSim importer may fail. The importer currently checks whether frames and wrapping objects have non-unique names, but not other model components.
 
 MuSkeMo does not support conditional or moving path points. These are automatically converted to regular path points during model import. For moving path points, the point position is selected that corresponds to the position when the controlling joint coordinate is equal to 0.
 
 OpenSim models with \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1CustomJoint.html}{CustomJoints} (and perhaps other joint types with a \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1SpatialTransform.html}{SpatialTransform}) can have \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1TransformAxis.html}{Transform Axes} that are different from the joint's principal axes, or have a specific user-defined order. In essence, Custom Joints allow users to define custom rotation application order about arbitrary axes, and allows translations about arbitrary axes as well (and the translation and orientation axes do not need to match). Such flexibility is not currently possible in MuSkeMo, R1 is always coordinate\_Rx (about the joint's local (1,0,0) axis), R2 is always coordinate\_Ry, and R3 is always coordinate\_Rz, and Tx, Ty, and Tz are about the same axes as the rotational axes. If a CustomJoint defines a different rotation order than Rx - Ry - Rz, and/or defines any of the transformations about different axes than (1,0,0), (0,1,0), or (0,0,1) (in that specific order), then the transform axes are treated as ``non standard". In this situation, MuSkeMo stores the name of the ``rotation1" coordinate as the ``coordinate\_Rx" (regardless of whether it originally encoded an x-axis rotation), ``rotation2" as ``coordinate\_Ry", and ``rotation3" as ``coordinate\_Rz", and the same for the translatory coordinates. The custom transform axes are stored as a Python dictionary in a custom property named ``transform\_axes". These transform axes are mapped onto the joint rotations themselves when importing trajectories (see \ref{sec:trajectoryimport}), using axis-angle rotations (see sec. \ref{sec:axisanglerotation}) in x-y-z order (thus preserving the user-defined custom order that was encoded in the CustomJoint). MuSkeMo warns the user during model import if such transform axes were detected and stored in a joint's custom data.
 Non-standard axes are also assumed when the root joint's default pose is not aligned with the global reference frame.
-
 
 
 OpenSim models require a joint that connects the model to the ground that decides the global degrees of freedom (MuSkeMo calls this a root joint). If a user creates an OpenSim model without defining a root joint, OpenSim automatically creates one (or multiple) \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1FreeJoint.html}{FreeJoints}, without any frames defined within the joint. If such a model is imported into MuSkeMo using local definitions, MuSkeMo creates these implicit frames at the origin, and guesses the intended OpenSim naming convention.
@@ -663,6 +675,7 @@ COM is always reported in the global reference frame, and MOI is always computed
 The underlying object type in Blender is an "Empty".
 
 \subsection{GEOMETRY}
+\label{sec:geometry}
 
 Visual geometry (e.g., bone meshes, or tissue outline meshes) can be attached to bodies for visualization purposes. In most simulators, these don’t have a physical function, but are purely used for visualization purposes and for determining where muscle attachments are relative to the bodies. 
 
@@ -775,7 +788,7 @@ The underlying object type in Blender is a UV sphere mesh. This object is essent
 \subsection{LANDMARK}
 \label{sec:landmark}
 
-A \texttt{LANDMARK} in MuSkeMo refers to a user-specified point on a rigid body or geometry. Landmarks are currently immediately parented to visual geometry, and can be used to help define (anatomical or local) reference frames. Future updates will include support for parenting to bodies, and exporting/importing global and local positions.
+A \texttt{LANDMARK} in MuSkeMo refers to any user-specified point in 3D space, and can be used to help define (anatomical or local) reference frames (sec. \ref{sec:frame}). Landmarks are always parented to bodies (sec. \ref{sec:body}), even when selecting a mesh to add landmarks to (see sec. \ref{sec:landmarkpanel} for details on how this is handled). Thus, if you are adding landmarks to a visual geometry so that you can define local reference frames, it is best to first attach the visual geometry to the body in question, because otherwise the Landmark panel will automatically create a body and attach the geometry to it.
 
 The underlying Blender object type is a UV sphere mesh.
 
@@ -812,7 +825,7 @@ MuSkeMo implements two different sphere fitting algorithms, described in \cite{J
 
 Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (but currently not yet Gaitsym models) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. To achieve parametric wrap geometry, WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface). Currently, only cylinders are supported.
 
-WRAP geometry are the physical objects that muscles can be assigned to wrap around, but the actual curve wrapping is achieved with modifiers on individual muscles (see \ref{musclewrapping}).
+WRAP geometry are the physical objects that muscles can be assigned to wrap around, but the actual curve wrapping is achieved with modifiers on individual muscles (see \ref{sec:musclewrapping}).
 
 Just like JOINTS, WRAPS have parent bodies, and orientations and positions with respect to parent frames if those are assigned to the body. Unique to WRAP are the following properties:
 
