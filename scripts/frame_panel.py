@@ -65,8 +65,8 @@ class AssignPlaneLandmarkOperator(Operator):
 
 class ConstructFrameOperator(Operator):
     bl_idname = "frame.construct_frame"
-    bl_label = "Constructs a new anatomical (local) reference frame"
-    bl_description = "Constructs a new anatomical (local) reference frame"
+    bl_label = "Constructs a new anatomical (local) reference frame from markers"
+    bl_description = "Constructs a new anatomical (local) reference frame from markers"
     
     def execute(self, context):
         
@@ -184,6 +184,52 @@ class ConstructFrameOperator(Operator):
         muskemo.framename = ''
         
         return {'FINISHED'}
+    
+
+class ConstructFrame3DCursorOperator(Operator):
+    bl_idname = "frame.construct_frame_at_cursor"
+    bl_label = "Constructs a new anatomical (local) reference frame at the 3D cursor position"
+    bl_description = "Constructs a new anatomical (local) reference frame at the 3D cursor position"
+    
+    def execute(self, context):
+        
+        muskemo = bpy.context.scene.muskemo
+
+        
+        refframe_name = muskemo.framename
+
+        #Ensure name is specified
+        if not refframe_name:
+            self.report({'ERROR'}, "You did not specify a name for the FRAME. Choose a unique (unused) name for the new FRAME. Operation cancelled.")
+            return {'FINISHED'}
+
+
+
+        #Ensure unique name
+        if refframe_name in bpy.data.objects:
+            self.report({'ERROR'}, "An object with the name '" + refframe_name + "' already exists in the scene. Choose a unique (unused) name for the new FRAME. Operation cancelled.")
+            return {'FINISHED'}
+
+        origin = bpy.context.scene.cursor.location  #3D cursor location is the target position of the frame
+
+
+        colname = muskemo.frame_collection  #target collection
+
+        size = muskemo.frame_axes_size
+
+        gRl = Matrix(np.eye(3)) #3x3 identity matrix for the orientation of the frame
+
+        #local to global rotation matrix, 3x3. Columns are the axes directions in the global frame.
+        
+        from .create_frame_func import create_frame
+        create_frame(name=refframe_name, size = size, 
+                     pos_in_global = origin, gRb = gRl,
+                     collection_name = colname,
+                     parent_body = 'not_assigned',)
+        
+        muskemo.framename = ''
+        
+        return {'FINISHED'}    
 
 
 class AssignFrameParentBodyOperator(Operator):
@@ -496,23 +542,10 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         muskemo = scene.muskemo
         layout = self.layout
         
-        from .selected_objects_panel_row_func import CreateSelectedObjRow
+        from .selected_objects_panel_row_func import CreateSelectedObjRow #dynamic object selection
 
         CreateSelectedObjRow('FRAME', layout)
         CreateSelectedObjRow('LANDMARK', layout)
-        
-        #
-        construction_mode = muskemo.frame_construction_mode
-        axes_strings = construction_mode.split('-')
-        primary_axis = axes_strings[0]
-        temp_axis = axes_strings[1]
-        
-        if ('X' in construction_mode and 'Y' in construction_mode):
-            plane = 'XY'
-        elif ('X' in construction_mode and 'Z' in construction_mode):
-            plane = 'XZ'
-        elif ('Y' in construction_mode and 'Z' in construction_mode):
-            plane = 'YZ'
 
 
         # Row for frame collection
@@ -533,43 +566,66 @@ class VIEW3D_PT_frame_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming conventio
         split.label(text="Construction mode")
         split.prop(muskemo,  "frame_construction_mode", text = "")
         
-        # Row for Assign as frame origin
-        row = self.layout.row()
-        split = row.split(factor=1/3)
-        split.operator("frame.assign_origin", text="Assign frame origin")
-        sub_split = split.split(factor=0.5)
-        sub_split.label(text="Origin Landmark")
-        sub_split.prop(muskemo, "or_landmark_name", text="")
 
-        # Row for primary axis marker 1
-        row = self.layout.row()
-        split = row.split(factor=1/3)
-        split.operator("frame.assign_primary_axis_start_landmark", text="Assign " + primary_axis + " start")
-        sub_split = split.split(factor=0.5)
-        sub_split.label(text= primary_axis + " Direction Start Landmark")
-        sub_split.prop(muskemo, "primary_axis_start_landmark_name", text="")
 
-        # Row for primary axis marker 2
-        row = self.layout.row()
-        split = row.split(factor=1/3)
-        split.operator("frame.assign_primary_axis_end_landmark", text="Assign " + primary_axis + " end")
-        sub_split = split.split(factor=0.5)
-        sub_split.label(text= primary_axis + " Direction End Landmark")
-        sub_split.prop(muskemo, "primary_axis_end_landmark_name", text="")
+        ### dynamic panel rows
 
-        # Row for Assign temp axis /  plane landmark 2
-        row = self.layout.row()
-        split = row.split(factor=1/3)
-        split.operator("frame.assign_plane_landmark", text="Assign " + temp_axis.replace('t', '-temp') + " ("+ plane +" plane)")
-        sub_split = split.split(factor=0.5)
-        sub_split.label(text=temp_axis.replace('t', '-temp') + " ("+ plane +" Plane) Landmark")
-        sub_split.prop(muskemo, "plane_landmark_name", text="")
+        construction_mode = muskemo.frame_construction_mode
 
-        
-        
-        row = self.layout.row()
-        row.operator("frame.construct_frame", text="Construct Frame from Landmark Positions")
-        self.layout.row()
+        if "Manual placement" not in construction_mode: #if it's one of the marker-based placement modes
+
+            axes_strings = construction_mode.split('-')
+            primary_axis = axes_strings[0]
+            temp_axis = axes_strings[1]
+            
+            if ('X' in construction_mode and 'Y' in construction_mode):
+                plane = 'XY'
+            elif ('X' in construction_mode and 'Z' in construction_mode):
+                plane = 'XZ'
+            elif ('Y' in construction_mode and 'Z' in construction_mode):
+                plane = 'YZ'
+            # Row for Assign as frame origin
+            row = self.layout.row()
+            split = row.split(factor=1/3)
+            split.operator("frame.assign_origin", text="Assign frame origin")
+            sub_split = split.split(factor=0.5)
+            sub_split.label(text="Origin Landmark")
+            sub_split.prop(muskemo, "or_landmark_name", text="")
+
+            # Row for primary axis marker 1
+            row = self.layout.row()
+            split = row.split(factor=1/3)
+            split.operator("frame.assign_primary_axis_start_landmark", text="Assign " + primary_axis + " start")
+            sub_split = split.split(factor=0.5)
+            sub_split.label(text= primary_axis + " Direction Start Landmark")
+            sub_split.prop(muskemo, "primary_axis_start_landmark_name", text="")
+
+            # Row for primary axis marker 2
+            row = self.layout.row()
+            split = row.split(factor=1/3)
+            split.operator("frame.assign_primary_axis_end_landmark", text="Assign " + primary_axis + " end")
+            sub_split = split.split(factor=0.5)
+            sub_split.label(text= primary_axis + " Direction End Landmark")
+            sub_split.prop(muskemo, "primary_axis_end_landmark_name", text="")
+
+            # Row for Assign temp axis /  plane landmark 2
+            row = self.layout.row()
+            split = row.split(factor=1/3)
+            split.operator("frame.assign_plane_landmark", text="Assign " + temp_axis.replace('t', '-temp') + " ("+ plane +" plane)")
+            sub_split = split.split(factor=0.5)
+            sub_split.label(text=temp_axis.replace('t', '-temp') + " ("+ plane +" Plane) Landmark")
+            sub_split.prop(muskemo, "plane_landmark_name", text="")
+
+                    
+            row = self.layout.row()
+            row.operator("frame.construct_frame", text="Construct Frame from Landmark Positions")
+            self.layout.row()
+
+        else: #Manual placement, frame is placed at 3D cursor
+
+            row = self.layout.row()
+            row.operator("frame.construct_frame_at_cursor", text="Construct Frame at 3D cursor")
+            self.layout.row()
 
         from .selected_objects_panel_row_func import CreateSelectedObjRow
         CreateSelectedObjRow('BODY', layout)

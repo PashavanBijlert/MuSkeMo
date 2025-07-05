@@ -142,7 +142,7 @@ from .scripts.frame_panel import (VIEW3D_PT_frame_panel,
                                 AssignPrimaryAxisStartLandmarkOperator,
                                 AssignPrimaryAxisEndLandmarkOperator,
                                 AssignPlaneLandmarkOperator, 
-                                ConstructFrameOperator, 
+                                ConstructFrameOperator, ConstructFrame3DCursorOperator,
                                 AssignFrameParentBodyOperator,ClearFrameParentBodyOperator,)
 
 #### Landmark & marker panel
@@ -266,7 +266,7 @@ classes = (  #Global settings panel
                                 AssignPrimaryAxisStartLandmarkOperator,
                                 AssignPrimaryAxisEndLandmarkOperator,
                                 AssignPlaneLandmarkOperator,
-                                ConstructFrameOperator,
+                                ConstructFrameOperator, ConstructFrame3DCursorOperator,
                                 AssignFrameParentBodyOperator,ClearFrameParentBodyOperator,
 
             #landmark & marker panel
