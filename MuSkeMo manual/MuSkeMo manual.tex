@@ -437,8 +437,8 @@ The plotting subpanel provides the user with some flexibility to alter the plots
 \subsection{Anatomical \& local reference frames panel}
 \label{sec:framepanel}
 
-Construct anatomical and local reference frames, by assigning landmarks or markers as the reference points to construct the axes directions. The user defines a primary axis using two markers, and a temporary axis direction using a third, which together span a plane. The secondary axis is computed as perpendicular to the plane, and then the tertiary axis is mutually perpendicular to the first two axes. The reference frame is placed at the user-specified origin position.
-The user has to define four positions (using landmarks, sec. \ref{sec:landmark} and \ref{sec:landmarkpanel} is recommended, but not required):
+Construct anatomical and local reference frames (sec. \ref{sec:frame}) by assigning reference points to construct the axes directions, or via manual placement. The user defines a primary axis using two markers, and a temporary axis direction using a third, which together span a plane. The secondary axis is computed as perpendicular to the plane. The tertiary axis is mutually perpendicular to the first two axes, and lies on the same plane as the temporary axis. The reference frame is placed at the user-specified origin position.
+You have to assign four positions:
 
 \begin{itemize}
 \item Primary axis start
@@ -447,7 +447,9 @@ The user has to define four positions (using landmarks, sec. \ref{sec:landmark} 
 \item Frame origin (this can be the same marker as any of the previous three, if desired)
 \end{itemize}
 
-All three axes ( \(X\), \(Y\) and \(Z\)) can be selected as the primary axis, or the temporary axis to define the plane. The panel thus has six "Construction modes" which can be selected from a dropdown menu:
+Each of these four positions is assigned by selecting a reference object, and pressing the corresponding ``assign" button. The position of those objects will be sampled when constructing the actual frame (using the "Construct Frames from landmark positions" button). It is recommended (but not mandatory) to use Landmarks as reference objects (see sec. \ref{sec:landmarkpanel} and \ref{sec:landmark}).
+
+All three axes ( \(X\), \(Y\) and \(Z\)) can be selected as the primary axis, or the temporary axis to define the plane. It is also possible to place the new frame manually (in which case the frame is placed at the 3D cursor position). The panel thus has seven "Construction modes" which can be selected from a dropdown menu:
 
 \begin{itemize}
     \item "Specify X-axis and Y-temp direction (for XY plane)".  
@@ -456,11 +458,11 @@ All three axes ( \(X\), \(Y\) and \(Z\)) can be selected as the primary axis, or
     \item "Specify Y-axis and X-temp direction (for XY plane)".
     \item "Specify Z-axis and X-temp direction (for XZ plane)".
     \item "Specify Z-axis and Y-temp direction (for YZ plane)".
+    \item "Manual placement (at 3D cursor position)"
 \end{itemize}
 
 
-As an example, when selecting the mode "Specify X-axis and Y-temp direction (for XY plane)": The frame will have its \(X\)-axis aligned to the direction specified by the primary axis start and end markers. The temp axis marker is used to define the \(XY\)-plane, and the \(Z\)-axis will be perpendicular to that plane (using a cross-product). The \(Y\) axis is found using another cross-product between the \(Z\) and \(X\) axes.
-
+As an example, when selecting the mode "Specify X-axis and Y-temp direction (for XY plane)": The frame will have its \(X\)-axis aligned to the direction specified by the primary axis start and end markers. The temp axis marker is used to define the \(XY\)-plane, and the \(Z\)-axis will be perpendicular to that plane (using a cross-product). The \(Y\) axis is found using another cross-product between the \(Z\) and \(X\) axes. This approach is commonly used to construct anatomical reference frames \cite{wuISBRecommendationsStandardization1995,wuISBRecommendationDefinitions2002,wuISBRecommendationDefinitions2005}.
 
 Local reference frames have a position and an orientation with respect to the global reference frame. If the global frame is denoted with the letter \(\mathcal{G}\), then the position of an arbitrary frame in the global reference frame can be written as the following vector: \(\vec{v}_{\mathcal{G}}\). Internally, orientations are stored through rotation matrices. The rotation matrix that rotates a vector from the local \(\mathcal{B}\)-frame to the global \(\mathcal{G}\)-frame can be written as: \({}^{\mathcal{G}} \mathbf{R}_{\mathcal{B}}\). The vectors describing the axes directions in the global frame form three mutually orthogonal basis vectors, and they form the three columns of the orientation (rotation) matrix.
 
