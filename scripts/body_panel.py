@@ -583,15 +583,24 @@ class GeometryIntersectionCheckerOperator(Operator):
             self.report({'ERROR'}, "Neither of the selected objects is a MESH. The mesh intersection checker only works on meshes. Select 2 meshes and try again.")
             return {'FINISHED'}
 
-        
 
-        ## replace with actual intersection checking logic
-        success = True  
+        #### check for intersections
 
-        if success:
-            self.result_message = "Operation completed successfully!"
+        from .two_object_intersection_func import check_bvh_intersection
+        #Get the dependency graph
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+
+        mesh_1_name = sel_meshes[0].name
+        mesh_2_name = sel_meshes[1].name
+
+        intersections = check_bvh_intersection(mesh_1_name, mesh_2_name, depsgraph)
+        #The output is pairs of intersecting polygons (if indeed these exist)
+
+                
+        if intersections:
+            self.result_message = mesh_1_name + " and " + mesh_2_name + " intersect with each other."
         else:
-            self.result_message = "Operation failed."
+            self.result_message = mesh_1_name + " and " + mesh_2_name + " do not intersect with each other."
 
         # Show popup after setting the message
         return context.window_manager.invoke_popup(self)
