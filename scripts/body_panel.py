@@ -637,7 +637,7 @@ class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  #
     bl_parent_id = 'VIEW3D_PT_body_panel'
     
     #bl_category = "Body panel"  # found in the Sidebar
-    bl_label = "Attach visual (bone) geometry"  # found at the top of the Panel
+    bl_label = "Visual (bone) geometry"  # found at the top of the Panel
     bl_context = "objectmode"
     
     bl_options = {'DEFAULT_CLOSED'}
