@@ -803,10 +803,41 @@ class FitEllipsoidOperator(Operator):
     bl_idname = "joint.fit_ellipsoid"
     bl_label = "Fit an ellipsoid to a selected mesh"
     bl_description = "Fit a ellipsoid to a selected mesh"
-    #source: https://github.com/marksemple/pyEllipsoid_Fit/blob/master/ellipsoid_fit.py
-    #based on: https://nl.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
+    #source: https://github.com/marksemple/pyEllipsoid_Fit/blob/master/ellipsoid_fit.py #Python implementation by Mark Semple
+    #based on: https://nl.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit #Original Matlab implementation by Yuri Petrov
     #Pasha van Bijlert modified this code to add a check for right-handed coordinate systems
     
+    """
+    Adapted from MATLAB code by Yury Petrov (2015)
+    Original source: https://www.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
+    Original license: BSD 2-Clause
+
+    Copyright (c) 2015, Yury Petrov
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    """
+
+
     def execute(self, context):
         
         active_obj = bpy.context.active_object  #should be the joint
