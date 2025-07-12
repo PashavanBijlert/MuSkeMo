@@ -351,7 +351,7 @@ In this panel, you can also attach visualization geometry (eg., bone meshes) to 
 The geometry subpanel also contains a mesh intersection checker. This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The Wikipedia page on Bounding Volume Hierarchies also gives an accessible explanation on how this works.
 
 
-\subsection{Joint panel}'
+\subsection{Joint panel}
 \label{sec:jointpanel}
 
 Create new joints by typing in a unique name and pressing 'Create new joint'. To and assign a parent or child body, select the joint and the target body, and press the respective button. 
