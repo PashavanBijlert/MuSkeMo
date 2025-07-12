@@ -184,7 +184,7 @@ Combining parenting and Blender's native object types does not provide all of th
 
 MuSkeMo uses both regular modifiers (which perform a predefined operation/modification on the object, e.g. the \href{https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/bevel.html}{Bevel modifier} is used to round the edges of muscle visualizations), but also several custom-made Geometry nodes modifiers.
 
-\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes} modifiers are a very powerful way perform a customized sequence of operations on a specific object. MuSkeMo uses custom-made geometry nodes modifiers for muscle visualization (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}), muscle wrapping \ref{sec:musclewrapping}, creating parametric wrap geometry \ref{sec:wrapgeom}, amongst other features. The most important inputs for most MuSkeMo's custom Geometry nodes are accessible from the modifier panel itself [FIGURE], but advanced Blender users can also dive into the nodes themselves for more in depth modifications to their behavior. Where possible MuSkeMo tries to reuse node groups, which means that it is possible to make global changes to geometry node behavior by changing the parameters of a single node group. For example, the visualization of all the muscles can be changed by modifying the underlying node groups (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}).
+\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes} modifiers are a very powerful way perform a customized sequence of operations on a specific object. MuSkeMo uses custom-made geometry nodes modifiers for muscle visualization (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}), muscle wrapping \ref{sec:musclewrapping}, creating parametric wrap geometry \ref{sec:wrapgeom}, amongst other features. The most important inputs for most MuSkeMo's custom Geometry nodes are accessible from the modifier panel itself, but advanced Blender users can also dive into the nodes themselves for more in depth modifications to their behavior. Where possible MuSkeMo tries to reuse node groups, which means that it is possible to make global changes to geometry node behavior by changing the parameters of a single node group. For example, the visualization of all the muscles can be changed by modifying the underlying node groups (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}).
 
 By default, MuSkeMo color codes each component (see \ref{sec:defaultcolors} for details).
 
@@ -405,11 +405,14 @@ The node uses a custom node group named "LiveLengthViewerNodeGroup", which is sh
 
 \subsubsection{Assigning wrapping}
 
-You can use the "Wrapping" subpanel to perform all the necessary steps to assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. Note that wrapping is currently only physically accurate (i.e., a true tangent solution) if each wrapping object is separated by at least one muscle point on both sides.
+You can use the ``Wrapping" subpanel to perform all the necessary steps to assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. Note that wrapping is currently only physically accurate (i.e., a true tangent solution) if each wrapped section is separated by at least one muscle point on both sides.
 
 \subsubsection{Parametric wraps}
-Wrapping geometries can be interactively resized using the inputs in the object's modifier (e.g., the cylinder). To achieve this in Blender, wrapping geometries are also generated using geometry nodes (see \ref{sec:wrapgeom} for details). When a muscle gets assigned a WRAP, it receives a very complex geometry nodes modifier (see \ref{sec:musclewrapping} for details). This geometry node modifier, amongst other inputs, requires the wrap object dimensions (e.g., cylinder radius and height) as inputs. In Blender, it is not straightforward to couple the wrap parameters of a muscle to the wrapping geometry, because they are two separate objects. Turning on "Parametric Wraps" before creating (or importing) a wrap achieves this behavior using \href{https://docs.blender.org/manual/en/latest/animation/drivers/introduction.html}{Blender Drivers}. \textbf{Having many drivers on simultaneously can reduce performance and cause instability. It is recommended to turn Parametric Wraps ON when constructing muscle paths and modifying them, and then to export the model, and reimport it into a new scene with Parametric Wraps turned OFF for further processing.}
+\label{sec:parametricwraps}
+Wrapping geometries can be interactively resized using the inputs in the object's modifier (e.g., the cylinder). To achieve this in Blender, wrapping geometries are also generated using geometry nodes (see \ref{sec:wrapgeom} for details). Note that this only affects the wrapping geometry itself.
+When a muscle gets assigned a WRAP, it receives a very complex geometry nodes modifier (see \ref{sec:musclewrapping} for details), and this wrapping node on the MUSCLE affects that specific muscle's wrapping behavior. This geometry node modifier on the muscle requires the wrap object dimensions (e.g., cylinder radius and height) as inputs, which is not straightforward to do in Blender, because the muscle and the wrapping geometry are two separate objects in the scene. Turning on ``Parametric Wraps" before creating (or importing) a wrap achieves this behavior using \href{https://docs.blender.org/manual/en/latest/animation/drivers/introduction.html}{Blender Drivers}. \textbf{Having many drivers on simultaneously can reduce performance and cause instability. It is recommended to turn Parametric Wraps ON when constructing muscle paths and modifying them, and then to export the model, and reimport it into a new scene with Parametric Wraps turned OFF for further processing.}
 
+If you want to make modifications to wrapping which were created while ``parametric wraps" was off, you will have to change their respective parameters (e.g., cylinder radius) both in on the wrapping object's modifier, and in the muscle's modifier.
 
 \subsubsection{Moment arms}
 
@@ -586,7 +589,7 @@ MuJoCo models have a similar possibility (see Sec. \ref{sec:mujocoimporter}.). M
 This subpanel includes several convenience tools to aid users who are new to animations in Blender. These are:
 
 \begin{itemize}
-    \item \textbf{Convert to volumetric muscles:} adds volumetric muscle visualization to each muscle in the scene. See section \ref{sec:volmuscleviz} for details.
+    \item \textbf{Convert to volumetric muscles:} adds volumetric muscle visualization to each muscle in the scene. See section \ref{sec:volmuscleviz} for details and settings for the visualizations.
     \item \textbf{Convert to simple (tube) muscles:} Converts the muscles back to simple (tube) visualizations. See section \ref{sec:simplemuscleviz} for details.
     \item \textbf{Create a ground plane:} adds a ground plane to the scene
     \item \textbf{Set recommended render settings:} sets the rendering engine to Cycles (see below), the device to GPU, Max samples to 1000, turns on persistent data (under performance), and sets the "Look" to very high contrast (under Color Management). \textbf{WARNING:} the Cycles rendering engine is a path tracing (raytracing) rendering engine. If you do not have access to a computer with a powerful GPU, rendering performance will be incredibly poor. In that case, you should switch to the Eevee rendering engine.
@@ -718,21 +721,33 @@ Under "Geometry nodes", with the "SimpleMuscleViz" node of a muscle selected, th
 Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
 
 \begin{itemize}
-\item{MuscleVolume:} Computed using each muscle's F\_max, optimal\_fiber\_length, and specific\_tension (set in the Visualization panel, see section \ref{sec:visualizationpanel}). The node setup adjusts the muscle's radius to keep the volume constant irrespective of the length.
-\item{MuscleTendonLengthRatio: } This decides the ratio of the muscle belly to the total musculotendon complex length. If set to 1, the muscle belly is stretched across the entire muscle's length. 
-\item{TendonMuscleRadiusRatio: } This sets the relative ratio of the tendon with respect to the muscle's radius. Set to 0 if you want no tendon visualization.
-\item{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
+\item \textbf{MuscleVolume:} Computed using each muscle's F\_max, optimal\_fiber\_length, and specific\_tension (set in the Visualization panel, see section \ref{sec:visualizationpanel}). The node setup adjusts the muscle's radius to keep the volume constant irrespective of the length.
+\item \textbf{MuscleTendonLengthRatio: } This decides the ratio of the muscle belly to the total musculotendon complex length. If set to 1, the muscle belly is stretched across the entire muscle's length. 
+\item \textbf{TendonMuscleRadiusRatio: } This sets the relative ratio of the tendon with respect to the muscle's radius. Set to 0 if you want no tendon visualization.
+\item \textbf{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
 \end{itemize}
 
 
 \subsubsection{Muscle wrapping}
 \label{sec:musclewrapping}
 
-MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric wrapping, using a custom-designed Geometry node. The wrapping node will give a true tangent-curve solution as long as there is maximum of one wrapping object between each pair of subsequent muscle points. Garner et al. \cite{garnerObstacleSetMethodRepresenting2000} propose an iterative root finding method for multi-object wrapping between two curve points, which is currently very challenging to implement using Geometry nodes. \textbf{If you add multiple wrapping objects per pair of muscle points, MuSkeMo only provides a true tangent curve solutions if each wrapped section is separated by a curve point.} 
+MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric wrapping, using a custom-designed Geometry node. Garner et al. \cite{garnerObstacleSetMethodRepresenting2000} propose an iterative root finding method for multi-object wrapping between two curve points, which is currently very challenging to implement using Geometry nodes. \textbf{If you add multiple wrapping objects per pair of muscle points, MuSkeMo only provides true tangent curve solutions if each wrapped section is separated by a curve point.} MuSkeMo adds a Geometry nodes modifier to the muscle for each wrapping object.
 
-\textbf{Wrapping will not work if any of the muscle curve points clip into the wrapping object.}
+\textbf{Wrapping will not work correctly if any of the muscle curve points clip into the wrapping object.}
 
-[Documentation about the wrapping settings to follow]
+Cylindric wrapping has the following settings, accessible via the wrapping modifiers:
+
+\begin{itemize}
+\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. Note that this only affects the geometry itself (and thus not the radius of the wrapped muscle), unless you checked "parametric wraps" before assigning the wrap to the muscle (see sec. \ref{sec:parametricwraps})
+\item \textbf{Wrap Cylinder Height:} Height of the cylinder
+\item \textbf{Flip Wrap:} This allows you to flip the sidedness of the wrap
+\item \textbf{Shortest Wrap:} This ensures the wrapping occurs on the side where the wrapped section would be shortest. Causes posture-dependent flipping if the curve moves to the other side of the wrapping geometry. Shortest wrap is ignored if Force Sided Wrap is enabled.
+\item \textbf{Force Sided Wrap:} Select this if you want to force a wrap in a specific projection direction, even when the curve is not intersecting the geometry. You have to specify the index of the pre-wrap point, and a projection angle. The wrap is active when the curve intersects the geometry, or when it is outside the geometry, on the opposite side of the projection direction.
+\item \textbf{Index Of Pre Wrap Point Starting At 1:} Specify the point after which you would like the wrapping to occur. This setting is ignored unless you select Force Sided Wrap.
+\item \textbf{Projection Angle:} By default, the projection direction is in the positive X-direction in the frame of reference of the wrapping geometry. The projection angle rotates the projection direction about the Z-axis of the wrapping geometry.
+\item \textbf{Wrapping Point Resolution} Number of points projected onto the wrapping geometry (if wrapping occurs). This only affects visualizations, not length computations. Setting this very high can reduce performance.
+\end{itemize}
+
 
 % Projection affects flips the wrap in two situations
 % 1) If force wrap is on, using a dot product, we find the clostest point between the wrap object center (2D projection) and the wrap crossing line.
@@ -740,8 +755,6 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 % 2) Take a vector frome pre to post wrapping point, in the wrapping frame. The arctan2 gives the phi_angle this is pointing in. If this angle is between 0 and pi (so in the first or second quadrant), we flip the wrap. This is assuming a projection angle of 0 (so the projection is in local X dir.). The projection angle shifts the relevant quadrants. So we compute if (phi_angle - proj angle ) is between 0 and pi.
 
 %shortest wrap uses a cross product between the wrap crossing points, then computes the dot product between that vector and the cylinder z-axis. This is used to flip the wrap if required.
-
-% \textbf{MuSkeMo currently does not yet support physically accurate wrapping,} and only provides a very experimental setup as an option during import for model visualizations. When the option is selected during import, muscles get one extra geometry node modifier per wrapping interaction. The "wrapping" is currently achieved by a node setup that projects the section of the muscle inside the wrapping object in a 180 degree arc onto the wrapping surface. This is not a minimal-distance wrapping approach, and is thus not physically realistic, but could potentially be useful for visualizations. The direction of the wrapping can be changed by changing the projection angle - accessible in the node setup. 0\degree means the wrap is projected around the positive $x$-direction of the wrapping object's local coordinate system, and the angle is the local $z$-angle.
 
 
 % The conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
@@ -828,9 +841,9 @@ MuSkeMo implements two different sphere fitting algorithms, described in \cite{J
 \subsection{WRAP}
 \label{sec:wrapgeom}
 
-Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (but currently not yet Gaitsym models) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. To achieve parametric wrap geometry, WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface). Currently, only cylinders are supported.
+Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (but currently not yet Gaitsym models) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface). Currently, only cylinders are supported.
 
-WRAP geometry are the physical objects that muscles can be assigned to wrap around, but the actual curve wrapping is achieved with modifiers on individual muscles (see \ref{sec:musclewrapping}).
+WRAP geometry are the physical objects that muscles can be assigned to wrap around, but the actual curve wrapping is achieved with modifiers on individual muscles (see \ref{sec:musclewrapping}). Unless you checked "parametric wraps", the wrap radius and height settings only affect the geometry dimensions, and the wrapping behavior will need to be defined in the Wrap modifier under the target muscle (see sec. \ref{sec:parametricwraps}).
 
 Just like JOINTS, WRAPS have parent bodies, and orientations and positions with respect to parent frames if those are assigned to the body. Unique to WRAP are the following properties:
 
@@ -1307,7 +1320,7 @@ r_m = -dl_m / d\phi_j
 
 The minus sign in eq. \ref{eq:momentarm} appears due to the convention in musculoskeletal simulators to define muscle contractile force as a positive scalar, even though muscle contraction results in a negative change in length.
 
-Accurate computations of moment arms therefore require correct application of local frames, positions and orientations, require accurate changes in muscle point positions when the joints are rotated, and also require accurate computations of the instantaneous muscle lengths in all of the different joint poses. Fig. \ref{fig:momentarmsindividual} compares the moment arms computed by MuSkeMo after importing an OpenSim model, to the moment arms of the same model computed by OpenSim 4.0 using the Matlab api. These are the same data that are combined into three plots in Fig. \ref{fig:momentarmscombined} Note that the moment arms computed by MuSkeMo will only match those computed by OpenSim if the model either omits wrapping, or uses only contact cylinders with a muscle point between each wrapping object.
+Accurate computations of moment arms therefore require correct application of local frames, positions and orientations, require accurate changes in muscle point positions when the joints are rotated, and also require accurate computations of the instantaneous muscle lengths in all of the different joint poses. Fig. \ref{fig:momentarmsindividual} compares the moment arms computed by MuSkeMo after importing an OpenSim model, to the moment arms of the same model computed by OpenSim 4.0 using the Matlab api. These are the same data that are combined into three plots in Fig. \ref{fig:momentarmscombined}. Note that the moment arms computed by MuSkeMo will only match those computed by OpenSim if the model only uses wrapping cylinders, with each wrapped section separated by a curve point (or if the model uses no wrapping at all).
 
 \begin{figure}[htbp]
     %\vspace{-155pt}
