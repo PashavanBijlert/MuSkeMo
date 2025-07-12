@@ -33,9 +33,6 @@
 % add more prose about number formatting
 % Write section about scaling
 
-% Moment arm computation validation figure
-% body segment property validation figure
-
 
 
 % Figures to add:
@@ -348,7 +345,7 @@ Inertial properties are not dynamic, if you move the source objects that the rig
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. Select the meshes and the target body, and press the button.
 
 \subsubsection{Checking geometry intersections}
-The geometry subpanel also contains a mesh intersection checker. This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The Wikipedia page on Bounding Volume Hierarchies also gives an accessible explanation on how this works.
+The geometry subpanel also contains a mesh intersection checker. This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works.
 
 
 \subsection{Joint panel}
@@ -408,7 +405,7 @@ The node uses a custom node group named "LiveLengthViewerNodeGroup", which is sh
 
 \subsubsection{Assigning wrapping}
 
-You can use the "Wrapping" subpanel to perform all the necessary steps to assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. 
+You can use the "Wrapping" subpanel to perform all the necessary steps to assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. Note that wrapping is currently only physically accurate (i.e., a true tangent solution) if each wrapping object is separated by at least one muscle point on both sides.
 
 \subsubsection{Parametric wraps}
 Wrapping geometries can be interactively resized using the inputs in the object's modifier (e.g., the cylinder). To achieve this in Blender, wrapping geometries are also generated using geometry nodes (see \ref{sec:wrapgeom} for details). When a muscle gets assigned a WRAP, it receives a very complex geometry nodes modifier (see \ref{sec:musclewrapping} for details). This geometry node modifier, amongst other inputs, requires the wrap object dimensions (e.g., cylinder radius and height) as inputs. In Blender, it is not straightforward to couple the wrap parameters of a muscle to the wrapping geometry, because they are two separate objects. Turning on "Parametric Wraps" before creating (or importing) a wrap achieves this behavior using \href{https://docs.blender.org/manual/en/latest/animation/drivers/introduction.html}{Blender Drivers}. \textbf{Having many drivers on simultaneously can reduce performance and cause instability. It is recommended to turn Parametric Wraps ON when constructing muscle paths and modifying them, and then to export the model, and reimport it into a new scene with Parametric Wraps turned OFF for further processing.}
@@ -428,11 +425,11 @@ If "Export length and moment arm" is selected, a CSV (or other file, see \ref{se
     %\vspace{-155pt}
     \centering
     \includegraphics[width=1\textwidth]{figures/HKA_momentarms_emu.eps} % Add image
-    \caption{Moment arms of the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, computed by MuSkeMo and exported as .csv files, compared to those computed by OpenSim 4.0 using the Matlab API. See section \ref{sec:momentarmvalidation} for details. A python script that performs a moment arm analysis is provided in the Utilities folder \ref{sec:muskemoutilities}}
+    \caption{Moment arms of the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}, computed by MuSkeMo and exported as .csv files, compared to those computed by OpenSim 4.0 using the Matlab API. See section \ref{sec:momentarmvalidation} for details. A python script that performs a moment arm analysis is provided in the Utilities folder \ref{sec:muskemoutilities}}. Note that this comparison gives identical results because the emu model uses only cylinder wrapping, and that each wrapping cylinder is separated by at least one muscle curve.
     \label{fig:momentarmscombined}
 \end{figure}
 
-%example figure of difference in my emu, made using an automated script that will be dumped in the utilities folder
+
 \subsubsection{Plotting}
 \label{sec:plotting}
 
@@ -1310,7 +1307,7 @@ r_m = -dl_m / d\phi_j
 
 The minus sign in eq. \ref{eq:momentarm} appears due to the convention in musculoskeletal simulators to define muscle contractile force as a positive scalar, even though muscle contraction results in a negative change in length.
 
-Accurate computations of moment arms therefore require correct application of local frames, positions and orientations, require accurate changes in muscle point positions when the joints are rotated, and also require accurate computations of the instantaneous muscle lengths in all of the different joint poses. Fig. \ref{fig:momentarmsindividual} compares the moment arms computed by MuSkeMo after importing an OpenSim model, to the moment arms of the same model computed by OpenSim 4.0 using the Matlab api. These are the same data that are combined into three plots in Fig. \ref{fig:momentarmscombined}.
+Accurate computations of moment arms therefore require correct application of local frames, positions and orientations, require accurate changes in muscle point positions when the joints are rotated, and also require accurate computations of the instantaneous muscle lengths in all of the different joint poses. Fig. \ref{fig:momentarmsindividual} compares the moment arms computed by MuSkeMo after importing an OpenSim model, to the moment arms of the same model computed by OpenSim 4.0 using the Matlab api. These are the same data that are combined into three plots in Fig. \ref{fig:momentarmscombined} Note that the moment arms computed by MuSkeMo will only match those computed by OpenSim if the model either omits wrapping, or uses only contact cylinders with a muscle point between each wrapping object.
 
 \begin{figure}[htbp]
     %\vspace{-155pt}
@@ -1326,7 +1323,7 @@ The OpenSim model used for this comparison was the emu model from \cite{vanbijle
 
 Fig. \ref{fig:momentarmsindividual} also shows that the moment arms in panels A and L are somewhat noisy. Closer inspection of the vertical axes of those panels reveals that the moment arms are nearly constant for those muscles (\~ -0.03 \si{m}), because the moment arms are determined by a cylinder with constant diameter radius (0.03 \si{m}). Thus, the noise is numerically insignificant (in the order of ~0.015\% of the moment arm magnitude). The noise is so small in magnitude that it is not visible when plotting multiple muscles in the same plot, with more informative ranges on the y axis (Fig. \ref{fig:momentarmscombined}).
 
-While the noise is small enough to make no difference in a practical sense, it is explicitly pointed out here, because readers who want to use MuSkeMo's moment arms directly for their own simulations may want to smooth the moment arms first. The noisy moment arms for wrapping muscles are likely caused by wrapping node (see sec. \ref{sec:musclewrapping}). A likely possibility is that the many mathematical operations that are performed in the node on single precision digits introduces a floating point error (see \nameref{sec:precision}). Another possible culprit may be inaccuracy of the Raycasting operation that geometrically determines intersections between a wrapping geometry and a muscle curve.
+While the noise is small enough to make no difference in a practical sense, it is explicitly pointed out here, because readers who want to use MuSkeMo's moment arms directly for their own simulations may want to smooth the moment arms first. The noisy moment arms for wrapping muscles are likely caused by wrapping node (see sec. \ref{sec:musclewrapping}). A likely possibility is that the many mathematical operations that are performed in the node on single precision digits introduce floating point errors (see \nameref{sec:precision}). Another possible culprit may be inaccuracy of the Raycasting operation that geometrically determines intersections between a wrapping geometry and a muscle curve.
 
 The python script (to be run in Blender's script editor) that generates the muscle analysis is provided in MuSkeMo's utilities folder as an example script that calls MuSkeMo's API (sec. \ref{sec:muskemoutilities}). The Matlab script that generates the plots from Figs. \ref{fig:momentarmscombined} and \ref{fig:momentarmsindividual} is also provided.
 
