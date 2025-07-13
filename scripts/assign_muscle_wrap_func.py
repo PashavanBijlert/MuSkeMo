@@ -1,11 +1,11 @@
 import bpy
 import os
 
-def assign_muscle_wrap(wrap_obj_name, muscle_name, self, parametric_wraps = False):
+def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
     #Inputs: wrap_obj_name (should exist)
     # muscle_name (should exist
     #self (from the operator that calls this function)
-    #parametric wraps (bool, True if you want to add the wraps ass drivers)
+    
 
     
     #some settings for if I decide to rename node group files:
@@ -101,35 +101,35 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self, parametric_wraps = Fals
 
 
         ## Add a driver
-        if parametric_wraps:
+        # if parametric_wraps:
 
-            #radius
-            driver_str = 'modifiers["' + geonode_name +'"]["Socket_3"]' #wrap geonode cylinder radius socket
-            driver = muscle_obj.driver_add(driver_str)
+        #     #radius
+        #     driver_str = 'modifiers["' + geonode_name +'"]["Socket_3"]' #wrap geonode cylinder radius socket
+        #     driver = muscle_obj.driver_add(driver_str)
 
-            var = driver.driver.variables.new()        #make a new variable
-            var.name = geonode_name + '_' + wrap_obj_name + '_rad_var'            #give the variable a name
+        #     var = driver.driver.variables.new()        #make a new variable
+        #     var.name = geonode_name + '_' + wrap_obj_name + '_rad_var'            #give the variable a name
 
-            #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+        #     #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
 
-            var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
-            var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
+        #     var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
+        #     var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
 
-            driver.driver.expression = var.name
+        #     driver.driver.expression = var.name
 
-            #height
-            driver_str = 'modifiers["' + geonode_name +'"]["Socket_4"]' #wrap geonode cylinder height socket
-            driver = muscle_obj.driver_add(driver_str)
+        #     #height
+        #     driver_str = 'modifiers["' + geonode_name +'"]["Socket_4"]' #wrap geonode cylinder height socket
+        #     driver = muscle_obj.driver_add(driver_str)
 
-            var = driver.driver.variables.new()        #make a new variable
-            var.name = geonode_name + '_' + wrap_obj_name + '_height_var'            #give the variable a name
+        #     var = driver.driver.variables.new()        #make a new variable
+        #     var.name = geonode_name + '_' + wrap_obj_name + '_height_var'            #give the variable a name
 
-            #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+        #     #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
 
-            var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
-            var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
+        #     var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
+        #     var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
 
-            driver.driver.expression = var.name
+        #     driver.driver.expression = var.name
 
     
         ## Here we crudely estimate what the pre-wrap index should be. 

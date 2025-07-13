@@ -202,11 +202,7 @@ class MuSkeMoProperties(PropertyGroup):
         )
 
 
-    parametric_wraps: BoolProperty(
-        name = 'Parametric Wraps',
-        description='If selected, newly created wraps will remain parametric using Blender drivers. This can reduce performance if importing a model with a lot of wrapping.',
-        default = False,
-    )
+
 
 ### muscle panel extra tooltips
 
