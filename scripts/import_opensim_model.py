@@ -1153,7 +1153,7 @@ class ImportOpenSimModel(Operator):
 
         if enable_wrapping: #if the user wants wrapping
             
-            wrap_nodefilename = 'muscle_wrapper_v6.blend'
+            wrap_nodefilename = 'muscle_wrapper_v7.blend'
             directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
             with bpy.data.libraries.load(directory + wrap_nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file
@@ -1255,11 +1255,7 @@ class ImportOpenSimModel(Operator):
                                 #set the wrap object
                                 wrap_node_tree_new.interface.items_tree['Object'].default_value = bpy.data.objects[wrap_name_MuSkeMo] #the wrap geometry
 
-                                #set the cylinder radius
-                                wrap_node_tree_new.interface.items_tree['Wrap Cylinder Radius'].default_value = dimensions['radius']
-
-                                #set the cylinder height
-                                wrap_node_tree_new.interface.items_tree['Wrap Cylinder Height'].default_value = dimensions['height']
+                               
                                 
                                 force_wrap = False
                                 

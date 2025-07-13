@@ -582,7 +582,7 @@ class AssignWrappingOperator(Operator):
 
         cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
         sphere_wrap_node_group_name = 'Whatever' #doesn't exist yet, but this is a placeholder to make the intended structure of this script clear
-        wrap_nodefilename = 'muscle_wrapper_v6.blend'  
+        wrap_nodefilename = 'muscle_wrapper_v7.blend'  
 
         
         
@@ -623,10 +623,10 @@ class AssignWrappingOperator(Operator):
                 wrap_node_tree_thisobj.interface.items_tree['Object'].default_value = wrap_obj #the wrap geometry
 
                 #set the cylinder radius
-                wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Radius'].default_value = radius
+                #wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Radius'].default_value = radius
 
                 #set the cylinder height
-                wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Height'].default_value = height
+                #wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Height'].default_value = height
 
             ## create a modifier for the muscle and set this node group
             

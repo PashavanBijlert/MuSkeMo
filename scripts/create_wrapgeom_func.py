@@ -107,8 +107,18 @@ def create_wrapgeom(name, geomtype, collection_name,
             self_object.location = (-800, -100)
             
             transform_geometry = node_tree.nodes.new(type='GeometryNodeTransform')
-            transform_geometry.location = (-200, 0)
-                        
+            transform_geometry.location = (0, 0)
+
+            #Store named attribute for Radius
+            NamedAttributeRadius = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
+            NamedAttributeRadius.location = (-400, 300)
+            NamedAttributeRadius.inputs["Name"].default_value = 'WrapCylRadius'
+
+            #Store named attribute for Height
+            NamedAttributeHeight = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
+            NamedAttributeHeight.location = (-200, 250)
+            NamedAttributeHeight.inputs["Name"].default_value = 'WrapCylHeight'
+
             # Link nodes
             links = node_tree.links
             
@@ -119,8 +129,14 @@ def create_wrapgeom(name, geomtype, collection_name,
             links.new(object_info.outputs['Location'], transform_geometry.inputs['Translation'])
             links.new(object_info.outputs['Rotation'], transform_geometry.inputs['Rotation'])
 
-            # Link cylinder output to transform geometry
-            links.new(primitive_cylinder.outputs['Mesh'], transform_geometry.inputs['Geometry'])
+            # Link cylinder output to Named Attribute Radius
+            links.new(primitive_cylinder.outputs['Mesh'], NamedAttributeRadius.inputs['Geometry'])
+
+            # Link Named Attribute Radius to Named attribute height
+            links.new(NamedAttributeRadius.outputs['Geometry'], NamedAttributeHeight.inputs['Geometry'])
+                      
+            # Link Named Attribute Height to transform geometry         
+            links.new(NamedAttributeHeight.outputs['Geometry'], transform_geometry.inputs['Geometry'])
 
             # Update connection to set material
             links.new(transform_geometry.outputs['Geometry'], set_material.inputs['Geometry'])
@@ -138,6 +154,10 @@ def create_wrapgeom(name, geomtype, collection_name,
             # Link group inputs to the primitive cylinder
             links.new(group_input.outputs['Radius'], primitive_cylinder.inputs['Radius'])
             links.new(group_input.outputs['Height'], primitive_cylinder.inputs['Depth'])
+
+            # Link group inputs to named attribute
+            links.new(group_input.outputs['Radius'], NamedAttributeRadius.inputs["Value"])
+            links.new(group_input.outputs['Height'], NamedAttributeHeight.inputs["Value"])
 
         ## nNow Add a Geometry Nodes modifier
         modifier = obj.modifiers.new(name="WrapObjMesh", type='NODES')
