@@ -180,6 +180,7 @@ For each model component, data created by MuSkeMo are stored in Blender as \href
 
 MuSkeMo creates a new \href{https://docs.blender.org/manual/en/latest/scene_layout/object/types.html}{Blender Object} for each model component. Blender has many different object types, but MuSkeMo mainly uses "Mesh", "Curve", and "Empty" (see \ref{sec:DataTypes} for a full specification of all the used data types). Objects in Blender do not interact with other objects, unless the user somehow defines their inter-relationships. MuSkeMo handles all of this under the hood. For instance, components such as contact spheres need to be parented to specific bodies in the model, and MuSkeMo handles this while also keeping track of these inter-relationships in "Custom properties" so they are exposed to the user (see \ref{sec:muskemodata}).
 
+\label{sec:modifiers}
 Combining parenting and Blender's native object types does not provide all of the required functionality. MuSkeMo extensively makes use of Blender's \href{https://docs.blender.org/manual/en/latest/modeling/modifiers/index.html}{Modifier system} for both generating and visualizing components. For instance, individual muscle curve points cannot be attached to bodies using Blender's parenting system, so MuSkeMo achieves this by adding a hook modifier for each curve point (see \ref{sec:muscle}). 
 
 MuSkeMo uses both regular modifiers (which perform a predefined operation/modification on the object, e.g. the \href{https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/bevel.html}{Bevel modifier} is used to round the edges of muscle visualizations), but also several custom-made Geometry nodes modifiers.
@@ -405,14 +406,11 @@ The node uses a custom node group named "LiveLengthViewerNodeGroup", which is sh
 
 \subsubsection{Assigning wrapping}
 
-You can use the ``Wrapping" subpanel to perform all the necessary steps to assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. Note that wrapping is currently only physically accurate (i.e., a true tangent solution) if each wrapped section is separated by at least one muscle point on both sides.
+You can use the ``Wrapping" subpanel to perform all the necessary steps to create and assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. Note that wrapping is currently only physically accurate (i.e., a true tangent solution) if each wrapped section is separated by at least one muscle point on both sides.
 
-\subsubsection{Parametric wraps}
-\label{sec:parametricwraps}
-Wrapping geometries can be interactively resized using the inputs in the object's modifier (e.g., the cylinder). To achieve this in Blender, wrapping geometries are also generated using geometry nodes (see \ref{sec:wrapgeom} for details). Note that this only affects the wrapping geometry itself.
-When a muscle gets assigned a WRAP, it receives a very complex geometry nodes modifier (see \ref{sec:musclewrapping} for details), and this wrapping node on the MUSCLE affects that specific muscle's wrapping behavior. This geometry node modifier on the muscle requires the wrap object dimensions (e.g., cylinder radius and height) as inputs, which is not straightforward to do in Blender, because the muscle and the wrapping geometry are two separate objects in the scene. Turning on ``Parametric Wraps" before creating (or importing) a wrap achieves this behavior using \href{https://docs.blender.org/manual/en/latest/animation/drivers/introduction.html}{Blender Drivers}. \textbf{Having many drivers on simultaneously can reduce performance and cause instability. It is recommended to turn Parametric Wraps ON when constructing muscle paths and modifying them, and then to export the model, and reimport it into a new scene with Parametric Wraps turned OFF for further processing.}
+Wrapping geometries are also generated using geometry nodes (see \ref{sec:wrapgeom} for details), so that they can be interactively resized using the inputs in the wrapping object's modifier (see \ref{sec:modifiers}). When a WRAP is assigned to a muscle, it receives a very complex geometry nodes modifier (see \ref{sec:musclewrapping} for details). Changing the wrapping geometry dimensions (e.g., the cylinder's radius) also affects the dimensions of the muscle wrapping. Information on the dimensions of the wrapping object is carried over to the Muscle by creating a \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/geometry/read/named_attribute.html}{Named Attribute} in the Geometry node for the Wrapping object, which is then sampled in the Geometry node in the muscle wrapping node (see sec. \ref{sec:musclewrapping}).
 
-If you want to make modifications to wrapping which were created while ``parametric wraps" was off, you will have to change their respective parameters (e.g., cylinder radius) both in on the wrapping object's modifier, and in the muscle's modifier.
+
 
 \subsubsection{Moment arms}
 
@@ -738,8 +736,8 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 Cylindric wrapping has the following settings, accessible via the wrapping modifiers:
 
 \begin{itemize}
-\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. Note that this only affects the geometry itself (and thus not the radius of the wrapped muscle), unless you checked "parametric wraps" before assigning the wrap to the muscle (see sec. \ref{sec:parametricwraps})
-\item \textbf{Wrap Cylinder Height:} Height of the cylinder
+\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. When assigned to a muscle, also affects the wrapping radius.
+\item \textbf{Wrap Cylinder Height:} Height of the cylinder. When assigned to a muscle, also assigns the wrapping height.
 \item \textbf{Flip Wrap:} This allows you to flip the sidedness of the wrap
 \item \textbf{Shortest Wrap:} This ensures the wrapping occurs on the side where the wrapped section would be shortest. Causes posture-dependent flipping if the curve moves to the other side of the wrapping geometry. Shortest wrap is ignored if Force Sided Wrap is enabled.
 \item \textbf{Force Sided Wrap:} Select this if you want to force a wrap in a specific projection direction, even when the curve is not intersecting the geometry. You have to specify the index of the pre-wrap point, and a projection angle. The wrap is active when the curve intersects the geometry, or when it is outside the geometry, on the opposite side of the projection direction.
@@ -841,9 +839,7 @@ MuSkeMo implements two different sphere fitting algorithms, described in \cite{J
 \subsection{WRAP}
 \label{sec:wrapgeom}
 
-Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (but currently not yet Gaitsym models) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface). Currently, only cylinders are supported.
-
-WRAP geometry are the physical objects that muscles can be assigned to wrap around, but the actual curve wrapping is achieved with modifiers on individual muscles (see \ref{sec:musclewrapping}). Unless you checked "parametric wraps", the wrap radius and height settings only affect the geometry dimensions, and the wrapping behavior will need to be defined in the Wrap modifier under the target muscle (see sec. \ref{sec:parametricwraps}).
+Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (but currently not yet Gaitsym models) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface, see sec. \ref{sec:modifiers}). Currently, only cylinders are supported.
 
 Just like JOINTS, WRAPS have parent bodies, and orientations and positions with respect to parent frames if those are assigned to the body. Unique to WRAP are the following properties:
 
