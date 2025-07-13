@@ -341,11 +341,17 @@ You can assign rigid body parameters in two ways. The recommend approach is to a
 
 It is also possible to assign inertial properties manually. This is not recommended, but it is possible by manually typing the values in the Body's custom properties. If going this route, the COM position can be updated using the button in the "Assign inertial properties manually" subpanel.
 
+
 Inertial properties are not dynamic, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body (see \ref{sec:defaultpose}). Otherwise COM, mass, and or inertia can be outdated. MuSkeMo warns you if you attempt to export inertial property data in a different pose than the default pose.
 
+\subsubsection{Visual geometry (meshes)}
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. Select the meshes and the target body, and press the button.
 
-\subsection{Joint panel}
+\subsubsection{Checking geometry intersections}
+The geometry subpanel also contains a mesh intersection checker. This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The Wikipedia page on Bounding Volume Hierarchies also gives an accessible explanation on how this works.
+
+
+\subsection{Joint panel}'
 \label{sec:jointpanel}
 
 Create new joints by typing in a unique name and pressing 'Create new joint'. To and assign a parent or child body, select the joint and the target body, and press the respective button. 
