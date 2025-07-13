@@ -1153,7 +1153,7 @@ class ImportOpenSimModel(Operator):
 
         if enable_wrapping: #if the user wants wrapping
             
-            wrap_nodefilename = 'muscle_wrapper_v6.blend'
+            wrap_nodefilename = 'muscle_wrapper_v7.blend'
             directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
             with bpy.data.libraries.load(directory + wrap_nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file
@@ -1255,11 +1255,7 @@ class ImportOpenSimModel(Operator):
                                 #set the wrap object
                                 wrap_node_tree_new.interface.items_tree['Object'].default_value = bpy.data.objects[wrap_name_MuSkeMo] #the wrap geometry
 
-                                #set the cylinder radius
-                                wrap_node_tree_new.interface.items_tree['Wrap Cylinder Radius'].default_value = dimensions['radius']
-
-                                #set the cylinder height
-                                wrap_node_tree_new.interface.items_tree['Wrap Cylinder Height'].default_value = dimensions['height']
+                               
                                 
                                 force_wrap = False
                                 
@@ -1364,7 +1360,6 @@ class ImportOpenSimModel(Operator):
             
             if (enable_wrapping and muscle['path_wrap_data']): #if wrapping is enabled and the muscle has wrapping
 
-                parametric_wraps = bpy.context.scene.muskemo.parametric_wraps #bool for parametric wraps
                                 
                 for pathwrap in muscle['path_wrap_data']: #for each wrap in the muscle
                     
@@ -1423,35 +1418,6 @@ class ImportOpenSimModel(Operator):
                             pre_wrap_indices_count[index_of_pre_wrap_point] = pre_wrap_indices_count.get(index_of_pre_wrap_point, 0) + 1
 
                             
-                            ## Add a driver
-                            if parametric_wraps:
-                                #radius
-                                driver_str = 'modifiers["' + geonode_name +'"]["Socket_3"]' #wrap geonode cylinder radius socket
-                                driver = muscle_obj.driver_add(driver_str)
-
-                                var = driver.driver.variables.new()        #make a new variable
-                                var.name = geonode_name + '_' + wrap_obj_name_MuSkeMo + '_rad_var'            #give the variable a name
-
-                                #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-                                var.targets[0].id = bpy.data.objects[wrap_obj_name_MuSkeMo] #set the id to target object
-                                var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
-
-                                driver.driver.expression = var.name
-
-                                #height
-                                driver_str = 'modifiers["' + geonode_name +'"]["Socket_4"]' #wrap geonode cylinder height socket
-                                driver = muscle_obj.driver_add(driver_str)
-
-                                var = driver.driver.variables.new()        #make a new variable
-                                var.name = geonode_name + '_' + wrap_obj_name_MuSkeMo + '_height_var'            #give the variable a name
-
-                                #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-                                var.targets[0].id = bpy.data.objects[wrap_obj_name_MuSkeMo] #set the id to target object
-                                var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
-
-                                driver.driver.expression = var.name 
 
             ### Throw a warning about multi object wrapping
 

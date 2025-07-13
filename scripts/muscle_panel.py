@@ -571,18 +571,17 @@ class AssignWrappingOperator(Operator):
 
         #############
 
-        parametric_wraps = bpy.context.scene.muskemo.parametric_wraps
-
+        
         ### everything below here can be a separate function
         ### inputs of the function should include all the inputs of the wrapping node as optional input
-        ##inputs: wrap_obj_name (get wrap obj using the name), muscle_name, parametric_wraps(bool),
+        ##inputs: wrap_obj_name (get wrap obj using the name), muscle_name, ,
 
         #some settings for if I decide to rename node groups:
 
 
         cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
         sphere_wrap_node_group_name = 'Whatever' #doesn't exist yet, but this is a placeholder to make the intended structure of this script clear
-        wrap_nodefilename = 'muscle_wrapper_v6.blend'  
+        wrap_nodefilename = 'muscle_wrapper_v7.blend'  
 
         
         
@@ -623,10 +622,10 @@ class AssignWrappingOperator(Operator):
                 wrap_node_tree_thisobj.interface.items_tree['Object'].default_value = wrap_obj #the wrap geometry
 
                 #set the cylinder radius
-                wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Radius'].default_value = radius
+                #wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Radius'].default_value = radius
 
                 #set the cylinder height
-                wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Height'].default_value = height
+                #wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Height'].default_value = height
 
             ## create a modifier for the muscle and set this node group
             
@@ -660,40 +659,6 @@ class AssignWrappingOperator(Operator):
                     wrap_obj['target_muscles'] = wrap_obj['target_muscles'] +  muscle_name + ';'
 
 
-                ## Add a driver
-                if parametric_wraps:
-
-                    #radius
-                    driver_str = 'modifiers["' + geonode_name +'"]["Socket_3"]' #wrap geonode cylinder radius socket
-                    driver = muscle_obj.driver_add(driver_str)
-
-                    var = driver.driver.variables.new()        #make a new variable
-                    var.name = geonode_name + '_' + wrap_obj_name + '_rad_var'            #give the variable a name
-
-                    #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-                    var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
-                    var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
-
-                    driver.driver.expression = var.name
-
-                    #height
-                    driver_str = 'modifiers["' + geonode_name +'"]["Socket_4"]' #wrap geonode cylinder height socket
-                    driver = muscle_obj.driver_add(driver_str)
-
-                    var = driver.driver.variables.new()        #make a new variable
-                    var.name = geonode_name + '_' + wrap_obj_name + '_height_var'            #give the variable a name
-
-                    #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-                    var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
-                    var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
-
-                    driver.driver.expression = var.name
-
-
-                ## Here we crudely estimate what the pre-wrap index should be. 
-                # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
                 ''' 
                 wrap_obj_pos_glob = wrap_obj.matrix_world.translation
 
@@ -1396,7 +1361,7 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
 
 
         row = self.layout.row()
-        row.prop(muskemo, 'parametric_wraps', text = "Parametric wraps")
+       
 
         row = self.layout.row()
         split = row.split(factor=1/2)
