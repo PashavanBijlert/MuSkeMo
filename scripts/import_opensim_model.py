@@ -184,6 +184,8 @@ class ImportOpenSimModel(Operator):
             joints = joint_set.find('objects')
 
             joint_data = {}
+            joint_inconsistent_frame_list = [] #list of joint names for a warning message if the socket_parent and socket_child names were not consistent with the names of the PhysicalOffsetFrames defined in the joint
+            
             for joint in joints:
                 joint_name = joint.get('name')
                 joint_type = joint.tag
@@ -200,7 +202,7 @@ class ImportOpenSimModel(Operator):
                 frames_data = []
                 frames = joint.find('frames')
                 if frames is not None: #if there are frames defined
-                    for frame in frames.findall('PhysicalOffsetFrame'):
+                    for idx, frame in enumerate(frames.findall('PhysicalOffsetFrame')):
                         frame_name = frame.get('name')
                         translation = tuple(map(float, frame.find('translation').text.split()))
                         orientation = tuple(map(float, frame.find('orientation').text.split()))
@@ -215,6 +217,33 @@ class ImportOpenSimModel(Operator):
                         # Match child_frame with frame_name to get child_body
                         if frame_name == child_frame:
                             child_body = socket_parent.split('/bodyset/')[-1]
+
+
+                        #if the joint has inconsistent definitions between socket_parent or socket_child and the actual PhysicalOffsetFrame names,
+                        #We throw a warning, and assume the PhysicalOffsetFrame is the correct frame.
+                        if (frame_name != parent_frame and frame_name != child_frame):
+                            if idx ==0: #parent frame assumed as first frame
+                                
+                                parent_body = socket_parent.split('/bodyset/')[-1]
+                                if parent_body == '/ground':
+                                    parent_body = 'ground'
+
+                                #set 1st PhysicalOffsetFrame name as the parent_frame name 
+                                parent_frame = frame_name
+                                   
+                                joint_inconsistent_frame_list.append(joint_name) #for a warning message
+
+                            elif idx  == 1: #child frame assumed as second frame
+                                
+                                child_body = socket_parent.split('/bodyset/')[-1]
+                                
+                                #set 2nd PhysicalOffsetFrame name as the child_frame name 
+                                child_frame = frame_name
+                                
+                                joint_inconsistent_frame_list.append(joint_name) #for a warning message
+
+
+
 
                         frames_data.append({
                             'frame_name': frame_name,
@@ -300,6 +329,17 @@ class ImportOpenSimModel(Operator):
                     'spatial_transform': spatial_transform
                 }
 
+            #Throw a warning message if the frames definitions were inconsistent
+
+            if joint_inconsistent_frame_list: #if this list contains any joint names
+
+                # Issue warning
+                warning_message = (
+                    f"The following joints had inconsistencies between socket_parent_frame or socket_child_frame and the actual PhysicalOffsetFrame names defined:"
+                    f"{', '.join(joint_inconsistent_frame_list)}."
+                    f"MuSkeMo automatically assumed the PhysicalOffsetFrames were the correct parent and/or child frames, but you should check your OpenSim model for inconsistencies."
+                )
+                self.report({'WARNING'}, warning_message)
 
             
             ## check if any of the child frames are non-unique            
@@ -347,6 +387,8 @@ class ImportOpenSimModel(Operator):
                     f"{', '.join(renamed_list)}."
                 )
                 self.report({'WARNING'}, warning_message)
+
+
             return joint_data
 
 
