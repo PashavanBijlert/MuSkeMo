@@ -43,10 +43,28 @@ class ImportOpenSimModel(Operator):
     
     def execute(self, context):
         """Reads XML data from the specified filepath"""
+        
         filepath = self.filepath
-        tree = ET.parse(filepath)
-        root = tree.getroot()    
+
+        with open(filepath, 'r', encoding='utf-8') as f:
+            xml_data = f.read()
+
+        if 'HuntCrossleyForce' in xml_data:
+
+            # OpenSim filespec allows :: in the tag names, which isn't allowed by the standard xml filespec.
+            # Those tags need to be replaced. For now, this is only relevant for HuntCrossleyForce.
+            # Only replace tags if HuntCrossley is present
+            # Sanitize only if HuntCrossleyForce is present
+            xml_data = xml_data.replace('HuntCrossleyForce::ContactParametersSet', 'HuntCrossleyForce_ContactParametersSet')
+            xml_data = xml_data.replace('HuntCrossleyForce::ContactParameters', 'HuntCrossleyForce_ContactParameters')
+            tree = ET.ElementTree(ET.fromstring(xml_data))
+        else:
+            # Fast path for clean XML
+            tree = ET.parse(filepath)
+
+        root = tree.getroot()
         model = root.find('Model')
+
         
         time1 = time.time()        
     
@@ -239,7 +257,7 @@ class ImportOpenSimModel(Operator):
                                 
                                 #set 2nd PhysicalOffsetFrame name as the child_frame name 
                                 child_frame = frame_name
-                                
+
                                 joint_inconsistent_frame_list.append(joint_name) #for a warning message
 
 
