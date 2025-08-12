@@ -539,6 +539,8 @@ Non-standard axes are also assumed when the root joint's default pose is not ali
 OpenSim models require a joint that connects the model to the ground that decides the global degrees of freedom (MuSkeMo calls this a root joint). If a user creates an OpenSim model without defining a root joint, OpenSim automatically creates one (or multiple) \href{https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1FreeJoint.html}{FreeJoints}, without any frames defined within the joint. If such a model is imported into MuSkeMo using local definitions, MuSkeMo creates these implicit frames at the origin, and guesses the intended OpenSim naming convention.
 
 
+OpenSim allows the characters ``::" in the XML tags of their .osim format, which is not allowed in standard XML files. This is true for ``HuntCrossleyForce'' components, for instance. MuSkeMo automatically renames these tags during model import, although currently MuSkeMo does not import contact force parameters, so this is purely to prevent an XML import error.
+
 \subsubsection{Gaitsym 2019 model import}
 
 MuSkeMo includes a Gaitsym (2019) importer. It currently imports bodies, joints, muscles (DampedSpring elements are treated as muscles), contacts, and markers (as frames). Muscles that include wrapping are currently not supported, but limited wrapping support is planned in a future update. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory, and the name of this subdirectory must currently be manually typed into the panel.
@@ -577,10 +579,29 @@ Rendering in Blender can be a complicated process. It is capable of professional
 
 \subsubsection{Trajectory import}
 \label{sec:trajectoryimport}
-MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. Currently, it is only possible to import trajectories using OpenSim .sto files. If you are importing a periodic stride, it is possible to automatically loop these in sequence to create a video using multiple strides, while progressing the (selectable) forward translation coordinate. In this case, you have to define the root joint (default =  groundPelvis) and the forward progression coordinate (default = coordinate\_Tx).
+MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. Currently, it is only possible to import trajectories using OpenSim .sto files. The trajectory importer sets a \href{https://docs.blender.org/manual/en/latest/animation/keyframes/index.html}{keyframe} for each joint position and orientation, and keyframes the muscle activations by keyframing the color saturation. Frame 0 (in the playback timeline at the bottom of the screen) is always set as the default pose (see sec. \ref{sec:defaultpose}).
 
-Using the user-selected FPS and the trajectory's timebase and user-selected number of repetitions, MuSkeMo downsamples the trajectory to individual frames, and sets a \href{https://docs.blender.org/manual/en/latest/animation/keyframes/index.html}{keyframe} for each joint position and orientation. Frame 0 (in the playback timeline at the bottom of the screen) is always set as the default pose (see sec. \ref{sec:defaultpose}).
+If you want to modify the import settings, you will need to undo the import, and then reimport using the new settings. It is also possible to delete the existing trajectory: navigate to Frame 0, press A to select all model components, then in the timeline below delete all the keyframes.
 
+\textbf{Looping periodic trajectories}. If you are importing a periodic stride, it is possible to automatically loop these in sequence (by increasing the number of repetitions) to create a video using multiple strides, while aut0matically progressing the (selectable) forward progression coordinate. In this case, you have to define the root joint (default =  groundPelvis) and the forward progression coordinate (default = coordinate\_Tx).
+
+\textbf{Playback speed and FPS}. Using the user-selected frames per second and the trajectory's timebase, MuSkeMo downsamples the trajectory to individual frames. The frames per second should be chosen during import with the final output speed in mind. For example: if you want to create a video at 30 frames per second, but also want to slow down the playback to 50\% real time, then you should set 60 frames per second during import.
+
+
+\textbf{Muscle activations}. The trajectory importer has two settings that affect how muscle activations are animated:
+
+\begin{itemize}
+ \item \textbf{Scale activations to highest:} if this is ticked, then all activations in the trajectory will be mapped onto a visual scale that goes from 0 to the max activation (over all the muscles) in the trajectory. This ensures that in trajectories where the activations are low, the relative activation levels are still visible. This is achieved by dividing all the activations by the highest activation in the entire trajectory.
+\item \textbf{Baseline color saturation:} This decides how saturated an inactive muscle will look. The color saturation is computed as follows (after the optional max activations scaling):
+
+\begin{equation}
+saturation = baseline\_color\_saturation + (1 - baseline\_color\_saturation) \cdot activation.
+\end{equation}
+Thus, if this parameter is set to 0, you use the full bandwith of color saturation, but inactive muscles will be completely grey. The default value is 0.25, which gives a red-grey tint to the inactive muscles.
+\end{itemize}
+
+
+\textbf{Non-standard transform axes}.
 OpenSim CustomJoints can have user-defined custom transform axes (see \ref{sec:opensimimporter}). In the case of translations, these are simply added to the joint position in the directions specified by the transform axes. For rotations, MuSkeMo defines three successive axis-angle Rotation matrices, and applies them in XYZ order (see \ref{sec:axisanglerotation}).
 
 MuJoCo models have a similar possibility (see Sec. \ref{sec:mujocoimporter}.). MuJoCo trajectory import is not yet supported, but will be handled similarly in the future.
@@ -601,11 +622,13 @@ This subpanel includes several convenience tools to aid users who are new to ani
 \subsubsection{Default colors}
 \label{sec:defaultcolors}
 
-In Blender, objects get assigned a color (and other surface rendering properties, such as roughness) by assigning a \href{https://docs.blender.org/manual/en/latest/editors/properties_editor.html}{material}. Before importing and/or model component creation, you can define the desired default colors in this panel for muscles, visual geometry (bones), joints, contacts, markers, geometric primitives, and wrapping geometry. If an instance of the object has been already created (e.g., you have already created a joint), you can change the colors by changing the object's material in the \href{https://docs.blender.org/manual/en/latest/editors/properties_editor.html}{properties tab} or in the \href{https://docs.blender.org/manual/en/latest/editors/shader_editor.html}{shader editor}. Unlike all other object types, each individual muscle in the model gets a unique material. This is to ensure that its activation can be independently animated when importing trajectories. This means that if you want a different default muscle color, you need to define it before model import/creation, or you must change all the muscle-materials individually.
+In Blender, objects get assigned a color (and other surface rendering properties, such as roughness) by assigning a \href{https://docs.blender.org/manual/en/latest/editors/properties_editor.html}{material}. Before importing and/or model component creation, you can define the desired default colors in this panel for muscles, visual geometry (bones), joints, contacts, markers, geometric primitives, and wrapping geometry. If an instance of the object has been already created (e.g., you have already created a joint), you can change the colors by changing the object's material in the \href{https://docs.blender.org/manual/en/latest/editors/properties_editor.html}{properties tab} or in the \href{https://docs.blender.org/manual/en/latest/editors/shader_editor.html}{shader editor}. 
 
-Joints, contacts, wrap geometry, geometric primitives, and markers are provided with a transparent material by default (this is achieved with a mix shader node in the shader editor).
+Importantly, the coloration in Blender depends on whichever \href{https://docs.blender.org/manual/en/latest/editors/3dview/display/shading.html}{Viewport Shading} mode is active in Blender. "Solid" mode uses a material's \href{https://docs.blender.org/manual/en/latest/render/workbench/display_settings.html#properties-material-viewport-display}{Viewport Display}, and during renders this mode is accessible by selecting the "Workbench" renderer. "Material Preview" and "Rendered" modes actually use the object's Material properties themselves, and the "Rendered" view is also what choosing "Eevee" or "Cycles" as the rendering engine. Eevee is faster than Cycles, but looks less cinematic because it is not a raytracing (or path tracing) engine. Both Eevee and Cycles will require setting up some lighting, and it is recommended that this lighting be parented to the camera (effectively acting as a camera flash). Choosing the "Workbench" renderer, combined with "Matcap" lighting, probably requires the least amount of set-up and lowest rendering times.
 
-Importantly, the coloration in Blender depends on \href{https://docs.blender.org/manual/en/latest/editors/3dview/display/shading.html}{Viewport Shading} mode in Blender. "Solid" mode uses a material's \href{https://docs.blender.org/manual/en/latest/render/workbench/display_settings.html#properties-material-viewport-display}{Viewport Display}, whereas "Material Preview" and "Rendered" modes actually use the object's Material properties themselves. Eevee does not support transparent materials, so this is only available when selecting "Cycles" as the rendering engine.
+Joints, contacts, wrap geometry, geometric primitives, and markers are provided with a transparent material by default (for the rendered viewport shading mode, this is achieved with a mix shader node in the shader editor, for the solid viewport display, this is achieved by lowering the alpha).
+
+Unlike all other object types, each individual muscle in the model gets a unique material. This is to ensure that its activation can be independently animated when importing trajectories. This means that if you want a different default muscle color, you need to define it before model import/creation, or you must change all the muscle-materials individually. When muscle activations are animated by the trajectory importer (sec. \ref{sec:trajectoryimport}), the saturation of both the material, and the viewport display are changed simultaneously.
 
 \subsection{Reflection panel}
 
