@@ -742,13 +742,14 @@ Under "Geometry nodes", with the "SimpleMuscleViz" node of a muscle selected, th
 \subsubsection{Volumetric muscle visualization}
 \label{sec:volmuscleviz}
 
-Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
+Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters and an operation mode, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
 
 \begin{itemize}
 \item \textbf{MuscleVolume:} Computed using each muscle's F\_max, optimal\_fiber\_length, and specific\_tension (set in the Visualization panel, see section \ref{sec:visualizationpanel}). The node setup adjusts the muscle's radius to keep the volume constant irrespective of the length.
 \item \textbf{MuscleTendonLengthRatio: } This decides the ratio of the muscle belly to the total musculotendon complex length. If set to 1, the muscle belly is stretched across the entire muscle's length. 
 \item \textbf{TendonMuscleRadiusRatio: } This sets the relative ratio of the tendon with respect to the muscle's radius. Set to 0 if you want no tendon visualization.
 \item \textbf{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
+\item \textbf{FastOrVolumeAccurate: } The volumetric visualizer has two operation modes. The Fast mode may underestimate the volume by ~1-5\%, depending on the shape of the muscle, but it maintains its relative accuracy for profile curves shapes. The VolumeAccurate node adds an extra volume checking and rescaling step to ensure that the visualized volume is correct with respect to the muscle-input volume. This mode probably has lower performance, because it essentially draws each muscle twice (once internally).
 \end{itemize}
 
 
