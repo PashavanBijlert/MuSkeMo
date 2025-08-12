@@ -339,11 +339,12 @@ class ImportTrajectorySTO(Operator):
             else: #if blender version is above 4:
                 nodename = 'Hue/Saturation/Value'
 
-            
+            # Muscle mat in rendered mode
             node_tree.nodes[nodename].inputs['Saturation'].default_value = 1
             node_tree.nodes[nodename].inputs['Saturation'].keyframe_insert('default_value', frame = frame_number) #insert a keyframe
 
-
+            # Muscle mat viewport display (i.e., workbench renderer)
+            mat.keyframe_insert('diffuse_color',frame = frame_number)
 
 
         ##### start inserting keyframes per time point
@@ -521,6 +522,8 @@ class ImportTrajectorySTO(Operator):
 
                 activation = activation_traj_row[muscle_ind] #assign the right data point, using the k'th ind_act
                 
+                ## First the rendered materials
+
                 #if scale_activations_to_highest == 'yes': #scales the intensity of the activation colours (useful for simulations where muscle activations are low)
                 #    activation = activation/data[:,ind_act].max()
                 
@@ -530,7 +533,13 @@ class ImportTrajectorySTO(Operator):
                 node_tree.nodes[nodename].inputs['Saturation'].default_value = activation
                 node_tree.nodes[nodename].inputs['Saturation'].keyframe_insert('default_value', frame = frame_number) #insert a keyframe
 
-                
+                ## Now the viewport display materials (for the workbench renderer)
+                r,g,b,a = mat.diffuse_color #viewport display color
+
+                h,s,v = colorsys.rgb_to_hsv(r,g,b) #convert to Hue Saturation Value
+                r,g,b = colorsys.hsv_to_rgb(h,activation,v) #set saturation using activation level
+                mat.diffuse_color = (r,g,b,a)
+                mat.keyframe_insert('diffuse_color',frame = frame_number)
 
         return {'FINISHED'}
 
