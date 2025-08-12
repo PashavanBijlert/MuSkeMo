@@ -366,6 +366,12 @@ class VIEW3D_PT_import_trajectory_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
 
         row = layout.row()
         row.prop(muskemo, "in_degrees")
+
+        row = layout.row()
+        row.prop(muskemo, "scale_activations_to_highest")
+
+        row = layout.row()
+        row.prop(muskemo, "baseline_saturation")
                
         return    
     

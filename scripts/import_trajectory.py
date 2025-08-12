@@ -203,16 +203,19 @@ class ImportTrajectorySTO(Operator):
         activation_trajectories = traj_data[:,traj_muscle_act_ind]
 
         #### USER SWITCHES
-        number_of_repeats = bpy.context.scene.muskemo.number_of_repetitions # number of strides. Should be a user switch. Assumes final state is equal to initial state, except pelvis x translation, so a full stride.
-        fps = bpy.context.scene.muskemo.fps #set to 60 if you want 50% slow motion (for a run)
-        root_joint_name = bpy.context.scene.muskemo.root_joint_name
-        forward_progression_coordinate = bpy.context.scene.muskemo.forward_progression_coordinate
-
+        muskemo = bpy.context.scene.muskemo
+        number_of_repeats = muskemo.number_of_repetitions # number of strides. Should be a user switch. Assumes final state is equal to initial state, except pelvis x translation, so a full stride.
+        fps = muskemo.fps #set to 60 if you want 50% slow motion (for a run)
+        root_joint_name = muskemo.root_joint_name
+        forward_progression_coordinate = muskemo.forward_progression_coordinate
+        scale_activations_to_highest = muskemo.scale_activations_to_highest #bool True or False, should we visually scale the activation levels
+        baseline_saturation = muskemo.baseline_saturation #baseline for visual muscle saturation (activation), float 0 - 1
+        
+    
         #### SET SOME RENDER SETTINGS
 
         bpy.context.scene.render.fps = fps #set the render fps
         bpy.context.scene.sync_mode = 'FRAME_DROP' 
-
 
 
         ## IF ROOT_JOINT_NAME DOESN'T EXIST, SET N_REPEATS TO 0.    
@@ -303,15 +306,15 @@ class ImportTrajectorySTO(Operator):
         for i in range(activation_trajectories.shape[1]):
             activation_trajectories_rs[:, i] = np.interp(x_query, x, activation_trajectories[:, i])
         
+        max_act = np.max(activation_trajectories_rs) #for visual activation scaling
         
+        
+
         ##### start adding keyframes
         ##### insert a rest-pose keyframe at frame number 0
 
         frame_number = 0
 
-   
-        
-        
         unique_joints_in_traj = list(set(traj_joints)) #unique joints used in the trajectory 
 
         #Define the global starting position and orientations of the joints, so we can use these as offsets for the trajectory data that are loaded in
@@ -522,22 +525,25 @@ class ImportTrajectorySTO(Operator):
 
                 activation = activation_traj_row[muscle_ind] #assign the right data point, using the k'th ind_act
                 
-                ## First the rendered materials
 
-                #if scale_activations_to_highest == 'yes': #scales the intensity of the activation colours (useful for simulations where muscle activations are low)
-                #    activation = activation/data[:,ind_act].max()
+                if scale_activations_to_highest: #scales the intensity of the activation colours (useful for simulations where muscle activations are low)
+                    activation = activation/max_act
+
+                #remap activation (which should vary between 0 to 1) onto a saturation scale of baseline_saturation to 1.
+                # The result is that inactive muscles are never at 0 saturation.
+                saturation = baseline_saturation + (1-baseline_saturation) * activation
+
+
+                ## First the rendered materials
                 
-                #if activation < 0.2:
-                #    activation = 0.2
-                    
-                node_tree.nodes[nodename].inputs['Saturation'].default_value = activation
+                node_tree.nodes[nodename].inputs['Saturation'].default_value = saturation
                 node_tree.nodes[nodename].inputs['Saturation'].keyframe_insert('default_value', frame = frame_number) #insert a keyframe
 
                 ## Now the viewport display materials (for the workbench renderer)
                 r,g,b,a = mat.diffuse_color #viewport display color
 
                 h,s,v = colorsys.rgb_to_hsv(r,g,b) #convert to Hue Saturation Value
-                r,g,b = colorsys.hsv_to_rgb(h,activation,v) #set saturation using activation level
+                r,g,b = colorsys.hsv_to_rgb(h,saturation,v) #set saturation using activation level
                 mat.diffuse_color = (r,g,b,a)
                 mat.keyframe_insert('diffuse_color',frame = frame_number)
 

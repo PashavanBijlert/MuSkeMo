@@ -832,6 +832,21 @@ class MuSkeMoProperties(PropertyGroup):
     )
 
 
+    scale_activations_to_highest: BoolProperty(
+        name="Scale activations to highest",
+        description='Rescales the activations so that highest activation in the trajectory corresponds to maximum color saturation',
+        default = True,
+    )
+
+    baseline_saturation: FloatProperty(
+        name="Baseline color saturation",
+        description='The baseline color saturation for inactive muscles.',
+        default = 0.25,
+        min = 0,
+        max = 0.5,
+        precision = 2,
+    )
+
     ############### Global properties panel
 
     left_side_string: StringProperty(
