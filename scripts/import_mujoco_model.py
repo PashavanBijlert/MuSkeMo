@@ -586,6 +586,11 @@ class ImportMuJoCoModel(Operator):
             coordinate_Rx=coordinate_Rx, coordinate_Ry=coordinate_Ry, coordinate_Rz=coordinate_Rz,                  
             )    
             
+
+            ## set root joint name
+            if depth == 0:
+                bpy.context.scene.muskemo.root_joint_name = joint_name
+
             ### deal with non-standard transform axes
 
             if not has_standard_axes:
