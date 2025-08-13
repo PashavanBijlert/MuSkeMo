@@ -673,6 +673,24 @@ The Python script "moment\_arm\_analysis.py" can be opened in the Blender Python
 
 The moment arms analysis script loops through the target joints and finds all muscles that cross it (by checking which muscles change in length when moving the joint through its coordinates).
 
+\subsubsection{Volumetric muscle visualization volume comparison}
+\label{sec:volcomparisonscript}
+
+The Python script ``CompareVolMuscVizVolumes.py" compares volumes of the Fast and VolumeAccurate modes of the volumetric muscle visualization node (sec. \ref{sec:volmuscleviz}). This script should be executed in Blender's script editor after loading a MuSkeMo model and enabling the volumetric muscle visualizations. It assumes that muscle object names end with \texttt{\_r} (right side) or \texttt{\_l} (left side), though this can be modified to suit other naming conventions.
+
+For all muscles, the script sets the \emph{TendonMuscleRadiusRatio} parameter to zero, disabling tendon geometry. Right-sided muscles are processed using the ``Fast'' volume mode, while left-sided muscles are processed using the ``VolumeAccurate'' mode. In each case, the actual mesh volume is computed using Blender's \texttt{bmesh} API and compared to the Hill-type muscle volume encoded in the muscle's geometry node group.
+
+The results are:
+\begin{itemize}
+    \item Printed to the System Console (\emph{Window, Toggle System Console}).
+    \item Saved as a CSV file in the same directory as the current blend file.
+\end{itemize}
+
+For the emu model in the sample dataset (in the base posture), the Fast mode underestimated actual volume by between 0\% and 3.6\%, with an average underestimation of 2.5\%. This discrepancy varies with posture and muscle visualization settings, and can be larger (e.g., up to 8\%) for certain configurations. The VolumeAccurate mode provides a closer match but runs twice as slowly (on an Intel i7-11850H 2.5 GHz processor). 
+
+\noindent The script requires minimal modification for other models, aside from adapting side-string detection if muscle naming conventions differ.
+
+
 
 \section{MuSkeMo Data Types}
 \label{sec:DataTypes}
@@ -749,7 +767,7 @@ Similar to the simple muscle visualizations, volumetric muscle visualizations ar
 \item \textbf{MuscleTendonLengthRatio: } This decides the ratio of the muscle belly to the total musculotendon complex length. If set to 1, the muscle belly is stretched across the entire muscle's length. 
 \item \textbf{TendonMuscleRadiusRatio: } This sets the relative ratio of the tendon with respect to the muscle's radius. Set to 0 if you want no tendon visualization.
 \item \textbf{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
-\item \textbf{FastOrVolumeAccurate: } The volumetric visualizer has two operation modes. The Fast mode may underestimate the volume by ~1-5\%, depending on the shape of the muscle, but it maintains its relative accuracy for profile curves shapes. The VolumeAccurate node adds an extra volume checking and rescaling step to ensure that the visualized volume is correct with respect to the muscle-input volume. This mode probably has lower performance, because it essentially draws each muscle twice (once internally).
+\item \textbf{FastOrVolumeAccurate: } The volumetric visualizer has two operation modes, see sec. \ref{sec:volcomparisonscript} for a script that compares muscle volumes. The Fast mode may underestimate the volume by ~1-5\%, depending on the shape of the muscle. The VolumeAccurate node adds an extra volume checking and rescaling step to ensure that the visualized volume is correct with respect to the muscle-input volume. This mode is approximately twice as slow, because it essentially draws each muscle twice (once internally). The Fast mode is recommended if you have a slow computer and a model with many muscles, which is why it is enabled by default.
 \end{itemize}
 
 
