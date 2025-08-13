@@ -823,7 +823,8 @@ class ImportOpenSimModel(Operator):
             stack = list(joint_tree.items())
             frames = {} #initialize a frames dict
 
-            
+            #Set the root joint
+            bpy.context.scene.muskemo.root_joint_name = stack[0][0]
             
             
 
