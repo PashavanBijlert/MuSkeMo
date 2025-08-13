@@ -227,10 +227,10 @@ To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of
 It is possible to change the density property of an object, after which you will have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
 
 \subsubsection{Generate minimal convex hulls}
-Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons \cite{sellersMinimumConvexHull2012a,brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,coathamConvexHullEstimation2021,macaulayDecouplingBodyShape2023,wrightVolumetricElementscalingMass2024,batesRunningPerformanceAustralopithecus2025}.
+Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons \cite{sellersMinimumConvexHull2012,brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,coathamConvexHullEstimation2021,macaulayDecouplingBodyShape2023,wrightVolumetricElementscalingMass2024,batesRunningPerformanceAustralopithecus2025}.
 In this subpanel, you can automatically generate convex hulls around (skeletal) meshes in a collection, and then apply methods from the literature to reconstruct the inertial properties.
 
-You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a different collection. Each separate object in the collection will receive its own convex hull, so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012a,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection. 
+You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a different collection. Each separate object in the collection will receive its own convex hull, so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection. 
 
 The recommended workflow is to organize all the skeletal meshes in a single collection. Ensure that all the skeletal meshes contain the correct segment names in their full name (see below). Then, generate the minimal convex hulls, and use one of the expansion modes to expand those convex hulls.
 
@@ -250,7 +250,7 @@ Under \textbf{Expand convex hulls - arithmetic}, you can use arithmetic expansio
     \item \textbf{Macaulay 2023 Bird:} The per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The per-segment "Croc\_Lizard" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
     \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The per-segment "Av." average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S6.
-    \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012a}. This is the first introduction of this method, and the user is warned that the the Sellers 2012 curve was not calibrated using direct measurements of body mass for the analyzed skeletons \cite{sellersMinimumConvexHull2012a}.
+    \item \textbf{Sellers 2012 Large Mammals:} This is a "whole\_body" scale factor of 1.206 as described in \cite{sellersMinimumConvexHull2012}. This is the first introduction of this method, and the user is warned that the the Sellers 2012 curve was not calibrated using direct measurements of body mass for the analyzed skeletons \cite{sellersMinimumConvexHull2012}.
 \end{itemize}
 
 Under \textbf{Expand convex hulls - logarithmic}, it is possible to use log-transformed regression equations from the literature to scale your hulls. 
@@ -305,12 +305,12 @@ For the mass estimation equations, x is the summed volume of the convex hulls of
 This subpanel sums all the convex hull volumes in a designated collection, then uses the user-selected empirical equation to compute total body mass (in kg). This assumes the convex hulls are of the complete skeleton (including both left and right sides). Available equations are:
 
 \begin{itemize}
-    \item \textbf{Wright 2024 Logarithmic Tetrapods:} Regression equation from \cite{wrightVolumetricElementscalingMass2024}, based on primary data, and reused data from \cite{coathamConvexHullEstimation2021} and \cite{sellersMinimumConvexHull2012a} (the latter includes estimates instead of measurements of total body mass)
+    \item \textbf{Wright 2024 Logarithmic Tetrapods:} Regression equation from \cite{wrightVolumetricElementscalingMass2024}, based on primary data, and reused data from \cite{coathamConvexHullEstimation2021} and \cite{sellersMinimumConvexHull2012} (the latter includes estimates instead of measurements of total body mass)
     \item \textbf{Brassey 2018 Logarithmic Primates:} from \cite{brasseyVolumetricTechniqueFossil2018}.
     \item \textbf{Brassey 2016 Logarithmic Pigeons, Eviscerated:} from \cite{brasseyConvexhullMassEstimates2016}, using the eviscerated pigeons equation.
     \item \textbf{Brassey 2016 Logarithmic Pigeons, Combined:} from \cite{brasseyConvexhullMassEstimates2016}, using the combined pigeons equation.
     \item \textbf{Brassey 2014 Logarithmic Primates:} from \cite{brasseyScalingConvexHull2014}.
-    \item \textbf{Brassey 2014 Logarithmic Mammals:} from \cite{brasseyScalingConvexHull2014}, this reuses data from \cite{sellersMinimumConvexHull2012a} which includes body mass estimates instead of direct measurements.
+    \item \textbf{Brassey 2014 Logarithmic Mammals:} from \cite{brasseyScalingConvexHull2014}, this reuses data from \cite{sellersMinimumConvexHull2012} which includes body mass estimates instead of direct measurements.
 \end{itemize}
 
 The original Brassey et al. 2016 \cite{brasseyConvexhullMassEstimates2016} pigeon equations assume volume is  \si{mm^3}, and provide the mass in \si{g}. To convert the output to kilograms (multiply by \(10^{-3}\)) and allow the input to be in \si{m^3} (multiply input by \(10^9\)), it is possible to rewrite equation \ref{eq:powercurve}.
