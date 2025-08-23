@@ -782,6 +782,8 @@ class FitCylinderOperator(Operator):
         obj.rotation_mode = 'ZYX'  # Change rotation sequence
 
         obj.matrix_world = worldMat # set the transformation matrix
+        obj.rotation_euler[2] = 0 #Set the Z-angle to zero because the Cylinder is rotationally symmetric about its long axis
+
 
         obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
         obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
