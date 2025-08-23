@@ -363,9 +363,19 @@ If you want to change a joint's position or orientation, detach the parent and c
 
 It is possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turned into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
-\subsubsection*{Joint utilities}
+\subsubsection{Fitting primitive objects for joints}
+\label{sec:primitivefitting}
+In this panel, there are buttons that fit geometric primitives to a selected mesh (sphere, cylinder, ellipsoid, plane). Simply select a target mesh, and press one of the fitting buttons. The options are:
 
-In this panel, there are buttons that fit geometric primitives to a selected mesh (sphere, cylinder, ellipsoid, plane). The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), go through the following steps:
+\begin{itemize}
+    \item \textbf{Sphere (geometric).} Implements \cite{yesudasanFastGeometricFit2015}.
+    \item \textbf{Sphere (least squares).} Implements \cite{Jekel2016}.
+    \item \textbf{Cylinder.} Python implementation of the pseudocode in \cite{eberlyLeastSquaresFitting}. After implementing the fitting algorithm, MuSkeMo also uses the original vertex data to compute the height of the cylinder, based on the maximum z-span of the target vertices in the cylinder frame. The z-axis Euler angle is set to 0, because cylinders are rotationally symmetric about the long axis.
+    \item \textbf{Ellipsoid.} This is a Python implementation provided courtesy of Mark Semple \cite{semplePyEllipsoid_Fit}, who converted Yuri Petrov's Matlab implementation. I modified it further to ensure right-handed coordinate systems.
+    \item \textbf{Plane.} Simple implementation based taking the covariance matrix of all the recentered vertex positions. The plane is taken as the basis spanned by the eigenvectors of the two largest eigenvalues. Right-handed coordinate systems are also ensured.
+\end{itemize}
+
+The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), go through the following steps:
 
 1) Select the target mesh
 2) Press Tab to go into 'edit mode' in Blender
@@ -376,7 +386,24 @@ In this panel, there are buttons that fit geometric primitives to a selected mes
 
 You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions. The duplicated section of the mesh is in the same collection as the original, and if the original mesh was attached to a BODY, so will this copied section. To prevent it being exported, move it to a different collection, and detach the mesh from the body using the button in the panel.
 
-It is possible to match the transformations of a joint to the fitted geometry. Child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically.
+\paragraph {Matching joints to fitted geometry.} 
+
+It is possible to match the position and/or oreintation of a joint to the fitted geometry, respectively. Simply select the target joint and a source geometry, and press the respective button. Child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically. 
+
+\paragraph {Cycling through joint axes.} 
+It is possible that the named axes of the fitted object do not correspond with how you would like the joint to behave (e.g., a Cylinder's long axis always the z-axis, but you may want that axis to align with the joint's x-axis). In this case, after using the match orientations button, use the "Cycle through joint axes" button. This button post-multiplies the joint's rotation matrix with the following permutation matrix:
+
+\begin{equation}
+\mathcal{P} =
+\begin{bmatrix}
+0 & 0 & 1 \\
+1 & 0 & 0 \\
+0 & 1 & 0
+\end{bmatrix}
+\end{equation}
+
+
+Cycling through it three times restores the original orientation.
 
 \subsection{Muscle panel}
 
@@ -888,7 +915,7 @@ In MuSkeMo, a \texttt{FRAME} is a local coordinate system that can be assigned t
 
 \subsection{GEOM\_PRIMITIVE}
 
-In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders, ellipsoids, and planes) to 3D meshes. This can be useful for defining joint centers of rotation using the skeletal geometry. The geometric details of the shapes are stored for reuse. These are:
+In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders, ellipsoids, and planes) to 3D meshes, see \ref{sec:primitivefitting}. This can be useful for defining joint centers of rotation using the skeletal geometry. The geometric details of the shapes are stored for reuse. These are:
 
 \begin{itemize}
     \item Sphere: \texttt{sphere\_radius}
@@ -898,8 +925,6 @@ In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders
 \end{itemize}
 
 The underlying object types in Blender are regular meshes (UV Sphere, cylinder, ellipsoid).
-
-MuSkeMo implements two different sphere fitting algorithms, described in \cite{Jekel2016, yesudasanFastGeometricFit2015}. The cylinder fit algorithm was adapted from \cite{eberlyLeastSquaresFitting}. The ellipsoid fit algorithm \cite{semplePyEllipsoid_Fit} was provided courtesy of Mark Semple, who converted a Matlab implementation written by Yuri Petrov to Python. I modified it further to ensure right-handed coordinate systems.
 
 \subsection{WRAP}
 \label{sec:wrapgeom}
