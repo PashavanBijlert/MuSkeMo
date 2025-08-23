@@ -531,6 +531,11 @@ class FitSphereGeomOperator(Operator):
         bpy.context.active_object.name = fit_obj_name
 
         obj = bpy.data.objects[fit_obj_name]
+        
+        
+        obj.rotation_mode = 'ZYX'  # Change rotation sequence
+    
+
 
         obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
         obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
@@ -636,6 +641,9 @@ class FitSphereLSOperator(Operator):
         bpy.context.active_object.name = fit_obj_name
 
         obj = bpy.data.objects[fit_obj_name]
+
+        obj.rotation_mode = 'ZYX'  # Change rotation sequence
+    
 
         obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
         obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
@@ -767,9 +775,13 @@ class FitCylinderOperator(Operator):
         bpy.ops.mesh.primitive_cylinder_add(radius=Radius, depth=cylinder_height, end_fill_type='NGON', calc_uvs=True, enter_editmode=False, align='WORLD')
         fit_obj_name = obj_name + '_CylinderFit'
         bpy.context.active_object.name = fit_obj_name
-        bpy.context.active_object.matrix_world = worldMat
+       
 
         obj = bpy.data.objects[fit_obj_name]
+
+        obj.rotation_mode = 'ZYX'  # Change rotation sequence
+
+        obj.matrix_world = worldMat # set the transformation matrix
 
         obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
         obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
@@ -994,8 +1006,12 @@ class FitEllipsoidOperator(Operator):
         bpy.context.active_object.scale = Vector(radii)  #initial radius of sphere is 1. radii is xyz radius in meters. Ellipsoid scale factor is radii[r]/sphere_radius, so each radius can just be set as the scale factor
         bpy.ops.object.transform_apply(scale=True)
 
+        finalWM = bpy.context.active_object.matrix_world # finalWorldMatrix, which we will reapply after setting the rotation mode
+        
         obj = bpy.data.objects[fit_obj_name]
 
+        obj.rotation_mode = 'ZYX'  # Change rotation sequence
+        obj.matrix_world = finalWM
         
         obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
         obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
@@ -1123,8 +1139,13 @@ class FitPlaneOperator(Operator):
         bpy.context.active_object.scale = Vector([plane_x_dim, plane_y_dim, 1])
 
         bpy.ops.object.transform_apply(scale=True)
+        finalWM = bpy.context.active_object.matrix_world # finalWorldMatrix, which we will reapply after setting the rotation mode
+        
+        
 
         obj = bpy.data.objects[fit_obj_name]
+        obj.rotation_mode = 'ZYX'  # Change rotation sequence
+        obj.matrix_world = finalWM #reset the world matrix
 
         obj['MuSkeMo_type'] = 'GEOM_PRIMITIVE'    #to inform the user what type is created
         obj.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!") 
