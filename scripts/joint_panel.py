@@ -1004,7 +1004,7 @@ class FitEllipsoidOperator(Operator):
         
         bpy.context.active_object.matrix_world = worldMat
         bpy.context.active_object.scale = Vector(radii)  #initial radius of sphere is 1. radii is xyz radius in meters. Ellipsoid scale factor is radii[r]/sphere_radius, so each radius can just be set as the scale factor
-        bpy.ops.object.transform_apply(scale=True)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
         finalWM = bpy.context.active_object.matrix_world # finalWorldMatrix, which we will reapply after setting the rotation mode
         
@@ -1138,7 +1138,7 @@ class FitPlaneOperator(Operator):
 
         bpy.context.active_object.scale = Vector([plane_x_dim, plane_y_dim, 1])
 
-        bpy.ops.object.transform_apply(scale=True)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
         finalWM = bpy.context.active_object.matrix_world # finalWorldMatrix, which we will reapply after setting the rotation mode
         
         
