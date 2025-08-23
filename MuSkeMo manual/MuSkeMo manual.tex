@@ -391,7 +391,7 @@ You have now copied a subsection of the mesh as a new mesh, which you can use as
 It is possible to match the position and/or oreintation of a joint to the fitted geometry, respectively. Simply select the target joint and a source geometry, and press the respective button. Child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically. 
 
 \paragraph {Cycling through joint axes.} 
-It is possible that the named axes of the fitted object do not correspond with how you would like the joint to behave (e.g., a Cylinder's long axis always the z-axis, but you may want that axis to align with the joint's x-axis). In this case, after using the match orientations button, use the "Cycle through joint axes" button. This button post-multiplies the joint's rotation matrix with the following permutation matrix:
+It is possible that the named axes of the fitted object do not correspond with how you would like the joint to behave (e.g., a aylinder's long axis is always the z-axis, but you may want that axis to align with the joint's x-axis). In this case, after using the match orientations button, use the "Cycle through joint axes" button. This button post-multiplies the joint's rotation matrix with the following permutation matrix (see also sec. \ref{sec:eulerangles}):
 
 \begin{equation}
 \mathcal{P} =
