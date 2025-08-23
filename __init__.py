@@ -67,6 +67,7 @@ from .scripts.joint_panel import ( CreateNewJointOperator,
                                       FitCylinderOperator, FitEllipsoidOperator,
                                       FitPlaneOperator, 
                                       MatchOrientationOperator, MatchPositionOperator,
+                                      CycleThroughJointAxesOperator,
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
                                       )
@@ -215,6 +216,7 @@ classes = (  #Global settings panel
                                       FitCylinderOperator, FitEllipsoidOperator,
                                       FitPlaneOperator, 
                                       MatchOrientationOperator, MatchPositionOperator,
+                                      CycleThroughJointAxesOperator,
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
                                       VIEW3D_PT_joint_utilities_subpanel,
             #Muscle panel 

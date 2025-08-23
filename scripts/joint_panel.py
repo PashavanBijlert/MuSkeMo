@@ -1441,6 +1441,78 @@ class MatchPositionOperator(Operator):
 
         return {'FINISHED'}        
 
+class CycleThroughJointAxesOperator(Operator):
+    bl_idname = "joint.cycle_through_axes"
+    bl_label = "Cycle through axes, if you want to switch which axes are X, Y, and Z. Select an unparented joint, then press the button."
+    bl_description = "Cycle through axes, if you want to switch which axes are X, Y, and Z. Select an unparented joint, then press the button."
+    
+    def execute(self, context):
+        
+        sel_obj = bpy.context.selected_objects  #should be the only the joint
+        
+        # throw an error if no objects are selected     
+        if (len(sel_obj) == 0):
+            self.report({'ERROR'}, "No joint selected. Select the target joint and try again. Operation cancelled")
+            return {'FINISHED'}
+        
+        # throw an error if too many objects are selected     
+        if (len(sel_obj) > 1):
+            self.report({'ERROR'}, "Too many objects selected. Only select the target joint. Operation cancelled")
+            return {'FINISHED'}
+        
+        joint = sel_obj[0]
+
+        # Check if it's a MuSkeMo JOINT
+        if 'MuSkeMo_type' not in joint:
+            self.report({'ERROR'}, "Selected object '" + joint.name + "' was not created by MuSkeMo. Only select the target joint. Operation cancelled")
+            return {'FINISHED'}
+        
+        if joint['MuSkeMo_type'] != 'JOINT':
+            self.report({'ERROR'}, "Selected object '" + joint.name + "' is not a joint. Select the target joint. Operation cancelled")
+            return {'FINISHED'}
+        
+
+        #Ensure no parent or child
+
+        if joint['parent_body'] != 'not_assigned':
+            self.report({'ERROR'}, "Joint with the name '" + joint.name + "' has a parent body. Operation cancelled")
+            return {'FINISHED'}
+        
+
+        if joint['child_body'] != 'not_assigned':
+            self.report({'ERROR'}, "Joint with the name '" + joint.name + "' has a child body. Operation cancelled")
+            return {'FINISHED'}
+
+
+        #If none of the stop conditions are triggered, define a permutation matrix and multiply the joint's orientation by it.
+
+        # permutation matrix: XYZ -> YXZ
+        P = Matrix(((0,0,1),
+                    (1,0,0),
+                    (0,1,0)))
+
+
+        # extract 3x3 rotation
+        gRb = joint.matrix_world.to_3x3()
+
+        # save position
+        pos = joint.matrix_world.translation.copy()
+
+        # apply one step of permutation
+        R_new = (gRb @ P).to_4x4()
+
+        # put back into world matrix
+        joint.matrix_world = R_new
+        joint.matrix_world.translation = pos
+
+        return {'FINISHED'}
+
+         
+
+
+##### The panels ####
+
+
 class VIEW3D_PT_joint_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo
 
@@ -1595,6 +1667,9 @@ class VIEW3D_PT_joint_utilities_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class nami
         row = self.layout.row()
         row.operator("joint.match_position", text="Match position")
         row.operator("joint.match_orientation", text="Match orientation")
+
+        row = self.layout.row()
+        row.operator("joint.cycle_through_axes", text = "Cycle through joint axes")
 
 
        
