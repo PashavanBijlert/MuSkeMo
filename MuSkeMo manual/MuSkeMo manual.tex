@@ -346,7 +346,9 @@ Inertial properties are not dynamic, if you move the source objects that the rig
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. Select the meshes and the target body, and press the button.
 
 \subsubsection{Checking geometry intersections}
-The geometry subpanel also contains a mesh intersection checker. This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works.
+\label{sec:intersectionchecker}
+
+The geometry subpanel also contains a mesh intersection checker, which is also used by the pose sampling scripts in the MuSkeMo utilities folder (see sec. \ref{sec:posesampling}). This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works.
 
 
 \subsection{Joint panel}
@@ -692,13 +694,30 @@ The Python script "ComputeClosestPointBetweenMeshes.py" can be run in the Blende
 
 \subsubsection{Muscle length script}
 
-Run this script in the Blender script editor (after filling in a target muscle) to get its current length. Can be used in more elaborate scripts and functions (e.g., for computing moment arms).
+Run this script in the Blender script editor (after filling in a target muscle) to get its current length. This is mainly provided because this can be used in more elaborate scripts and functions (e.g., for computing moment arms).
 
 
 \subsubsection{Moment arms analysis}
 The Python script "moment\_arm\_analysis.py" can be opened in the Blender Python script editor to perform a moment arms analysis on the model in the scene. The script is set up to perform the analysis plotted in Figs. \ref{fig:momentarmscombined} \& \ref{fig:momentarmsindividual}, and thus assumes the emu model from \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1}{Sample Dataset 1} is imported into the scene. It exports the analysis to a subfolder called "muscle\_analysis" (which you can configure). The folder also contains a Matlab script that you can use to plot the outputs. The scripts can be used as a starting point for analyzing moment arms of your own models.
 
 The moment arms analysis script loops through the target joints and finds all muscles that cross it (by checking which muscles change in length when moving the joint through its coordinates).
+
+\subsubsection{Pose sampling scripts}
+\label{sec:posesampling}
+
+The utilities folder contains two types of pose sampling scripts, making use of MuSkeMo and Blender's Python APIs in a variety of ways. Importantly, they both use MuSkeMo's intersection checker (see sec. \ref{sec:intersectionchecker}).
+
+The pose sampling scripts are deliberately provided as scripts so that they remain extensible, and can form as example scripts for your customised analysis.
+
+
+
+\begin{itemize}
+    \item \textbf{TITLE OF SCRIPT} This script keeps rotating a joint until a bony intersection would occur, then moves on to the next most distal joint. It is specifically designed with tails or necks in mind, see the recently published \cite{diezdiazCentresRotationOsteological2025} as an example. You can specify the axis of rotation. This script can give the ultimate range of motion about a specific anatomical axis. Note that because it works using skeletal intersections, if two successive geometries already intersect in the starting position, it will immediately skip to the next joint in the sequence. In its current version, it checks for intersections with all the proximal geometries one at a time. A performance boost could likely achieved by using Blender's \href{https://docs.blender.org/api/current/bpy.types.Depsgraph.html}{Dependency graph} to combine all proximal geometries as a depsgraph evaluated object copy. This has not been implemented because the intersection checker is already very fast.
+    \item \textbf{TITLE OF SCRIPT 2} This is a more elaborate pose sampling analysis, in the style of \cite{manafzadehROMMappingLigamentous2018}. The idea is that instead of prescribing a specific axis of motion, you densely sample all available poses of a joint, and check whether they are viable. This script allows you to distinguish between skeletally non-viable (i.e., do the skeletal meshes intersect?) and non-viable due to soft-tissues (in this script: if a ligament length exceeds a specific threshold). To visualize the pose space, a landmark \ref{sec:landmark} is placed on a user-specified location on the distal segment, and in each pose, the position of this landmark is duplicated. These endpoint markers are color-coded based on viability (red: skeletally non-viable, orange: non-viable due to soft tissue constraint, blue: viable). Turning off these endpoint markers makes the script substantially faster. However, MuSkeMo's reliance on Blender's implementation of bounding volume hierarchies (\cite{ericsonBoundingVolumeHierarchies2005}, see sec. \ref{sec:intersectionchecker}) already offers a substantial speedup over booleans.
+
+\end{itemize}
+
+The scripts are demonstrated using the modified emu model available from INSERT LINK. This is a modified version of the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}. The modified version of the model contains a cranial cruciate ligament, following \cite{fussCruciateLigamentsAvian1992}, implemented in MuSkeMo as a MUSCLE so that its length can be used as a cutoff. The neck is also rearticulated slightly so that the neck geometries no longer intersect in the default pose. The muscles have been removed. This version of the model is intended as a kinematic demonstration model only, so the rigid body parameters have been set to NAN.
 
 \subsubsection{Volumetric muscle visualization volume comparison}
 \label{sec:volcomparisonscript}
