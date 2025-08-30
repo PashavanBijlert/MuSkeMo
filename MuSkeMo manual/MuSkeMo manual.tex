@@ -876,10 +876,10 @@ Cylindric wrapping has the following settings, accessible via the wrapping modif
 \end{itemize}
 
 
-\paragraph{Projection Angle} affects the wrap in two situations:
+\paragraph{Projection Angle.} This can affect the wrap in two situations, and is used in comparison with the positions of the two points that span the wrap ($\vec{p}_{1}$ and $\vec{p}_{2}$).
 
 \begin{enumerate}
-\item If Force Sided Wrap is on, we find the closest point $\vec{p}_c$ between the wrap object center $\vec{c}_w$, and the two points that span it ($\vec{p}_{1}$ and $\vec{p}_{2}$) using:
+\item If Force Sided Wrap is on, we find the closest point $\vec{p}_c$ between the wrap object center $\vec{c}_w$ using:
  \begin{equation}
  \vec{p}_c = \frac{(\vec{c}_w - \vec{p}_2) \cdot (\vec{p}_1 - \vec{p}_2)}{\lVert \vec{p}_1 - \vec{p}_2 \rVert^{2}} \cdot (\vec{p}_1 - \vec{p}_2) + \vec{p}_2
  \end{equation}
@@ -888,9 +888,11 @@ Readers familiar with linear algebra will recognize this as an orthogonal projec
 \end{enumerate}
 
 
-\paragraph{Shortest wrap} determines $-\vec{p}_{1} \cross \vec{p}_{2}$, then computes the dot product between that vector and the cylinder z-axis. If this dot product is negative, the wrap is flipped. Shortest wrap is superceded by Force Sided Wrap.
+\paragraph{Pre wrap index.} Inside the node tree, the conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
 
-\paragraph{Pre wrap index} Inside the node tree, the conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
+
+\paragraph{Shortest wrap.} First determines the vector $-\vec{p}_{1} \cross \vec{p}_{2}$, then computes the dot product between that vector and the cylinder z-axis. If this dot product is negative, the wrap is flipped. Shortest wrap is superceded by Force Sided Wrap.
+
 
 
 
