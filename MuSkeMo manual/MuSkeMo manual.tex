@@ -2,6 +2,9 @@
 
 % Packages
 \usepackage{amsmath}    % For math environments
+
+\DeclareMathOperator{\atantwo}{atan2}
+
 \usepackage{graphicx}   % For including graphics
 \usepackage{caption}
 \usepackage{hyperref}   % For hyperlinks
@@ -99,21 +102,21 @@ PA van Bijlert. \textit{MuSkeMo: Open-source software to construct, analyze, and
 \newpage
 \section{Introduction}
 
-MuSkeMo is a tool for musculoskeletal modeling in \href{https://www.blender.org}{Blender}. MuSkeMo allows you to translate biological 3D scans to useful biomechanical information, in the form of full models or model components. These can then be used for further analysis within Blender, or exported for simulations in other biomechanical software. Simulation trajectories can be imported back into MuSkeMo to make publication-ready stills and videos, using Blender’s built-in raytracing rendering. MuSkeMo can also be used for 3D landmarking and for simply calculating inertia tensors from 3D scans.
+MuSkeMo is a tool for musculoskeletal modeling in \href{https://www.blender.org}{Blender}. MuSkeMo allows you to translate biological 3D scans to useful biomechanical information, in the form of full models or model components. These can then be used for further analysis within Blender, or exported for simulations in other biomechanical software. Simulation trajectories can be imported back into MuSkeMo to make publication-ready stills and videos, using Blender's built-in raytracing rendering. MuSkeMo can also be used for 3D landmarking and for simply calculating inertia tensors from 3D scans.
 
 This MuSkeMo documentation file is meant to complement the \href{https://youtube.com/playlist?list=PLfgxaucAWlEp5-cavvXmdrTIWYT_tgZYK&si=Cdl9MchuLP5aRJNL}{video tutorial series on YouTube}. Users are encouraged to download the sample datasets and follow along with the video tutorials.
-This documentation is focused on features specific to MuSkeMo, and where necessary provides suggestions regarding Blender settings and features. Because Blender can be overwhelming at first, new users are recommended to follow the "Donut tutorial" series by BlenderGuru on Youtube. For Blender-specific questions, the reader is referred to the extensive \href{https://docs.blender.org/}{Blender documentation}. MuSkeMo currently officially supports Blender 4.0 -4.1, but will offer 4.2+ support in the future. 
+This documentation is focused on features specific to MuSkeMo, and where necessary provides suggestions regarding Blender settings and features. Because Blender can be overwhelming at first, new users are recommended to follow the "Donut tutorial" series by BlenderGuru on Youtube. For Blender-specific questions, the reader is referred to the extensive \href{https://docs.blender.org/}{Blender documentation}. MuSkeMo currently officially supports Blender 4.1 -4.5.
 
 \subsection{Installation instructions}
 
 To download: Go to the \href{https://github.com/PashavanBijlert/MuSkeMo/releases}{releases page} on the Github repository, and download the most recent version of "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
-To install (Fig. \ref{fig:installation}): In Blender v4-v4.1, go to Edit → preferences → Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, you may need to use the legacy installer, but MuSkeMo has currently not been tested above v4.1.
+To install (Fig. \ref{fig:installation}): In Blender v4.1, go to Edit → preferences → Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, the install button is replaced with a downwards arrow, which gives ``Install from disk''.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{figures/install_instructions.png} % Add image
-    \caption{Installing MuSkeMo in Blender versions 4.0-4.1}
+    \caption{Installing MuSkeMo in Blender versions 4.0-4.1. In 4.2+, Step 4 is replaced with pressing a downwards arrow and selection ``Install from disk''}
     \label{fig:installation}
 \end{figure}
 
@@ -134,7 +137,7 @@ MuSkeMo uses the following units:
 \end{itemize}
 
 
-\textbf{WARNING:} Blender's default units are in metres. Many of the calculations in MuSkeMo are derived from the spatial position of individual points (vertices) of the 3D meshes. If you change the base units of Blender, these calculations are also implicitly scaled, and the units will no longer be correct (e.g., if you change Blender’s base units to centimetres, linear dimensions will be off by a factor of 100, but volumetrics and inertial properties will be off by a factor of 100\(^3\)). MuSkeMo currently only officially supports metres as the base unit, correct scaling of the outputs if using other units is up to the user.
+\textbf{WARNING:} Blender's default units are in metres. Many of the calculations in MuSkeMo are derived from the spatial position of individual points (vertices) of the 3D meshes. If you change the base units of Blender, these calculations are also implicitly scaled, and the units will no longer be correct (e.g., if you change Blender's base units to centimetres, linear dimensions will be off by a factor of 100, but volumetrics and inertial properties will be off by a factor of 100\(^3\)). MuSkeMo currently only officially supports metres as the base unit, correct scaling of the outputs if using other units is up to the user.
 
 \subsection{A Note on Precision}
 \label{sec:precision}
@@ -158,7 +161,7 @@ Nearly all functions in MuSkeMo work by selecting the correct objects in the sce
 Although Blender does support using a trackpad, it is substantially more intuitive to navigate with a mouse, and a keyboard with a separate numberpad. There are also certain settings that make navigation easier (see Section \ref{sec:MSM_glob_settings}).
 
 
-\textbf{WARNING:} Ensure that 3D meshes (visual geometry and tissue outlines) have all their transformations applied before you start constructing the model. To do this, select the object, press \texttt{Control + A}, and select “All transforms”. This accounts for the way that Blender stores local transformations. When you move, rotate, and/or scale 3D models in Blender, these transformations are initially stored only locally in the object’s data (an extra storage layer in Blender). This means that the object’s position has not changed in 3D space, you have defined an extra local transformation that can easily be undone. Some of the functions in MuSkeMo may behave unpredictably unless transformations have first been applied.
+\textbf{WARNING:} Ensure that 3D meshes (visual geometry and tissue outlines) have all their transformations applied before you start constructing the model. To do this, select the object, press \texttt{Control + A}, and select ``All transforms". This accounts for the way that Blender stores local transformations. When you move, rotate, and/or scale 3D models in Blender, these transformations are initially stored only locally in the object's data (an extra storage layer in Blender). This means that the object's position has not changed in 3D space, you have defined an extra local transformation that can easily be undone. Some of the functions in MuSkeMo may behave unpredictably unless transformations have first been applied.
 
 
 
@@ -202,6 +205,21 @@ To prevent incorrect exports, MuSkeMo keeps track of the 'default\_pose', which 
 
 Alternatively, if the user wishes to export the model in the changed pose, it is necessary to recompute all the model parameters in this new pose. For inertial properties and bodies, this means recomputing and reassigning the inertial properties, for other components it means detaching and reparenting the objects.
 
+% \subsection{Example Model Building Workflow}
+
+% Model building approaches can vary depending researcher preferences, research questions, and intended purpose of the model (8-15). This section provides a possible workflow to construct a model using MuSkeMo, for predictive simulations in third party simulators. However, MuSkeMo's many features make it suitable for a variety of other biomechanical and/or morphological analyses.
+
+% \begin{enumerate}
+% \item	Import a skeletal mesh into Blender, partition it into relevant body segments, and position it into a neutral posture (Fig 1A). Optionally, retrodeformation techniques can be applied if the meshes are deformed fossil specimens (16).
+%  \item Import tissue outline meshes (acquired using CT scans), partition those into equivalent segments, then use MuSkeMo's ``Inertial properties panel" to estimate body mass properties of these meshes (Fig 1B). The user can specify a density, and which meshes to apply these densities to. After pressing the relevant button, the inertial properties are automatically computed. If tissue outline meshes are not available (e.g., when analyzing a fossil taxon), MuSkeMo's convex hulling features (Fig 1B) can generate them using empirical equations from the literature (17,18).
+% \item	Create rigid bodies in MuSkeMo's ``Body panel".  Each rigid body should have a unique name. Rigid bodies can represent the combined inertial properties of one or more meshes, as computed in the previous step: select one body and one or more meshes, then press ``Assign precomputed inertial properties". Optionally, the user can assign visual geometry to the rigid bodies for visualization purposes (e.g., the skeleton or tissue outline meshes acquired in steps 1 and 2): select a rigid body, and the target visualization meshes, and press ``Attach visual (bone) geometry".
+% \item	In MuSkeMo's ``Joint panel", create joints for each desired joint (link, articulation) in the model (Fig 1H). The position and orientations of the joints can be set manually (using Blender's transformation tools), or alternatively by fitting geometric primitives to portions of the skeleton (Fig. 1D). This option is available under ``Joint utilities", in the Joint panel. The ``match position" and ``match orientation" buttons automatically transform selected joints to target fitted geometry (or other target objects in the scene). Parenting is handled by the panel if the user selects one rigid body and one joint, and presses the ``Assign parent body" or ``Assign child body" buttons.
+% \item	Create muscles in MuSkeMo's ``Muscle panel" (Fig. 1E) Muscle points are added to Blender's 3D cursor, provided the user selects a body to which the point will be parented. Before adding a muscle point, the user can reposition the 3D cursor with ``Shift + right mouse button". Once a muscle point is created, it can be repositioned by bringing the muscle point into Blender's ``Edit mode", which is accessible using the ``TAB" key. Optionally, the user can add wrapping to a muscle in this panel, or plot moment arms to iteratively reposition the muscle points. It is possible to assign contractile properties to each muscle via its Custom Properties (see Methods, and Supplementary File S1). MuSkeMo can display a muscle's length in real time, which enables the user to determine suitable optimal fiber lengths and tendon slack lengths by manually moving the model through different postures (see [9,12,19] for details).
+% \item	Define contact sphere positions in the ``Contact sphere panel" (Fig. 1G). The approach is very similar to creating joints, except that contact spheres are placed on the 3D cursor location.
+% \item	Optionally, the user can create frames in the ``Anatomical and local references frames panel" (Fig. 1C). These frames can either be positioned and oriented manually, or constructed with the help of landmarks (using cross-products, as described in [20]). When using landmarks, these first need to be created using the ``Landmark & marker panel". Landmark-based frames can be constructed with an arbitrary primary axis (X,Y, or Z) and arbitrary secondary plane (one of the two remaining unused directions), resulting in six possible ways to construct right-handed reference frames using landmarks (see the Supplementary File S1, the manual, for details).
+% \item	It is possible to reflect all the created model elements in MuSkeMo's ``Reflection panel" to create a symmetric model (Fig. 1F). This requires following a consistent naming convention when creating sided model elements (all right-side model components names should end with ``\_r" and vice-versa, e.g., ``thigh\_r", ``knee\_r" , etc.).
+% \item Export all model components using the ``Export panel". Model components are exported as .CSV files. Users can process these in their simulator of choice, see for example the OpenSim conversion Matlab script provided in the ``MuSkeMo Utilities" folder.
+% \end{enumerate}
 
 \section{MuSkeMo's Panels}
 This section describes all of MuSkeMo's panels and how to use them. Most of MuSkeMo's features work by selecting the correct combination of objects, and then pressing one of the buttons in the panels. MuSkeMo's panels show you how many and what types of objects (e.g., "BODY") you have selected, and will give an explanatory error message if you try to use a panel incorrectly (e.g.,: assigning a parent body to a joint requires selecting one body and one joint, and MuSkeMo informs you if you didn't do this). Most of the panels also allow you to create new objects, which means you have to type in a (unique!) object name and press a button. 
@@ -346,7 +364,9 @@ Inertial properties are not dynamic, if you move the source objects that the rig
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. Select the meshes and the target body, and press the button.
 
 \subsubsection{Checking geometry intersections}
-The geometry subpanel also contains a mesh intersection checker. This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works.
+\label{sec:intersectionchecker}
+
+The geometry subpanel also contains a mesh intersection checker, which is also used by the pose sampling scripts in the MuSkeMo utilities folder (see sec. \ref{sec:posesampling}). This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works.
 
 
 \subsection{Joint panel}
@@ -363,20 +383,50 @@ If you want to change a joint's position or orientation, detach the parent and c
 
 It is possible to define coordinate names in the joint panel. After exporting from MuSkeMo, the model conversion scripts (e.g., MuSkeMo\_to\_OpenSim) will only add DOFs to model if they are named (e.g. hip\_angle\_r). If no coordinates are named for a joint, the joint is turned into an immobilized joint (e.g., WeldJoint in OpenSim). 
 
-\subsubsection*{Joint utilities}
+\subsubsection{Fitting primitive objects for joints}
+\label{sec:primitivefitting}
+In this panel, there are buttons that fit geometric primitives to a selected mesh (sphere, cylinder, ellipsoid, plane). Simply select a target mesh, and press one of the fitting buttons. The options are:
 
-In this panel, there are buttons that fit geometric primitives to a selected mesh (sphere, cylinder, ellipsoid, plane). The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), go through the following steps:
+\begin{itemize}
+    \item \textbf{Sphere (geometric).} Implements \cite{yesudasanFastGeometricFit2015}.
+    \item \textbf{Sphere (least squares).} Implements \cite{Jekel2016}.
+    \item \textbf{Cylinder.} Python implementation of the pseudocode in \cite{eberlyLeastSquaresFitting}. After implementing the fitting algorithm, MuSkeMo also uses the original vertex data to compute the height of the cylinder, based on the maximum z-span of the target vertices in the cylinder frame. The z-axis Euler angle is set to 0, because cylinders are rotationally symmetric about the long axis.
+    \item \textbf{Ellipsoid.} This is a Python implementation provided courtesy of Mark Semple \cite{semplePyEllipsoid_Fit}, who converted Yuri Petrov's Matlab implementation. I modified it further to ensure right-handed coordinate systems.
+    \item \textbf{Plane.} Simple implementation based on taking the covariance matrix of all the recentered vertex positions, which is conceptually identical to a principal component analysis. The best fitting plane must pass through the centroid of the data points \cite{pearsonLIIILinesPlanes1901}, which is used to recenter the data. The eigenvectors of the covariance matrix then encode the directions (principal components) of variance in the data \cite{jolliffeMathematicalStatisticalProperties2002}. The plane of best fit, in a least-squares sense, is orthogonal to the eigenvector corresponding to the lowest eigenvalue of the covariance matrix \cite{jolliffeMathematicalStatisticalProperties2002,pearsonLIIILinesPlanes1901}. This is taken as the Z-axis of the plane. The plane itself is taken as the basis spanned by the eigenvectors of the two largest eigenvalues. Right-handed coordinate systems are also ensured, by flipping the direction of one of the eigenvectors if necessary.
+\end{itemize}
 
-1) Select the target mesh
-2) Press Tab to go into 'edit mode' in Blender
-3) Select the portion of the mesh you would like to fit (easiest is to use face selection mode, and use the selection circle)
-4) press shift \+ D to duplicate the selection
-5) press P (for seParate), and then select "by selection".
-6) press Tab to go out of edit mode.
+The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), go through the following steps:
+
+
+\begin{enumerate}
+\item Select the target mesh
+\item Press Tab to go into 'edit mode' in Blender
+\item Select the portion of the mesh you would like to fit (easiest is to use face selection mode, and use the selection circle)
+\item press shift \+ D to duplicate the selection
+\item press P (for seParate), and then select "by selection".
+\item press Tab to go out of edit mode.
+\end{enumerate}
 
 You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions. The duplicated section of the mesh is in the same collection as the original, and if the original mesh was attached to a BODY, so will this copied section. To prevent it being exported, move it to a different collection, and detach the mesh from the body using the button in the panel.
 
-It is possible to match the transformations of a joint to the fitted geometry. Child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically.
+\paragraph {Matching joints to fitted geometry.} 
+
+It is possible to match the position and/or oreintation of a joint to the fitted geometry, respectively. Simply select the target joint and a source geometry, and press the respective button. Child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos\_in\_child) are recomputed automatically. 
+
+\paragraph {Cycling through joint axes.} 
+It is possible that the named axes of the fitted object do not correspond with how you would like the joint to behave (e.g., a aylinder's long axis is always the z-axis, but you may want that axis to align with the joint's x-axis). In this case, after using the match orientations button, use the "Cycle through joint axes" button. This button post-multiplies the joint's rotation matrix with the following permutation matrix (see also sec. \ref{sec:eulerangles}):
+
+\begin{equation}
+\mathcal{P} =
+\begin{bmatrix}
+0 & 0 & 1 \\
+1 & 0 & 0 \\
+0 & 1 & 0
+\end{bmatrix}
+\end{equation}
+
+
+Cycling through it three times restores the original orientation.
 
 \subsection{Muscle panel}
 
@@ -487,7 +537,7 @@ For an arbitrary matrix \(\mathbf{I}\) expressed in \(\mathcal{G}\) (e.g., an in
 \label{eq:similaritytransformation}
 \end{equation}
 
-Readers familiar with linear algebra will recognize this as a similarity transformation, using a change of basis matrix.
+Readers familiar with linear algebra will recognize this as a similarity transformation, using a change of basis matrix \cite{layLinearAlgebraIts2016}.
 
 \subsection{Landmark \& marker panel}
 \label{sec:landmarkpanel}
@@ -576,6 +626,11 @@ Future updates will include Hyfydy and MuJoCo model support.
 \label{sec:visualizationpanel}
 Rendering in Blender can be a complicated process. It is capable of professional level video graphics rendering, and there are a lot of settings that the user can modify to achieve this. This panel provides some ease of use functions that preset the rendering settings that the author finds visually appealing, while also providing adequate performance. There exist thousands of video tutorials for creating renders in Blender. Until a MuSkeMo-specific rendering tutorial is recorded, it is recommended that you follow one of the many out there (e.g., the Donut tutorial referenced at the top of this document). \textbf{If your computer does not have a powerful graphics card (GPU), it may be necessary to tweak the recommended settings.} 
 
+\subsubsection{Volumetric Muscles}
+\label{sec:visualizationpanelvolmusc}
+This subpanel allows you to toggle between the volumetric (sec. \ref{sec:volmuscleviz}), and the tube style (sec. \ref{sec:simplemuscleviz}) muscle visualizations. Use the \textbf{Convert to volumetric muscles} and \textbf{Convert to simple (tube) muscles} buttons to toggle between the two. The buttons will act on all muscles in the designated Muscle collection. Specific tension will affect the computed muscle volumes (assuming $vol = F/\sigma \cdot L_{0}$), and the muscle radius affects the tube style. If you want to change these values, they will take into effect after toggling the visualizations (so e.g., to change specific tension for all muscles, first toggle it back to the tube style, change the specific tension, and then toggle back to volumetric).
+
+For each muscle, the volumetric muscle visualization node has four inputs, next to the volume (see sec. \ref{sec:volmuscleviz}). These can be adjusted for all muscles by selecting \textbf{Show volumetric muscle options}. You will have to toggle between the visualization modes for the changes to take into effect.
 
 \subsubsection{Trajectory import}
 \label{sec:trajectoryimport}
@@ -611,8 +666,7 @@ MuJoCo models have a similar possibility (see Sec. \ref{sec:mujocoimporter}.). M
 This subpanel includes several convenience tools to aid users who are new to animations in Blender. These are:
 
 \begin{itemize}
-    \item \textbf{Convert to volumetric muscles:} adds volumetric muscle visualization to each muscle in the scene. See section \ref{sec:volmuscleviz} for details and settings for the visualizations.
-    \item \textbf{Convert to simple (tube) muscles:} Converts the muscles back to simple (tube) visualizations. See section \ref{sec:simplemuscleviz} for details.
+    
     \item \textbf{Create a ground plane:} adds a ground plane to the scene
     \item \textbf{Set recommended render settings:} sets the rendering engine to Cycles (see below), the device to GPU, Max samples to 1000, turns on persistent data (under performance), and sets the "Look" to very high contrast (under Color Management). \textbf{WARNING:} the Cycles rendering engine is a path tracing (raytracing) rendering engine. If you do not have access to a computer with a powerful GPU, rendering performance will be incredibly poor. In that case, you should switch to the Eevee rendering engine.
     \item \textbf{Set black background gradient for renders:} creates a node setup in the \href{https://docs.blender.org/manual/en/latest/compositing/index.html}{compositor} that de-emphasizes the background.
@@ -665,13 +719,30 @@ The Python script "ComputeClosestPointBetweenMeshes.py" can be run in the Blende
 
 \subsubsection{Muscle length script}
 
-Run this script in the Blender script editor (after filling in a target muscle) to get its current length. Can be used in more elaborate scripts and functions (e.g., for computing moment arms).
+Run this script in the Blender script editor (after filling in a target muscle) to get its current length. This is mainly provided because this can be used in more elaborate scripts and functions (e.g., for computing moment arms).
 
 
 \subsubsection{Moment arms analysis}
 The Python script "moment\_arm\_analysis.py" can be opened in the Blender Python script editor to perform a moment arms analysis on the model in the scene. The script is set up to perform the analysis plotted in Figs. \ref{fig:momentarmscombined} \& \ref{fig:momentarmsindividual}, and thus assumes the emu model from \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1}{Sample Dataset 1} is imported into the scene. It exports the analysis to a subfolder called "muscle\_analysis" (which you can configure). The folder also contains a Matlab script that you can use to plot the outputs. The scripts can be used as a starting point for analyzing moment arms of your own models.
 
 The moment arms analysis script loops through the target joints and finds all muscles that cross it (by checking which muscles change in length when moving the joint through its coordinates).
+
+\subsubsection{Pose sampling scripts}
+\label{sec:posesampling}
+
+The utilities folder contains two types of pose sampling scripts, making use of MuSkeMo and Blender's Python APIs in a variety of ways. Importantly, they both use MuSkeMo's intersection checker (see sec. \ref{sec:intersectionchecker}).
+
+The pose sampling scripts are deliberately provided as scripts so that they remain extensible, and can form as example scripts for your customised analysis.
+
+
+
+\begin{itemize}
+    \item \textbf{TITLE OF SCRIPT} This script keeps rotating a joint until a bony intersection would occur, then moves on to the next most distal joint. It is specifically designed with tails or necks in mind, see the recently published \cite{diezdiazCentresRotationOsteological2025} as an example. You can specify the axis of rotation. This script can give the ultimate range of motion about a specific anatomical axis. Note that because it works using skeletal intersections, if two successive geometries already intersect in the starting position, it will immediately skip to the next joint in the sequence. In its current version, it checks for intersections with all the proximal geometries one at a time. A performance boost could likely achieved by using Blender's \href{https://docs.blender.org/api/current/bpy.types.Depsgraph.html}{Dependency graph} to combine all proximal geometries as a depsgraph evaluated object copy. This has not been implemented because the intersection checker is already very fast.
+    \item \textbf{TITLE OF SCRIPT 2} This is a more elaborate pose sampling analysis, in the style of \cite{manafzadehROMMappingLigamentous2018}. The idea is that instead of prescribing a specific axis of motion, you densely sample all available poses of a joint, and check whether they are viable. This script allows you to distinguish between skeletally non-viable (i.e., do the skeletal meshes intersect?) and non-viable due to soft-tissues (in this script: if a ligament length exceeds a specific threshold). To visualize the pose space, a landmark \ref{sec:landmark} is placed on a user-specified location on the distal segment, and in each pose, the position of this landmark is duplicated. These endpoint markers are color-coded based on viability (red: skeletally non-viable, orange: non-viable due to soft tissue constraint, blue: viable). Turning off these endpoint markers makes the script substantially faster. However, MuSkeMo's reliance on Blender's implementation of bounding volume hierarchies (\cite{ericsonBoundingVolumeHierarchies2005}, see sec. \ref{sec:intersectionchecker}) already offers a substantial speedup over booleans.
+
+\end{itemize}
+
+The scripts are demonstrated using the modified emu model available from INSERT LINK. This is a modified version of the emu model from \cite{vanbijlertMusclecontrolledPhysicsSimulations2024a}. The modified version of the model contains a cranial cruciate ligament, following \cite{fussCruciateLigamentsAvian1992}, implemented in MuSkeMo as a MUSCLE so that its length can be used as a cutoff. The neck is also rearticulated slightly so that the neck geometries no longer intersect in the default pose. The muscles have been removed. This version of the model is intended as a kinematic demonstration model only, so the rigid body parameters have been set to NAN.
 
 \subsubsection{Volumetric muscle visualization volume comparison}
 \label{sec:volcomparisonscript}
@@ -727,7 +798,7 @@ The underlying object type in Blender is an "Empty".
 \subsection{GEOMETRY}
 \label{sec:geometry}
 
-Visual geometry (e.g., bone meshes, or tissue outline meshes) can be attached to bodies for visualization purposes. In most simulators, these don’t have a physical function, but are purely used for visualization purposes and for determining where muscle attachments are relative to the bodies. 
+Visual geometry (e.g., bone meshes, or tissue outline meshes) can be attached to bodies for visualization purposes. In most simulators, these don't have a physical function, but are purely used for visualization purposes and for determining where muscle attachments are relative to the bodies. 
 
 \textbf{WARNING:} OpenSim has a visualization bug that prevents models from loading correctly if the total file size of the attached geometry exceeds ~50MB. You can decimate the meshes to reduce them to about ~50MB or attempt to load the model into OpenSim Creator.
 
@@ -760,35 +831,39 @@ Under "Geometry nodes", with the "SimpleMuscleViz" node of a muscle selected, th
 \subsubsection{Volumetric muscle visualization}
 \label{sec:volmuscleviz}
 
-Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters and an operation mode, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
+You can convert all your muscles to the volumetric style in the Volumetric Muscles subpanel of the Visualization panel (sec. \ref{sec:visualizationpanelvolmusc}). Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters and an operation mode, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
 
 \begin{itemize}
 \item \textbf{MuscleVolume:} Computed using each muscle's F\_max, optimal\_fiber\_length, and specific\_tension (set in the Visualization panel, see section \ref{sec:visualizationpanel}). The node setup adjusts the muscle's radius to keep the volume constant irrespective of the length.
 \item \textbf{MuscleTendonLengthRatio: } This decides the ratio of the muscle belly to the total musculotendon complex length. If set to 1, the muscle belly is stretched across the entire muscle's length. 
 \item \textbf{TendonMuscleRadiusRatio: } This sets the relative ratio of the tendon with respect to the muscle's radius. Set to 0 if you want no tendon visualization.
 \item \textbf{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
-\item \textbf{FastOrVolumeAccurate: } Toggle betwen a faster or more volumetrically precise visualization. See sec. \ref{sec:volcomparisonscript} for a script that compares muscle volumes. The Fast mode may underestimate the volume by ~1-5\%, depending on the shape of the muscle. The VolumeAccurate node adds an extra volume checking and rescaling step to ensure that the visualized volume is correct with respect to the muscle-input volume. This mode is approximately twice as slow, because it essentially draws each muscle twice (once internally). In most cases, the discrepancy between the two modes is imperceptible, which is why the Fast mode is enabled by default, given that it is approximately twice as fast which may be noticable on slow PC's when visualizing many muscles. Use the VolumeAccurate mode if high precision is required.
+\item \textbf{FastOrVolumeAccurate: } Toggle betwen a faster or more volumetrically precise visualization. See sec. \ref{sec:volcomparisonscript} for a script that compares muscle volumes. The Fast mode may underestimate the volume by ~1-5\%, depending on the shape of the muscle. The VolumeAccurate node adds an extra volume checking and rescaling step to ensure that the visualized volume is correct with respect to the muscle-input volume. This mode is approximately twice as slow, because it essentially draws each muscle twice (once internally). In most cases, the discrepancy between the two modes is imperceptible. This is why the Fast mode is enabled by default, given that it is approximately twice as fast which may be noticable on slow PC's when visualizing many muscles. Use the VolumeAccurate mode if high precision is required.
 \end{itemize}
+
+If you want to change the global defaults of these parameters, hit ``Show volumetric muscle options'' in the Volumetric Muscles subpanel (sec. \ref{sec:visualizationpanelvolmusc}), and toggle between the visualization modes for the changes to take into effect.
+
 
 \paragraph{How it works:}
 
-The volumetric muscles are created using a Geometry nodes setup that sweeps (lofts) a circle across a portion of the length of the muscle curve, creating a volumetric object. A fixed fraction of the the whole muscle curve's instantaneous length is assigned as the Muscle belly length, meaning the belly length changes with different postures. The radius of the swept circle is dynamically adjusted to maintain constant volume. Simply sweeping a circle across a curve would result in a cylinder, therefore the node setup further varies the radius of the swept circle to allow for a tapered muscle shape. The swept circle is also not a true circle, but an $n$-sided polygon (24 by default). The node group corrects for the extra reduction in volume that the tapered shape and $n$-gon approximation introduce, but only the ``VolumeAccurate" mode further corrects for the volume discrepancy introduced by not having a straight-line curve.
+The volumetric muscles are created using a Geometry nodes setup that sweeps (lofts) a circle across a portion of the length of the muscle curve, creating a volumetric object. A fixed fraction of the the whole muscle curve's instantaneous length is assigned as the Muscle belly length, meaning the belly length changes with different postures. The radius of the swept circle is dynamically adjusted to maintain constant volume. Simply sweeping a circle across a curve would result in a cylinder, therefore the node setup further varies the radius of the swept circle to allow for a tapered muscle shape. The swept circle is also not a true circle, but an $n$-sided polygon (24 by default), which looks like a circle due to smooth shading in Blender. The node group corrects for the extra reduction in volume that the tapered shape and $n$-gon approximation introduce, but only the ``VolumeAccurate" mode further corrects for the volume discrepancy introduced by not having a straight-line curve.
 
 The full node setup performs the following steps:
 
 \begin{enumerate}
     \item The input polycurve is resampled for even spacing.
     \item One copy of the curve becomes the \textit{tendon}, with a constant-radius profile set by the tendon radius ratio.
-    \item The other copy of the curve is trimmed according to the length ratio and proximal–distal bias, then resampled again for smoothness
+    \item The other copy of the curve is trimmed according to the length ratio and proximal-distal bias, then resampled again for smoothness
     \item For both modes, an initial muscle belly radius is calculated from the target muscle volume and the trimmed belly length, using a cylindric approximation.
-    \item The computed muscle belly radius is then scaled by the curve’s \textit{Curve Radius} attribute, which can be edited using the \href{https://docs.blender.org/manual/en/latest/compositing/types/utilities/float_curve.html}{Float Curve} node. In Blender, the \textit{Curve Radius} is a per-control-point scalar property of a curve (\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/write/set_curve_radius.html}{Set Curve Radius} node), which does not directly change the visual thickness of a curve in the viewport, but is used by operations such as \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/operations/curve_to_mesh.html}{Curve to Mesh} to scale the cross-sectional profile. Thus, the Float curve node allows the user to draw a thickness profile of the muscle along its entire length (i.e., giving fine grained control over the thickness and the taper of the muscle).
-    \item Because tapering reduces volume, the node setup calculates the theoretical swept-volume of circle profile along a straight line, with its radius equal to the initial muscle belly radius scaled by the relative height of the profile curve at any point across the muscles length. This computation accounts for the truncation error from sweeping an $n$-sided polygon instead of a true circle. This theoretical volume is compared to the target cylinder volume, and scales the initial muscle belly radius by the square root of the ratio to match the target.
-    \item The adjusted $n$-gon profile is swept directly along the curve to create the muscle mesh.
+    \item The computed muscle belly radius is then scaled by the curve's \textit{Curve Radius} attribute, which can be edited using the \href{https://docs.blender.org/manual/en/latest/compositing/types/utilities/float_curve.html}{Float Curve} node. In Blender, the \textit{Curve Radius} is a per-control-point scalar property of a curve (\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/write/set_curve_radius.html}{Set Curve Radius} node), which does not directly change the visual thickness of a curve in the viewport, but is used by operations such as \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/operations/curve_to_mesh.html}{Curve to Mesh} to scale the cross-sectional profile. Thus, the Float curve node allows the user to draw a thickness profile of the muscle along its entire length (i.e., giving fine grained control over the thickness and the taper of the muscle). Note: Before version 4.5, the scale was set implicitly if the "Set curve radius" node was used before it in the node chain. Blender 4.5 added the scale as a dedicated input to the Curve to Mesh node, and automatically adds generates a "Named attribute" and "switch" node to connect to it, and to check whether "Set curve radius" was used earlier in the chain.
+    \item Because tapering reduces volume, the node setup calculates the theoretical swept-volume of circle profile along a straight line, with its radius equal to the initial muscle belly radius scaled by the relative height of the profile curve at any point across the muscles length. This computation accounts for the truncation error from sweeping an $n$-sided polygon instead of a true circle. This theoretical volume is compared to the target cylinder volume, and the initial muscle belly radius is scaled by the square root of the ratio to match the target.
+    \item The adjusted $n$-gon profile is swept along the curve to create the muscle mesh.
     \item In \textbf{Fast mode}, this mesh is used directly.
-    \item In \textbf{Volume Accurate mode}, the swept mesh is subdivided, its volume is measured, and a second adjustment is applied to precisely match the target volume before generating the final mesh. Because the muscle is essentially drawn twice (once without visualizing it), this mode is approximately twice as slow.
+    \item In \textbf{Volume Accurate mode}, the swept mesh is subdivided, its volume is measured, and a second adjustment is applied to precisely match the target volume before generating the final mesh. Because the muscle is essentially drawn twice (once without visualizing it), this mode is approximately twice as slow. The within-node volume computation occurs with the ``calc\_volume'' node shared by user bebop\_artist on the \href{https://blender.stackexchange.com/a/325516}{Blender Stackexchange} forum, under a CC BY-SA 4.0 license.
     \item A subdivision surface is applied to smooth the appearance and reduce visible creases.
     \item Muscle and tendon receive separate materials (see sec. \ref{sec:defaultcolors})
 \end{enumerate}
+
 
 
 \subsubsection{Muscle wrapping}
@@ -801,29 +876,34 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 Cylindric wrapping has the following settings, accessible via the wrapping modifiers:
 
 \begin{itemize}
-\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. When assigned to a muscle, also affects the wrapping radius.
-\item \textbf{Wrap Cylinder Height:} Height of the cylinder. When assigned to a muscle, also assigns the wrapping height.
-\item \textbf{Flip Wrap:} This allows you to flip the sidedness of the wrap
+\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. When assigned to a muscle, also affects the wrapping radius by storing a Named Attribute in Blender.
+\item \textbf{Wrap Cylinder Height:} Height of the cylinder. When assigned to a muscle, also assigns the wrapping height by storing a Named Attribute in Blender.
+\item \textbf{Flip Wrap:} This allows you to flip the sidedness of the wrap manually.
 \item \textbf{Shortest Wrap:} This ensures the wrapping occurs on the side where the wrapped section would be shortest. Causes posture-dependent flipping if the curve moves to the other side of the wrapping geometry. Shortest wrap is ignored if Force Sided Wrap is enabled.
-\item \textbf{Force Sided Wrap:} Select this if you want to force a wrap in a specific projection direction, even when the curve is not intersecting the geometry. You have to specify the index of the pre-wrap point, and a projection angle. The wrap is active when the curve intersects the geometry, or when it is outside the geometry, on the opposite side of the projection direction.
+\item \textbf{Force Sided Wrap:} Select this if you want to force a wrap in a specific projection direction, even when the curve is not intersecting the geometry. You have to specify the index of the pre-wrap point, and a projection angle. The wrap is active when the curve intersects the geometry, or when it is outside the geometry, on the opposite side of the projection direction. See below how this is achieved.
 \item \textbf{Index Of Pre Wrap Point Starting At 1:} Specify the point after which you would like the wrapping to occur. This setting is ignored unless you select Force Sided Wrap.
 \item \textbf{Projection Angle:} By default, the projection direction is in the positive X-direction in the frame of reference of the wrapping geometry. The projection angle rotates the projection direction about the Z-axis of the wrapping geometry.
 \item \textbf{Wrapping Point Resolution} Number of points projected onto the wrapping geometry (if wrapping occurs). This only affects visualizations, not length computations. Setting this very high can reduce performance.
 \end{itemize}
 
 
-% Projection affects flips the wrap in two situations
-% 1) If force wrap is on, using a dot product, we find the clostest point between the wrap object center (2D projection) and the wrap crossing line.
-% If this points in the same general direction as the projection direction (second dot product), then the wrap is active. 
-% 2) Take a vector frome pre to post wrapping point, in the wrapping frame. The arctan2 gives the phi_angle this is pointing in. If this angle is between 0 and pi (so in the first or second quadrant), we flip the wrap. This is assuming a projection angle of 0 (so the projection is in local X dir.). The projection angle shifts the relevant quadrants. So we compute if (phi_angle - proj angle ) is between 0 and pi.
+\paragraph{Projection Angle.} This can affect the wrap in two situations, and is used in comparison with the positions of the two points that span the wrap ($\vec{p}_{1}$ and $\vec{p}_{2}$).
 
-%shortest wrap uses a cross product between the wrap crossing points, then computes the dot product between that vector and the cylinder z-axis. This is used to flip the wrap if required.
+\begin{enumerate}
+\item If Force Sided Wrap is on, we find the closest point $\vec{p}_c$ on the curve section spanned by $\vec{p}_{1}$ and $\vec{p}_{2}$, from wrap object center $\vec{c}_w$, using: 
+ \begin{equation}
+ \vec{p}_c = \frac{(\vec{c}_w - \vec{p}_2) \cdot (\vec{p}_1 - \vec{p}_2)}{\lVert \vec{p}_1 - \vec{p}_2 \rVert^{2}} \cdot (\vec{p}_1 - \vec{p}_2) + \vec{p}_2
+ \end{equation}
+Readers familiar with linear algebra will recognize this as an orthogonal projection \cite{layLinearAlgebraIts2016}. An extra check is applied to account for situations where $\vec{p}_{1}$ or $\vec{p}_{2}$ is the closest point. All of this is computed in the wrap object's local frame. If the dot product between the projection direction vector and $\vec{p}_c$ is negative, Force Sided Wrap ensures that the wrap is active. The above computation will work regardless of whether the curve is in contact with the wrap or not. This enables wrapping in situations where both points are on the other side of the wrap than the projection direction, without the curve being in contact with the wrap.
+ \item The vector $\vec{p}_{2}$ - $\vec{p}_{1}$ points from the pre to the post wrapping point. If this vector points towards the first or second quadrant (using the projection-direction as the x-axis), the wrapping direction is flipped. This is achieved by checking whether $\atantwo{(\vec{p}_{2} - \vec{p}_{1})} - projection angle$ is between 0 and $\pi$.
+\end{enumerate}
 
 
-% The conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
+\paragraph{Pre wrap index.} Inside the node tree, the conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
 
 
-% Implementing physically accurate realtime wrapping is a challenge in Blender, because it seems that creating custom curve types is not currently possible. The most promising avenue appears to be using \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes}, but this comes with its own set of challenges because all of the logic needs to be implemented with nodes, and currently Blender does not have something equivalent to a "Scripted Expression" node. Thus, even a simple equation such as $ \sqrt{0.5x^2 + 3xy + \cos(x)} $ requires 8 nodes, and thus things can get very complicated rather quickly.
+\paragraph{Shortest wrap.} First determines the vector $-\vec{p}_{1} \cross \vec{p}_{2}$, then computes the dot product between that vector and the cylinder z-axis. If this dot product is negative, the wrap is flipped. Shortest wrap is superceded by Force Sided Wrap.
+
 
 
 
@@ -853,7 +933,7 @@ If a \texttt{parent} or \texttt{child} body also has a local \texttt{FRAME} defi
     \item \texttt{or\_in\_child\_frame\_quat}: The orientation of the joint center in the local reference frame attached to the child body , expressed as a quaternion (w, x, y, z).
 \end{itemize}
 
-Each joint also has six coordinates which can be named. These are meant to represent the generalized coordinates, or degrees of freedom, of the model. If they are named, this coordinate becomes a degree of freedom when using one of the provided scripts to convert a MuSkeMo model to a simulator (e.g., if you want \texttt{coordinate\_Rz} to be a degree of freedom in your OpenSim model, give \texttt{coordinate\_Rz} a name such as ‘hip\_flexion\_r’).
+Each joint also has six coordinates which can be named. These are meant to represent the generalized coordinates, or degrees of freedom, of the model. If they are named, this coordinate becomes a degree of freedom when using one of the provided scripts to convert a MuSkeMo model to a simulator (e.g., if you want \texttt{coordinate\_Rz} to be a degree of freedom in your OpenSim model, give \texttt{coordinate\_Rz} a name such as ‘hip\_flexion\_r').
 
 \begin{itemize}
     \item \texttt{coordinate\_Tx}: Translation along the x-axis
@@ -888,7 +968,7 @@ In MuSkeMo, a \texttt{FRAME} is a local coordinate system that can be assigned t
 
 \subsection{GEOM\_PRIMITIVE}
 
-In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders, ellipsoids, and planes) to 3D meshes. This can be useful for defining joint centers of rotation using the skeletal geometry. The geometric details of the shapes are stored for reuse. These are:
+In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders, ellipsoids, and planes) to 3D meshes, see \ref{sec:primitivefitting}. This can be useful for defining joint centers of rotation using the skeletal geometry. The geometric details of the shapes are stored for reuse. These are:
 
 \begin{itemize}
     \item Sphere: \texttt{sphere\_radius}
@@ -898,8 +978,6 @@ In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders
 \end{itemize}
 
 The underlying object types in Blender are regular meshes (UV Sphere, cylinder, ellipsoid).
-
-MuSkeMo implements two different sphere fitting algorithms, described in \cite{Jekel2016, yesudasanFastGeometricFit2015}. The cylinder fit algorithm was adapted from \cite{eberlyLeastSquaresFitting}. The ellipsoid fit algorithm \cite{semplePyEllipsoid_Fit} was provided courtesy of Mark Semple, who converted a Matlab implementation written by Yuri Petrov to Python. I modified it further to ensure right-handed coordinate systems.
 
 \subsection{WRAP}
 \label{sec:wrapgeom}
