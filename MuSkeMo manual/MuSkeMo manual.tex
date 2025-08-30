@@ -534,7 +534,7 @@ For an arbitrary matrix \(\mathbf{I}\) expressed in \(\mathcal{G}\) (e.g., an in
 \label{eq:similaritytransformation}
 \end{equation}
 
-Readers familiar with linear algebra will recognize this as a similarity transformation, using a change of basis matrix.
+Readers familiar with linear algebra will recognize this as a similarity transformation, using a change of basis matrix \cite{layLinearAlgebraIts2016}.
 
 \subsection{Landmark \& marker panel}
 \label{sec:landmarkpanel}
@@ -883,7 +883,7 @@ Cylindric wrapping has the following settings, accessible via the wrapping modif
  \begin{equation}
  \vec{p}_c = \frac{(\vec{c}_w - \vec{p}_2) \cdot (\vec{p}_1 - \vec{p}_2)}{\lVert \vec{p}_1 - \vec{p}_2 \rVert^{2}} \cdot (\vec{p}_1 - \vec{p}_2) + \vec{p}_2
  \end{equation}
-An extra check is applied to account for situations where $\vec{p}_{1}$ or $\vec{p}_{2}$ is the closest point. All of this is computed in the wrap object's local frame. If the dot product between the projection direction vector and $\vec{p}_c$ is negative, Force Sided Wrap ensures that the wrap is active. The above computation will work regardless of whether the curve is in contact with the wrap or not. This enables wrapping in situations where both points are on the other side of the wrap than the projection direction, without the curve being in contact with the wrap.
+Readers familiar with linear algebra will recognize this as an orthogonal projection \cite{layLinearAlgebraIts2016}. An extra check is applied to account for situations where $\vec{p}_{1}$ or $\vec{p}_{2}$ is the closest point. All of this is computed in the wrap object's local frame. If the dot product between the projection direction vector and $\vec{p}_c$ is negative, Force Sided Wrap ensures that the wrap is active. The above computation will work regardless of whether the curve is in contact with the wrap or not. This enables wrapping in situations where both points are on the other side of the wrap than the projection direction, without the curve being in contact with the wrap.
  \item The vector $\vec{p}_{2}$ - $\vec{p}_{1}$ points from the pre to the post wrapping point. If this vector points towards the first or second quadrant (using the projection-direction as the x-axis), the wrapping direction is flipped. This is achieved by checking whether $\atantwo{(\vec{p}_{2} - \vec{p}_{1})} - projection angle$ is between 0 and $\pi$.
 \end{enumerate}
 
