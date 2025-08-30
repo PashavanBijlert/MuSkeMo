@@ -105,18 +105,18 @@ PA van Bijlert. \textit{MuSkeMo: Open-source software to construct, analyze, and
 MuSkeMo is a tool for musculoskeletal modeling in \href{https://www.blender.org}{Blender}. MuSkeMo allows you to translate biological 3D scans to useful biomechanical information, in the form of full models or model components. These can then be used for further analysis within Blender, or exported for simulations in other biomechanical software. Simulation trajectories can be imported back into MuSkeMo to make publication-ready stills and videos, using Blender's built-in raytracing rendering. MuSkeMo can also be used for 3D landmarking and for simply calculating inertia tensors from 3D scans.
 
 This MuSkeMo documentation file is meant to complement the \href{https://youtube.com/playlist?list=PLfgxaucAWlEp5-cavvXmdrTIWYT_tgZYK&si=Cdl9MchuLP5aRJNL}{video tutorial series on YouTube}. Users are encouraged to download the sample datasets and follow along with the video tutorials.
-This documentation is focused on features specific to MuSkeMo, and where necessary provides suggestions regarding Blender settings and features. Because Blender can be overwhelming at first, new users are recommended to follow the "Donut tutorial" series by BlenderGuru on Youtube. For Blender-specific questions, the reader is referred to the extensive \href{https://docs.blender.org/}{Blender documentation}. MuSkeMo currently officially supports Blender 4.0 -4.1, but will offer 4.2+ support in the future. 
+This documentation is focused on features specific to MuSkeMo, and where necessary provides suggestions regarding Blender settings and features. Because Blender can be overwhelming at first, new users are recommended to follow the "Donut tutorial" series by BlenderGuru on Youtube. For Blender-specific questions, the reader is referred to the extensive \href{https://docs.blender.org/}{Blender documentation}. MuSkeMo currently officially supports Blender 4.1 -4.5.
 
 \subsection{Installation instructions}
 
 To download: Go to the \href{https://github.com/PashavanBijlert/MuSkeMo/releases}{releases page} on the Github repository, and download the most recent version of "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
-To install (Fig. \ref{fig:installation}): In Blender v4-v4.1, go to Edit → preferences → Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, you may need to use the legacy installer, but MuSkeMo has currently not been tested above v4.1.
+To install (Fig. \ref{fig:installation}): In Blender v4.1, go to Edit → preferences → Add-ons and then click "Install...", and then select your downloaded zip file. Then type in "MuSkeMo" in the search bar of the addon window, and enable the plugin by pressing the check mark. If using Blender 4.2+, the install button is replaced with a downwards arrow, which gives ``Install from disk''.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{figures/install_instructions.png} % Add image
-    \caption{Installing MuSkeMo in Blender versions 4.0-4.1}
+    \caption{Installing MuSkeMo in Blender versions 4.0-4.1. In 4.2+, Step 4 is replaced with pressing a downwards arrow and selection ``Install from disk''}
     \label{fig:installation}
 \end{figure}
 
@@ -397,12 +397,15 @@ In this panel, there are buttons that fit geometric primitives to a selected mes
 
 The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), go through the following steps:
 
-1) Select the target mesh
-2) Press Tab to go into 'edit mode' in Blender
-3) Select the portion of the mesh you would like to fit (easiest is to use face selection mode, and use the selection circle)
-4) press shift \+ D to duplicate the selection
-5) press P (for seParate), and then select "by selection".
-6) press Tab to go out of edit mode.
+
+\begin{enumerate}
+\item Select the target mesh
+\item Press Tab to go into 'edit mode' in Blender
+\item Select the portion of the mesh you would like to fit (easiest is to use face selection mode, and use the selection circle)
+\item press shift \+ D to duplicate the selection
+\item press P (for seParate), and then select "by selection".
+\item press Tab to go out of edit mode.
+\end{enumerate}
 
 You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions. The duplicated section of the mesh is in the same collection as the original, and if the original mesh was attached to a BODY, so will this copied section. To prevent it being exported, move it to a different collection, and detach the mesh from the body using the button in the panel.
 
@@ -623,6 +626,11 @@ Future updates will include Hyfydy and MuJoCo model support.
 \label{sec:visualizationpanel}
 Rendering in Blender can be a complicated process. It is capable of professional level video graphics rendering, and there are a lot of settings that the user can modify to achieve this. This panel provides some ease of use functions that preset the rendering settings that the author finds visually appealing, while also providing adequate performance. There exist thousands of video tutorials for creating renders in Blender. Until a MuSkeMo-specific rendering tutorial is recorded, it is recommended that you follow one of the many out there (e.g., the Donut tutorial referenced at the top of this document). \textbf{If your computer does not have a powerful graphics card (GPU), it may be necessary to tweak the recommended settings.} 
 
+\subsubsection{Volumetric Muscles}
+\label{sec:visualizationpanelvolmusc}
+This subpanel allows you to toggle between the volumetric (sec. \ref{sec:volmuscleviz}), and the tube style (sec. \ref{sec:simplemuscleviz}) muscle visualizations. Use the \textbf{Convert to volumetric muscles} and \textbf{Convert to simple (tube) muscles} buttons to toggle between the two. The buttons will act on all muscles in the designated Muscle collection. Specific tension will affect the computed muscle volumes (assuming $vol = F/\sigma \cdot L_{0}$), and the muscle radius affects the tube style. If you want to change these values, they will take into effect after toggling the visualizations (so e.g., to change specific tension for all muscles, first toggle it back to the tube style, change the specific tension, and then toggle back to volumetric).
+
+For each muscle, the volumetric muscle visualization node has four inputs, next to the volume (see sec. \ref{sec:volmuscleviz}). These can be adjusted for all muscles by selecting \textbf{Show volumetric muscle options}. You will have to toggle between the visualization modes for the changes to take into effect.
 
 \subsubsection{Trajectory import}
 \label{sec:trajectoryimport}
@@ -658,8 +666,7 @@ MuJoCo models have a similar possibility (see Sec. \ref{sec:mujocoimporter}.). M
 This subpanel includes several convenience tools to aid users who are new to animations in Blender. These are:
 
 \begin{itemize}
-    \item \textbf{Convert to volumetric muscles:} adds volumetric muscle visualization to each muscle in the scene. See section \ref{sec:volmuscleviz} for details and settings for the visualizations.
-    \item \textbf{Convert to simple (tube) muscles:} Converts the muscles back to simple (tube) visualizations. See section \ref{sec:simplemuscleviz} for details.
+    
     \item \textbf{Create a ground plane:} adds a ground plane to the scene
     \item \textbf{Set recommended render settings:} sets the rendering engine to Cycles (see below), the device to GPU, Max samples to 1000, turns on persistent data (under performance), and sets the "Look" to very high contrast (under Color Management). \textbf{WARNING:} the Cycles rendering engine is a path tracing (raytracing) rendering engine. If you do not have access to a computer with a powerful GPU, rendering performance will be incredibly poor. In that case, you should switch to the Eevee rendering engine.
     \item \textbf{Set black background gradient for renders:} creates a node setup in the \href{https://docs.blender.org/manual/en/latest/compositing/index.html}{compositor} that de-emphasizes the background.
@@ -824,7 +831,7 @@ Under "Geometry nodes", with the "SimpleMuscleViz" node of a muscle selected, th
 \subsubsection{Volumetric muscle visualization}
 \label{sec:volmuscleviz}
 
-Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters and an operation mode, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
+You can convert all your muscles to the volumetric style in the Volumetric Muscles subpanel of the Visualization panel (sec. \ref{sec:visualizationpanelvolmusc}). Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters and an operation mode, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
 
 \begin{itemize}
 \item \textbf{MuscleVolume:} Computed using each muscle's F\_max, optimal\_fiber\_length, and specific\_tension (set in the Visualization panel, see section \ref{sec:visualizationpanel}). The node setup adjusts the muscle's radius to keep the volume constant irrespective of the length.
@@ -833,6 +840,9 @@ Similar to the simple muscle visualizations, volumetric muscle visualizations ar
 \item \textbf{ProxToDistMuscleBellyBias: } By default, the muscle belly is in the middle of the curve. If MuscleTendonLengthRatio is less than 1, you can shift the muscle belly more proximally or more distally using "ProxToDistMuscleBellyBias".
 \item \textbf{FastOrVolumeAccurate: } Toggle betwen a faster or more volumetrically precise visualization. See sec. \ref{sec:volcomparisonscript} for a script that compares muscle volumes. The Fast mode may underestimate the volume by ~1-5\%, depending on the shape of the muscle. The VolumeAccurate node adds an extra volume checking and rescaling step to ensure that the visualized volume is correct with respect to the muscle-input volume. This mode is approximately twice as slow, because it essentially draws each muscle twice (once internally). In most cases, the discrepancy between the two modes is imperceptible. This is why the Fast mode is enabled by default, given that it is approximately twice as fast which may be noticable on slow PC's when visualizing many muscles. Use the VolumeAccurate mode if high precision is required.
 \end{itemize}
+
+If you want to change the global defaults of these parameters, hit ``Show volumetric muscle options'' in the Volumetric Muscles subpanel (sec. \ref{sec:visualizationpanelvolmusc}), and toggle between the visualization modes for the changes to take into effect.
+
 
 \paragraph{How it works:}
 
@@ -849,10 +859,11 @@ The full node setup performs the following steps:
     \item Because tapering reduces volume, the node setup calculates the theoretical swept-volume of circle profile along a straight line, with its radius equal to the initial muscle belly radius scaled by the relative height of the profile curve at any point across the muscles length. This computation accounts for the truncation error from sweeping an $n$-sided polygon instead of a true circle. This theoretical volume is compared to the target cylinder volume, and the initial muscle belly radius is scaled by the square root of the ratio to match the target.
     \item The adjusted $n$-gon profile is swept along the curve to create the muscle mesh.
     \item In \textbf{Fast mode}, this mesh is used directly.
-    \item In \textbf{Volume Accurate mode}, the swept mesh is subdivided, its volume is measured, and a second adjustment is applied to precisely match the target volume before generating the final mesh. Because the muscle is essentially drawn twice (once without visualizing it), this mode is approximately twice as slow.
+    \item In \textbf{Volume Accurate mode}, the swept mesh is subdivided, its volume is measured, and a second adjustment is applied to precisely match the target volume before generating the final mesh. Because the muscle is essentially drawn twice (once without visualizing it), this mode is approximately twice as slow. The within-node volume computation occurs with the ``calc\_volume'' node shared by user bebop\_artist on the \href{https://blender.stackexchange.com/a/325516}{Blender Stackexchange} forum, under a CC BY-SA 4.0 license.
     \item A subdivision surface is applied to smooth the appearance and reduce visible creases.
     \item Muscle and tendon receive separate materials (see sec. \ref{sec:defaultcolors})
 \end{enumerate}
+
 
 
 \subsubsection{Muscle wrapping}

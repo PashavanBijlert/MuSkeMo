@@ -780,13 +780,7 @@ class MuSkeMoProperties(PropertyGroup):
     
 #### visualization panel
 
-    number_of_repetitions: IntProperty(
-        name = "Number of repetitions",
-        description="The number of times you would like to repeat the trajectory (useful for looping strides in an animation)",
-        default = 0,
-        min = 0,
-        max = 100
-    )   
+#volumetric muscles
 
     specific_tension: FloatProperty(
         name = "Specific tension",
@@ -796,6 +790,61 @@ class MuSkeMoProperties(PropertyGroup):
         max = 2000000,
         precision = 0,
         )
+    
+    show_volumetric_options: BoolProperty(
+        name = 'Show volumetric muscle options',
+        description = 'Press this button to display extra options for the volumetric muscle conversion',
+        default=False,
+    )
+
+    muscletendonlengthratio: FloatProperty(
+        name = "Muscle tendon length ratio",
+        description="How much of the muscle path should be occupied by the belly?",
+        default = 0.8,
+        min = 0.1,
+        max = 1,
+        precision = 1,
+        )
+
+    tendonmuscleradiusratio: FloatProperty(
+        name = "Tendon muscle radius ratio",
+        description="Relative thickness of the tendon with respect to the muscle. Can be set to zero to hide the tendon.",
+        default = 0.3,
+        min = 0,
+        max = 0.9,
+        precision = 1,
+        )
+    
+    proxdistbellybias: FloatProperty(
+        name = "Proximal distal muscle belly bias",
+        description="Bias the muscle belly to the proximal (negative) or distal (positive) end.",
+        default = -0.1,
+        min = -0.5,
+        max = 0.5,
+        precision = 1,
+        )
+    
+    fast_or_volume_accurate: EnumProperty(
+        name="Fast or volume accurate",
+        description="Fast or volume accurate visualizations? Fast mode may underestimate the volume by 1-5%, volume accurate mode is ~2x as slow.",
+        items=[ ('Fast', "Fast", ""),
+                ('Volume accurate', "Volume accurate", ""),
+              ],
+        default = "Fast",
+        )
+
+## trajectories
+
+    number_of_repetitions: IntProperty(
+        name = "Number of repetitions",
+        description="The number of times you would like to repeat the trajectory (useful for looping strides in an animation)",
+        default = 0,
+        min = 0,
+        max = 100
+    )   
+
+       
+    
 
     fps :  IntProperty(
         name = "Frames per second",

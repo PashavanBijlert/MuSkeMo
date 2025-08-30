@@ -143,7 +143,13 @@ class ConvertMusclesToVolumetricViz(Operator):
     def execute(self, context):
         
         muskemo = bpy.context.scene.muskemo
-        specific_tension = 300000  #convert to muskemoprop
+
+        #get the values
+        specific_tension = muskemo.specific_tension  
+        muscletendonlengthratio = muskemo.muscletendonlengthratio
+        tendonmuscleradiusratio = muskemo.tendonmuscleradiusratio
+        proxdistbellybias = muskemo.proxdistbellybias
+        fast_or_volume_accurate = muskemo.fast_or_volume_accurate
 
         coll_name = muskemo.muscle_collection
         coll = bpy.data.collections[coll_name]
@@ -199,7 +205,29 @@ class ConvertMusclesToVolumetricViz(Operator):
                 #create a new geometry node for the muscle, and set the node tree we just made
                 geonode = muscle.modifiers.new(name = muscle_name + '_VolumetricMuscleViz', type = 'NODES') #add modifier to muscle
                 geonode.node_group = node_tree_copy
-                geonode['Socket_2'] = vol  #socket two is the volume input slider
+                
+                for item in geonode.node_group.interface.items_tree:
+                    if item.item_type == 'SOCKET' and item.name == 'MuscleVolume':
+                        geonode[item.identifier] = vol  #item.identifier will be "Socket_2" in this case
+                    
+                    elif item.item_type == 'SOCKET' and item.name == 'MuscleTendonLengthRatio':
+                        geonode[item.identifier] = muscletendonlengthratio  
+
+                    elif item.item_type == 'SOCKET' and item.name == 'TendonMuscleRadiusRatio':
+                        geonode[item.identifier] = tendonmuscleradiusratio
+
+                    elif item.item_type == 'SOCKET' and item.name == 'ProxToDistMuscleBellyBias':
+                        geonode[item.identifier] = proxdistbellybias
+  
+                    elif item.item_type == 'SOCKET' and item.name == 'FastOrVolumeAccurate':
+                   
+                        if fast_or_volume_accurate == 'Fast':
+                            geonode[item.identifier] = 0
+                        elif fast_or_volume_accurate == 'Volume accurate':    
+                            geonode[item.identifier] = 1
+
+
+
                 #sockets are the user input sliders in the modifier. They have a name (geonode['Socket_2_attribute_name']), but you can't access this easily nor can you iterate through sockets to check, so hardcoding it as the simplest solution
                 
                 #Ensure the last modifier is the bevel modifier
@@ -281,6 +309,66 @@ class VIEW3D_PT_visualization_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming c
         
         return
 
+    ## volumetric muscles
+
+class VIEW3D_PT_volumetric_muscles_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
+    bl_idname = 'VIEW3D_PT_volumetric_muscles_subpanel'
+    bl_parent_id = 'VIEW3D_PT_visualization_panel'  #have to define this if you use multiple panels
+    bl_label = "Volumetric muscles"  # found at the top of the Panel
+    bl_options = {'DEFAULT_CLOSED'} 
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+        ### volumetric muscles
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.label(text = "Muscle collection")
+        
+        split.prop(muskemo, "muscle_collection", text = "")
+
+
+        row = self.layout.row()
+
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.operator("visualization.convert_muscles_to_volumetric",text = 'Convert to volumetric muscles')
+        split.prop(muskemo, "specific_tension")
+        
+        row = self.layout.row()
+        split = row.split(factor = 1/2)
+        split.operator("visualization.convert_muscles_to_simple_tube",text = 'Convert to simple (tube) muscles')
+        split.prop(muskemo, "muscle_visualization_radius")
+
+        
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+
+        box = self.layout.box()
+        row = box.row()
+        row.prop(muskemo, "show_volumetric_options")
+
+        if muskemo.show_volumetric_options:
+            # explanatory text
+            col = box.column(align=True)
+            col.label(text="These options are applied to all muscles during conversion.")
+            col.label(text="To change the value for all muscles, convert to tube,")
+            col.label(text="adjust the values, then convert back to volumetric.")
+
+            # properties
+            box.prop(muskemo, "muscletendonlengthratio")
+            box.prop(muskemo, "tendonmuscleradiusratio")
+            box.prop(muskemo, "proxdistbellybias")
+
+            row = box.row()
+            split = row.split(factor=1/2)
+            split.label(text="Fast or volume accurate:")
+            split.prop(muskemo, "fast_or_volume_accurate", text="")
+
     
     
     ## Visualization options
@@ -294,22 +382,7 @@ class VIEW3D_PT_visualization_options_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cla
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
-        ### volumetric muscles
-        row = self.layout.row()
-        split = row.split(factor = 1/4)
-        split.label(text = "Muscle collection")
-        split = split.split(factor = 1/3)
-        split.prop(muskemo, "muscle_collection", text = "")
-        split.prop(muskemo, "specific_tension")
-
-        row = self.layout.row()
-        row.operator("visualization.convert_muscles_to_volumetric",text = 'Convert to volumetric muscles')
-
-        row = self.layout.row()
-        row.operator("visualization.convert_muscles_to_simple_tube",text = 'Convert to simple (tube) muscles')
-
-
-
+   
         ### ground plane
         row = self.layout.row()
         row = self.layout.row()
