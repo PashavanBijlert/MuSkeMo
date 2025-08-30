@@ -2,6 +2,9 @@
 
 % Packages
 \usepackage{amsmath}    % For math environments
+
+\DeclareMathOperator{\atantwo}{atan2}
+
 \usepackage{graphicx}   % For including graphics
 \usepackage{caption}
 \usepackage{hyperref}   % For hyperlinks
@@ -847,29 +850,32 @@ MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric 
 Cylindric wrapping has the following settings, accessible via the wrapping modifiers:
 
 \begin{itemize}
-\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. When assigned to a muscle, also affects the wrapping radius.
-\item \textbf{Wrap Cylinder Height:} Height of the cylinder. When assigned to a muscle, also assigns the wrapping height.
-\item \textbf{Flip Wrap:} This allows you to flip the sidedness of the wrap
+\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. When assigned to a muscle, also affects the wrapping radius by storing a Named Attribute in Blender.
+\item \textbf{Wrap Cylinder Height:} Height of the cylinder. When assigned to a muscle, also assigns the wrapping height by storing a Named Attribute in Blender.
+\item \textbf{Flip Wrap:} This allows you to flip the sidedness of the wrap manually.
 \item \textbf{Shortest Wrap:} This ensures the wrapping occurs on the side where the wrapped section would be shortest. Causes posture-dependent flipping if the curve moves to the other side of the wrapping geometry. Shortest wrap is ignored if Force Sided Wrap is enabled.
-\item \textbf{Force Sided Wrap:} Select this if you want to force a wrap in a specific projection direction, even when the curve is not intersecting the geometry. You have to specify the index of the pre-wrap point, and a projection angle. The wrap is active when the curve intersects the geometry, or when it is outside the geometry, on the opposite side of the projection direction.
+\item \textbf{Force Sided Wrap:} Select this if you want to force a wrap in a specific projection direction, even when the curve is not intersecting the geometry. You have to specify the index of the pre-wrap point, and a projection angle. The wrap is active when the curve intersects the geometry, or when it is outside the geometry, on the opposite side of the projection direction. See below how this is achieved.
 \item \textbf{Index Of Pre Wrap Point Starting At 1:} Specify the point after which you would like the wrapping to occur. This setting is ignored unless you select Force Sided Wrap.
 \item \textbf{Projection Angle:} By default, the projection direction is in the positive X-direction in the frame of reference of the wrapping geometry. The projection angle rotates the projection direction about the Z-axis of the wrapping geometry.
 \item \textbf{Wrapping Point Resolution} Number of points projected onto the wrapping geometry (if wrapping occurs). This only affects visualizations, not length computations. Setting this very high can reduce performance.
 \end{itemize}
 
 
-% Projection affects flips the wrap in two situations
-% 1) If force wrap is on, using a dot product, we find the clostest point between the wrap object center (2D projection) and the wrap crossing line.
-% If this points in the same general direction as the projection direction (second dot product), then the wrap is active. 
-% 2) Take a vector frome pre to post wrapping point, in the wrapping frame. The arctan2 gives the phi_angle this is pointing in. If this angle is between 0 and pi (so in the first or second quadrant), we flip the wrap. This is assuming a projection angle of 0 (so the projection is in local X dir.). The projection angle shifts the relevant quadrants. So we compute if (phi_angle - proj angle ) is between 0 and pi.
+\paragraph{Projection Angle} affects the wrap in two situations:
 
-%shortest wrap uses a cross product between the wrap crossing points, then computes the dot product between that vector and the cylinder z-axis. This is used to flip the wrap if required.
+\begin{enumerate}
+\item If Force Sided Wrap is on, we find the closest point $\vec{p}_c$ between the wrap object center $\vec{c}_w$, and the two points that span it ($\vec{p}_{1}$ and $\vec{p}_{2}$) using:
+ \begin{equation}
+ \vec{p}_c = \frac{(\vec{c}_w - \vec{p}_2) \cdot (\vec{p}_1 - \vec{p}_2)}{\lVert \vec{p}_1 - \vec{p}_2 \rVert^{2}} \cdot (\vec{p}_1 - \vec{p}_2) + \vec{p}_2
+ \end{equation}
+An extra check is applied to account for situations where $\vec{p}_{1}$ or $\vec{p}_{2}$ is the closest point. All of this is computed in the wrap object's local frame. If the dot product between the projection direction vector and $\vec{p}_c$ is negative, Force Sided Wrap ensures that the wrap is active. The above computation will work regardless of whether the curve is in contact with the wrap or not. This enables wrapping in situations where both points are on the other side of the wrap than the projection direction, without the curve being in contact with the wrap.
+ \item The vector $\vec{p}_{2}$ - $\vec{p}_{1}$ points from the pre to the post wrapping point. If this vector points towards the first or second quadrant (using the projection-direction as the x-axis), the wrapping direction is flipped. This is achieved by checking whether $\atantwo{(\vec{p}_{2} - \vec{p}_{1})} - projection angle$ is between 0 and $\pi$.
+\end{enumerate}
 
 
-% The conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
+\paragraph{Shortest wrap} determines $-\vec{p}_{1} \cross \vec{p}_{2}$, then computes the dot product between that vector and the cylinder z-axis. If this dot product is negative, the wrap is flipped. Shortest wrap is superceded by Force Sided Wrap.
 
-
-% Implementing physically accurate realtime wrapping is a challenge in Blender, because it seems that creating custom curve types is not currently possible. The most promising avenue appears to be using \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes}, but this comes with its own set of challenges because all of the logic needs to be implemented with nodes, and currently Blender does not have something equivalent to a "Scripted Expression" node. Thus, even a simple equation such as $ \sqrt{0.5x^2 + 3xy + \cos(x)} $ requires 8 nodes, and thus things can get very complicated rather quickly.
+\paragraph{Pre wrap index} Inside the node tree, the conditional wrapping is enforced in the node by passing -2 as an index if wrapping should not be active, and the actual pre-wrap index if it should be active. Pre-wrap index is either decided by a wrap intersection, or if there is no intersection, by checking if force wrap is enabled and the muscle is on the wrapping side.
 
 
 
