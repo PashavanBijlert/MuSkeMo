@@ -552,67 +552,6 @@ class DetachVizGeometryOperator(Operator):
         return {'FINISHED'}
 
 
-class GeometryIntersectionCheckerOperator(Operator):
-    bl_idname = "body.geometry_intersection_checker"
-    bl_label = "Select 2 meshes and check for intersections between them."
-    bl_description = "Select 2 meshes and check for intersections between them."
-
-    result_message: bpy.props.StringProperty(default="")
-
-    def execute(self, context):
-        
-        sel_obj = bpy.context.selected_objects  #should be two meshes
-
-        # throw an error if no objects are selected     
-        if (len(sel_obj) < 1):
-            self.report({'ERROR'}, "No objects selected. You must select 2 meshes to check whether they are intersecting.")
-            return {'FINISHED'}
-        
-        if (len(sel_obj) > 2):
-            self.report({'ERROR'}, "Too many objects selected. You must select 2 meshes to check whether they are intersecting.")
-            return {'FINISHED'}
-        
-        sel_meshes = [x for x in sel_obj if x.type == 'MESH'] #check that the objects are all meshes
-
-        if len(sel_meshes)==1: #If only one object is a mesh
-            self.report({'ERROR'}, "Only one of the two objects is a MESH. The mesh intersection checker only works on meshes. Select 2 meshes and try again.")
-            return {'FINISHED'}
-        
-
-        if len(sel_meshes)==0: #If no mesh
-            self.report({'ERROR'}, "Neither of the selected objects is a MESH. The mesh intersection checker only works on meshes. Select 2 meshes and try again.")
-            return {'FINISHED'}
-
-
-        #### check for intersections
-
-        from .two_object_intersection_func import check_bvh_intersection
-        #Get the dependency graph
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-
-        mesh_1_name = sel_meshes[0].name
-        mesh_2_name = sel_meshes[1].name
-
-        intersections = check_bvh_intersection(mesh_1_name, mesh_2_name, depsgraph)
-        #The output is pairs of intersecting polygons (if indeed these exist)
-
-                
-        if intersections:
-            self.result_message = mesh_1_name + " and " + mesh_2_name + " intersect with each other."
-        else:
-            self.result_message = mesh_1_name + " and " + mesh_2_name + " do not intersect with each other."
-
-        # Show popup after setting the message
-        return context.window_manager.invoke_popup(self)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text=self.result_message)
-
-    def invoke(self, context, event):
-        
-        return self.execute(context)
-    
 
 class VIEW3D_PT_body_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
     #Multiple inheritance, body_panel as a class inherits attributes from MuSkeMo class, but also from the "Panel" class, turning this into a panel
@@ -723,7 +662,7 @@ class VIEW3D_PT_vizgeometry_subpanel(VIEW3D_PT_MuSkeMo, Panel):  #
 
         row = self.layout.row()
         row = self.layout.row()
-        row.operator("body.geometry_intersection_checker", text = "Check for mesh intersections")
+        row.operator("mesh.intersection_checker", text = "Check for mesh intersections")
         return
 
 

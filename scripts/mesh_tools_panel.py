@@ -17,7 +17,112 @@ from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
 #### operators
 
 
+class MeshAlignnmentICPPointToPlaneOperator(Operator):
+    bl_idname = "mesh.align_icp_point_to_plane"
+    bl_label = "Rigid mesh alignment using iterative closest point - point to plane. Select two meshes, designate the free object, and then press the button."
+    bl_description = "Rigid mesh alignment using iterative closest point - point to plane. Select two meshes, designate the free object, and then press the button."
+    
+    def execute(self, context):
+        
 
+
+        sel_obj = [x for x in bpy.context.selected_objects if x.type == 'MESH']  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
+        
+        
+        if (len(sel_obj) < 2):
+            self.report({'ERROR'}, "Less than 2 meshes selected. Select exactly 2 meshes, and try again")
+            return {'FINISHED'}
+        
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "More than 2 meshes selected. Select exactly 2 meshes, and try again")
+            return {'FINISHED'}
+        
+        muskemo = bpy.context.scene.muskemo
+
+        free_obj = bpy.data.objects[muskemo.icp_free_obj]
+        target_obj = [obj for obj in sel_obj if obj!=free_obj][0] #target obj is the other selected object
+
+
+        max_iter = muskemo.icp_max_iterations
+        tol = muskemo.icp_tolerance
+        sample_ratio_start = muskemo.icp_sample_ratio_start
+        sample_ratio_end = muskemo.icp_sample_ratio_end
+        max_sample_ratio_after = muskemo.icp_max_sample_ratio_after
+
+        from .icp_point_to_plane import point_to_plane_icp_subsample
+
+        point_to_plane_icp_subsample(free_obj = free_obj,
+                                     target_obj=  target_obj,
+                                     max_iterations=max_iter,
+                                     tolerance=tol,
+                                     sample_ratio_start=sample_ratio_start,
+                                     sample_ratio_end=sample_ratio_end,
+                                    sample_ratio_ramp_iters = max_sample_ratio_after)
+        
+        return {'FINISHED'}
+
+
+class MeshIntersectionCheckerOperator(Operator):
+    bl_idname = "mesh.intersection_checker"
+    bl_label = "Select 2 meshes and check for intersections between them."
+    bl_description = "Select 2 meshes and check for intersections between them."
+
+    result_message: bpy.props.StringProperty(default="")
+
+    def execute(self, context):
+        
+        sel_obj = bpy.context.selected_objects  #should be two meshes
+
+        # throw an error if no objects are selected     
+        if (len(sel_obj) < 1):
+            self.report({'ERROR'}, "No objects selected. You must select 2 meshes to check whether they are intersecting.")
+            return {'FINISHED'}
+        
+        if (len(sel_obj) > 2):
+            self.report({'ERROR'}, "Too many objects selected. You must select 2 meshes to check whether they are intersecting.")
+            return {'FINISHED'}
+        
+        sel_meshes = [x for x in sel_obj if x.type == 'MESH'] #check that the objects are all meshes
+
+        if len(sel_meshes)==1: #If only one object is a mesh
+            self.report({'ERROR'}, "Only one of the two objects is a MESH. The mesh intersection checker only works on meshes. Select 2 meshes and try again.")
+            return {'FINISHED'}
+        
+
+        if len(sel_meshes)==0: #If no mesh
+            self.report({'ERROR'}, "Neither of the selected objects is a MESH. The mesh intersection checker only works on meshes. Select 2 meshes and try again.")
+            return {'FINISHED'}
+
+
+        #### check for intersections
+
+        from .two_object_intersection_func import check_bvh_intersection
+        #Get the dependency graph
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+
+        mesh_1_name = sel_meshes[0].name
+        mesh_2_name = sel_meshes[1].name
+
+        intersections = check_bvh_intersection(mesh_1_name, mesh_2_name, depsgraph)
+        #The output is pairs of intersecting polygons (if indeed these exist)
+
+                
+        if intersections:
+            self.result_message = mesh_1_name + " and " + mesh_2_name + " intersect with each other."
+        else:
+            self.result_message = mesh_1_name + " and " + mesh_2_name + " do not intersect with each other."
+
+        # Show popup after setting the message
+        return context.window_manager.invoke_popup(self)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text=self.result_message)
+
+    def invoke(self, context, event):
+        
+        return self.execute(context)
+    
 
 
 #### Panels
@@ -50,6 +155,8 @@ class VIEW3D_PT_mesh_tools_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conve
                            
         
         row = self.layout.row()
+        row = self.layout.row()
+        row.operator("mesh.intersection_checker", text = "Check for mesh intersections")
 
 
 
@@ -92,6 +199,17 @@ class VIEW3D_PT_mesh_alignment_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class namin
         split = row.split(factor = 1/2)
         split.label(text = "Free Object (is moved):")
         split.prop(muskemo, "icp_free_obj", text = '')
+        
+        row = layout.row()
+        row = layout.row()
+        row = layout.row()
+        layout.operator("mesh.align_icp_point_to_plane", text = 'Align Meshes')
+
+
+        row = layout.row()
+        row = layout.row()
+        row = layout.row()
+
         layout.prop(muskemo, "icp_max_iterations")
         layout.prop(muskemo, "icp_tolerance")
         layout.prop(muskemo, "icp_sample_ratio_start")

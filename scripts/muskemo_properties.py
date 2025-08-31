@@ -1034,7 +1034,7 @@ class MuSkeMoProperties(PropertyGroup):
 
     icp_sample_ratio_end: FloatProperty(
         name="End Sample Ratio",
-        description = "Sample ratio at the end of the ICP point-to-plane mesh alignment. The sample ratio is low at the start, and ramps up near the end.",
+        description = "Should be higher than Start Sample Ratio. This is the sample ratio at the end of the ICP point-to-plane mesh alignment. The sample ratio is low at the start, and ramps up near the end.",
         default=1.0,
         min=0.0,
         max=1.0
