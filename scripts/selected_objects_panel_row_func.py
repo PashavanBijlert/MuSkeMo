@@ -25,7 +25,7 @@ def CreateSelectedObjRow(type, layout):
 
    
     if type == 'MESH':
-       selected_items = [ob for ob in bpy.context.selected_objects if (ob.type == 'MESH' and 'MuSkeMo_type' not in ob)]
+       selected_items = [ob for ob in bpy.context.selected_objects if (ob.type == 'MESH')]
     
     if type == 'MESH_withdensity': #
         selected_items = [ob for ob in bpy.context.selected_objects if (ob.type == 'MESH' and 'density' in ob)]
