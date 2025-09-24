@@ -989,3 +989,62 @@ class MuSkeMoProperties(PropertyGroup):
                  default = (0.0, 0.0, 0.1, 1)
         )
     
+
+
+
+#################### Mesh tools panel
+    #a function that returns the two selected objects, if two objects are selected
+    def free_objects_items(self, context):
+        selected = context.selected_objects
+        if len(selected) != 2:
+            return []
+        return [(obj.name, obj.name, "") for obj in selected]
+
+
+    icp_free_obj: EnumProperty(
+        name="Free Object",
+        description="Object free to move during ICP point-to-plane mesh alignment",
+        items=free_objects_items
+    )
+
+    icp_max_iterations: IntProperty(
+        name="Max Iterations",
+        description = "Max iterations during ICP point-to-plane mesh alignment",
+        default=30,
+        min=1,
+        max=100
+    )
+
+    icp_tolerance: FloatProperty(
+        name="Tolerance",
+        description = "Error tolerance during ICP point-to-plane mesh alignment. Closer to zero is lower error, but takes longer. Beyond 1e-8 might be placebo.",
+        default=1e-6,
+        precision=8,
+        min=1e-16,
+        max=1e-2,
+    )
+
+    icp_sample_ratio_start: FloatProperty(
+        name="Start Sample Ratio",
+        description = "Sample ratio at the start of the ICP point-to-plane mesh alignment. The sample ratio is low at the start, and ramps up near the end.",
+        default=0.1,
+        min=0.1,
+        max=1.0
+    )
+
+    icp_sample_ratio_end: FloatProperty(
+        name="End Sample Ratio",
+        description = "Sample ratio at the end of the ICP point-to-plane mesh alignment. The sample ratio is low at the start, and ramps up near the end.",
+        default=1.0,
+        min=0.0,
+        max=1.0
+    )
+
+
+    icp_max_sample_ratio_after: IntProperty(
+        name="No. iterations before end ratio",
+        description = "Number of iterations before the end sample ratio is reached during the ICP point-to-plane mesh alignment. The sample ratio is low at the start, and ramps up near the end.",
+        default=6,
+        min=1,
+        max=99
+    )
