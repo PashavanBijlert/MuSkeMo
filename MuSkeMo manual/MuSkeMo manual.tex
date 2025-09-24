@@ -275,12 +275,12 @@ Under \textbf{Expand convex hulls - logarithmic}, it is possible to use log-tran
 The equations have the form:
 
 \begin{equation}
-y = 10^a \cdot x^{b} \cdot 10^{\epsilon /2}
+y = 10^a \cdot x^{b} \cdot 10^{\frac{\ln(10)}{2} MSE }
 \label{eq:powercurve}
 \end{equation}
 
 
-This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the scaled hull volume.  \(\epsilon\) is the mean squared error (MSE) of the regression, which is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,newmanRegressionAnalysisLogtransformed1993}. Where \(\epsilon\) was not or inconsistenly reported by the original studies, MuSkeMo sets it to 0 in the expansion templates, which implies a small, systematic, underestimation of the predictions by the power curve. By unticking the box "Apply Bias Correction", the bias correction is not applied during expansion even if the template has a value pre-filled (i.e., setting MSE to zero during the computations).
+This is known as an allometric power curve, and is the result of an ordinary least-squares regression of log-transformed data (see \cite{alexanderPrinciplesAnimalLocomotion2006,brasseyScalingConvexHull2014}). a is the y-intercept of the regression, b is the slope of the regression, x is the input convex hull volume, and y is the scaled hull volume. \(MSE\) is the mean squared error of the regression, also called the variance of the residuals, or $\sigma^2$, with $\sigma$ being the standard deviation or standard error of the residuals. The term $10^{\frac{\ln(10)}{2} MSE }$ is used for a bias correction to account for the fact that we are transforming log-transformed data back to arithmetic units, see \cite{baskervilleUseLogarithmicRegression1972,sprugelCorrectingBiasLogTransformed1983,smithLogarithmicTransformationBias1993}. $MSE$ is assumed to be computed in base-10 logarithms, hence the extra factor $\ln(10)$ \cite{sprugelCorrectingBiasLogTransformed1983,smithLogarithmicTransformationBias1993}. Where $MSE$ was not or inconsistenly reported by the original studies, MuSkeMo sets it to 0 in the expansion templates, which implies a small, systematic, underestimation of the predictions by the power curve. By unticking the box "Apply Bias Correction", the bias correction is not applied during expansion even if the template has a value pre-filled (i.e., setting MSE to zero during the computations).
 
 
 \begin{itemize}
@@ -288,7 +288,7 @@ This is known as an allometric power curve, and is the result of an ordinary lea
     \item \textbf{Macaulay 2023 Logarithmic Bird:} The logarithmic per-segment "Bird" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S4.
     \item \textbf{Macaulay 2023 Non-Avian Sauropsid:} The logarithmic per-segment "Non avian sauropsid" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S5.
     \item \textbf{Macaulay 2023 Average (Bird and Non-Avian Sauropsid):} The logarithmic per-segment "all taxa" average expansions from Macaulay et al. 2023 \cite{macaulayDecouplingBodyShape2023}, supplementary data S3.
-    \item \textbf{Coatham 2021 Logarithmic Mammal (rewritten volumetric):} The logarithmic per-segment mammal equations from Coatham et al. 2021 \cite{coathamConvexHullEstimation2021}. This implementation factors out the density to transform them into volumetric expansions, see below. MuSkeMo squares their ``root mean squared errors'' (RMSE) to acquire mean squared errors (\(\epsilon\) in eq. \ref{eq:powercurve}), but sets it to zero for the torso segment because the reported RMSE for the torso (3.42) leads to a bias correction factor of \(7 \cdot 10^{5}\).
+    \item \textbf{Coatham 2021 Logarithmic Mammal (rewritten volumetric):} The logarithmic per-segment mammal equations from Coatham et al. 2021 \cite{coathamConvexHullEstimation2021}. This implementation factors out the density to transform them into volumetric expansions, see below. MuSkeMo squares their ``root mean squared errors'' (RMSE) to acquire mean squared errors ($MSE$) in eq. \ref{eq:powercurve}, but sets it to zero for the torso segment because the reported RMSE for the torso (3.42) leads to a bias correction factor of \(7 \cdot 10^{5}\).
 \end{itemize}
 
 
@@ -297,9 +297,9 @@ Coatham et al. directly regressed convex hull mass against CT-based tissue outli
 
 \begin{equation}
 \begin{aligned}
-y \cdot \rho &= 10^a \cdot (x \cdot \rho )^{b} \cdot 10^{\epsilon / 2} \\
-y &= 10^a \cdot \rho^{b} / \rho  \cdot x^{b} \cdot 10^{\epsilon / 2} \\
-y &= 10^a \cdot \rho^{b - 1} \cdot x^{b} \cdot 10^{\epsilon / 2}
+y \cdot \rho &= 10^a \cdot (x \cdot \rho )^{b} \cdot 10^{\frac{\ln(10)}{2} MSE } \\
+y &= 10^a \cdot \rho^{b} / \rho  \cdot x^{b} \cdot 10^{\frac{\ln(10)}{2} MSE } \\
+y &= 10^a \cdot \rho^{b - 1} \cdot x^{b} \cdot 10^{\frac{\ln(10)}{2} MSE }
 \end{aligned}
 \end{equation}
 
@@ -334,7 +334,7 @@ This subpanel sums all the convex hull volumes in a designated collection, then 
 The original Brassey et al. 2016 \cite{brasseyConvexhullMassEstimates2016} pigeon equations assume volume is  \si{mm^3}, and provide the mass in \si{g}. To convert the output to kilograms (multiply by \(10^{-3}\)) and allow the input to be in \si{m^3} (multiply input by \(10^9\)), it is possible to rewrite equation \ref{eq:powercurve}.
 
 \begin{equation}
-y = 10^{-3} \cdot 10^a \cdot (x \cdot 10^9 )^{b} \cdot 10^{\epsilon /2}
+y = 10^{-3} \cdot 10^a \cdot (x \cdot 10^9 )^{b} \cdot 10^{\frac{\ln(10)}{2} MSE }
 \end{equation}
 
 After rewriting, this gives:

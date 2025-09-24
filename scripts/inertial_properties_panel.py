@@ -27,7 +27,7 @@ from bpy.props import (EnumProperty,
                         IntProperty,
                         StringProperty,
                         FloatProperty)
-from math import (nan, sqrt, log10, exp)
+from math import (nan, sqrt, log10, exp, log)
 
 import numpy as np
 
@@ -332,7 +332,7 @@ class ExpandConvexHullCollectionOperator (Operator):
         CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
         eCH_colname = muskemo.expanded_hull_collection #Collection that will contain the expanded convex hulls
 
-        apply_bias_correction = muskemo.apply_bias_correction #bool for if we should correct for retransformation bias using 10**(MSE/2)
+        apply_bias_correction = muskemo.apply_bias_correction #bool for if we should correct for retransformation bias using 10**(log(10)/2 * MSE)
 
         if CH_colname not in bpy.data.collections:
             self.report({'ERROR'}, "A collection with the name '" + CH_colname + "' does not exist. Which collection contains the convex hulls? Type that into the 'Convex hull collection' field")
@@ -477,7 +477,7 @@ class ExpandConvexHullCollectionOperator (Operator):
                     MSE = 0
 
                 uncorrected_vol = 10**intercept *vol_before**slope #volume without MSE correction
-                MSE_corr_vol = uncorrected_vol*10**(MSE/2) #MSE corrected volume
+                MSE_corr_vol = uncorrected_vol*10**(log(10)/2 * MSE) #MSE corrected volume
                 expansion_factor_allo = MSE_corr_vol / vol_before
                 expansion_factor = expansion_factor_allo
 
@@ -537,7 +537,7 @@ class WholeBodyMassFromConvexHullsOperator (Operator):
         CH_colname = muskemo.convex_hull_collection #Collection that will contain the convex hulls
         #eCH_colname = muskemo.expanded_hull_collection #Collection that will contain the expanded convex hulls
 
-        apply_bias_correction = muskemo.apply_bias_correction #bool for if we should correct for retransformation bias using 10**(MSE/2)
+        apply_bias_correction = muskemo.apply_bias_correction #bool for if we should correct for retransformation bias using 10**(log(10)/2 * MSE)
 
 
         if CH_colname not in bpy.data.collections:
@@ -575,7 +575,7 @@ class WholeBodyMassFromConvexHullsOperator (Operator):
         if not apply_bias_correction: #if apply_bias_correction is False, we set MSE to zero
             log_MSE = 0
         
-        total_body_mass = 10**log_intercept * vol**log_slope * 10**(log_MSE/2)
+        total_body_mass = 10**log_intercept * vol**log_slope * 10**(log(10)/2 * log_MSE)
 
         if muskemo.mass_from_CH_template_logarithmic == 'Wright 2024 Logarithmic Tetrapods': 
             density = muskemo.segment_density
