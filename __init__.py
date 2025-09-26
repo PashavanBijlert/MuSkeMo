@@ -55,7 +55,6 @@ from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_
                                 AssignInertialPropertiesOperator,
                                 UpdateLocationFromCOMOperator,
                                 AttachVizGeometryOperator, DetachVizGeometryOperator,
-                                GeometryIntersectionCheckerOperator,      
                                 )
 
 #### joint panel
@@ -172,7 +171,7 @@ from .scripts.reflection_panel import (ReflectUnilateralBodiesOperator,
 #### Mesh tools panel
 
 from .scripts.mesh_tools_panel import (VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mesh_alignment_subpanel,
-                                       )
+                                       MeshAlignnmentICPPointToPlaneOperator,MeshIntersectionCheckerOperator, )
 
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
@@ -188,6 +187,7 @@ classes = (  #Global settings panel
                                      ResetToDefaultPoseOperator,
     # Mesh tools panel
                                     VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mesh_alignment_subpanel,
+                                    MeshAlignnmentICPPointToPlaneOperator,MeshIntersectionCheckerOperator,
 
 
     #Inertial properties panel 
@@ -213,7 +213,7 @@ classes = (  #Global settings panel
                                     AssignInertialPropertiesOperator,
                                       UpdateLocationFromCOMOperator,
                                       AttachVizGeometryOperator, DetachVizGeometryOperator,
-                                      GeometryIntersectionCheckerOperator,
+                                      
             #joint panel
                                       CreateNewJointOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,

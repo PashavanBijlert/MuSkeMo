@@ -231,7 +231,38 @@ The Blender user interface has several default settings that do not work well wi
 The panel also has a button named "Set object children visibility". This toggles off "Object Children" in the outliner. In Blender's behavior, objects are placed under their parents in the outliner, but this would for instance result in a body being placed under the parent joint in the "Joint collection", instead of in the "Body collection". Turning off "Object children" avoids this behavior. MuSkeMo automatically calls the "Set object children visibility" operator when the user creates a Body, Joint, or Muscle for the first, so in most cases, you will not need to set this yourself. However, if you find yourself in a situation where you cannot find your objects in the outliner, even though you can clearly see them in the scene, this button may solve your problem.
 
 
+\subsection{Mesh tools panel}
+This panel combines several tools that are generally useful when manipulating or repositioning meshes. Some of these are also available in different panels (e.g., the intersection checker is also made available in the visual geometry subpanel \ref{sec:visgeomsubpanel}).
 
+\subsubsection{Mesh alignment}
+\label{sec:meshalignment}
+
+Aligning 3D meshes in space is a common task when dealing with 3D biomechanical data. To use MuSkeMo's mesh alignment tool, simply select two meshes, designate which mesh is the target (stationary) object, and which one is the free mesh (which will be moved to achieve alignment), and then press ``Align Meshes''. The alignment assumes that you have approximately aligned the meshes yourself, and that they have the same scale.
+
+The alignment uses an iterative closest point algorithm (point to plane, following \cite{chenObjectModelingRegistration1991}), using Blender's \href{https://docs.blender.org/api/current/mathutils.kdtree.html}{KD-tree} module to improve performance \cite{zhangIterativePointMatching1994}. Performance is further improved with (random) subsampling (see \cite{rusinkiewiczEfficientVariantsICP2001}), and the subsampling is slowly ramped down after several iterations so the final alignment is based on the entire meshes.
+
+The following settings are available:
+
+
+\begin{enumerate}
+    \item \textbf{Free Object.} Selects which object is allowed to move during ICP point-to-plane mesh alignment.
+    
+    \item \textbf{Max Iterations.} Maximum number of iterations performed during ICP point-to-plane mesh alignment. Higher values may improve accuracy but increase computation time.
+    
+    \item \textbf{Tolerance.} Error tolerance used to determine convergence of the ICP alignment. Smaller values enforce stricter convergence at the cost of runtime. Values below $10^{-8}$ are unlikely to improve results significantly.
+    
+    \item \textbf{Start Sample Ratio.} Fraction of points used for sub-sampling at the beginning of the ICP process. A lower ratio speeds up early iterations while maintaining coarse alignment.
+    
+    \item \textbf{End Sample Ratio.} Should be higher than Start Sample Ratio. Fraction of points used for sub-sampling at the end of the ICP process. If you set this to lower than 1, the final iterations will still use a sample ratio of 1 (ensuring that the final alignment is based on all points).
+    
+    \item \textbf{No. iterations before end ratio.} Number of iterations before the sample ratio reaches the defined end value. Controls how quickly the sampling density increases during ICP.
+\end{enumerate}
+
+
+\subsubsection{Checking geometry intersections}
+\label{sec:intersectionchecker}
+
+MuSkeMo implements a mesh intersection checker, which is used by the pose sampling scripts in the MuSkeMo utilities folder (see sec. \ref{sec:posesampling}). This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works.
 
 
 \subsection{Inertial properties panel}
@@ -361,12 +392,10 @@ It is also possible to assign inertial properties manually. This is not recommen
 Inertial properties are not dynamic, if you move the source objects that the rigid bodies were based on, or change their densities, you must recompute all inertial properties of the body (see \ref{sec:defaultpose}). Otherwise COM, mass, and or inertia can be outdated. MuSkeMo warns you if you attempt to export inertial property data in a different pose than the default pose.
 
 \subsubsection{Visual geometry (meshes)}
+\label{sec:visgeomsubpanel}
 In this panel, you can also attach visualization geometry (eg., bone meshes) to bodies. Select the meshes and the target body, and press the button.
 
-\subsubsection{Checking geometry intersections}
-\label{sec:intersectionchecker}
-
-The geometry subpanel also contains a mesh intersection checker, which is also used by the pose sampling scripts in the MuSkeMo utilities folder (see sec. \ref{sec:posesampling}). This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works.
+The intersection checker (sec. \ref{sec:intersectionchecker}) is also available here, for easy access when articulating bone meshes.
 
 
 \subsection{Joint panel}
