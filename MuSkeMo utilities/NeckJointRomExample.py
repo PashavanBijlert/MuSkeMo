@@ -1,7 +1,17 @@
-#This script checks the neck joint range of motions for the emu model in the sample dataset.
-#Note that neck geometries in the base emu model already intersect in the default pose, because
-#that model was initially constructed for locomotor simulations, not neck movements.
-#For more meaningful results, it is best to reposition the neck bodies first.
+#This script checks the neck joint range of motions for the modified emu model in sample dataset 2.
+#That version of the model has the neck positions modified with respect to the original publication,
+#because the model was not initially developed with neck joint range of motions in mind. If this is your goal, the emu model will require more extensive modifications.
+#This script assumes the starting pose is viable, and will keep checking the ultimate range of motion
+#around a single axis, until it hits an intersection, or until it hits "end_phi".
+#If the starting pose is not viable, it will immediately move on to the next joint.
+#The script progresses from the designated root joint, checks the intersections between the geometry 
+#immediately distal to the joint, with all the geometries proximal to it.
+# It will move on to the next most distal joint sequentially.
+#It is written specifically with necks and tails in mind (so each body should only have one child joint),
+# but it could easily be extended.
+
+# Download the blend file from sample dataset 2 to try out this script: https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset2
+
 import bpy
 import addon_utils
 from mathutils import Matrix
@@ -25,17 +35,23 @@ root_joint_name = "neck_18_joint"  # Root joint.
 #For each joint, it keeps rotating until the vert distal to it
 #intersects with any mesh proximal to it. Then it moves on to the
 #first joint distal to it, and repeats this till the end.
-#When we add CRs, we will probably need more sophisticated intersection checking
-#But that will make the script slower
+
 
 keyframe_number = 1            # The final posture is keyframed in this frame in the timeline.
 #Change this so you can save the end result of different analyses
-#I manually keyframed 0 rotation at frame 0 for all the joints
 
 
+export_results_as_CSV = True #If you want to export the results of the analysis as a CSV. Requires saving the blend file first.
 output_filename = 'joint_rom_flexion_v1' #careful that it can overwrite previous results
 
+# If export requested but no saved file, stop immediately
+if export_results_as_CSV and not bpy.data.filepath:
+    raise ValueError("Cannot export results as CSV because the Blender file has not been saved. Save the Blend file first and try again")
+
+
 csv_output_path = os.path.join(os.path.dirname(bpy.data.filepath), output_filename + ".csv")
+
+
 
 d_phi = -1 #check intersections in steps of how many degrees? Don't make this too small or the script will take forever
 end_phi = -25 # maximum ROM before we stop, in degrees
@@ -61,21 +77,6 @@ from two_object_intersection_func import check_bvh_intersection
 # HELPER FUNCTIONS TO GET MODEL GEOMETRY LISTS
 # ------------------------
 
-def collect_distal_geometry_object_names(obj):
-    #Recursively collects all child objects names (and their children, etc.)
-    #that have the custom property 'MuSkeMo_type' set to 'GEOMETRY'.
-    #This lets you find allthe bone meshes distal to a joint
-    geometry_names = []
-
-    # Check if this object itself is a GEOMETRY object
-    if obj.get('MuSkeMo_type') == 'GEOMETRY':
-        geometry_names.append(obj.name)
-
-    # Recursively process all children
-    for child in obj.children:
-        geometry_names.extend(collect_geometry_object_names(child))
-
-    return geometry_names
 
 def collect_proximal_geometry_names(joint_obj):
     """
@@ -177,8 +178,11 @@ def compute_max_joint_rotation(joint_obj, axis, frame_number, d_phi=1, end_phi=1
     intersect_found = False
     
     pos = joint_obj.matrix_world.translation.copy() #
+    
+    last_feasible_angle = 0
+    last_feasible_worldmatrix = joint_obj.matrix_world.copy()
 
-    for steps in range(0, end_phi, d_phi):
+    for steps in range(0, end_phi+d_phi, d_phi):
         depsgraph.update()
         bpy.context.view_layer.update()
 
@@ -186,7 +190,15 @@ def compute_max_joint_rotation(joint_obj, axis, frame_number, d_phi=1, end_phi=1
             intersections = check_bvh_intersection(child_geom_name, objname, depsgraph)
             if intersections:
                 intersect_found = True
+                
+                if steps == 0:
+                    last_feasible_angle = 'start_pose_not_viable'
                 break
+            
+            else: #Update last feasible angle
+                last_feasible_angle = total_phi
+                last_feasible_worldmatrix = joint_obj.matrix_world.copy()
+                
 
         if intersect_found:
             break
@@ -217,8 +229,10 @@ def compute_max_joint_rotation(joint_obj, axis, frame_number, d_phi=1, end_phi=1
                
         
         total_phi += d_phi
-    # Keyframe final pose
+    # Keyframe last feasible pose
+    joint_obj.matrix_world = last_feasible_worldmatrix
     joint_obj.keyframe_insert(data_path="rotation_euler", frame=frame_number)
+    
     
     gRj_current = joint_obj.matrix_world.to_3x3()
     
@@ -241,7 +255,7 @@ def compute_max_joint_rotation(joint_obj, axis, frame_number, d_phi=1, end_phi=1
     joint_obj.matrix_world = original_gRj.to_4x4()
     joint_obj.matrix_world.translation = pos    
 
-    return total_phi
+    return last_feasible_angle
 
 
 # ------------------------
@@ -266,7 +280,7 @@ for joint in all_joints:
     
     joint.keyframe_insert(data_path="rotation_euler", frame=0)
     
-    total_phi = compute_max_joint_rotation(
+    last_feasible_angle = compute_max_joint_rotation(
         joint_obj=joint,
         axis=axis,
         frame_number=keyframe_number,
@@ -274,7 +288,7 @@ for joint in all_joints:
         end_phi=end_phi
     )
 
-    rom_data.append((joint_name, axis, total_phi))
+    rom_data.append((joint_name, axis, last_feasible_angle))
 
 # ------------------------
 # EXPORT TO CSV
