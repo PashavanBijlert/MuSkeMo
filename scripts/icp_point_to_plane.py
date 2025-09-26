@@ -24,7 +24,8 @@ References:
 - Zhang, Z. (1994). Iterative point matching for registration of free-form curves and surfaces.
 - Rusinkiewicz, S., & Levoy, M. (2001). Efficient Variants of the ICP Algorithm.
 
-Author: Pasha van Bijlert
+Author, copyright: Pasha van Bijlert; 
+LIcense: CC-BY-NC
 """
 
 
