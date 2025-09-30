@@ -662,7 +662,7 @@ For each muscle, the volumetric muscle visualization node has four inputs, next 
 
 \subsubsection{Trajectory import}
 \label{sec:trajectoryimport}
-MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. Currently, it is only possible to import trajectories using OpenSim .sto files. The trajectory importer sets a \href{https://docs.blender.org/manual/en/latest/animation/keyframes/index.html}{keyframe} for each joint position and orientation, and keyframes the muscle activations by keyframing the color saturation. Frame 0 (in the playback timeline at the bottom of the screen) is always set as the default pose (see sec. \ref{sec:defaultpose}).
+MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. Currently, it is only possible to import trajectories using OpenSim .sto and .mot files. The trajectory importer sets a \href{https://docs.blender.org/manual/en/latest/animation/keyframes/index.html}{keyframe} for each joint position and orientation, and keyframes the muscle activations by keyframing the color saturation. Frame 0 (in the playback timeline at the bottom of the screen) is always set as the default pose (see sec. \ref{sec:defaultpose}).
 
 If you want to modify the import settings, you will need to undo the import, and then reimport using the new settings. It is also possible to delete the existing trajectory: navigate to Frame 0, press A to select all model components, then in the timeline below delete all the keyframes.
 
