@@ -19,9 +19,9 @@ import csv
 import colorsys
 
 class ImportTrajectorySTO(Operator):
-    bl_description = "Import a trajectory in .sto file format to create an animation"
+    bl_description = "Import an OpenSim trajectory in .sto or .mot file format to create an animation"
     bl_idname = "visualization.import_trajectory_sto"
-    bl_label = "Import .sto strajectory to create an animation"
+    bl_label = "Import a .sto or .mot trajectory to create an animation"
     bl_options = {"UNDO"} #enable undoing
 
 
@@ -39,10 +39,10 @@ class ImportTrajectorySTO(Operator):
     #run the file select window manager, with a filter for .osim extension files
     def invoke(self, context, _event):
 
-        self.filter_glob = "*.sto"
+        self.filter_glob = "*.sto;*.mot"
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-    
+    '''
     def parse_sto(self, context):#custom super class method
         """Reads .STO file data from the specified filepath using the CSV importer and tab delimiters."""
         filepath = self.filepath
@@ -83,11 +83,67 @@ class ImportTrajectorySTO(Operator):
     
         
         return column_headers, data
+    '''
+    def parse_sto_mot(self, context):  # custom super class method
+        """Reads OpenSim .sto or .mot file data from the specified filepath"""
+        filepath = self.filepath
+        file_header = []       # all header lines including 'endheader'
+        column_headers = []    # actual data column names
+        data = []              # numeric data rows
+        is_data = False        # becomes True after 'endheader'
+
+        in_degrees = 'not_defined'
+
+        with open(filepath, mode='r') as file:
+            
+            for line_num, line in enumerate(file, 1):
+                line = line.strip()
+                if not line:
+                    continue  # skip empty lines
+
+                # Check inDegrees in header
+                if not is_data and 'inDegrees' in line:
+                    if 'no' in line.lower():
+                        in_degrees = False
+                    elif 'yes' in line.lower():
+                        in_degrees = True
+                    else:
+                        print(f"Warning: unrecognized inDegrees value at line {line_num}: {line}")
+
+                    bpy.context.scene.muskemo.in_degrees = in_degrees
+
+                # Detect end of header
+                if not is_data and 'endheader' in line.lower():
+                    is_data = True
+                    continue
+
+                if is_data:
+                    # First row after endheader is column headers
+                    if not column_headers:
+                        column_headers = line.split()  # split on any whitespace
+                    else:
+                        try:
+                            row_values = [float(x) for x in line.split()]
+                            if len(row_values) != len(column_headers):
+                                print(f"Warning: line {line_num} has {len(row_values)} values but expected {len(column_headers)}")
+                            data.append(row_values)
+                        except ValueError as e:
+                            print(f"Warning: could not convert values to float at line {line_num}: {e}")
+                else:
+                    file_header.append(line)
+
+        # Warn if inDegrees was not defined in the header
+        if in_degrees == 'not_defined':
+            self.report({'WARNING'},
+                        "Your .sto or .mot file does not have an 'inDegrees' line in the header. "
+                        "Default behavior is to assume radians; if you want degrees, specify it before import.")
+
+        return column_headers, data
     
     def execute(self, context):
         
         # Call the custom superclass method parse_sto to read the sto data
-        column_headers, traj_data = self.parse_sto(context)
+        column_headers, traj_data = self.parse_sto_mot(context)
         
         traj_data = np.array(traj_data)
         time = traj_data[:,0] #time is the first column
@@ -176,7 +232,7 @@ class ImportTrajectorySTO(Operator):
             ind = [i for i, x in enumerate(column_headers)
                         if x.startswith(muscle.name + '/activation') #if the header is 'musclename/activation'
                         or x.startswith(muscle.name + '.activation') #if the header is 'musclename.activation' (SCONE)
-                        or x.endswith('/' + muscle.name + '/activation/')] #if the header is /forceset/musclename/activation'
+                        or x.endswith('/' + muscle.name + '/activation')] #if the header is /forceset/musclename/activation'
 
             # use indices to get the headers
             traj_act = [column_headers[i] for i in ind]            
