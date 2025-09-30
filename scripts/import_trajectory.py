@@ -172,8 +172,15 @@ class ImportTrajectorySTO(Operator):
 
         for idx, muscle in enumerate(muscles):
             
-            ind = [i for i, x in enumerate(column_headers) if ('/' + muscle.name + '/' +'activation' in x) or (muscle.name + '.activation' in x)] #indices of the activations. #OpenSim delimits with '/', hyfydy with '.'
-            traj_act = [x for i, x in enumerate(column_headers) if ('/' + muscle.name + '/' +'activation' in x) or (muscle.name + '.activation' in x)] #headers of the activation data
+            # Get column header indices that correspond to muscles in the MuSkeMo model
+            ind = [i for i, x in enumerate(column_headers)
+                        if x.startswith(muscle.name + '/activation') #if the header is 'musclename/activation'
+                        or x.startswith(muscle.name + '.activation') #if the header is 'musclename.activation' (SCONE)
+                        or x.endswith('/' + muscle.name + '/activation/')] #if the header is /forceset/musclename/activation'
+
+            # use indices to get the headers
+            traj_act = [column_headers[i] for i in ind]            
+
 
             if not traj_act:
                 muscle.hide_set(True)
