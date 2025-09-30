@@ -306,7 +306,9 @@ class ImportTrajectorySTO(Operator):
         for i in range(activation_trajectories.shape[1]):
             activation_trajectories_rs[:, i] = np.interp(x_query, x, activation_trajectories[:, i])
         
-        max_act = np.max(activation_trajectories_rs) #for visual activation scaling
+
+        if traj_muscles:
+            max_act = np.max(activation_trajectories_rs) #for visual activation scaling
         
         
 
