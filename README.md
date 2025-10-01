@@ -90,9 +90,9 @@ A MuJoCo importer is currently being developed, and future updates will also sup
 
 # **Visualization panel**
 
-MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. This panel features a trajectory importer (currently OpenSim .sto format only) that has the optional feature to repeat the trajectory in a loop while progressing the forward translation coordinate (useful for simulations of a single stride). This panel also includes several convenience tools to aid users who are new to animations in Blender. 
+MuSkeMo enables you to import simulated trajectories back into Blender to create high-quality animations with complex camera movements. This panel features a trajectory importer (including OpenSim .sto, .mot, and custom filetypes such as .csv) that has the optional feature to repeat the trajectory in a loop while progressing the forward translation coordinate (useful for simulations of a single stride). This panel also includes several convenience tools to aid users who are new to animations in Blender. 
 
-Users are able to define their desired default colors in this panel (currently only muscle color has been exposed to the user).
+Users are able to define their desired default colors in this panel.
 
 # **Reflection panel**
 
