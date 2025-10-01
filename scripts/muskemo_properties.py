@@ -843,8 +843,22 @@ class MuSkeMoProperties(PropertyGroup):
         max = 100
     )   
 
-       
+    trajectory_filetype: EnumProperty(
+        name="Trajectory filetype",
+        description="What type of trajectory file are you importing?",
+        items=[ ("OpenSim (.sto or .mot)", "OpenSim (.sto or .mot)", ""),
+                ('Custom', "Custom", ""),
+              ],
+        default = "OpenSim (.sto or .mot)",
+        )   
     
+    column_label_row_number: IntProperty(
+        name = "Column labels row number",
+        description="What row number are the column labels?",
+        default = 1,
+        min = 1,
+        max = 100
+        ) 
 
     fps :  IntProperty(
         name = "Frames per second",

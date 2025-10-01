@@ -18,10 +18,10 @@ import csv
 
 import colorsys
 
-class ImportTrajectorySTO(Operator):
-    bl_description = "Import an OpenSim trajectory in .sto or .mot file format to create an animation"
-    bl_idname = "visualization.import_trajectory_sto"
-    bl_label = "Import a .sto or .mot trajectory to create an animation"
+class ImportTrajectory(Operator):
+    bl_description = "Import a trajectory file to create an animation"
+    bl_idname = "visualization.import_trajectory"
+    bl_label = "Import a trajectory file to create an animation"
     bl_options = {"UNDO"} #enable undoing
 
 
@@ -38,54 +38,20 @@ class ImportTrajectorySTO(Operator):
 
     #run the file select window manager, with a filter for .osim extension files
     def invoke(self, context, _event):
-
-        self.filter_glob = "*.sto;*.mot"
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-    '''
-    def parse_sto(self, context):#custom super class method
-        """Reads .STO file data from the specified filepath using the CSV importer and tab delimiters."""
-        filepath = self.filepath
-        with open(filepath, mode = 'r') as file:
-            reader = csv.reader(file, delimiter='\t')
-            file_header = [] #all the extra header lines including "endheader"
-            column_headers = [] #the actual headers of the data columns
-            data = []
-            is_data = False #remains false until we've looped through the file_header rows
-
-            in_degrees = 'not_defined'
-
-            for row in reader:
-                if 'inDegrees' in row[0]: #if it's defined in the header, we set the muskemo prop
-                    if 'no' in row[0]:
-                        in_degrees = False
-
-                    elif 'yes' in row[0]:
-                        in_degrees = True
-
-                    bpy.context.scene.muskemo.in_degrees = in_degrees
-                
-
-                if 'endheader' in row:
-                    is_data = True
-                    continue
-                
-                if is_data:
-                    if not column_headers:  # The first row after endheader contains the column headers
-                        column_headers = row
-                    else:
-                        data.append([float(x) for x in row if x.strip() != ''])
-                else:
-                    file_header.append(row)
-
-            if in_degrees == 'not_defined': #if it's not defined, throw a warning
-                self.report({'WARNING'}, "Your .sto file does not have an 'inDegrees' line in the header. Default behavior is to assume radians, if you want degrees, specify so below before import.")
-    
         
-        return column_headers, data
-    '''
-    def parse_sto_mot(self, context):  # custom super class method
-        """Reads OpenSim .sto or .mot file data from the specified filepath"""
+        if bpy.context.scene.muskemo.trajectory_filetype == 'OpenSim (.sto or .mot)': #If user wants to import OpenSim sto or mot, filter them out.
+            self.filter_glob = "*.sto;*.mot"
+            
+
+        else: #filter nothing
+            self.filter_glob = "*"    
+
+        context.window_manager.fileselect_add(self)    
+        return {'RUNNING_MODAL'}
+
+
+    def parse_trajectory_file(self, context):  # custom super class method
+        """Reads simulation trajectory data from the specified file"""
         filepath = self.filepath
         file_header = []       # all header lines including 'endheader'
         column_headers = []    # actual data column names
@@ -94,56 +60,95 @@ class ImportTrajectorySTO(Operator):
 
         in_degrees = 'not_defined'
 
-        with open(filepath, mode='r') as file:
+        ## user switches
+        muskemo = context.scene.muskemo
+        trajectory_filetype = muskemo.trajectory_filetype
+
+        if trajectory_filetype == 'OpenSim (.sto or .mot)': ### OpenSim .sto or .mot should be split based on whitespaces
+
+
+            with open(filepath, mode='r') as file:
+                
+                for line_num, line in enumerate(file, 1):
+                    line = line.strip()
+                    if not line:
+                        continue  # skip empty lines
+
+                    # Check inDegrees in header
+                    if not is_data and 'inDegrees' in line:
+                        if 'no' in line.lower():
+                            in_degrees = False
+                        elif 'yes' in line.lower():
+                            in_degrees = True
+                        else:
+                            print(f"Warning: unrecognized inDegrees value at line {line_num}: {line}")
+
+                        bpy.context.scene.muskemo.in_degrees = in_degrees
+
+                    # Detect end of header
+                    if not is_data and 'endheader' in line.lower():
+                        is_data = True
+                        continue
+
+                    if is_data:
+                        # First row after endheader is column headers
+                        if not column_headers:
+                            column_headers = line.split()  # split on any whitespace
+                        else:
+                            try:
+                                row_values = [float(x) for x in line.split()]
+                                if len(row_values) != len(column_headers):
+                                    print(f"Warning: line {line_num} has {len(row_values)} values but expected {len(column_headers)}")
+                                data.append(row_values)
+                            except ValueError as e:
+                                print(f"Warning: could not convert values to float at line {line_num}: {e}")
+                    else:
+                        file_header.append(line)
+
             
-            for line_num, line in enumerate(file, 1):
-                line = line.strip()
-                if not line:
-                    continue  # skip empty lines
+            # Warn if inDegrees was not defined in the header
+            if in_degrees == 'not_defined':
+                self.report({'WARNING'},
+                            "Your .sto or .mot file does not have an 'inDegrees' line in the header. "
+                            "Default behavior is to assume radians; if you want degrees, specify it before import.")
 
-                # Check inDegrees in header
-                if not is_data and 'inDegrees' in line:
-                    if 'no' in line.lower():
-                        in_degrees = False
-                    elif 'yes' in line.lower():
-                        in_degrees = True
+
+        else: #custom filetype is split based on user set delimiter, and starts after user-set number of header rows. 
+            #more user switches
+            delimiter = muskemo.delimiter
+            column_label_row_number = muskemo.column_label_row_number
+             
+            with open(filepath, mode='r') as file:
+            
+                for line_num, line in enumerate(file, 1):
+                    line = line.strip()
+
+                    # Detect the row where the column labels are
+                    if not is_data and line_num == column_label_row_number:
+                        is_data = True
+                        
+
+                    if is_data:
+                        # First row after endheader is column headers
+                        if not column_headers:
+                            column_headers = line.split(delimiter)  # split on any whitespace
+                        else:
+                            try:
+                                row_values = [float(x) for x in line.split(delimiter)]
+                                if len(row_values) != len(column_headers):
+                                    print(f"Warning: line {line_num} has {len(row_values)} values but expected {len(column_headers)}")
+                                data.append(row_values)
+                            except ValueError as e:
+                                print(f"Warning: could not convert values to float at line {line_num}: {e}")
                     else:
-                        print(f"Warning: unrecognized inDegrees value at line {line_num}: {line}")
-
-                    bpy.context.scene.muskemo.in_degrees = in_degrees
-
-                # Detect end of header
-                if not is_data and 'endheader' in line.lower():
-                    is_data = True
-                    continue
-
-                if is_data:
-                    # First row after endheader is column headers
-                    if not column_headers:
-                        column_headers = line.split()  # split on any whitespace
-                    else:
-                        try:
-                            row_values = [float(x) for x in line.split()]
-                            if len(row_values) != len(column_headers):
-                                print(f"Warning: line {line_num} has {len(row_values)} values but expected {len(column_headers)}")
-                            data.append(row_values)
-                        except ValueError as e:
-                            print(f"Warning: could not convert values to float at line {line_num}: {e}")
-                else:
-                    file_header.append(line)
-
-        # Warn if inDegrees was not defined in the header
-        if in_degrees == 'not_defined':
-            self.report({'WARNING'},
-                        "Your .sto or .mot file does not have an 'inDegrees' line in the header. "
-                        "Default behavior is to assume radians; if you want degrees, specify it before import.")
-
+                        file_header.append(line)
+        
         return column_headers, data
     
     def execute(self, context):
         
         # Call the custom superclass method parse_sto to read the sto data
-        column_headers, traj_data = self.parse_sto_mot(context)
+        column_headers, traj_data = self.parse_trajectory_file(context)
         
         traj_data = np.array(traj_data)
         time = traj_data[:,0] #time is the first column

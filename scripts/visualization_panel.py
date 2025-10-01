@@ -288,7 +288,7 @@ class ConvertMusclesToSimpleViz(Operator):
 
 from .. import VIEW3D_PT_MuSkeMo  #the super class in which all panels will be placed
 
-from .import_trajectory import ImportTrajectorySTO
+from .import_trajectory import ImportTrajectory
 
 ### The panels
 
@@ -419,31 +419,50 @@ class VIEW3D_PT_import_trajectory_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # class n
         row = self.layout.row()
         row.label(text = "Do not import trajectories into your main .blend file, make a backup first.")
         row = layout.row()
-        row.operator("visualization.import_trajectory_sto",text = 'Import .sto or .mot trajectory')
+        split = row.split(factor = 1/2)
+        split.label(text = "Trajectory filetype:")
+        split.prop(muskemo, "trajectory_filetype", text = '')
         
-        row = layout.row()
-        row.prop(muskemo, "number_of_repetitions")
-
-        row = layout.row()
-        row.prop(muskemo, "fps")
-
-        row = layout.row()
-        split = row.split(factor = 1/2)
-        split.label(text = "Root joint name")
-        split.prop(muskemo, "root_joint_name", text = '')
-
-        row = layout.row()
-        split = row.split(factor = 1/2)
-        split.label(text = "Forward progression coordinate")
-        split.prop(muskemo, "forward_progression_coordinate", text = '')
-
+        
+        if muskemo.trajectory_filetype == 'Custom':
+            row = self.layout.row()
+            split = row.split(factor =  1/2)
+            split.label(text = "Delimiter:")
+            split.prop(muskemo, "delimiter", text = '')
+            row = self.layout.row()
+            split = row.split(factor =  1/2)
+            split.label(text = "Column labels in row number:")
+            split.prop(muskemo, "column_label_row_number", text = '')
+        
         row = layout.row()
         row.prop(muskemo, "in_degrees")
 
         row = layout.row()
+        row.operator("visualization.import_trajectory",text = 'Import trajectory')    
+
+        layout.separator()
+       
+        box = layout.box()
+        row = box.row()
+        row.prop(muskemo, "number_of_repetitions")
+
+        row = box.row()
+        row.prop(muskemo, "fps")
+
+        row = box.row()
+        split = row.split(factor = 1/2)
+        split.label(text = "Root joint name")
+        split.prop(muskemo, "root_joint_name", text = '')
+
+        row = box.row()
+        split = row.split(factor = 1/2)
+        split.label(text = "Forward progression coordinate")
+        split.prop(muskemo, "forward_progression_coordinate", text = '')
+
+        row = box.row()
         row.prop(muskemo, "scale_activations_to_highest")
 
-        row = layout.row()
+        row = box.row()
         row.prop(muskemo, "baseline_saturation")
                
         return    

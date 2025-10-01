@@ -135,7 +135,7 @@ from .scripts.visualization_panel import (VIEW3D_PT_visualization_panel, VIEW3D_
                                           VIEW3D_PT_visualization_options_subpanel, VIEW3D_PT_default_colors_subpanel,
                                           CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
                                            ConvertMusclesToVolumetricViz,ConvertMusclesToSimpleViz,
-                                    ImportTrajectorySTO,#these are separate scripts)
+                                    ImportTrajectory,#these are separate scripts)
                                     )
 #### Anatomical (local) reference frame panel
 from .scripts.frame_panel import (VIEW3D_PT_frame_panel,
@@ -269,7 +269,7 @@ classes = (  #Global settings panel
                                 CreateGroundPlaneOperator, SetCompositorBackgroundGradient,
                                ConvertMusclesToVolumetricViz,ConvertMusclesToSimpleViz,
 
-                                ImportTrajectorySTO, # separate script
+                                ImportTrajectory, # separate script
 
             #anatomical (local) reference frames panel
                                  VIEW3D_PT_frame_panel,
