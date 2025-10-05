@@ -237,15 +237,17 @@ This panel combines several tools that are generally useful when manipulating or
 \subsubsection{Mesh alignment}
 \label{sec:meshalignment}
 
-Aligning 3D meshes in space is a common task when dealing with 3D biomechanical data. To use MuSkeMo's mesh alignment tool, simply select two meshes, designate which mesh is the target (stationary) object, and which one is the free mesh (which will be moved to achieve alignment), and then press ``Align Meshes''. The alignment assumes that you have approximately aligned the meshes yourself, and that they have the same scale.
+Aligning 3D meshes in space is a common task when dealing with 3D biomechanical data. To use MuSkeMo's mesh alignment tool, simply select two meshes, designate which mesh is the target (stationary) object, and which one is the free mesh (which will be moved to achieve alignment), and then press ``Align Meshes''. The alignment assumes that you have approximately aligned the meshes yourself, and that they have the same scale. You can align entire meshes, or selected sections of meshes (e.g., when trying to match articular surfaces). 
 
-The alignment uses an iterative closest point algorithm (point to plane, following \cite{chenObjectModelingRegistration1991}), using Blender's \href{https://docs.blender.org/api/current/mathutils.kdtree.html}{KD-tree} module to improve performance \cite{zhangIterativePointMatching1994}. Performance is further improved with (random) subsampling (see \cite{rusinkiewiczEfficientVariantsICP2001}), and the subsampling is slowly ramped down after several iterations so the final alignment is based on the entire meshes.
+The alignment uses an iterative closest point algorithm (point to plane, following \cite{chenObjectModelingRegistration1991}), using Blender's \href{https://docs.blender.org/api/current/mathutils.kdtree.html}{KD-tree} module to improve performance \cite{zhangIterativePointMatching1994}. Performance is further improved with (random) subsampling (see \cite{rusinkiewiczEfficientVariantsICP2001}), and the subsampling is slowly ramped down after several iterations so the final alignment is based on the entire meshes. Performance will still be slow with heavy meshes.
 
 The following settings are available:
 
 
 \begin{enumerate}
     \item \textbf{Free Object.} Selects which object is allowed to move during ICP point-to-plane mesh alignment.
+    
+    \item \textbf{Alignment mode.} Toggle whether you want to align the entire mesh, or only selected portions of two meshes. When aligning selected mesh portions, both meshes should have selections set in Edit mode (select both meshes, hit TAB, and select the relevant mesh sections). Selecting portions of meshes can be useful if one (or both) of the meshes is incomplete, or when trying to match corresponding articular surfaces of bones.
     
     \item \textbf{Max Iterations.} Maximum number of iterations performed during ICP point-to-plane mesh alignment. Higher values may improve accuracy but increase computation time.
     

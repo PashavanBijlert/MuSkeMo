@@ -43,6 +43,19 @@ class MeshAlignnmentICPPointToPlaneOperator(Operator):
         target_obj = [obj for obj in sel_obj if obj!=free_obj][0] #target obj is the other selected object
 
 
+        alignment_mode = muskemo.icp_alignment_mode
+
+
+        if alignment_mode == 'Selected mesh portions':
+
+            if not [v for v in  free_obj.data.vertices if v.select]:
+                self.report({'ERROR'}, free_obj.name + "Free Object has no selected portions. Select the mesh, hit TAB to go into edit mode, and then select the mesh portion you would like to align. Alternatively, align the entire mesh.")
+                return {'FINISHED'}
+
+            if not [v for v in  target_obj.data.vertices if v.select]:
+                self.report({'ERROR'}, target_obj.name + " has no selected portions. Select the mesh, hit TAB to go into edit mode, and then select the mesh portion you would like to align. Alternatively, align the entire mesh.")
+                return {'FINISHED'}
+
         max_iter = muskemo.icp_max_iterations
         tol = muskemo.icp_tolerance
         sample_ratio_start = muskemo.icp_sample_ratio_start
@@ -57,7 +70,8 @@ class MeshAlignnmentICPPointToPlaneOperator(Operator):
                                      tolerance=tol,
                                      sample_ratio_start=sample_ratio_start,
                                      sample_ratio_end=sample_ratio_end,
-                                    sample_ratio_ramp_iters = max_sample_ratio_after)
+                                    sample_ratio_ramp_iters = max_sample_ratio_after,
+                                    alignment_mode = alignment_mode)
         
         return {'FINISHED'}
 
@@ -209,6 +223,7 @@ class VIEW3D_PT_mesh_alignment_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class namin
         row = layout.row()
         row = layout.row()
         row = layout.row()
+        layout.prop(muskemo, "icp_alignment_mode", expand = True)
 
         layout.prop(muskemo, "icp_max_iterations")
         layout.prop(muskemo, "icp_tolerance")

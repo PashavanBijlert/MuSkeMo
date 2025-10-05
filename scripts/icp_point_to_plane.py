@@ -34,10 +34,17 @@ import numpy as np
 from mathutils import Vector, kdtree, Matrix
 import time
 
-def get_vertices_and_normals_world(obj):
+def get_vertices_and_normals_world(obj, selection_only):
     mw = obj.matrix_world
-    verts = np.array([mw @ v.co for v in obj.data.vertices])
-    norms = np.array([mw.to_3x3() @ v.normal for v in obj.data.vertices])
+
+    if not selection_only: #if we're aligning whole meshes
+        verts = np.array([mw @ v.co for v in obj.data.vertices])
+        norms = np.array([mw.to_3x3() @ v.normal for v in obj.data.vertices])
+
+    else:
+        verts = np.array([mw @ v.co for v in obj.data.vertices if v.select])
+        norms = np.array([mw.to_3x3() @ v.normal for v in obj.data.vertices if v.select])
+    
     return verts, norms
 
 def build_kdtree(points):
@@ -57,7 +64,8 @@ def point_to_plane_icp_subsample(free_obj, target_obj,
                                  tolerance=1e-6,
                                  sample_ratio_start=0.1,
                                  sample_ratio_end=1.0,
-                                 sample_ratio_ramp_iters=6):
+                                 sample_ratio_ramp_iters=6,
+                                 alignment_mode = 'Whole meshes'):
    
     """
     Point-to-Plane ICP with:
@@ -71,9 +79,16 @@ def point_to_plane_icp_subsample(free_obj, target_obj,
     sample_ratio_start (downsample ratio at the start of the optimization)
     sample_ratio_end (downsample after reaching sample_ratio_ramp_iters)
     sample_ratio_ramp_iters (number of iterations afer sample_ratio_end is reached)
+    Alignment mode ("Whole meshes", or "Selected mesh portions"). "Selected mesh portions" requires both meshes to have selections set in Edit mode.
     """
-    source_verts = get_vertices_and_normals_world(free_obj)[0]
-    tgt_verts, tgt_norms = get_vertices_and_normals_world(target_obj)
+    if alignment_mode == "Whole meshes":
+        selection_only = False
+    elif alignment_mode == "Selected mesh portions":
+        selection_only = True
+
+    source_verts = get_vertices_and_normals_world(free_obj, selection_only=selection_only)[0]
+    tgt_verts, tgt_norms = get_vertices_and_normals_world(target_obj, selection_only=selection_only)
+
     tgt_tree = build_kdtree(tgt_verts)
 
     transform = np.eye(4)

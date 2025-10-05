@@ -1021,6 +1021,16 @@ class MuSkeMoProperties(PropertyGroup):
         items=free_objects_items
     )
 
+    icp_alignment_mode: EnumProperty(
+        name="Alignment mode",
+        description="Align whole meshes, or only selected portions of both meshes. If aligning mesh portions, you must select the relevant portions in edit mode (select mesh + hit TAB).",
+        items=[
+            ('Whole meshes', "Whole Meshes", "Align whole meshes"),
+            ('Selected mesh portions', "Selected mesh portions", "Align selected mesh portions"),
+        ],
+        default='Whole meshes',
+    )
+
     icp_max_iterations: IntProperty(
         name="Max Iterations",
         description = "Max iterations during ICP point-to-plane mesh alignment",
