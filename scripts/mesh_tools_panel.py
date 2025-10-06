@@ -21,6 +21,7 @@ class MeshAlignnmentICPPointToPlaneOperator(Operator):
     bl_idname = "mesh.align_icp_point_to_plane"
     bl_label = "Rigid mesh alignment using iterative closest point - point to plane. Select two meshes, designate the free object, and then press the button."
     bl_description = "Rigid mesh alignment using iterative closest point - point to plane. Select two meshes, designate the free object, and then press the button."
+    bl_options = {"UNDO"} #enable undoing
     
     def execute(self, context):
         

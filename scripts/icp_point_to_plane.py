@@ -110,19 +110,23 @@ def point_to_plane_icp_subsample(free_obj, target_obj,
         num_sample = max(1, int(sample_ratio * num_source))
         sampled_indices = np.random.choice(num_source, num_sample, replace=False)
 
-        # Build system
-        A, b = [], []
-        for idx in sampled_indices:
-            p = source_verts[idx]
-            nearest, index, _ = tgt_tree.find(Vector(p))
-            q = tgt_verts[index]
-            n = tgt_norms[index]
-            diff = p - q
-            A.append(np.concatenate((np.cross(p, n), n)))
-            b.append(-np.dot(n, diff))
+        
+        p = source_verts[sampled_indices] #Get all sampled source points in a single NumPy array
 
-        A = np.array(A)
-        b = np.array(b).reshape(-1, 1)
+               
+        nearest_indices = [tgt_tree.find(Vector(pt))[1] for pt in p] # Find nearest neighbors and collect their indices.
+
+        q = tgt_verts[nearest_indices] #Use the collected indices to get all target points (q) and normals (n)  at once using NumPy.
+        n = tgt_norms[nearest_indices]
+
+        # Calculate all cross products
+        diff = p - q
+        cross_products = np.cross(p, n, axis=1)
+
+        # Assemble the final A and b matrices.
+        
+        A = np.hstack((cross_products, n)) #    np.hstack joins the arrays horizontally.
+        b = -np.einsum('ij,ij->i', n, diff).reshape(-1, 1) #    np.einsum performs all dot products between corresponding n and diff vectors.
 
         # Solve
         x, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
