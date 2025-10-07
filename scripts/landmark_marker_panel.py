@@ -10,7 +10,7 @@ class CreateLandmarkOperator(Operator):
     bl_idname = "landmark.create_landmark"
     bl_label = "Creates a landmark at the 3D cursor location"  #not sure what bl_label does, bl_description gives a hover tooltip
     bl_description = "Creates a landmark at the 3D cursor location"
-    
+    bl_options = {"UNDO"} #enables undoing
     def execute(self, context):
 
         muskemo = bpy.context.scene.muskemo
