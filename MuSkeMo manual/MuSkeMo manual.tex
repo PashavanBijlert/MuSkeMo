@@ -641,11 +641,26 @@ MuJoCo has a substantially different model format from most biomechanical simula
 \item MuJoCo models can have kinematic constraints that couple one coordinate's ("joint" in MuJoCo) motions to another. This is currently not yet possible in MuSkeMo, and the joint is thus imported assuming a coordinate value of 0. The user is warned if this occured.
 \item DEPCRECATED - WILL REMOVE AFTER TESTING MuJoCo allows joints to have \href{https://mujoco.readthedocs.io/en/stable/modeling.html#cuser}{user parameters}, which the MyoConverter models appear to use to define a default coordinate value. MuSkeMo creates the model then uses the "user parameters" defined in the joints to transform the joints along their respective coordinate axes.
 \item Muscles are imported, but if the muscle points (called "Sites" in MuJoCo) were attached to MuJoCo bodies without inertial properties (i.e., frames without inertial properties), then currently the importer parents those muscle points to JOINTS. This is not officially supported by MuSkeMo, so currently such models cannot be exported, but this is adequate for visualizations. In MuJoCo, these points (called sites) can move using joint constraints, which is equivalent to 'MovingPathPoint' in OpenSim. These points were presumably added to the MuJoCo model to represent the wrapping surfaces present in the original OpenSim model that they were converted from.
+\item Optimal fiber lengths and tendon slack lengths are implicitly defined in MuJoCo, via the actuator length ranges ($r_{length}$), and the normalized operating range ($r_{norm}$) in the gain parameters (see the \href{https://mujoco.readthedocs.io/en/stable/modeling.html#cmuscle}{MuJoCo documentation on muscles}). MuSkeMo calculates optimal fiber length $L_0$ as:
+\begin{equation}
+L_0 = \frac{r_{length,2} - r_{length,1}}{r_{norm,2} - r_{norm,1}}.
+\end{equation}
+
+Tendon slack length $L_T$ is calculated as:
+\begin{equation}
+L_T = r_{length,1} - L_0 \cdot r_{norm,1}.
+\end{equation}
+
 
 
 \end{itemize}
 
-The MuJoCo model importer is still missing the following features: conversion of moving path points to static path points.
+The MuJoCo model importer is still missing the following features: 
+
+\begin{itemize}
+\item Conversion of moving path points to static path points.
+\end{itemize}
+
 
 \subsubsection{Other simulators}
 

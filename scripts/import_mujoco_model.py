@@ -717,6 +717,21 @@ class ImportMuJoCoModel(Operator):
                 muscle_name = actuator['name']
                 tendon = [x for x in muscle_data['tendons'] if x['name'] == actuator['tendon']][0] #muscle_data['tendons'] is a list of dicts
 
+                ## get muscle contractile parameters
+
+                lengthrange = actuator['lengthrange'] #range (in m) of the muscle-tendon complex
+                normrange = actuator['gainprm'][0:2] # corresponding normalized range (in L0) of the muscle fiber 
+
+                #optimal fiber length and tendon slack lengths are implicitly defined in MuJoCo models
+                optimal_fiber_length = (lengthrange[1] - lengthrange[0])/(normrange[1]-normrange[0])
+                tendon_slack_length = lengthrange[0] - optimal_fiber_length*normrange[0]
+
+                F_max = actuator['gainprm'][2]
+                
+                #currently unused by MuSkeMo
+                #v_max = actuator['gainprm'][6]
+
+
                 for site in tendon['sites']: #again a list of dicts
                     target_sitename = site['site']
                     
@@ -745,9 +760,9 @@ class ImportMuJoCoModel(Operator):
                             body_name = mp_parent_body_name,
                             point_position = muscle_point_pos_in_glob,
                             collection_name=muscle_colname,
-                            optimal_fiber_length=0.1,
-                            tendon_slack_length=0.2,
-                            F_max = 100,
+                            optimal_fiber_length=optimal_fiber_length,
+                            tendon_slack_length=tendon_slack_length,
+                            F_max = F_max,
                             pennation_angle = 0)    
 
                     
