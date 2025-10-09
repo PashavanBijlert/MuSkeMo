@@ -105,7 +105,8 @@ class CreateLandmarkOperator(Operator):
             target_obj.select_set(True) #select the parent body. Now a BODY and a mesh are selected
             bpy.ops.body.attach_visual_geometry() #attach visual geometry
 
-
+            #Make sure the landmarks collection is active
+            bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
 
         #### All of this should be moved over to a separate creation function
 
