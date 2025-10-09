@@ -651,7 +651,7 @@ Tendon slack length $L_T$ is calculated as:
 L_T = r_{length,1} - L_0 \cdot r_{norm,1}.
 \end{equation}
 
-
+Note that because MuJoCo does not have elastic tendons in their muscle model, to achieve an adequate length range, apparently the optimal fiber lengths in the muscles are sometimes increased to compensate. For a given $F_{max}$, this encodes higher muscle volumes in MuJoCo models. This can become apparent for certain muscles when using the volumetric muscle visualizations (sec. \ref{sec:volmuscleviz}).
 
 \end{itemize}
 
@@ -664,7 +664,7 @@ The MuJoCo model importer is still missing the following features:
 
 \subsubsection{Other simulators}
 
-Future updates will include Hyfydy and MuJoCo model support.
+Future updates will include Hyfydy model support.
 
 
 \subsection{Visualization panel}
