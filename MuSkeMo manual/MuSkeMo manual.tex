@@ -188,7 +188,15 @@ Combining parenting and Blender's native object types does not provide all of th
 
 MuSkeMo uses both regular modifiers (which perform a predefined operation/modification on the object, e.g. the \href{https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/bevel.html}{Bevel modifier} is used to round the edges of muscle visualizations), but also several custom-made Geometry nodes modifiers.
 
-\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes} modifiers are a very powerful way perform a customized sequence of operations on a specific object. MuSkeMo uses custom-made geometry nodes modifiers for muscle visualization (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}), muscle wrapping \ref{sec:musclewrapping}, creating parametric wrap geometry \ref{sec:wrapgeom}, amongst other features. The most important inputs for most MuSkeMo's custom Geometry nodes are accessible from the modifier panel itself, but advanced Blender users can also dive into the nodes themselves for more in depth modifications to their behavior. Where possible MuSkeMo tries to reuse node groups, which means that it is possible to make global changes to geometry node behavior by changing the parameters of a single node group. For example, the visualization of all the muscles can be changed by modifying the underlying node groups (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}).
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/MuscleSettingsModifierPanel.png} % Add image
+    \caption{Some of MuSkeMo's custom Geometry Nodes modifiers have specific settings that can interactively change their behaviour (pictured is the Volumetric Muscle visualization node).}
+    \label{fig:geonodeexample}
+\end{figure}
+
+
+\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry Nodes} modifiers are a very powerful way perform a customized sequence of operations on a specific object. MuSkeMo uses custom-made geometry nodes modifiers for muscle visualization (Fig. \ref{fig:geonodeexample}, sec. \ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}), muscle wrapping (sec.  \ref{sec:musclewrapping}), creating parametric wrap geometry (sec. \ref{sec:wrapgeom}), amongst other features. The most important inputs for most MuSkeMo's custom Geometry nodes are accessible from the modifier panel itself  (Fig. \ref{fig:geonodeexample}), but advanced Blender users can also dive into the nodes themselves for more in depth modifications to their behavior. Where possible MuSkeMo tries to reuse node groups, which means that it is possible to make global changes to geometry node behavior by changing the parameters of a single node group. For example, the visualization of all the muscles can be changed by modifying the underlying node groups (\ref{sec:simplemuscleviz} and \ref{sec:volmuscleviz}).
 
 By default, MuSkeMo color codes each component (see \ref{sec:defaultcolors} for details).
 
@@ -673,7 +681,7 @@ Rendering in Blender can be a complicated process. It is capable of professional
 
 \subsubsection{Volumetric Muscles}
 \label{sec:visualizationpanelvolmusc}
-This subpanel allows you to toggle between the volumetric (sec. \ref{sec:volmuscleviz}), and the tube style (sec. \ref{sec:simplemuscleviz}) muscle visualizations. Use the \textbf{Convert to volumetric muscles} and \textbf{Convert to simple (tube) muscles} buttons to toggle between the two. The buttons will act on all muscles in the designated Muscle collection. Specific tension will affect the computed muscle volumes (assuming $vol = F/\sigma \cdot L_{0}$), and the muscle radius affects the tube style. If you want to change these values, they will take into effect after toggling the visualizations (so e.g., to change specific tension for all muscles, first toggle it back to the tube style, change the specific tension, and then toggle back to volumetric).
+This subpanel allows you to toggle between the volumetric (sec. \ref{sec:volmuscleviz}), and the tube style (sec. \ref{sec:simplemuscleviz}) muscle visualizations (Fig. \ref{fig:musclevisualizations}). Use the \textbf{Convert to volumetric muscles} and \textbf{Convert to simple (tube) muscles} buttons to toggle between the two. The buttons will act on all muscles in the designated Muscle collection. Specific tension will affect the computed muscle volumes (assuming $vol = F/\sigma \cdot L_{0}$), and the muscle radius affects the tube style. If you want to change these values, they will take into effect after toggling the visualizations (so e.g., to change specific tension for all muscles, first toggle it back to the tube style, change the specific tension, and then toggle back to volumetric).
 
 For each muscle, the volumetric muscle visualization node has four inputs, next to the volume (see sec. \ref{sec:volmuscleviz}). These can be adjusted for all muscles by selecting \textbf{Show volumetric muscle options}. You will have to toggle between the visualization modes for the changes to take into effect.
 
@@ -894,17 +902,33 @@ The underlying object type in Blender is a poly-curve. Each point in the curve i
 \subsubsection{Simple muscle visualization}
 \label{sec:simplemuscleviz}
 
-Simple muscle visualizations are achieved by adding a simple \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry node setup} to each muscle (curve in Blender). This node setup essentially lofts a curve with the user-specified radius (default = 0.015 m) across the entire length of the curve. The radius can be changed without going into the Geometry nodes setup, by selecting the correct modifier in the modifier stack.
+Simple tube style muscle visualizations (Fig. \ref{fig:musclevisualizations}) are achieved by adding a simple \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html}{Geometry node setup} to each muscle (curve in Blender). This node setup essentially lofts a curve with the user-specified radius (default = 0.015 m) across the entire length of the curve. The radius can be changed without going into the Geometry nodes setup, by selecting the correct modifier in the modifier stack.
 
 Under "Geometry nodes", with the "SimpleMuscleViz" node of a muscle selected, the node setup is visible. The visualization setup itself is specified by the "SimpleMuscleNode" node group (select it and press 'TAB' to modify, this node group is shared by all muscles and thus modifications are applied to all muscles). The node setup also applies a material to each individual muscle, so that their colors can be animated invidually.
-
 %%% documentation about the merge by distance setting
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=\textwidth]{figures/MuscleSettingsComparison_v1.png} % Add image
+    \caption{MuSkeMo's tube and volumetric muscle visualization styles. The volumetric muscle visualization can be interactively changed using the modifier input, when the muscle is selected. How to adjust the shape curve is shown in Fig. \ref{fig:muscleshapecurve}.}
+    \label{fig:musclevisualizations}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/MuscleShapeCurve.png} % Add image
+    \caption{You can customize the shape curve of the volumetric muscle visualizer by going into Geometry Nodes, selecting the correct node, pressing ``TAB'', and then adjusting the shape of the curve interactively.}
+    \label{fig:muscleshapecurve}
+\end{figure}
+
+
+
 
 
 \subsubsection{Volumetric muscle visualization}
 \label{sec:volmuscleviz}
 
-You can convert all your muscles to the volumetric style in the Volumetric Muscles subpanel of the Visualization panel (sec. \ref{sec:visualizationpanelvolmusc}). Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters and an operation mode, which can be accessed directly in the "VolumetricMuscleViz" modifier. These are:
+You can convert all your muscles to the volumetric style in the Volumetric Muscles subpanel of the Visualization panel (sec. \ref{sec:visualizationpanelvolmusc}). Similar to the simple muscle visualizations, volumetric muscle visualizations are also achieved by adding a Geometry node to each muscle. The node-group itself is shared across muscles, but muscle visualizations are individualized through four parameters and an operation mode, which can be accessed directly in the "VolumetricMuscleViz" modifier (Fig. \ref{fig:musclevisualizations}). These are:
 
 \begin{itemize}
 \item \textbf{MuscleVolume:} Computed using each muscle's F\_max, optimal\_fiber\_length, and specific\_tension (set in the Visualization panel, see section \ref{sec:visualizationpanel}). The node setup adjusts the muscle's radius to keep the volume constant irrespective of the length.
@@ -928,7 +952,7 @@ The full node setup performs the following steps:
     \item One copy of the curve becomes the \textit{tendon}, with a constant-radius profile set by the tendon radius ratio.
     \item The other copy of the curve is trimmed according to the length ratio and proximal-distal bias, then resampled again for smoothness
     \item For both modes, an initial muscle belly radius is calculated from the target muscle volume and the trimmed belly length, using a cylindric approximation.
-    \item The computed muscle belly radius is then scaled by the curve's \textit{Curve Radius} attribute, which can be edited using the \href{https://docs.blender.org/manual/en/latest/compositing/types/utilities/float_curve.html}{Float Curve} node. In Blender, the \textit{Curve Radius} is a per-control-point scalar property of a curve (\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/write/set_curve_radius.html}{Set Curve Radius} node), which does not directly change the visual thickness of a curve in the viewport, but is used by operations such as \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/operations/curve_to_mesh.html}{Curve to Mesh} to scale the cross-sectional profile. Thus, the Float curve node allows the user to draw a thickness profile of the muscle along its entire length (i.e., giving fine grained control over the thickness and the taper of the muscle). Note: Before version 4.5, the scale was set implicitly if the "Set curve radius" node was used before it in the node chain. Blender 4.5 added the scale as a dedicated input to the Curve to Mesh node, and automatically adds generates a "Named attribute" and "switch" node to connect to it, and to check whether "Set curve radius" was used earlier in the chain.
+    \item The computed muscle belly radius is then scaled by the curve's \textit{Curve Radius} attribute, which can be edited using the \href{https://docs.blender.org/manual/en/latest/compositing/types/utilities/float_curve.html}{Float Curve} node, allowing you to adjust the muscle's shape (Fig. \ref{fig:muscleshapecurve}). In Blender, the \textit{Curve Radius} is a per-control-point scalar property of a curve (\href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/write/set_curve_radius.html}{Set Curve Radius} node), which does not directly change the visual thickness of a curve in the viewport, but is used by operations such as \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/curve/operations/curve_to_mesh.html}{Curve to Mesh} to scale the cross-sectional profile. Thus, the Float curve node allows the user to draw a thickness profile of the muscle along its entire length (i.e., giving fine grained control over the thickness and the taper of the muscle). Note: Before version 4.5, the scale was set implicitly if the "Set curve radius" node was used before it in the node chain. Blender 4.5 added the scale as a dedicated input to the Curve to Mesh node, and automatically adds generates a "Named attribute" and "switch" node to connect to it, and to check whether "Set curve radius" was used earlier in the chain.
     \item Because tapering reduces volume, the node setup calculates the theoretical swept-volume of circle profile along a straight line, with its radius equal to the initial muscle belly radius scaled by the relative height of the profile curve at any point across the muscles length. This computation accounts for the truncation error from sweeping an $n$-sided polygon instead of a true circle. This theoretical volume is compared to the target cylinder volume, and the initial muscle belly radius is scaled by the square root of the ratio to match the target.
     \item The adjusted $n$-gon profile is swept along the curve to create the muscle mesh.
     \item In \textbf{Fast mode}, this mesh is used directly.
