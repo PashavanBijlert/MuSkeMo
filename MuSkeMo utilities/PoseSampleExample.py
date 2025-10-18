@@ -216,6 +216,13 @@ target_joint.keyframe_insert(data_path="rotation_euler", frame=0)
 # Store results
 rom_data = [] 
 
+# Store positions for deferred visualization
+all_marker_positions = {
+    "viable": [],
+    "soft_tissue_non_viable": [],
+    "skeletally_non_viable": []
+}
+
 #ensure that if start and end range are the same, we still test the start range
 ranges = [x_range, y_range, z_range]
 angles = [[np.deg2rad(a) for a in range(r[0], r[1] + d_phi, d_phi)]  for r in ranges]
@@ -305,22 +312,9 @@ for x in x_euler:
             ])
                     
             
-            if visualize_endpoint_markers: #if we want endpoint markers, here we create them
-                #create the sphere with euler angle and situation in the name
-                endpoint_sphere = create_uv_sphere(situation+ '_' + euler_string, target_landmark.matrix_world.translation, marker_radius) 
-                    
-                #remove existing collections
-                for c in endpoint_sphere.users_collection:
-                    c.objects.unlink(endpoint_sphere)    
-                #call the desired collection
-                coll = bpy.data.collections[situation]
-                #place the endpoint marker in the correct collection
-                coll.objects.link(endpoint_sphere)
-                
-                #call the correct material
-                mat = bpy.data.materials[situation]
-                #add the correct material
-                endpoint_sphere.data.materials.append(mat)
+            if visualize_endpoint_markers:
+                all_marker_positions[situation].append(target_landmark.matrix_world.translation.copy())
+                        
                 
             #keyframe the pose
             target_joint.keyframe_insert(data_path="rotation_euler", frame=frame)        
@@ -330,14 +324,31 @@ for x in x_euler:
             target_joint.matrix_world = target_joint_original_wm
             
             frame += 1
-            
-            
+
+
+if visualize_endpoint_markers:
+    print("Creating endpoint markers (deferred)...")
+
+    for situation, points in all_marker_positions.items():
+        coll = bpy.data.collections[situation]
+        mat = bpy.data.materials[situation]
+
+        for i, pos in enumerate(points):
+            sphere = create_uv_sphere(f"{situation}_{i}", pos, marker_radius)
+            for c in sphere.users_collection:
+                c.objects.unlink(sphere)
+            coll.objects.link(sphere)
+            sphere.data.materials.append(mat)
+
+    print(f"Created {sum(len(v) for v in all_marker_positions.values())} endpoint markers.")
+
+                        
 end_time = time.time()
 time_elapsed = end_time-start_time
-time_per_frame = time_elapsed/(frame-1) #minus 1 because we start at 2
+time_per_pose = time_elapsed/(len(rom_data)) #minus 1 because we start at 2
 
 print(f"time elapsed: {time_elapsed} seconds")
-print(f"time per frame: {time_per_frame} seconds")
+print(f"time per pose: {time_per_pose} seconds")
 
 
 
