@@ -42,9 +42,6 @@ x_range = [-20, 20]# degrees, x-rotation range. Second number has to be bigger t
 y_range = [-30, 10]# degrees, y-rotation range. Second number has to be bigger than the first number, or the same
 z_range = [-100, 0]# degrees, z-rotation range. Second number has to be bigger than the first number, or the same
 
-#if you want to check ROM in the other direction, make both d_phi and end_phi negative
-axis = 'Z' #Rotate about which local axis of the joint?
-
 
 # If export requested but no saved file, stop immediately
 if export_results_as_CSV and not bpy.data.filepath:
