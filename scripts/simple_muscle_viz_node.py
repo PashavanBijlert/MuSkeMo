@@ -34,8 +34,12 @@ def create_simple_muscle_node_group():
     merge_by_distance = muscle_node_group.nodes.new('GeometryNodeMergeByDistance')
     merge_by_distance.location = (400, -200)  # Set location
     merge_by_distance.inputs['Distance'].default_value = bpy.context.scene.muskemo.muscle_visualization_radius * 0.13 # Set Merge Distance
-    merge_by_distance.mode = 'ALL'  # Set mode to All
-
+    if bpy.app.version < (5, 0, 0): 
+        merge_by_distance.mode = "ALL"
+    else: 
+        merge_by_distance.inputs["Mode"].default_value = "All" 
+    
+    
     # Create Set Shade Smooth node
     set_shade_smooth = muscle_node_group.nodes.new('GeometryNodeSetShadeSmooth')
     set_shade_smooth.location = (600, 0)
