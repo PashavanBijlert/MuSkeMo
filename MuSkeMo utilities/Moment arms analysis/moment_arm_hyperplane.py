@@ -11,6 +11,8 @@ import csv
 # Also available in the MuSkeMo sample dataset: https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-sampledataset1
 # The script assumes the OpenSim model is imported into the blend file, and that the blend file has been saved somewhere.
 # You can use this script as a starting point to plot the moment arms in your own model.
+# Go to https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-momentarmhyperplane for a Matlab script that plots the result
+
 
 # A moment arm hyperplane is the moment arm of a muscle, computed for different combinations of two degrees of freedom.
 # In this case, we will loop over hip Rx and hip Rz (abduction and flexion).
