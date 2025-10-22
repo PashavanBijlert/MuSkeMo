@@ -2,7 +2,7 @@
 
 ![Horse multipanel figure](./MuSkeMo%20manual/figures/Multipanel%20figure%20cropped.png?raw=true)
 
-Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in Blender versions between 4.1-4.5.
+Build and visualize musculoskeletal models in [Blender](https://www.blender.org/). The plugin has been tested in Blender versions between 4.1-4.5, and the 5.0 Beta (for which support is currently experimental).
 
 To download: Navigate to the [releases page](https://github.com/PashavanBijlert/MuSkeMo/releases) and download the most recent version of "MuSkeMo.zip". The .zip file is used to install the plugin, but also contains a folder with utility functions (e.g., for OpenSim conversion).
 
@@ -100,4 +100,4 @@ This panel allows you to create symmetric models, by only defining components on
 
 # **MuSkeMo utilities**
 
-The MuSkeMo.zip release contains a folder with MuSkeMo utlities. This includes a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. You must have the [OpenSim Matlab API](https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab) installed. This folder also includes python scripts that can be run in Blender's script editor, including a muscle line of action fitter and a moment arms analysis, and some demo scripts that show you how to access MuSkeMo functionality via the Python API.
+The MuSkeMo.zip release contains a folder with MuSkeMo utlities. This includes a MuSkeMo_to_OpenSim.m Matlab script to convert your MuSkeMo outputs to an OpenSim model. You must have the [OpenSim Matlab API](https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53089380/Scripting+with+Matlab) installed. This folder also includes python scripts that can be run in Blender's script editor, including pose sampling scripts, a muscle line of action fitter,  moment arms analyses, and some demo scripts that show you how to access MuSkeMo functionality via the Python API.
