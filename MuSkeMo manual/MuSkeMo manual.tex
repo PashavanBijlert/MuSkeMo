@@ -823,7 +823,7 @@ The scripts are setup to output a .CSV file after completion, which gives the re
     %\vspace{-155pt}
     \centering
     \includegraphics[width=1\textwidth]{figures/pose_sample_for_manual.png} % Add image
-    \caption{\textbf{Outputs of two joint range of motion analysis example scripts.}A. Ultimate neck flexion range of motion. The output is intended as a demonstration only. B. Knee joint pose sampling analysis. A LANDMARK is placed on the distal tibiotarsus. As the knee joint is moved into different poses, the script checks for intersections between the femur and the tibiotarsus, and checks if the length of the cruciate ligament exceeds a threshold. Based on this, the marker is duplicated in this position, and color-coded: red (skeletally non-viable, orange (non-viable due to soft tissue constraint), or blue (viable)).}
+    \caption{\textbf{Outputs of two joint range of motion analysis example scripts.} A. Ultimate neck flexion range of motion. The output is intended as a demonstration only. B. Knee joint pose sampling analysis. A LANDMARK is placed on the distal tibiotarsus. As the knee joint is moved into different poses, the script checks for intersections between the femur and the tibiotarsus, and checks if the length of the cruciate ligament exceeds a threshold. Based on this, the marker is duplicated in this position, and color-coded: red (skeletally non-viable, orange (non-viable due to soft tissue constraint), or blue (viable)).}
     \label{fig:posesampleexamples}
 \end{figure}
 
@@ -835,7 +835,7 @@ The scripts are setup to output a .CSV file after completion, which gives the re
     The script only checks rotational poses, see the next scripted example for a 6 degree of freedom pose analysis.
     \item \textbf{6DOFPoseSampleTest.py} This script performs a six degree of freedom pose sampling analysis. It is the same analysis presented in \ref{sec:posesampletest} at a lower sampling density. It works with the scene available \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-posesamplestresstest}{from Github}, which uses the screw-motion pose sampling test developed for \cite{bishopIntelligentSamplingHighdimensional2023}. This script is intended to demonstrate how you might script up a 6DOF pose sampling analysis. The default settings of this script don't find any new viable pose,  because the test is designed to require a high sampling density (see \cite{bishopIntelligentSamplingHighdimensional2023} and sec. \ref{sec:posesampletest}). In default settings, the poses are sampled at a rate of ~170 poses per second, due to the relative simplicity of the meshes with respect to the emu model (on the same laptop CPU as mentioned above). If you want to perform the full test, set the sample\_density parameters to a higher value (e.g., 3). The script will then take several hours to run, and find some viable points (see sec. \ref{sec:posesampletest}).
 
-    This script does not use a soft-tissue constraint, but it is set up to allow it should you want to use one. You can also turn the endpoint visualizations on or off, and optionally suppress all the print statements, and choose to only keyframe viable poses.
+    This script does not use a soft-tissue constraint, but it is set up to allow it should you want to use one. You can also turn the endpoint visualizations on or off (although the marker itself is placed at the center of the screw), and optionally suppress all the print statements, and choose to only keyframe viable poses.
 
 
 \end{itemize}
@@ -1606,13 +1606,6 @@ While the noise is small enough to make no difference in a practical sense, it i
 
 The python script (``moment\_arm\_analysis.py'', to be run in Blender's script editor) that generates the muscle analysis is provided in MuSkeMo's utilities folder as an example script that calls MuSkeMo's API (sec. \ref{sec:muskemoutilities}). The Matlab script that generates the plots from Figs. \ref{fig:momentarmscombined} and \ref{fig:momentarmsindividual} is also provided (moment\_arm\_analysis\_plot.m). This requires the OpenSim API to be installed.
 
-
-\subsubsection*{Moment arm hyperplane}
-\label{sec:momentarmshyperplane}
-Even though the emu model in the previous section only has degrees of freedom about the sagittal plane, because the paths themselves are in 3D, MuSkeMo computes everything in 3D. This is already demonstrated in sec. \ref{sec:framevalidation}, because all of the underlying 3D transformations in MuSkeMo use the same scripts. Thus, it does not matter what rotational axis is chosen, MuSkeMo computes the moment arms accurately. Fig. \ref{fig:momentarmshyperplane} confirms: this plot shows the moment arm hyperplane acquired over an arbitrary pose-space encompassing hip abduction (Rx) and hip flexion (Rz). The moment arms computed by MuSkeMo and OpenSim are essentially identical (normalized root mean squared difference = 0.006 \%).
-
-The analysis in MuSkeMo requires no further modifications to the model, and can be performed by running ``moment\_arm\_hyperplane.py''. To generate the plot, the OpenSim model had to be modified (an Rx coordinate had to be added to the emu model). This version of the model, including the Matlab code to produce the figure, is available \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-momentarmhyperplane}{as a Github release}.
-
 \begin{figure}[htbp]
     %\vspace{-155pt}
     \centering
@@ -1620,6 +1613,15 @@ The analysis in MuSkeMo requires no further modifications to the model, and can 
     \caption{Moment arm hyperplane of the ``HF\_r'' hip flexor muscle from the emu model \cite{vanbijlertMusclecontrolledPhysicsSimulations2024}, comparison between MuSkeMo and OpenSim. The plot compares the muscle's moment arm over different combinations Rx (hip abduction) and Rz (hip flexion). Normalized root mean squared differences were 0.006 \%, meaning the outputs are essentially identical. The python script that performs this moment arm analysis is provided in the Utilities folder \ref{sec:muskemoutilities}}.
     \label{fig:momentarmshyperplane}
 \end{figure}
+
+
+\subsubsection*{Moment arm hyperplane}
+\label{sec:momentarmshyperplane}
+Even though the emu model in the previous section only has degrees of freedom about the sagittal plane, because the paths themselves are in 3D, MuSkeMo computes everything in 3D. This is already demonstrated in sec. \ref{sec:framevalidation}, because all of the underlying 3D transformations in MuSkeMo use the same scripts. Thus, it does not matter what rotational axis is chosen, MuSkeMo computes the moment arms accurately. Fig. \ref{fig:momentarmshyperplane} confirms: this plot shows the moment arm hyperplane acquired over an arbitrary pose-space encompassing hip abduction (Rx) and hip flexion (Rz). The moment arms computed by MuSkeMo and OpenSim are essentially identical (normalized root mean squared difference = 0.006 \%).
+
+The analysis in MuSkeMo requires no further modifications to the model, and can be performed by running ``moment\_arm\_hyperplane.py''. To generate the plot, the OpenSim model had to be modified (an Rx coordinate had to be added to the emu model). This version of the model, including the Matlab code to produce the figure, is available \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-momentarmhyperplane}{as a Github release}.
+
+
 
 \subsection{Pose sampler stress test}
 \label{sec:posesampletest}
@@ -1633,9 +1635,9 @@ Set both sample\_density parameters to 3 to perform a more thorough test. This t
 
 However, MuSkeMo's intersection checking is substantially faster than other available methods. Currently, the fastest available approach is the Matlab implementation by Bishop et al. \cite{bishopIntelligentSamplingHighdimensional2023}, which provides a remarkable 7 fold speed increase over booleans. Running their Matlab script ``IntelligentROMmapper\_6D\_1crit\_screw.m" on the same processor as described above samples 100976 poses in 17639 seconds (\~4.9 hours), or \~5.7 poses per second. In contrast, MuSkeMo can test poses for this setup at 167 poses per second. This speed will be lower with soft-tissue constraints and/or higher scene complexity (e.g., 50 poses per second for the example in sec. \ref{sec:posesampling}). So, MuSkeMo's pose sampling speed makes it a fruitful platform for further development of intelligent sampling methods, and is already fast enough for simple pose sampling analyses, where an exhaustive grid search may be sufficient (e.g., sec. \ref{sec:posesampling}). Most biological analyses will not require sampling as many poses as the stress test.
 
-The theoretical ideal translations and orientations plotted in fig. \ref{fig:posesamplestresstest} are derived in the supplementary information of \cite{bishopIntelligentSamplingHighdimensional2023}. The Matlab code that generates FIGURE is provided with the Blender scene \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-posesamplestresstest}{on Github}
+The theoretical ideal translations and orientations plotted in fig. \ref{fig:posesamplestresstest} are derived in the supplementary information of \cite{bishopIntelligentSamplingHighdimensional2023}. The Matlab code that generates the plots in fig. \ref{fig:posesamplestresstest} is provided with the Blender scene \href{https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-posesamplestresstest}{on Github}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
     %\vspace{-155pt}
     \centering
     \includegraphics[width=1\textwidth]{figures/screwtest_combined_fig.pdf} % Add image
