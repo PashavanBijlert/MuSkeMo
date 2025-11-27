@@ -207,6 +207,7 @@ def compute_max_joint_rotation(joint_obj, axis, frame_number, d_phi=1, end_phi=1
     Returns the last feasible rotation angle in degrees.
     """
 
+
     joint_name = joint_obj.name
     child_body_name = joint_obj.get('child_body')
     if not child_body_name:
