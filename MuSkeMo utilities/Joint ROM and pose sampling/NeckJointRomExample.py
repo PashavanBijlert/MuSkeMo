@@ -140,120 +140,197 @@ def get_all_distal_joints(root_joint):
 
     return joint_list
 
+
+# ------------------------
+# Merge a list of objects so that we don't have to check the intersections one at a time
+# ------------------------
+
+
+def merge_objects(obj_names):
+    """Duplicate a list of objects, join them, and return the merged object."""
+    dupes = []
+    temp_meshes = []
+    for name in obj_names:
+        src = bpy.data.objects[name]
+        dup = src.copy()
+        dup.data = src.data.copy()  # duplicate mesh data
+        temp_meshes.append(dup.data)  # keep track of these
+        bpy.context.collection.objects.link(dup)
+        dupes.append(dup)
+
+    # select duplicates and make first one active
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in dupes:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = dupes[0]
+
+    # join duplicates into one object if indeed there are multiple
+    if len(dupes)>1:
+        bpy.ops.object.join()
+    merged = dupes[0]
+
+    # delete all old duplicate meshes except the merged one
+    for m in temp_meshes:
+        if m != merged.data and m.users == 0:
+            bpy.data.meshes.remove(m)
+
+    return merged
+
+
+# ------------------------
+# Delete the merged objects
+# ------------------------
+
+def delete_merged(merged_obj):
+    """Delete a merged object and its mesh data to clean up."""
+    mesh = merged_obj.data
+    bpy.data.objects.remove(merged_obj)
+    bpy.data.meshes.remove(mesh)
+
+
+
+
 # ------------------------
 # MAX Rotation Computation
 # ------------------------
+# We loop through a set of angles. Each step of the loop, we check whether the current pose is viable.
+# If it is, we accept this pose, and rotate it one step further to check in the next iteration whether that pose is also viable.
+# Once we find a non-viable degree of rotation, we stop the loop for this specific joint.
+# Viability is checked by seeing if the geometries attached to the joint's child body intersect with any of the geometries proximal to it.
+# Note that this loop checks for intersections between all geometries proximal to the joint with geometries attached to the child body - nothing more distal than the child body is evaluated.
+# To save computation time, all proximal meshes are merged for the computation, and all the child body's geometry are merged.
 
 def compute_max_joint_rotation(joint_obj, axis, frame_number, d_phi=1, end_phi=15):
     """
-    Rotate joint until intersection is found, keyframe at final pose,
-    reset rotation, and return total_phi.
+    Rotate the joint in steps of d_phi until an intersection is detected.
+    The last feasible pose (just before the intersection) is keyframed.
+    Returns the last feasible rotation angle in degrees.
     """
+
     joint_name = joint_obj.name
     child_body_name = joint_obj.get('child_body')
     if not child_body_name:
         print(f"{joint_name} missing 'child_body'")
         return 0
-    
+
     child_body = bpy.data.objects[child_body_name]
-    
-    child_geom_names = [] 
-    # Collect only direct children of the body with MuSkeMo_type == 'GEOMETRY'
-    for child in child_body.children:
-        if child.get('MuSkeMo_type') == 'GEOMETRY':
-            child_geom_names.append(child.name)
-        
-    if len(child_geom_names)>1:
-        print(f"Body has multiple attached geometries {child_body_name}")
-    else:
-        
-        child_geom_name = child_geom_names[0]
-        child_geom_obj = bpy.data.objects[child_geom_name]
-    
-    # Find proximal geometry
+
+    # Collect geometry directly attached to the child body
+    child_geom_names = [
+        c.name for c in child_body.children
+        if c.get('MuSkeMo_type') == 'GEOMETRY'
+    ]
+
+    # Collect all proximal geometry
     all_proximal_mesh_names = collect_proximal_geometry_names(joint_obj)
+    
+    # Merge proximal objects ONCE (they don't move relative to the root of the check)
+    prox_obj_merged = merge_objects(all_proximal_mesh_names)
 
     depsgraph = bpy.context.evaluated_depsgraph_get()
-    total_phi = 0
-    intersect_found = False
     
-    pos = joint_obj.matrix_world.translation.copy() #
-    
-    last_feasible_angle = 0
-    last_feasible_worldmatrix = joint_obj.matrix_world.copy()
+    # --- SAVE INITIAL STATE ---
+    # Save the exact starting matrix to restore later (avoids floating point drift)
+    start_matrix_world = joint_obj.matrix_world.copy() 
+    start_translation = joint_obj.matrix_world.translation.copy()
 
-    for steps in range(0, end_phi+d_phi, d_phi):
-        depsgraph.update()
+    # Track valid states
+    last_feasible_angle = 0
+    # Initialize valid matrix as the starting one
+    last_feasible_worldmatrix = start_matrix_world.copy() 
+
+    # We iterate through the angles
+    # Note: We use a while loop or manual step handling to ensure clean updates
+    current_phi = 0
+    
+    # Determine step direction for the range function
+    step_sign = 1 if end_phi >= 0 else -1
+    
+    # Create range including the 0 (start) and the end_phi
+    # We add d_phi to the 'stop' parameter to ensure the final value is included
+    range_steps = range(0, end_phi + d_phi, d_phi) if d_phi != 0 else [0]
+
+    intersection_found = False
+
+    for steps in range_steps:
+        # 1. FORCE SCENE UPDATE
+        # This ensures the child objects move to the new joint position 
+        # BEFORE we copy them in merge_objects.
         bpy.context.view_layer.update()
 
-        for objname in all_proximal_mesh_names:
-            intersections = check_bvh_intersection(child_geom_name, objname, depsgraph)
-            if intersections:
-                intersect_found = True
-                
-                if steps == 0:
-                    last_feasible_angle = 'start_pose_not_viable'
-                break
+        # 2. Merge child mesh (Now they are at the correct location)
+        child_obj_merged = merge_objects(child_geom_names)
+        
+        # 3. Update depsgraph for the new merged object
+        depsgraph.update()
+        
+        # 4. Check intersection
+        intersections = check_bvh_intersection(child_obj_merged.name, prox_obj_merged.name, depsgraph)
+        
+        # Clean up the temp child merge immediately
+        delete_merged(child_obj_merged)
+
+        print(f"Angle: {steps}, Intersect: {bool(intersections)}")
+
+        if intersections:
+            # Intersection found! 
+            intersection_found = True
             
-            else: #Update last feasible angle
-                last_feasible_angle = total_phi
-                last_feasible_worldmatrix = joint_obj.matrix_world.copy()
-                
-
-        if intersect_found:
+            if steps == 0:
+                last_feasible_angle = 'start_pose_not_viable'
+                # If start is bad, we rely on the logic below to restore start_matrix (or keep as is)
+            
+            # Stop checking further
             break
-        
-        wm = joint_obj.matrix_world #
-        
-        
-        gRj = wm.to_3x3() # rotation matrix
-        
-        d_phi_rad = np.deg2rad(d_phi)
-        
-        if axis == 'Z':
-            #rotate_about_local_z(joint_name, np.deg2rad(d_phi))
-            euler_angles = [0,0, d_phi_rad]
-        elif axis == 'X':
-            #rotate_about_local_x(joint_name, np.deg2rad(d_phi))
-            euler_angles = [d_phi_rad,0,0]
-        elif axis == 'Y':
-            #rotate_about_local_y(joint_name, np.deg2rad(d_phi))
-            euler_angles = [0, d_phi_rad,0]
 
-        gRb, bRg  = matrix_from_euler_XYZbody(euler_angles)
-       
-        new_gRj = gRj @ gRb #post multiply for a local space rotation
+        else:
+            # NO intersection. This pose is safe.
+            last_feasible_angle = current_phi
+            last_feasible_worldmatrix = joint_obj.matrix_world.copy()
+
+        # ------------------------------------------------------------------
+        # PREPARE NEXT ROTATION
+        # ------------------------------------------------------------------
+        # If we haven't reached the end, apply rotation for the *next* loop iteration
         
+        # Calculate rotation matrix for d_phi
+        wm = joint_obj.matrix_world
+        gRj = wm.to_3x3()
+        d_phi_rad = np.deg2rad(d_phi)
+
+        if axis == 'Z':
+            euler_angles = [0, 0, d_phi_rad]
+        elif axis == 'X':
+            euler_angles = [d_phi_rad, 0, 0]
+        elif axis == 'Y':
+            euler_angles = [0, d_phi_rad, 0]
+
+        gRb, bRg = matrix_from_euler_XYZbody(euler_angles)
+        new_gRj = gRj @ gRb
+
+        # Apply new matrix
         joint_obj.matrix_world = new_gRj.to_4x4()
-        joint_obj.matrix_world.translation = pos
-               
-        
-        total_phi += d_phi
-    # Keyframe last feasible pose
+        joint_obj.matrix_world.translation = start_translation # Keep original position
+
+        # Increment tracker
+        current_phi += d_phi
+
+    # ----------------------------------------------------------------------
+    # APPLY RESULT
+    # ----------------------------------------------------------------------
+    
+    # 1. Restore the LAST KNOWN SAFE matrix
     joint_obj.matrix_world = last_feasible_worldmatrix
+    
+    # 2. Keyframe this safe pose
     joint_obj.keyframe_insert(data_path="rotation_euler", frame=frame_number)
-    
-    
-    gRj_current = joint_obj.matrix_world.to_3x3()
-    
-    total_phi_rad = np.deg2rad(total_phi)
-    # Reset rotation
-    if axis == 'Z':
-        #rotate_about_local_z(joint_name, np.deg2rad(-total_phi))
-        euler_angles = [0,0, -total_phi_rad]
-    elif axis == 'X':
-        #rotate_about_local_x(joint_name, np.deg2rad(-total_phi))
-        euler_angles = [-total_phi_rad,0,0]
-    elif axis == 'Y':
-        #rotate_about_local_y(joint_name, np.deg2rad(-total_phi))
-        euler_angles = [0, -total_phi_rad,0]
-        
-    gRb, bRg  = matrix_from_euler_XYZbody(euler_angles)
-       
-    original_gRj = gRj_current @ gRb #post multiply for a local space rotation
-        
-    joint_obj.matrix_world = original_gRj.to_4x4()
-    joint_obj.matrix_world.translation = pos    
+
+    # 3. RESET joint to ORIGINAL starting pose for the next joint in the chain
+    # This prevents error accumulation for subsequent joints
+    joint_obj.matrix_world = start_matrix_world
+
+    # Cleanup proximal merge
+    delete_merged(prox_obj_merged)
 
     return last_feasible_angle
 
