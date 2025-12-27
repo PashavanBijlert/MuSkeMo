@@ -77,6 +77,8 @@ class MeshAlignnmentICPPointToPlaneOperator(Operator):
         return {'FINISHED'}
 
 
+
+
 class MeshIntersectionCheckerOperator(Operator):
     bl_idname = "mesh.intersection_checker"
     bl_label = "Select 2 meshes and check for intersections between them."
@@ -138,7 +140,53 @@ class MeshIntersectionCheckerOperator(Operator):
         
         return self.execute(context)
     
+class MeshFromSelectedFacesOperator(Operator):
 
+    '''
+    import bmesh
+
+    # Active object in Edit Mode
+    obj = bpy.context.edit_object
+    mesh = obj.data
+
+    # Access live Edit Mode mesh
+    bm = bmesh.from_edit_mesh(mesh)
+
+    # Selected faces
+    faces = [f for f in bm.faces if f.select]
+    if not faces:
+        raise RuntimeError("No faces selected")
+
+    # New bmesh
+    bm_new = bmesh.new()
+    vert_map = {}
+
+    # Copy vertices
+    for f in faces:
+        for v in f.verts:
+            if v not in vert_map:
+                vert_map[v] = bm_new.verts.new(v.co)
+
+    bm_new.verts.ensure_lookup_table()
+
+    # Copy faces
+    for f in faces:
+        bm_new.faces.new([vert_map[v] for v in f.verts])
+
+    # Create new mesh
+    new_mesh = bpy.data.meshes.new(obj.name + "_selected_surface")
+    bm_new.to_mesh(new_mesh)
+    bm_new.free()
+
+    # Create new object
+    new_obj = bpy.data.objects.new(new_mesh.name, new_mesh)
+    bpy.context.collection.objects.link(new_obj)
+
+    # Copy full transform (location, rotation, scale)
+    new_obj.matrix_world = obj.matrix_world.copy()
+
+    '''
+    
 
 #### Panels
 
