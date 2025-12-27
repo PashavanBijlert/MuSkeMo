@@ -10,6 +10,7 @@ from bpy.types import (Panel,
 from math import nan
 
 import numpy as np
+import bmesh
 
 from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
     
@@ -141,51 +142,61 @@ class MeshIntersectionCheckerOperator(Operator):
         return self.execute(context)
     
 class MeshFromSelectedFacesOperator(Operator):
+    bl_idname = "mesh.mesh_from_selected_faces"
+    bl_label = "Mesh From Selected Faces"
+    bl_description = "Create a new mesh object from selected faces"
+    bl_options = {'REGISTER', 'UNDO'}
 
-    '''
-    import bmesh
+    @classmethod
+    def poll(cls, context):
+        obj = context.edit_object
+        return (
+            obj is not None and
+            obj.type == 'MESH' and
+            context.mode == 'EDIT_MESH'
+        )
 
-    # Active object in Edit Mode
-    obj = bpy.context.edit_object
-    mesh = obj.data
+    def execute(self, context):
+        obj = context.edit_object
+        mesh = obj.data
 
-    # Access live Edit Mode mesh
-    bm = bmesh.from_edit_mesh(mesh)
+        # Access live Edit Mode mesh
+        bm = bmesh.from_edit_mesh(mesh)
 
-    # Selected faces
-    faces = [f for f in bm.faces if f.select]
-    if not faces:
-        raise RuntimeError("No faces selected")
+        faces = [f for f in bm.faces if f.select]
+        if not faces:
+            self.report({'WARNING'}, "No faces selected")
+            return {'CANCELLED'}
 
-    # New bmesh
-    bm_new = bmesh.new()
-    vert_map = {}
+        # New bmesh
+        bm_new = bmesh.new()
+        vert_map = {}
 
-    # Copy vertices
-    for f in faces:
-        for v in f.verts:
-            if v not in vert_map:
-                vert_map[v] = bm_new.verts.new(v.co)
+        # Copy vertices
+        for f in faces:
+            for v in f.verts:
+                if v not in vert_map:
+                    vert_map[v] = bm_new.verts.new(v.co)
 
-    bm_new.verts.ensure_lookup_table()
+        bm_new.verts.ensure_lookup_table()
 
-    # Copy faces
-    for f in faces:
-        bm_new.faces.new([vert_map[v] for v in f.verts])
+        # Copy faces
+        for f in faces:
+            bm_new.faces.new([vert_map[v] for v in f.verts])
 
-    # Create new mesh
-    new_mesh = bpy.data.meshes.new(obj.name + "_selected_surface")
-    bm_new.to_mesh(new_mesh)
-    bm_new.free()
+        # Create new mesh
+        new_mesh = bpy.data.meshes.new(obj.name + "_selected_surface")
+        bm_new.to_mesh(new_mesh)
+        bm_new.free()
 
-    # Create new object
-    new_obj = bpy.data.objects.new(new_mesh.name, new_mesh)
-    bpy.context.collection.objects.link(new_obj)
+        # Create new object
+        new_obj = bpy.data.objects.new(new_mesh.name, new_mesh)
+        context.collection.objects.link(new_obj)
 
-    # Copy full transform (location, rotation, scale)
-    new_obj.matrix_world = obj.matrix_world.copy()
+        # Copy full transform (parent-safe)
+        new_obj.matrix_world = obj.matrix_world.copy()
 
-    '''
+        return {'FINISHED'}
     
 
 #### Panels
@@ -196,7 +207,7 @@ class VIEW3D_PT_mesh_tools_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conve
 
     bl_idname = 'VIEW3D_PT_mesh_tools_panel'
     bl_label = "Mesh tools"  # found at the top of the Panel
-    bl_context = "objectmode"
+    #bl_context = "objectmode"
 
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -221,7 +232,18 @@ class VIEW3D_PT_mesh_tools_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conve
         row = self.layout.row()
         row.operator("mesh.intersection_checker", text = "Check for mesh intersections")
 
-
+        if context.mode == 'EDIT_MESH':
+            layout.operator(
+                "mesh.mesh_from_selected_faces",
+                text="New mesh from selected faces"
+            )
+        else:
+            row = layout.row()
+            row.enabled = False
+            row.operator(
+                "mesh.mesh_from_selected_faces",
+                text="New mesh from selected faces (Edit Mode)"
+            )
 
 class VIEW3D_PT_mesh_alignment_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo

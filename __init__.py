@@ -171,7 +171,8 @@ from .scripts.reflection_panel import (ReflectUnilateralBodiesOperator,
 #### Mesh tools panel
 
 from .scripts.mesh_tools_panel import (VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mesh_alignment_subpanel,
-                                       MeshAlignnmentICPPointToPlaneOperator,MeshIntersectionCheckerOperator, )
+                                       MeshAlignnmentICPPointToPlaneOperator,MeshIntersectionCheckerOperator,
+                                       MeshFromSelectedFacesOperator, )
 
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
@@ -188,6 +189,7 @@ classes = (  #Global settings panel
     # Mesh tools panel
                                     VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mesh_alignment_subpanel,
                                     MeshAlignnmentICPPointToPlaneOperator,MeshIntersectionCheckerOperator,
+                                    MeshFromSelectedFacesOperator,
 
 
     #Inertial properties panel 
