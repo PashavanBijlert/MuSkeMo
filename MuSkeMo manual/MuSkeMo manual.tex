@@ -239,6 +239,7 @@ The panel also has a button named "Set object children visibility". This toggles
 
 
 \subsection{Mesh tools panel}
+\label{sec:meshtools}
 This panel combines several tools that are generally useful when manipulating or repositioning meshes. Some of these are also available in different panels (e.g., the intersection checker is also made available in the visual geometry subpanel \ref{sec:visgeomsubpanel}).
 
 \subsubsection{Mesh alignment}
@@ -273,6 +274,27 @@ The following settings are available:
 
 MuSkeMo implements a mesh intersection checker, which is used by the pose sampling scripts in the MuSkeMo utilities folder (see sec. \ref{sec:posesampling}). This works via Blender's \href{https://docs.blender.org/api/current/mathutils.bvhtree.html}{BVHTree module}, which is an implementation of Bounding Volume Hierarchies \cite{ericsonBoundingVolumeHierarchies2005}. Essentially, the mesh is bounded by successively smaller objects in a nested tree structure, and Blender's BVHTree traverses down the tree while checking whether these bounding objects intersect with other objects in the scene. By starting with large bounding volumes, and only traversing the tree if the larger objects trigger an intersection, this is a computationally efficient way of checking for intersections. The \href{https://en.wikipedia.org/wiki/Bounding_volume_hierarchy}{Wikipedia page on Bounding Volume Hierarchies} also gives an accessible explanation on how this works. While the panel button is useful to interactively check for intersections (e.g., when articulating bones), the intersection checker shines in scripting, because it allows for computationally efficient pose sampling analyses (see sec. \ref{sec:posesampling}).
 
+\subsubsection{New mesh from selected faces (Edit mode)}
+\label{sec:newmeshselfaces}
+This button is a convenience function that allows you to create a new mesh from a selection of faces, useful as a target mesh for on of the geometric primitive fitters (sec. \ref{sec:primitivefitting}). It only works when the selected mesh is in EDIT mode.
+
+go through the following steps:
+
+
+\begin{enumerate}
+\item Select the target mesh
+\item Press Tab to go into 'EDIT mode' in Blender
+\item Select the portion of the mesh you would like to fit (easiest is to use face selection mode, and use the selection circle). Note that you likely want to ensure that XRAY mode is off.
+\item In the mesh tools panel (sec. \ref{sec:meshtools}), press ``New mesh from selected faces" (see sec. \ref{sec:newmeshselfaces} for details.). This creates a new mesh object.
+\item press Tab to go out of edit mode
+\end{enumerate}
+
+Your newly created mesh will be named be named [OriginalMeshName + \_selected\_surface].
+
+
+You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions. The duplicated section of the mesh is in the same collection as the original, and if the original mesh was attached to a BODY, so will this copied section. To prevent it being exported, move it to a different collection, and detach the mesh from the body using the button in the panel.
+
+This button was suggested by Miguel Díaz de León.
 
 \subsection{Inertial properties panel}
 \label{sec:inproppanel}
@@ -432,19 +454,7 @@ In this panel, there are buttons that fit geometric primitives to a selected mes
     \item \textbf{Plane.} Simple implementation based on taking the covariance matrix of all the recentered vertex positions, which is conceptually identical to a principal component analysis. The best fitting plane must pass through the centroid of the data points \cite{pearsonLIIILinesPlanes1901}, which is used to recenter the data. The eigenvectors of the covariance matrix then encode the directions (principal components) of variance in the data \cite{jolliffeMathematicalStatisticalProperties2002}. The plane of best fit, in a least-squares sense, is orthogonal to the eigenvector corresponding to the lowest eigenvalue of the covariance matrix \cite{jolliffeMathematicalStatisticalProperties2002,pearsonLIIILinesPlanes1901}. This is taken as the Z-axis of the plane. The plane itself is taken as the basis spanned by the eigenvectors of the two largest eigenvalues. Right-handed coordinate systems are also ensured, by flipping the direction of one of the eigenvectors if necessary.
 \end{itemize}
 
-The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), go through the following steps:
-
-
-\begin{enumerate}
-\item Select the target mesh
-\item Press Tab to go into 'edit mode' in Blender
-\item Select the portion of the mesh you would like to fit (easiest is to use face selection mode, and use the selection circle)
-\item press shift \+ D to duplicate the selection
-\item press P (for seParate), and then select "by selection".
-\item press Tab to go out of edit mode.
-\end{enumerate}
-
-You have now copied a subsection of the mesh as a new mesh, which you can use as an input for one of the fitting functions. The duplicated section of the mesh is in the same collection as the original, and if the original mesh was attached to a BODY, so will this copied section. To prevent it being exported, move it to a different collection, and detach the mesh from the body using the button in the panel.
+The functions will fit the entire mesh that you select, so if you want to fit a portion of the mesh (e.g., the femoral head), use the ``New mesh from selected faces" button (see sec. \ref{sec:newmeshselfaces} for details).
 
 \paragraph {Matching joints to fitted geometry.} 
 
