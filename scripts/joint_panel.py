@@ -529,6 +529,13 @@ class FitSphereGeomOperator(Operator):
 
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=5, radius=Radius, align='WORLD', location=(xc, yc, zc))
         fit_obj_name = obj_name + '_SphereGeoFit'
+
+        ## ensure unique name
+        i = 1
+        while fit_obj_name in bpy.data.objects:
+            fit_obj_name = obj_name + '_SphereGeoFit_' + str(i)
+            i += 1
+
         bpy.context.active_object.name = fit_obj_name
 
         obj = bpy.data.objects[fit_obj_name]
@@ -640,6 +647,14 @@ class FitSphereLSOperator(Operator):
         
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=5, radius=Radius, align='WORLD', location=(C[0], C[1], C[2]))
         fit_obj_name = obj_name + '_SphereLSFit'
+
+        ## ensure unique name
+        i = 1
+        while fit_obj_name in bpy.data.objects:
+            fit_obj_name = obj_name + '_SphereGeoFit_' + str(i)
+            i += 1
+
+
         bpy.context.active_object.name = fit_obj_name
 
         obj = bpy.data.objects[fit_obj_name]
@@ -777,6 +792,13 @@ class FitCylinderOperator(Operator):
         
         bpy.ops.mesh.primitive_cylinder_add(radius=Radius, depth=cylinder_height, end_fill_type='NGON', calc_uvs=True, enter_editmode=False, align='WORLD')
         fit_obj_name = obj_name + '_CylinderFit'
+
+        ## ensure unique name
+        i = 1
+        while fit_obj_name in bpy.data.objects:
+            fit_obj_name = obj_name + '_SphereGeoFit_' + str(i)
+            i += 1
+
         bpy.context.active_object.name = fit_obj_name
        
 
@@ -1006,6 +1028,13 @@ class FitEllipsoidOperator(Operator):
 
         bpy.ops.mesh.primitive_uv_sphere_add()
         fit_obj_name = obj_name + '_EllipsoidFit'
+
+        ## ensure unique name
+        i = 1
+        while fit_obj_name in bpy.data.objects:
+            fit_obj_name = obj_name + '_SphereGeoFit_' + str(i)
+            i += 1
+
         bpy.context.active_object.name = fit_obj_name
         
         bpy.context.active_object.matrix_world = worldMat
@@ -1140,6 +1169,13 @@ class FitPlaneOperator(Operator):
         bpy.ops.mesh.primitive_plane_add(size=1, align='WORLD')
 
         fit_obj_name = obj.name + '_PlaneFit'
+
+        ## ensure unique name
+        i = 1
+        while fit_obj_name in bpy.data.objects:
+            fit_obj_name = obj_name + '_SphereGeoFit_' + str(i)
+            i += 1
+            
         bpy.context.active_object.name = fit_obj_name
         bpy.context.active_object.matrix_world = worldMat
 
