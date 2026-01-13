@@ -432,6 +432,7 @@ class FitSphereGeomOperator(Operator):
     bl_idname = "joint.fit_sphere_geometric"
     bl_label = "Fit a sphere to a selected mesh, using Yesudesan geometric fit"
     bl_description = "Fit a sphere to a selected mesh, using Yesudesan geometric fit"
+    bl_options = {"UNDO"} #enable undoing
     #Based on sumith_fit - https://doi.org/10.48550/arXiv.1506.02776
   
     def execute(self, context):
@@ -568,6 +569,7 @@ class FitSphereLSOperator(Operator):
     bl_idname = "joint.fit_sphere_ls"
     bl_label = "Fit a sphere to a selected mesh, using Jekel least-squares fit"
     bl_description = "Fit a sphere to a selected mesh, using Jekel least-squares fit"
+    bl_options = {"UNDO"} #enable undoing
     #based on: https://jekel.me/2015/Least-Squares-Sphere-Fit/, originally from Jekel's PhD thesis
         
     def execute(self, context):
@@ -675,7 +677,8 @@ class FitCylinderOperator(Operator):
     bl_idname = "joint.fit_cylinder"
     bl_label = "Fit a cylinder to a selected mesh"
     bl_description = "Fit a cylinder to a selected mesh"
-        
+    bl_options = {"UNDO"} #enable undoing
+
     def execute(self, context):
         
         active_obj = bpy.context.active_object  #should be the joint
@@ -817,6 +820,7 @@ class FitEllipsoidOperator(Operator):
     bl_idname = "joint.fit_ellipsoid"
     bl_label = "Fit an ellipsoid to a selected mesh"
     bl_description = "Fit a ellipsoid to a selected mesh"
+    bl_options = {"UNDO"} #enable undoing
     #source: https://github.com/marksemple/pyEllipsoid_Fit/blob/master/ellipsoid_fit.py #Python implementation by Mark Semple
     #based on: https://nl.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit #Original Matlab implementation by Yuri Petrov
     #Pasha van Bijlert modified this code to add a check for right-handed coordinate systems
@@ -1043,6 +1047,7 @@ class FitPlaneOperator(Operator):
     bl_idname = "joint.fit_plane"
     bl_label = "Fit a plane to a selected mesh"
     bl_description = "Fit a plane to a selected mesh"
+    bl_options = {"UNDO"} #enable undoing
         
     def execute(self, context):
         
