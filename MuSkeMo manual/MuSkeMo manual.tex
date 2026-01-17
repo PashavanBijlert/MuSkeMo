@@ -299,18 +299,25 @@ This button was suggested by Miguel Díaz de León.
 \subsection{Inertial properties panel}
 \label{sec:inproppanel}
 
-The main goal of this panel is to compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans.
-Inertial properties are not dynamic, if you move the 3D meshes or would like to change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo warns you if this has occured, by tracking the 'default\_pose' of each mesh as a custom property (see \ref{sec:defaultpose}). Density can only be changed by changing the 'Segment density' in the panel and recomputing the object's inertial properties.
+The main goal of this panel is to compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans. You can generate inertial properties for any triangular watertight mesh in two ways:
+
+\begin{enumerate}
+\item Select the target meshes, and press ``Compute for selected meshes''
+\item Select a collection from the dropdown menu that contains all your target meshes, and press ``Compute for all meshes in a collection.''
+\end{enumerate}
+
+The density specified at the top of the panel is used for all inertial properties calculations (default = 1000 \unit{kg m^{-3}}). It is possible to change the density property of an object, after which you will have to select the object and rerun "Compute for selected meshes". 
+\textbf{Inertial properties are not dynamic, if you move the 3D meshes or would like to change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated.} MuSkeMo warns you if this has occured, by tracking the 'default\_pose' of each mesh as a custom property (see \ref{sec:defaultpose}). Density can only be changed by changing the 'Segment density' in the panel and recomputing the object's inertial properties.
 
 To compute the volumetric inertia tensor (with elements in the unit \si{m^5}) of a triangular mesh, MuSkeMo implements the solution derived and presented in \cite{eberlyGamePhysics2004}. This gives an exact solution for the volumetric moments of inertia of a closed, triangulated mesh, based on the Divergence Theorem. This algorithm requires the mesh to be triangulated and watertight to provide meaningful results, and MuSkeMo alerts the user if this is not the case. The volumetric tensor is multiplied by density (in \si{kg m^{-3}}) to acquire the inertial tensor elements (in units \si{kg m^2}). 
 
-It is possible to change the density property of an object, after which you will have to select the object and rerun "Compute for selected meshes". See \ref{sec:inpropvalidation} for a validation of the outputs.
+See \ref{sec:inpropvalidation} for a validation of the outputs.
 
 \subsubsection{Generate minimal convex hulls}
 Several studies have used convex hulls as the starting point for estimating inertial properties of (extinct) animals directly from full skeletons \cite{sellersMinimumConvexHull2012,brasseyScalingConvexHull2014,brasseyConvexhullMassEstimates2016,brasseyVolumetricTechniqueFossil2018,coathamConvexHullEstimation2021,macaulayDecouplingBodyShape2023,wrightVolumetricElementscalingMass2024,batesRunningPerformanceAustralopithecus2025}.
 In this subpanel, you can automatically generate convex hulls around (skeletal) meshes in a collection, and then apply methods from the literature to reconstruct the inertial properties.
 
-You have to designate the "Skeletal mesh collection" where your skeletal meshes are located. This defaults to the "Geometry" collection, but it can also be a different collection. Each separate object in the collection will receive its own convex hull, so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection. 
+You have to designate the "Skeletal mesh collection" where your skeletal meshes are located, by selecting it from the dropdown. Each separate object in the collection will receive its own convex hull, so the meshes in the collection should represent functional body segments. See \cite{sellersMinimumConvexHull2012,coathamConvexHullEstimation2021, macaulayDecouplingBodyShape2023} for examples. Convex hulls are placed in a new collection. 
 
 The recommended workflow is to organize all the skeletal meshes in a single collection. Ensure that all the skeletal meshes contain the correct segment names in their full name (see below). Then, generate the minimal convex hulls, and use one of the expansion modes to expand those convex hulls.
 

@@ -38,6 +38,19 @@ class SegmentParameterItem(PropertyGroup):
 
 
 
+## Helper function for user-selectable dropdown lists of current collections in the scene (e.g. convex hull collection)
+def collection_items(self, context):
+    # MUST always return at least one item
+    items = [("NONE", "Select a collection", "Select a collection")]
+
+    # bpy.data.collections is safe during registration
+    for c in bpy.data.collections:
+        items.append((c.name, c.name, ""))
+
+    return items
+
+
+
 
 class MuSkeMoProperties(PropertyGroup):
 
@@ -360,19 +373,19 @@ class MuSkeMoProperties(PropertyGroup):
         )    
 
 
-    source_object_collection: StringProperty(
+    source_object_collection: EnumProperty(
         name = "Collection",
-        description="Name of the collection (ie. folder) that contains the soft tissue geometry (meshes)",
-        default = "",
-        maxlen = 1024,
+        description="Select the collection (ie. folder) that contains the soft tissue geometry (meshes)",
+        items = collection_items,
+        #default = "NONE",
         )
 
 
-    skeletal_mesh_collection: StringProperty(
+    skeletal_mesh_collection: EnumProperty(
         name = "Skeletal mesh collection",
-        description="Name of the collection (ie. folder) that contains the skeletal meshes that you would like to generate convex hulls for",
-        default = "Geometry",
-        maxlen = 1024,
+        description="Select the collection (ie. folder) that contains the skeletal meshes that you would like to generate convex hulls for",
+        items = collection_items,
+        #default = "Geometry",
         ) 
     
     convex_hull_collection: StringProperty(
