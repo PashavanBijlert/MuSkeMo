@@ -647,7 +647,9 @@ OpenSim allows the characters ``::" in the XML tags of their .osim format, which
 
 \subsubsection{Gaitsym 2019 model import}
 
-MuSkeMo includes a Gaitsym (2019) importer. It currently imports bodies, joints, muscles (DampedSpring elements are treated as muscles), contacts, and markers (as frames). Muscles that include wrapping are currently not supported, but limited wrapping support is planned in a future update. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory, and the name of this subdirectory must currently be manually typed into the panel.
+MuSkeMo includes a Gaitsym (2019) importer. It currently imports bodies, joints, muscles (DampedSpring elements are treated as muscles), contacts, and markers. Gaitsym markers can have an orientation defined, which MuSkeMo LANDMARKS (sec. \ref{sec:landmark}) cannot. If you need to import the orientations defined in the markers, select ``Import Gaitsym markers as frames''. 
+
+Wrapping in Gaitsym muscles is currently ignored during import, but this will be added in a future update. Visual geometry can be imported, but requires the user to type the name of the containing folder in "Gaitsym geometry folder". The geometries must be in a subdirectory of the model directory, and the name of this subdirectory must currently be manually typed into the panel.
 
 It is possible to automatically apply a rotation to the entire model during import. This can be convenient because Gaitsym is generally geared towards the Z-axis being the "up" axis, whereas ISB recommends Y-up. To rotate a model from Z-up to Y-up, apply a -90 \degree rotation about the x-axis. Points simply get rotated, MOI gets transformed according to eq. \ref{eq:similaritytransformation} (although technically the transformation is now from one global frame to another). The same change-of-basis transformation is also applied to orientions (of joints, frames, etc.). The result is that the old Z-axis becomes the new Y-axis, and the old Y-axis becomes the new Z-axis.
 

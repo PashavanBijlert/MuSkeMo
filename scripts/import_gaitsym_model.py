@@ -163,7 +163,8 @@ class ImportGaitsymModel(Operator):
             
             return geoms
 
-
+        # preallocate muskemo
+        muskemo = bpy.context.scene.muskemo
 
         # Check for model import rotation 
         
@@ -173,7 +174,7 @@ class ImportGaitsymModel(Operator):
         
         import_iRg = import_gRi
 
-        gaitsym_import_euler = bpy.context.scene.muskemo.rotate_on_import
+        gaitsym_import_euler = muskemo.rotate_on_import
         gaitsym_import_euler = (gaitsym_import_euler[0],gaitsym_import_euler[1],gaitsym_import_euler[2])
 
         from .quaternions import (matrix_from_quaternion, quat_from_matrix)
@@ -190,11 +191,11 @@ class ImportGaitsymModel(Operator):
         #### create bodies
         from .create_body_func import create_body
 
-        body_colname = bpy.context.scene.muskemo.body_collection #name for the collection that will contain the hulls
-        size = bpy.context.scene.muskemo.axes_size #axis length, in meters
+        body_colname = muskemo.body_collection #name for the collection that will contain the hulls
+        size = muskemo.axes_size #axis length, in meters
         geometry_parent_dir = os.path.dirname(self.filepath)
-        import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
-        gaitsym_geo_folder = bpy.context.scene.muskemo.gaitsym_geometry_folder
+        import_geometry = muskemo.import_visual_geometry #user switch for import geometry, true or false
+        gaitsym_geo_folder = muskemo.gaitsym_geometry_folder
 
         if import_geometry: #if the user wants imported geometry, we check if the folder exists
 
@@ -268,8 +269,8 @@ class ImportGaitsymModel(Operator):
         #### create joints
         from .create_joint_func import create_joint
 
-        joint_colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the joints
-        rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius
+        joint_colname = muskemo.joint_collection #name for the collection that will contain the joints
+        rad = muskemo.jointsphere_size #joint_radius
 
         for joint in joint_data:
 
@@ -365,8 +366,8 @@ class ImportGaitsymModel(Operator):
         #### create muscles
         from .create_muscle_func import create_muscle
 
-        muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the joints
-        #rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius                         
+        muscle_colname = muskemo.muscle_collection #name for the collection that will contain the joints
+        #rad = muskemo.jointsphere_size #joint_radius                         
 
         for muscle in muscle_data:
 
@@ -436,7 +437,7 @@ class ImportGaitsymModel(Operator):
         contact_data = get_geom_data(root)
         from .create_contact_func import create_contact
 
-        contact_colname = bpy.context.scene.muskemo.contact_collection #name for the collection that will contain the contacts
+        contact_colname = muskemo.contact_collection #name for the collection that will contain the contacts
 
         for contact in contact_data:
             
@@ -464,39 +465,58 @@ class ImportGaitsymModel(Operator):
                         parent_body = contact_pbody_name)
             
 
-        if bpy.context.scene.muskemo.import_gaitsym_markers_as_frames: #if the user selected yes
-            from .create_frame_func import create_frame
+
+        from .create_frame_func import create_frame
             
-            frame_colname = bpy.context.scene.muskemo.frame_collection
-            frame_size = bpy.context.scene.muskemo.frame_axes_size
+        frame_colname = muskemo.frame_collection
+        frame_size = muskemo.frame_axes_size
 
-            self.report({'WARNING'},"When importing Markers as Frames, the frames will not be parented to bodies, because in MuSkeMo, a frame can have only one local frame.")    
+        from .create_landmark_func import create_landmark
+
+        landmark_colname = muskemo.landmark_collection
+        landmark_radius = muskemo.landmark_radius
+        
+
+        for marker_name, marker in marker_data.items():
+            landmark_parent_body_name = marker['BodyID']
+
+            marker_pos_in_import = [float(x) for x in marker['WorldPosition'].split()]
+            marker_pos_in_global = import_gRi@(Vector(marker_pos_in_import)) #import rotation
+            marker_pos_in_global = list(marker_pos_in_global) #frame func expects a list
+
+            marker_or_in_import_quat = [float(x) for x in marker['WorldQuaternion'].split()]
+            
+            
+
+
+            [marker_iRb, marker_bRi] = matrix_from_quaternion(marker_or_in_import_quat)
+            marker_or_in_global = import_gRi @ marker_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI. This is called a similarity transformation.
+            marker_or_in_global_quat = list(quat_from_matrix(marker_or_in_global)) #frame func expects a list
+
+            create_landmark(landmark_name = marker_name, 
+                                landmark_radius = landmark_radius,
+                                pos_in_global = marker_pos_in_global,
+                                collection_name = landmark_colname,
+                                parent_body = landmark_parent_body_name,
+                                )
                 
+            
 
-            for marker_name, marker in marker_data.items():
-
-                marker_pos_in_import = [float(x) for x in marker['WorldPosition'].split()]
-                marker_pos_in_global = import_gRi@(Vector(marker_pos_in_import)) #import rotation
-                marker_pos_in_global = list(marker_pos_in_global) #frame func expects a list
-
-                marker_or_in_import_quat = [float(x) for x in marker['WorldQuaternion'].split()]
+            if muskemo.import_gaitsym_markers_as_frames: #if the user selected yes
                 
-                [marker_iRb, marker_bRi] = matrix_from_quaternion(marker_or_in_import_quat)
-                marker_or_in_global = import_gRi @ marker_iRb  @ import_iRg #Fixed, treated like a change of reference frame just like MOI. This is called a similarity transformation.
-                marker_or_in_global_quat = list(quat_from_matrix(marker_or_in_global)) #frame func expects a list
-
+                self.report({'WARNING'},"When importing Markers as Frames, the frames will not be parented to bodies, because in MuSkeMo, a body can have only one local frame.")    
+                
                 create_frame(name = marker_name, 
-                             size = frame_size,
-                             pos_in_global = marker_pos_in_global,
-                             gRb = marker_or_in_global,
-                             collection_name = frame_colname,
-                             )
+                                size = frame_size,
+                                pos_in_global = marker_pos_in_global,
+                                gRb = marker_or_in_global,
+                                collection_name = frame_colname,
+                                )
 
-
-        else:
-            self.report({'WARNING'},"Gaitsym Markers can currently only be imported as frames, not as MuSkeMo landmarks.")    
+            else:
+                self.report({'WARNING'},"Gaitsym Markers can have an orientation, MuSkeMo LANDMARKS cannot. If you are worried about data loss, reimport with 'Import Gaitsym markers as frames' selected.")    
+                
             
-
         time2 = time.time()
 
         print('Elapsed time = ' + str(time2-time1) + ' seconds')
