@@ -605,17 +605,49 @@ class ImportOpenSimModel(Operator):
 
             return contact_data
 
+        def get_marker_data(model):
 
+            marker_data = {}
+
+             # Locate the MarkerSet in the model
+            marker_set = model.find('MarkerSet')
+            if marker_set is not None:
+                # Locate all marker objects
+                marker_objects = marker_set.find('objects')
+                if marker_objects is not None:
+                    for marker in marker_objects:
+                        marker_name = marker.get('name')
+
+                        # Initialize variables with default values
+                        socket_parent_frame = None
+                        location = (0.0, 0.0, 0.0)
+
+                        # Extract frame, location, and orientation
+                        if marker.find('socket_parent_frame') is not None:
+                            socket_parent_frame = marker.find('socket_parent_frame').text.strip()
+
+                        if marker.find('location') is not None:
+                            location = tuple(map(float, marker.find('location').text.split()))
+
+
+                        # Add the extracted data to the marker_data dict
+                        marker_data[marker_name] = {
+                            'socket_parent_frame': socket_parent_frame,
+                            'location': location,
+                            }
+            return marker_data            
+        #preallocate muskemo
+        muskemo = bpy.context.scene.muskemo
 
         # Extract body data from the model, and check if geometry folder exists
         body_data = get_body_data(model)
         
-        body_colname = bpy.context.scene.muskemo.body_collection #name for the collection that will contain the hulls
-        body_axes_size = bpy.context.scene.muskemo.axes_size #axis length, in meters
+        body_colname = muskemo.body_collection #name for the collection that will contain the hulls
+        body_axes_size = muskemo.axes_size #axis length, in meters
         geometry_parent_dir = os.path.dirname(self.filepath)
-        import_geometry = bpy.context.scene.muskemo.import_visual_geometry #user switch for import geometry, true or false
+        import_geometry = muskemo.import_visual_geometry #user switch for import geometry, true or false
 
-        wrap_colname = bpy.context.scene.muskemo.wrap_geom_collection
+        wrap_colname = muskemo.wrap_geom_collection
 
         if import_geometry: #if the user wants imported geometry, we check if the folder exists
 
@@ -656,17 +688,21 @@ class ImportOpenSimModel(Operator):
         # Extract joint data from the model
         joint_data = get_joint_data(model)
 
-        joint_colname = bpy.context.scene.muskemo.joint_collection #name for the collection that will contain the joints
-        joint_rad = bpy.context.scene.muskemo.jointsphere_size #joint_radius
+        joint_colname = muskemo.joint_collection #name for the collection that will contain the joints
+        joint_rad = muskemo.jointsphere_size #joint_radius
 
         # Extract muscle data from the model
         muscle_data = get_muscle_data(model)
-        muscle_colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the muscles
+        muscle_colname = muskemo.muscle_collection #name for the collection that will contain the muscles
         
         # Extract the contact data from the model
         contact_data = get_contact_data(model)
-        contact_colname =  bpy.context.scene.muskemo.contact_collection #name for the collection that will contain the contacts
-
+        contact_colname =  muskemo.contact_collection #name for the collection that will contain the contacts
+        
+        # Extract marker data from the model
+        marker_data = get_marker_data(model)
+        landmark_colname = muskemo.landmark_collection
+        landmark_radius = muskemo.landmark_radius
 
 
         #### import the component creation functions
@@ -677,18 +713,20 @@ class ImportOpenSimModel(Operator):
         from .create_frame_func import create_frame
         from .create_contact_func import create_contact
         from .create_wrapgeom_func import create_wrapgeom
+        # assign wrap func
+        from .create_landmark_func import create_landmark
 
 
         # Frame related user inputs
-        frame_colname = bpy.context.scene.muskemo.frame_collection
-        frame_size = bpy.context.scene.muskemo.frame_axes_size
+        frame_colname = muskemo.frame_collection
+        frame_size = muskemo.frame_axes_size
 
         # Lists that tracks errors or warnings
         skipped_geoms = [] #empty list that will be populated if the geoms aren't found, only in the local import mode
         transform_axes_warning_list = [] #list to which we will add OpenSim joints for a warning about transform axes that were not aligned with the joint itself. Only in local import mode
 
         
-        if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions
+        if muskemo.model_import_style == 'glob':  #if importing a model using global definitions
             
             #### create bodies
             for body_name, body in body_data.items():
@@ -824,7 +862,7 @@ class ImportOpenSimModel(Operator):
             frames = {} #initialize a frames dict
 
             #Set the root joint
-            bpy.context.scene.muskemo.root_joint_name = stack[0][0]
+            muskemo.root_joint_name = stack[0][0]
             
             
 
@@ -1208,7 +1246,7 @@ class ImportOpenSimModel(Operator):
 
         #### Wrapping
         # import the wrapping node template
-        enable_wrapping = bpy.context.scene.muskemo.enable_wrapping_on_import #does the user want to enable wrapping?
+        enable_wrapping = muskemo.enable_wrapping_on_import #does the user want to enable wrapping?
 
         renamed_wrap_warning = False #for an if statement that triggers a warning
 
@@ -1274,11 +1312,11 @@ class ImportOpenSimModel(Operator):
                         wrap_or_in_parent_frame_XYZeuler = [float('nan')] * 3
                         wrap_or_in_parent_frame_quat = [float('nan')] * 4
 
-                        if bpy.context.scene.muskemo.model_import_style == 'glob':  # Global import
+                        if muskemo.model_import_style == 'glob':  # Global import
                             wrap_pos_in_global = wrap_position
                             wrap_or_in_global_XYZeuler = wrap_orientation  # Assuming you want the euler angles in global coordinates
 
-                        elif bpy.context.scene.muskemo.model_import_style == 'loc':  # Local import
+                        elif muskemo.model_import_style == 'loc':  # Local import
                             wrap_parent_frame = frames[wrap_parent_body['local_frame']]
                             gRp = wrap_parent_frame['gRf']  # Global orientation of parent frame
                             parent_frame_pos_in_glob = wrap_parent_frame['frame_pos_in_global']
@@ -1394,7 +1432,7 @@ class ImportOpenSimModel(Operator):
                 muscle_point_position = point['location']
                 
                 
-                if bpy.context.scene.muskemo.model_import_style == 'loc':  #if importing a model using local definitions, muscle points are provided wrt parent frame
+                if muskemo.model_import_style == 'loc':  #if importing a model using local definitions, muscle points are provided wrt parent frame
                     
                     mp_parent_body = bpy.data.objects[mp_parent_body_name] ## this assumes muscle point parent frames are always expressed in a body, thus in the /bodyset/
                     mp_parent_frame = frames[mp_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
@@ -1528,11 +1566,11 @@ class ImportOpenSimModel(Operator):
                 contact_pos_in_global = [nan]*3
                 contact_pos_in_parent_frame = [nan]*3
 
-                if bpy.context.scene.muskemo.model_import_style == 'glob':  #if importing a model using global definitions, the location corresponds to global location
+                if muskemo.model_import_style == 'glob':  #if importing a model using global definitions, the location corresponds to global location
                     
                     contact_pos_in_global = contact_position
 
-                elif bpy.context.scene.muskemo.model_import_style == 'loc':  #
+                elif muskemo.model_import_style == 'loc':  #
 
                     contact_pos_in_parent_frame = contact_position
                     contact_parent_body = bpy.data.objects[contact_parent_body_name] ## this assumes contact parent frames are always expressed in a body, thus in the /bodyset/
@@ -1551,6 +1589,41 @@ class ImportOpenSimModel(Operator):
                                pos_in_parent_frame=contact_pos_in_parent_frame,
                                is_global = True,
                                )
+
+
+        ### create landmarks
+        for landmark_name, landmark in marker_data.items():
+
+        
+            l_socket_parent_frame_name = landmark['socket_parent_frame']
+            landmark_parent_body_name = l_socket_parent_frame_name.split('/bodyset/')[-1]  #this assumes the landmarks are always expressed in the parent body frame, not an offset frame
+            landmark_position = landmark['location']
+            landmark_pos_in_global = [nan]*3
+            landmark_pos_in_parent_frame = [nan]*3
+
+            if muskemo.model_import_style == 'glob':  #if importing a model using global definitions, the location corresponds to global location
+                
+                landmark_pos_in_global = landmark_position
+
+            elif muskemo.model_import_style == 'loc':  #
+
+                landmark_pos_in_parent_frame = landmark_position
+                landmark_parent_body = bpy.data.objects[landmark_parent_body_name] ## this assumes landmark parent frames are always expressed in a body, thus in the /bodyset/
+                landmark_parent_frame = frames[landmark_parent_body['local_frame']] #fill the body parent frame name in the frames dict to get some of the preprocessed frame data
+
+                gRp = landmark_parent_frame['gRf']  #global orientation of parent frame
+                parent_frame_pos_in_glob = landmark_parent_frame['frame_pos_in_global']
+
+                landmark_pos_in_global = parent_frame_pos_in_glob + gRp @ Vector(landmark_position)
+            
+            create_landmark(landmark_name = landmark_name,
+                            landmark_radius = landmark_radius,
+                            collection_name = landmark_colname,
+                            pos_in_global = landmark_pos_in_global,
+                            parent_body = landmark_parent_body_name,
+                            pos_in_parent_frame=landmark_pos_in_parent_frame,
+                            is_global = True,
+                            )
 
        
         time2 = time.time()
