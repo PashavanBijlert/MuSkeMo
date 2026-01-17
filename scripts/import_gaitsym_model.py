@@ -506,7 +506,7 @@ class ImportGaitsymModel(Operator):
                 
                 self.report({'WARNING'},"When importing Markers as Frames, the frames will not be parented to bodies, because in MuSkeMo, a body can have only one local frame.")    
                 
-                create_frame(name = marker_name, 
+                create_frame(name = marker_name + 'AsFrame', 
                                 size = frame_size,
                                 pos_in_global = marker_pos_in_global,
                                 gRb = marker_or_in_global,
