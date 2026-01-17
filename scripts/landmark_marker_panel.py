@@ -20,17 +20,6 @@ class CreateLandmarkOperator(Operator):
 
         colname = muskemo.landmark_collection #name for the collection that will contain the landmarks
 
-        if colname not in bpy.data.collections:
-            bpy.data.collections.new(colname)
-            
-        coll = bpy.data.collections[colname] #Collection which will recieve the landmarks
-
-        if colname not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
-            bpy.context.scene.collection.children.link(coll)     #add it to the scene
-            
-        #Make sure the landmarks collection is active
-        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
-
         active_obj = bpy.context.active_object  #should be the body that you want to parent the point to
         sel_obj = bpy.context.selected_objects  #should be the body that you want to parent the point to
 
@@ -64,9 +53,16 @@ class CreateLandmarkOperator(Operator):
                 return {'FINISHED'}
             
             elif target_obj['MuSkeMo_type'] == 'GEOMETRY':
-                self.report({'WARNING'}, "The landmark was attached to the target mesh's parent body '" + target_obj.name + "_pbody'.")
                 
-                target_obj = target_obj.parent
+                if target_obj['Attached to'] == 'no body': #if not attached to a body, we will create a body and attach it automatically
+                    
+                    create_parent_body = True
+                    self.report({'WARNING'}, "A parent BODY was created for the selected mesh with the '" + target_obj.name + "_pbody' and placed at the origin. Landmarks will be attached to that newly created body")
+                
+                else:    
+                    self.report({'WARNING'}, "The landmark was attached to the target mesh's parent body '" + target_obj.name + "_pbody'.")
+                
+                    target_obj = target_obj.parent
 
 
 
@@ -98,62 +94,28 @@ class CreateLandmarkOperator(Operator):
 
             pbodyname = target_obj.name + '_pbody'
 
-            create_body(name= pbodyname, size = muskemo.axes_size, self = self)
+            if not pbodyname in bpy.data.objects:
+            
+                create_body(name= pbodyname, size = muskemo.axes_size, self = self)
 
-            target_obj.select_set(True) #select the mesh
+                target_obj.select_set(True) #select the mesh
             target_obj = bpy.data.objects[pbodyname] #set the parent body as the target_obj
             target_obj.select_set(True) #select the parent body. Now a BODY and a mesh are selected
             bpy.ops.body.attach_visual_geometry() #attach visual geometry
 
-            #Make sure the landmarks collection is active
-            bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[colname]
 
         #### All of this should be moved over to a separate creation function
 
         target_loc = bpy.context.scene.cursor.location
         
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=landmark_radius, enter_editmode=False, align='WORLD', location = target_loc) #create a sphere
-        bpy.context.object.name = landmark_name #set the name
-        bpy.context.object.data.name = landmark_name #set the name of the object data
-        
-        landmark_name = bpy.context.object.name ### because duplicate names get automatically numbered in Blender
-        bpy.context.object['MuSkeMo_type'] = 'LANDMARK'    #to inform the user what type is created
-        bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
-        
-        bpy.ops.object.select_all(action='DESELECT')
+        from .create_landmark_func import create_landmark
 
-
-
-        obj = bpy.data.objects[landmark_name]
-        
-        obj.parent = target_obj
-        
-        #this undoes the transformation after parenting
-        obj.matrix_parent_inverse = target_obj.matrix_world.inverted()
-
-
-        #restore selection status
-        target_obj.select_set(True)
-                    
-
-        ##### Assign a material
-        matname = 'marker_material'
-        color = tuple(muskemo.marker_color)
-        transparency = 0.5
-            
-               
-        if matname not in bpy.data.materials:   #if the material doesn't exist, get it
-            from .create_transparent_material_func import create_transparent_material
-            create_transparent_material(matname, color, transparency)
-
-        mat = bpy.data.materials[matname]
-        obj.data.materials.append(mat)
-
-        ### viewport display color
-
-        obj.active_material.diffuse_color = (color[0], color[1], color[2], transparency)
-        
-        
+        create_landmark(landmark_name = landmark_name, 
+                        landmark_radius =landmark_radius, 
+                        collection_name = colname, 
+                        pos_in_global = target_loc, 
+                        is_global = True, 
+                        parent_body = target_obj.name)
         ### Empty the landmark name input
 
         muskemo.landmark_name = ''
