@@ -1,5 +1,7 @@
 import bpy
 from math import nan
+import bmesh
+from mathutils import Matrix
 
 def create_contact(name, radius, collection_name,
                     pos_in_global = [nan]*3,
@@ -20,10 +22,27 @@ def create_contact(name, radius, collection_name,
     bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
 
 
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, enter_editmode=False, align='WORLD', location = (0,0,0)) #create a sphere
-    bpy.context.object.name = name #set the name
-    bpy.context.object.data.name = name #set the name of the object data
-    obj = bpy.data.objects[name]
+    
+    ########### create contact
+    mesh = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+
+    bmesh.ops.create_icosphere(
+        bm,
+        subdivisions=3,
+        radius=radius,
+        matrix=Matrix.Identity(4)
+    )
+
+    bm.to_mesh(mesh)
+    bm.free()
+
+    obj = bpy.data.objects.new(name, mesh)
+    obj.location = pos_in_global
+
+    coll.objects.link(obj) #link to correct collection
+
+    #####
     obj.rotation_mode = 'ZYX'    #change rotation sequence
 
     obj['MuSkeMo_type'] = 'CONTACT'    #to inform the user what type is created

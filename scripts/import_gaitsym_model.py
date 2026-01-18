@@ -409,7 +409,7 @@ class ImportGaitsymModel(Operator):
                 points_ID_list.append(strap['OriginMarkerID'])
                 points_ID_list.append(strap['InsertionMarkerID'])
 
-                self.report({'WARNING'},'Wrapping is currently not supported by MuSkeMo. Skipping the wrapping surface in ' + strapID)    
+                self.report({'WARNING'},'Wrapping is currently not supported during Gaitsym import. Skipping the wrapping surface in ' + strapID)    
 
             for point in points_ID_list:
 
@@ -504,7 +504,7 @@ class ImportGaitsymModel(Operator):
 
             if muskemo.import_gaitsym_markers_as_frames: #if the user selected yes
                 
-                self.report({'WARNING'},"When importing Markers as Frames, the frames will not be parented to bodies, because in MuSkeMo, a body can have only one local frame.")    
+                  
                 
                 create_frame(name = marker_name + 'AsFrame', 
                                 size = frame_size,
@@ -513,9 +513,12 @@ class ImportGaitsymModel(Operator):
                                 collection_name = frame_colname,
                                 )
 
-            else:
-                self.report({'WARNING'},"Gaitsym Markers can have an orientation, MuSkeMo LANDMARKS cannot. If you are worried about data loss, reimport with 'Import Gaitsym markers as frames' selected.")    
-                
+
+        if muskemo.import_gaitsym_markers_as_frames:
+            self.report({'WARNING'},"When importing Markers as Frames, the frames will not be parented to bodies, because in MuSkeMo, a body can have only one local frame.")  
+        else:
+            self.report({'WARNING'},"Gaitsym Markers can have an orientation, MuSkeMo LANDMARKS cannot. If you are worried about data loss, reimport with 'Import Gaitsym markers as frames' selected.")    
+            
             
         time2 = time.time()
 

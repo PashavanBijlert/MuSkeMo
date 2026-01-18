@@ -1,5 +1,7 @@
 import bpy
+import bmesh
 from math import nan
+from mathutils import Matrix
 
 def create_landmark(landmark_name, landmark_radius, collection_name,
                     pos_in_global = [nan]*3,
@@ -18,22 +20,38 @@ def create_landmark(landmark_name, landmark_radius, collection_name,
     if collection_name not in bpy.context.scene.collection.children:       #if the collection is not yet in the scene
         bpy.context.scene.collection.children.link(coll)     #add it to the scene
         
-    #Make sure the landmarks collection is active
-    bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]    
+   ## Create landmark 
+    mesh = bpy.data.meshes.new(landmark_name)
+    bm = bmesh.new()
 
-    ## Create landmark
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=landmark_radius, enter_editmode=False, align='WORLD', location = pos_in_global) #create a sphere
-    bpy.context.object.name = landmark_name #set the name
-    bpy.context.object.data.name = landmark_name #set the name of the object data
+    bmesh.ops.create_icosphere(
+        bm,
+        subdivisions=2,
+        radius=landmark_radius,
+        matrix=Matrix.Identity(4)
+    )
 
-    landmark_name = bpy.context.object.name ### because duplicate names get automatically numbered in Blender
-    bpy.context.object['MuSkeMo_type'] = 'LANDMARK'    #to inform the user what type is created
-    bpy.context.object.id_properties_ui('MuSkeMo_type').update(description = "The object type. Warning: don't modify this!")  
+    bm.to_mesh(mesh)
+    bm.free()
+
+    obj = bpy.data.objects.new(landmark_name, mesh)
+    obj.location = pos_in_global
+
+    
+    coll.objects.link(obj)
+
+    obj.name = landmark_name
+    obj.data.name = landmark_name
+
+    obj['MuSkeMo_type'] = 'LANDMARK'
+    obj.id_properties_ui('MuSkeMo_type').update(
+        description="The object type. Warning: don't modify this!"
+    )
 
     bpy.ops.object.select_all(action='DESELECT')
 
-
     obj = bpy.data.objects[landmark_name]
+    obj.rotation_mode = 'ZYX'    #change rotation sequence
 
     parent_body_obj = bpy.data.objects[parent_body]
     obj.parent = parent_body_obj

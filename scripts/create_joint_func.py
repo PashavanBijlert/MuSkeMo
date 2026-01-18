@@ -1,4 +1,6 @@
 import bpy
+import bmesh
+from mathutils import Matrix
 from math import nan
 #from .euler_XYZ_body import euler_XYZbody_from_matrix
 from .quaternions import matrix_from_quaternion
@@ -63,10 +65,26 @@ def create_joint(name, radius, is_global = True, collection_name = 'Joint center
     bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
     
     # Create a sphere and set the name
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, enter_editmode=False, align='WORLD', location=(0, 0, 0))
-    obj = bpy.context.object
-    obj.name = name  # Set the name
-    obj = bpy.data.objects[name] 
+    mesh = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+
+    bmesh.ops.create_icosphere(
+        bm,
+        subdivisions=3,
+        radius=radius,
+        matrix=Matrix.Identity(4)
+    )
+
+    bm.to_mesh(mesh)
+    bm.free()
+
+    obj = bpy.data.objects.new(name, mesh)
+    
+
+    coll.objects.link(obj) #link to correct collection
+
+    #####
+    
     obj.rotation_mode = 'ZYX'  # Change rotation sequence
     
     ## set parent & child
