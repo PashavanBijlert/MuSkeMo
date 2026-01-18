@@ -183,7 +183,8 @@ class ImportGaitsymModel(Operator):
             
             [import_gRi, import_iRg] = matrix_from_euler_XYZbody(np.deg2rad(gaitsym_import_euler))
 
-
+        # Default cylinder height
+        gaitsym_default_cylinder_height = 0.1
 
         # Extract body data from the model
         body_data = get_body_data(root)
@@ -363,11 +364,15 @@ class ImportGaitsymModel(Operator):
         # Extract muscle data from the model
         strap_data = get_strap_data(root)
         muscle_data = get_muscle_data(root)
+        
         #### create muscles
         from .create_muscle_func import create_muscle
 
         muscle_colname = muskemo.muscle_collection #name for the collection that will contain the joints
-        #rad = muskemo.jointsphere_size #joint_radius                         
+        #rad = muskemo.jointsphere_size #joint_radius    
+        # 
+
+        muscles_with_wrapping = [] #preallocate a list for a warning message about wrapping                     
 
         for muscle in muscle_data:
 
@@ -409,7 +414,7 @@ class ImportGaitsymModel(Operator):
                 points_ID_list.append(strap['OriginMarkerID'])
                 points_ID_list.append(strap['InsertionMarkerID'])
 
-                self.report({'WARNING'},'Wrapping is currently not supported during Gaitsym import. Skipping the wrapping surface in ' + strapID)    
+                muscles_with_wrapping.append(strapID)   
 
             for point in points_ID_list:
 
@@ -432,6 +437,67 @@ class ImportGaitsymModel(Operator):
                             F_max = F_max,
                             #pennation_angle = pennation_angle
                             )
+                
+        
+        if muscles_with_wrapping: #if this list contains any muscle names
+            #Throw a warning message if wrapping was detected
+
+            # Issue warning
+            warning_message = (
+                f"Wrapping is currently not supported during Gaitsym import. Skipping the wrapping surfaces in the following muscles: "
+                f"{', '.join(muscles_with_wrapping)}.")
+            self.report({'WARNING'}, warning_message)
+            
+            from .create_wrapgeom_func import create_wrapgeom
+
+            wrap_colname = muskemo.wrap_geom_collection
+
+
+            ## Create wrapping geometry
+
+            for strap in muscles_with_wrapping:
+                strapdict = strap_data[strap]
+                
+
+                cylinder_dimensions = {}
+                cylinder_dimensions['radius'] = strapdict['CylinderRadius']
+                cylinder_dimensions['height'] = gaitsym_default_cylinder_height 
+
+                CylinderMarkerID = strapdict['CylinderMarkerID']
+                marker = marker_data[CylinderMarkerID]
+
+                cylinder_name = marker['ID'].split('_Marker')[0] #remove _Marker_0 at the end. This is fragile if the marker suffix is not automated in Gaitsym
+
+                cylinder_or_in_import_quat = [float(x) for x in marker['WorldQuaternion'].split()]
+            
+                [cyl_iRb, cyl_bRi] = matrix_from_quaternion(cylinder_or_in_import_quat)
+
+                #Gaitsym defines the axis of the cylinder as X, instead of Z. To account for this, we rotate the cylinder about local Y.
+                [Ry, Ryinv] = matrix_from_euler_XYZbody([0,np.pi/2,0]) #90 degree rotation about y
+
+                #most multiply for local rotation
+                cyl_iRb = cyl_iRb @ Ry
+
+                cyl_or_in_global = import_gRi @ cyl_iRb  #Apply import rotation
+                cyl_or_in_global_quat = list(quat_from_matrix(cyl_or_in_global)) #joint func expects a list
+
+                cylinder_parent_body_name = marker['BodyID']
+                cylinder_pos = Vector([float(x) for x in marker['WorldPosition'].split()])
+                cylinder_pos_in_glob = list(import_gRi @ cylinder_pos)
+
+
+
+                # Create the wrap geometry using create_wrapgeom
+                create_wrapgeom(name=cylinder_name,
+                                geomtype='Cylinder',
+                                collection_name=wrap_colname,
+                                parent_body=cylinder_parent_body_name,
+                                pos_in_global=cylinder_pos_in_glob,
+                                or_in_global_quat=cyl_or_in_global_quat,
+                                dimensions=cylinder_dimensions
+                            )
+                
+
 
         #### create contacts
         contact_data = get_geom_data(root)
