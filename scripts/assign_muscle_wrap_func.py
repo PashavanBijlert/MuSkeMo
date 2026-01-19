@@ -2,12 +2,11 @@ import bpy
 import os
 
 def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
-    #Inputs: wrap_obj_name (should exist)
-    # muscle_name (should exist
+    #Inputs: wrap_obj_name (should exist, and be a MuSkeMo WRAP)
+    # muscle_name (should exist, and be a MuSkeMo MUSCLE)
     #self (from the operator that calls this function)
-    
 
-    
+
     #some settings for if I decide to rename node group files:
 
     cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
@@ -27,7 +26,8 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
 
     else: #not cylinder
 
-        print('only cylinders supported currently')
+        self.report({'ERROR'},'Only cylindric wrapping is currently supported.')
+        return{'FINISHED'}
 
         
     ## load the node group template if necessary
@@ -57,15 +57,7 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
         #set the wrap object
         wrap_node_tree_thisobj.interface.items_tree['Object'].default_value = wrap_obj #the wrap geometry
 
-        if wrap_obj['wrap_type'].upper() == 'CYLINDER':
-            #set the cylinder radius
-            #wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Radius'].default_value = radius
-            print('nothing')
-            #set the cylinder height
-            #wrap_node_tree_thisobj.interface.items_tree['Wrap Cylinder Height'].default_value = height
-
-        else:
-            print('only cylinders supported currently')               
+                  
 
     ## create a modifier for the muscle and set this node group
     muscle_obj = bpy.data.objects[muscle_name]
@@ -98,38 +90,6 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
 
         else: #else, we add it to the end
             wrap_obj['target_muscles'] = wrap_obj['target_muscles'] +  muscle_name + ';'
-
-
-        ## Add a driver
-        # if parametric_wraps:
-
-        #     #radius
-        #     driver_str = 'modifiers["' + geonode_name +'"]["Socket_3"]' #wrap geonode cylinder radius socket
-        #     driver = muscle_obj.driver_add(driver_str)
-
-        #     var = driver.driver.variables.new()        #make a new variable
-        #     var.name = geonode_name + '_' + wrap_obj_name + '_rad_var'            #give the variable a name
-
-        #     #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-        #     var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
-        #     var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
-
-        #     driver.driver.expression = var.name
-
-        #     #height
-        #     driver_str = 'modifiers["' + geonode_name +'"]["Socket_4"]' #wrap geonode cylinder height socket
-        #     driver = muscle_obj.driver_add(driver_str)
-
-        #     var = driver.driver.variables.new()        #make a new variable
-        #     var.name = geonode_name + '_' + wrap_obj_name + '_height_var'            #give the variable a name
-
-        #     #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-        #     var.targets[0].id = bpy.data.objects[wrap_obj_name] #set the id to target object
-        #     var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
-
-        #     driver.driver.expression = var.name
 
     
         ## Here we crudely estimate what the pre-wrap index should be. 
