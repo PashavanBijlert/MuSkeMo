@@ -640,6 +640,10 @@ class VIEW3D_PT_import_Gaitsym_model_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # clas
         row = layout.row()
         row.prop(muskemo, "import_gaitsym_markers_as_frames")
         
+        row = layout.row()
+        row = layout.row()
+        row.prop(muskemo, "gaitsym_default_cylinder_height")
+        
 
         return         
 

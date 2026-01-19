@@ -184,7 +184,7 @@ class ImportGaitsymModel(Operator):
             [import_gRi, import_iRg] = matrix_from_euler_XYZbody(np.deg2rad(gaitsym_import_euler))
 
         # Default cylinder height
-        gaitsym_default_cylinder_height = 0.1
+        gaitsym_default_cylinder_height = muskemo.gaitsym_default_cylinder_height
 
         # Extract body data from the model
         body_data = get_body_data(root)

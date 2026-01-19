@@ -658,6 +658,15 @@ class MuSkeMoProperties(PropertyGroup):
         default = False,
     )
 
+    gaitsym_default_cylinder_height: FloatProperty(
+        name = "Gaitsym default cylinder height",
+        description="Default height for all the wrapping cylinders (in m)",
+        default = 0.2,
+        min = 1e-12,
+        max = 100,
+        precision = 5,
+        )
+
 #### anatomical (local) reference frame panel
 
     framename: StringProperty(
