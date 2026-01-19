@@ -1261,6 +1261,8 @@ class ImportOpenSimModel(Operator):
             wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
             wrap_node_tree_template = [x for x in data_to.node_groups if wrap_node_group_name in x.name][0] #node tree template
 
+            from .assign_muscle_wrap_func import assign_muscle_wrap
+
         wrap_objects = {}
 
         ### create wrapping
@@ -1472,28 +1474,18 @@ class ImportOpenSimModel(Operator):
 
                         if wrap_objects[wrap_objname]['type'] == 'WrapCylinder':
 
-                            muscle_obj = bpy.data.objects[muscle_name]
-                            #create a new geometry node for the curve, and set the node tree we just made
-                            geonode_name = muscle_name + '_wrap_' + wrap_obj_name_MuSkeMo
-                            geonode = muscle_obj.modifiers.new(name = geonode_name, type = 'NODES') #add modifier to curve
-                            geonode.node_group = bpy.data.node_groups[wrap_node_group_name + '_' + wrap_obj_name_MuSkeMo]
-                            #geonode['Socket_4'] = np.deg2rad(180)  #socket two is the volume input slider
-
-                            ## Add the muscle to the target_muscles property of the wrap object
-                            if wrap_obj['target_muscles'] == 'not_assigned': #if the wrap currently has no wrap assigned, assign it
-                                wrap_obj['target_muscles'] = muscle_name + ';'
-
-                            else: #else, we add it to the end
-                                wrap_obj['target_muscles'] = wrap_obj['target_muscles'] +  muscle_name + ';'   
+                            
+                            assign_muscle_wrap(wrap_obj_name = wrap_objname, muscle_name = muscle_name, self = self)
+                            # ## Here we crudely estimate what the pre-wrap index should be. 
+                            # # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
+                            
                             
 
-                            #Ensure the last two modifiers are always the Visualization and then the bevel modifier
-                            n_modifiers = len(muscle_obj.modifiers)
-                            muscle_obj.modifiers.move(n_modifiers-1, n_modifiers-3) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
-                            
-                            ## Here we crudely estimate what the pre-wrap index should be. 
-                            # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
-                            
+                            geonode_name = muscle_name + '_wrap_' + wrap_objname
+
+                            geonode = bpy.data.objects[muscle_name].modifiers[geonode_name]
+
+
                             wrap_obj_pos_glob = bpy.data.objects[wrap_obj_name_MuSkeMo].matrix_world.translation
 
                             total_dist_to_wrap = []  #this is the summed distance between current point and next point to the wrap object center.
