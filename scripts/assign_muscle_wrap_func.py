@@ -1,5 +1,6 @@
 import bpy
 import os
+import numpy as np
 
 def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
     #Inputs: wrap_obj_name (should exist, and be a MuSkeMo WRAP)
@@ -94,27 +95,47 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
     
         ## Here we crudely estimate what the pre-wrap index should be. 
         # #as a first guess for which two successive points span the wrap, we check which pair of points has the lowest total distance to the wrap object.
-        ''' 
-        wrap_obj_pos_glob = wrap_obj.matrix_world.translation
+       
+        # wrap_obj_pos_glob = wrap_obj.matrix_world.translation
 
-        total_dist_to_wrap = []  #this is the summed distance between current point and next point to the wrap object center.
-        for ind, point in enumerate(muscle['path_points_data'][:-1]): #loop through n points-1
-            
-            #if the current point and the next point are attached to the same body, they can't span the wrap, so we set distance to inf
-            if point['parent_frame'] == muscle['path_points_data'][ind+1]['parent_frame']:
-                total_dist_to_wrap.append(np.inf)
-            else:
-                dpoint0_wrap = (point['global_position']-wrap_obj_pos_glob).length #distance of current point to wrap
-                dpoint1_wrap = (muscle['path_points_data'][ind+1]['global_position']-wrap_obj_pos_glob).length #distance of next point to wrap
+
+        # ## get all the muscle points and their parent bodies
+        # muscle_obj = bpy.data.objects[muscle_name]
+        # modifier_list = [x.name for x in muscle_obj.modifiers if 'Hook'.casefold() in x.name.casefold()] #list of all the hook modifiers that are added to this muscle_obj
+
+        # ### loop through points
+        # point_positions = []
+        # parent_bodies = []
+        # for i in range(0, len(muscle_obj.data.splines[0].points)): #for each point
+    
+        # ### find which body each point is attached through, you have to loop through all the modifiers for this
+        #     for h in range(len(modifier_list)):               #for each hook modifier that is added to this muscle_obj
+        #         modifier = muscle_obj.modifiers[modifier_list[h]]  #modifier is the h'th modifier in the list
+        #         for j in range(len(modifier.vertex_indices)): #vertex index = connected curve point, so for each connected curve point j, which starts counting at 0
+        #             if i == modifier.vertex_indices[j]:       
+        #                 body_name = modifier.object.name 
+        #                 parent_bodies.append(body_name)  
+
+        #                 point_pos_world = muscle_obj.matrix_world @ muscle_obj.data.splines[0].points[i].co.xyz
+        #                 point_positions.append(point_pos_world)
+
+
+        # total_dist_to_wrap = []  #this is the summed distance between current point and next point to the wrap object center.
                 
-                #print(dpoint0_wrap)
-                #rint(dpoint1_wrap)
-                total_dist_to_wrap.append(dpoint0_wrap+dpoint1_wrap)
+        # for i, (position, parent) in enumerate(zip(point_positions[:-1], parent_bodies[:-1])): #loop through n points-1
+        #     #if the current point and the next point are attached to the same body, they can't span the wrap, so we set distance to inf
+        #     if parent == parent_bodies[i+1]:
+        #         total_dist_to_wrap.append(np.inf)
+        #     else:
+        #         dpoint0_wrap = (position-wrap_obj_pos_glob).length #distance of current point to wrap
+        #         dpoint1_wrap = (point_positions[i+1]-wrap_obj_pos_glob).length #distance of next point to wrap
+                
+        #         #
+        #         total_dist_to_wrap.append(dpoint0_wrap+dpoint1_wrap)
         
-        index_of_pre_wrap_point = total_dist_to_wrap.index(min(total_dist_to_wrap)) +1 #get the index where the two points have minimal distance to the wrap, while also having different frames. Add 1 because the index count starts at 1
-        geonode['Socket_6']  = index_of_pre_wrap_point #socket for setting the index
+        # index_of_pre_wrap_point = total_dist_to_wrap.index(min(total_dist_to_wrap)) +1 #get the index where the two points have minimal distance to the wrap, while also having different frames. Add 1 because the index count starts at 1
+        # geonode['Socket_6']  = index_of_pre_wrap_point #socket for setting the index
 
-        # Track occurrences of index_of_pre_wrap_point
-        pre_wrap_indices_count[index_of_pre_wrap_point] = pre_wrap_indices_count.get(index_of_pre_wrap_point, 0) + 1
-        '''
+        
+        
     return {'FINISHED'}    
