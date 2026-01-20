@@ -414,7 +414,7 @@ class ImportGaitsymModel(Operator):
                 points_ID_list.append(strap['OriginMarkerID'])
                 points_ID_list.append(strap['InsertionMarkerID'])
 
-                muscles_with_wrapping.append(strapID)   
+                muscles_with_wrapping.append([muscle_name, strapID])   
 
             for point in points_ID_list:
 
@@ -443,20 +443,18 @@ class ImportGaitsymModel(Operator):
             #Throw a warning message if wrapping was detected
 
             # Issue warning
-            warning_message = (
-                f"Wrapping is currently not supported during Gaitsym import. Skipping the wrapping surfaces in the following muscles: "
-                f"{', '.join(muscles_with_wrapping)}.")
-            self.report({'WARNING'}, warning_message)
+            self.report({'WARNING'}, "Gaitsym wrapping behaviour is different from MuSkeMo, you may need to manually change the wrapping settings for muscle wrap nodes. See the manual.")
             
             from .create_wrapgeom_func import create_wrapgeom
+            from .assign_muscle_wrap_func import assign_muscle_wrap
 
             wrap_colname = muskemo.wrap_geom_collection
 
 
             ## Create wrapping geometry
 
-            for strap in muscles_with_wrapping:
-                strapdict = strap_data[strap]
+            for [muscle_name, strapID] in muscles_with_wrapping:
+                strapdict = strap_data[strapID]
                 
 
                 cylinder_dimensions = {}
@@ -497,6 +495,8 @@ class ImportGaitsymModel(Operator):
                                 dimensions=cylinder_dimensions
                             )
                 
+                #assign the wrap to the muscle
+                assign_muscle_wrap(wrap_obj_name = cylinder_name, muscle_name = muscle_name, self=self)
 
 
         #### create contacts
