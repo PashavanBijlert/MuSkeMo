@@ -47,7 +47,7 @@ class CreateLandmarkOperator(Operator):
 
         if target_obj.get('MuSkeMo_type'): #if it has a MuSkeMo_type, and thus was created by MuSkeMo 
 
-            if target_obj['MuSkeMo_type'] not in ('BODY', 'GEOMETRY'): #if it's not a BODY or a GEOMETRY
+            if target_obj['MuSkeMo_type'] not in ('BODY', 'GEOMETRY', 'GEOM_PRIMITIVE'): #if it's not a BODY or a GEOMETRY
 
                 self.report({'ERROR'}, "Selected object '" + target_obj.name + "' is not a BODY or a GEOMETRY (mesh attached to a body). Landmarks must be parented to BODIES or GEOMETRIES. Operation cancelled")
                 return {'FINISHED'}
@@ -64,7 +64,12 @@ class CreateLandmarkOperator(Operator):
                 
                     target_obj = target_obj.parent
 
+            elif target_obj['MuSkeMo_type'] == 'GEOM_PRIMITIVE':
 
+                create_parent_body = True
+                self.report({'WARNING'}, "GEOM_PRIMITIVE converted to GEOMETRY. A parent BODY was created for the selected mesh with the '" + target_obj.name + "_pbody' and placed at the origin. Landmarks will be attached to that newly created body")
+
+                del target_obj['MuSkeMo_type']
 
         else: #if it's not a MuSkeMo BODY, it can still get a landmark if it is a Mesh. If the Mesh has no parent body, we create a new body for this purpose.
 
