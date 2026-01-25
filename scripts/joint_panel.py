@@ -1418,18 +1418,28 @@ class CycleThroughJointAxesOperator(Operator):
             self.report({'ERROR'}, "Selected object '" + joint.name + "' is not a joint. Select the target joint. Operation cancelled")
             return {'FINISHED'}
         
-
-        #Ensure no parent or child
-
-        if joint['parent_body'] != 'not_assigned':
-            self.report({'ERROR'}, "Joint with the name '" + joint.name + "' has a parent body. Operation cancelled")
-            return {'FINISHED'}
+        child_body = False #gets overwritten if there is a child
+        parent_body = False #gets overwritten if there is a parent
         
+        if joint.parent: #If the joint has a parent, temporarily clear the parent
 
-        if joint['child_body'] != 'not_assigned':
-            self.report({'ERROR'}, "Joint with the name '" + joint.name + "' has a child body. Operation cancelled")
-            return {'FINISHED'}
-
+            parent_body = bpy.data.objects[joint['parent_body']]
+            bpy.ops.object.select_all(action='DESELECT')
+                    
+            [bpy.data.objects[x].select_set(True) for x in [joint.name]] #set the selection for the correct objects
+            bpy.ops.joint.clear_parent_body()
+            bpy.ops.object.select_all(action='DESELECT') 
+        
+        
+        if len(joint.children) != 0: #if the joint has a child, temporarily clear it
+            
+            child_body = joint.children[0]
+            bpy.ops.object.select_all(action='DESELECT')
+                    
+            [bpy.data.objects[x].select_set(True) for x in [joint.name]] #set the selection for the correct objects
+            bpy.ops.joint.clear_child_body()
+            bpy.ops.object.select_all(action='DESELECT') 
+       
 
         #If none of the stop conditions are triggered, define a permutation matrix and multiply the joint's orientation by it.
 
@@ -1452,6 +1462,25 @@ class CycleThroughJointAxesOperator(Operator):
         joint.matrix_world = R_new
         joint.matrix_world.translation = pos
 
+        if parent_body: #Reassign the parent
+            
+            bpy.ops.object.select_all(action='DESELECT')
+                    
+            [bpy.data.objects[x].select_set(True) for x in [joint.name, parent_body.name]] #set the selection for the correct objects
+            bpy.ops.joint.assign_parent_body()
+            bpy.ops.object.select_all(action='DESELECT') 
+
+
+        if child_body: #reparent the child
+
+            bpy.ops.object.select_all(action='DESELECT')
+                    
+            [bpy.data.objects[x].select_set(True) for x in [joint.name, child_body.name]] #set the selection for the correct objects
+            bpy.ops.joint.assign_child_body()
+            bpy.ops.object.select_all(action='DESELECT')         
+
+
+        joint.select_set(True) #reset selection state
         return {'FINISHED'}
 
          
