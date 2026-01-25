@@ -1256,18 +1256,27 @@ class MatchOrientationOperator(Operator):
         if len(joint.children) != 0: #if the joint has a child, unparent it before modifying the joint
             
             child_body = joint.children[0]
-            #clear the parent, without moving the joint
-            parented_worldmatrix =child_body.matrix_world.copy() 
-            child_body.parent = None
-            child_body.matrix_world = parented_worldmatrix 
+            # #clear the parent, without moving the joint
+            # parented_worldmatrix =child_body.matrix_world.copy() 
+            # child_body.parent = None
+            # child_body.matrix_world = parented_worldmatrix 
 
               
-            joint['pos_in_child_frame'] = [nan, nan, nan]
-            joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
-            joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]  
+            # joint['pos_in_child_frame'] = [nan, nan, nan]
+            # joint['or_in_child_frame_XYZeuler'] = [nan, nan, nan]
+            # joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]  
 
-        
+            bpy.ops.object.select_all(action='DESELECT')
+                    
+            [bpy.data.objects[x].select_set(True) for x in [joint.name]] #set the selection for the correct objects
+            bpy.ops.joint.clear_child_body()
+            bpy.ops.object.select_all(action='DESELECT') 
+
+
         worldMatrix = target_obj.matrix_world.copy() #get a copy the target object transformation matrix
+        # remove scale
+        worldMatrix = worldMatrix.normalized() 
+        
         worldMatrix.translation = joint.matrix_world.translation  #ensure the original joints translation doesn't get lost.
 
         joint.matrix_world = worldMatrix
