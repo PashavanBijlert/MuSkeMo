@@ -27,6 +27,9 @@ After installation, all of MuSkeMo's features can be accessed via its panels. Th
 
 # **Inertial properties panel**
 
+<img width="481" height="237" alt="image" src="https://github.com/user-attachments/assets/ff2b3135-b6fb-436a-80d7-750b4184ba27" />
+
+
 Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans. Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. This panel also allows you to generate convex hulls, and expand them on a per-segment basis using empirical equations.
 
 ![convex_hull_gif](https://github.com/user-attachments/assets/72c2b4c0-ace9-44c6-9789-4a5650504f40)
