@@ -27,7 +27,13 @@ After installation, all of MuSkeMo's features can be accessed via its panels. Th
 
 # **Inertial properties panel**
 
-Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans. Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. MuSkeMo will give you an error message if you ignore this. 
+<img width="481" height="237" alt="image" src="https://github.com/user-attachments/assets/ff2b3135-b6fb-436a-80d7-750b4184ba27" />
+
+
+Compute inertial properties from 3D volumetric meshes, eg. from CT-segmentations or surface scans. Inertial properties are not dynamic, if you move the 3D meshes or change their densities, you must recompute their inertial properties, otherwise COM, mass, and or inertia can be outdated. This panel also allows you to generate convex hulls, and expand them on a per-segment basis using empirical equations.
+
+![convex_hull_gif](https://github.com/user-attachments/assets/72c2b4c0-ace9-44c6-9789-4a5650504f40)
+
 
 # **Body panel**
 
@@ -41,11 +47,19 @@ It is also possible to define coordinate names in the joint panel. After exporti
 
 In the joint panel (under joint utilities), you can also fit geometric primitives (sphere, cylinder, ellipsoid, plane), and match the transformations of a joint to the fitted geometry. By default, MuSkeMo ensures that child objects and parent objects are not transformed with the joint. Instead, only the joint's position or orientation is changed, and related data (e.g., pos_in_child) are recomputed automatically.
 
+![object_fit](https://github.com/user-attachments/assets/18241aab-5354-4967-89fb-4f4a11bf57e4)
+
+
 # **Muscle panel**
 
 Define path-point muscles. Muscle points are added to the 3D cursor location, and parented to the selected Body (so you have to define bodies first). 
 To add a point, select the muscle and the target body. Press shift + right mouse button to position the 3D cursor. Muscle points are added to the 3D cursor location.
 You can change the locations of the path points by selecting the muscle in edit mode (select the muscle and press "TAB").
+
+Muscles can be visualized using a volume-accurate visualizer, and these visualizations can be customized in a parametric manner using the modifier inputs, and by changing the shape curve.
+![muscle_settings](https://github.com/user-attachments/assets/b6a37b56-b9e7-466a-931a-0f4f2dfa603c)
+
+![muscle_belly_shape](https://github.com/user-attachments/assets/30f2d5ba-8799-425b-adc5-0d5375637b69)
 
 Within the muscle panel, it is also possible to create wrapping geometry (currently, only cylinders are supported), and assign these to muscles.
 
