@@ -141,10 +141,10 @@ class MeshIntersectionCheckerOperator(Operator):
         
         return self.execute(context)
     
-class MeshFromSelectedFacesOperator(Operator):
-    bl_idname = "mesh.mesh_from_selected_faces"
-    bl_label = "Mesh From Selected Faces"
-    bl_description = "Create a new mesh object from selected faces"
+class MeshFromSelectionOperator(Operator):
+    bl_idname = "mesh.mesh_from_selection"
+    bl_label = "Mesh From Selected Portion"
+    bl_description = "Create a new mesh object from the selected mesh portion. You must select a mesh portion by pressing TAB to go into EDIT mode."
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -163,26 +163,37 @@ class MeshFromSelectedFacesOperator(Operator):
         # Access live Edit Mode mesh
         bm = bmesh.from_edit_mesh(mesh)
 
+        # Try selected faces first
         faces = [f for f in bm.faces if f.select]
-        if not faces:
-            self.report({'WARNING'}, "No faces selected")
-            return {'CANCELLED'}
 
-        # New bmesh
         bm_new = bmesh.new()
         vert_map = {}
 
-        # Copy vertices
-        for f in faces:
-            for v in f.verts:
-                if v not in vert_map:
-                    vert_map[v] = bm_new.verts.new(v.co)
+        if faces:
+            # Copy vertices from faces
+            for f in faces:
+                for v in f.verts:
+                    if v not in vert_map:
+                        vert_map[v] = bm_new.verts.new(v.co)
+            bm_new.verts.ensure_lookup_table()
 
-        bm_new.verts.ensure_lookup_table()
+            # Copy faces
+            for f in faces:
+                bm_new.faces.new([vert_map[v] for v in f.verts])
+        else:
+            # No faces: check selected vertices (point cloud)
+            verts = [v for v in bm.verts if v.select]
+            if not verts:
+                # Nothing selected
+                self.report({'WARNING'},"No faces or vertices selected")
+                return {'FINISHED'}
 
-        # Copy faces
-        for f in faces:
-            bm_new.faces.new([vert_map[v] for v in f.verts])
+            # Copy selected vertices
+            for v in verts:
+                vert_map[v] = bm_new.verts.new(v.co)
+            bm_new.verts.ensure_lookup_table()
+            # No faces to copy
+
 
         # Create new mesh
         new_mesh = bpy.data.meshes.new(obj.name + "_selected_surface")
@@ -234,15 +245,15 @@ class VIEW3D_PT_mesh_tools_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conve
 
         if context.mode == 'EDIT_MESH':
             layout.operator(
-                "mesh.mesh_from_selected_faces",
-                text="New mesh from selected faces"
+                "mesh.mesh_from_selection",
+                text="New mesh from selected mesh portion"
             )
         else:
             row = layout.row()
             row.enabled = False
             row.operator(
-                "mesh.mesh_from_selected_faces",
-                text="New mesh from selected faces (Edit Mode)"
+                "mesh.mesh_from_selection",
+                text="New mesh from selected mesh portion (Edit Mode)"
             )
 
 class VIEW3D_PT_mesh_alignment_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
