@@ -71,7 +71,7 @@ def create_contact(name, radius, collection_name,
 
                 # if we parent, we also track ['default_pose']
 
-                obj['default_pose'] = obj.matrix_world #track the default pose to ensure the exported values are in the same pose
+                obj['default_pose'] = list(obj.matrix_world) #track the default pose to ensure the exported values are in the same pose
                
 
 

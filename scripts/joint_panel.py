@@ -152,7 +152,7 @@ class AssignParentBodyOperator(Operator):
 
         joint['parent_body'] = parent_body.name
 
-        joint['default_pose'] = joint.matrix_world #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
+        joint['default_pose'] = list(joint.matrix_world) #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
 
 
         from .quaternions import quat_from_matrix
@@ -269,7 +269,7 @@ class AssignChildBodyOperator(Operator):
 
         joint['child_body'] = child_body.name
 
-        joint['default_pose'] = joint.matrix_world #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
+        joint['default_pose'] = list(joint.matrix_world) #track the default pose to ensure the exported values are in the same pose. This overwrites it with the same existing value (or it would have been caught by the error check above, or creates it anew)
 
         from .quaternions import quat_from_matrix
         from .euler_XYZ_body import euler_XYZbody_from_matrix      
@@ -359,7 +359,7 @@ class ClearParentBodyOperator(Operator):
         joint['or_in_parent_frame_quat'] = [nan, nan, nan, nan]
 
         ### If the joint is unparented after this, stop tracking default pose and set global or and pos to nan
-        if joint['child_body']== 'not_assigned' and 'default_pose' in joint:
+        if joint['child_body'] == 'not_assigned' and 'default_pose' in joint:
             del joint['default_pose']
             joint['pos_in_global'] = [nan, nan, nan]
             joint['or_in_global_quat'] = [nan, nan, nan, nan]
@@ -419,7 +419,7 @@ class ClearChildBodyOperator(Operator):
         joint['or_in_child_frame_quat'] = [nan, nan, nan, nan]
 
         ### If the joint is unparented after this, stop tracking default pose and set global or and pos to nan
-        if joint['parent_body']== 'not_assigned' and 'default_pose' in joint:
+        if joint['parent_body'] == 'not_assigned' and 'default_pose' in joint:
             del joint['default_pose']
             joint['pos_in_global'] = [nan, nan, nan]
             joint['or_in_global_quat'] = [nan, nan, nan, nan]

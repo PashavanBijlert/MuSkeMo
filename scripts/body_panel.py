@@ -134,7 +134,7 @@ class UpdateLocationFromCOMOperator(Operator):
             if len(children)==0: #if the object has no children
                 target_body.matrix_world.translation = COM
 
-                target_body['default_pose'] = target_body.matrix_world #track the default pose to ensure the exported values are in the same pose
+                target_body['default_pose'] = list(target_body.matrix_world) #track the default pose to ensure the exported values are in the same pose
                 
             else:    #if the object has children, loop through them and ensure they don't change their location
                                     
@@ -146,7 +146,7 @@ class UpdateLocationFromCOMOperator(Operator):
                 pos_old = target_body.matrix_world.translation.copy()
                 target_body.matrix_world.translation = target_body['COM']
 
-                target_body['default_pose'] = target_body.matrix_world #track the default pose to ensure the exported values are in the same pose
+                target_body['default_pose'] = list(target_body.matrix_world) #track the default pose to ensure the exported values are in the same pose
                 
                                 
                 for chil in children:
@@ -294,7 +294,7 @@ class AssignInertialPropertiesOperator(Operator):
         
         if len(children)==0: #if the object has no children
             target_body.matrix_world.translation = target_body['COM']
-            target_body['default_pose'] = target_body.matrix_world #track the default pose to ensure the exported values are in the same pose
+            target_body['default_pose'] = list(target_body.matrix_world) #track the default pose to ensure the exported values are in the same pose
                 
             
         else:    #if the object has children, loop through them and ensure they don't change their location
@@ -307,7 +307,7 @@ class AssignInertialPropertiesOperator(Operator):
             pos_old = target_body.matrix_world.translation.copy()
             target_body.matrix_world.translation = target_body['COM']
 
-            target_body['default_pose'] = target_body.matrix_world
+            target_body['default_pose'] = list(target_body.matrix_world)
             
                         
             for chil in children:

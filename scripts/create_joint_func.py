@@ -192,7 +192,7 @@ def create_joint(name, radius, is_global = True, collection_name = 'Joint center
                 obj.parent = parent_body_obj
                 obj.matrix_parent_inverse = parent_body_obj.matrix_world.inverted()                      
 
-                obj['default_pose'] = obj.matrix_world #### keep track of the default pose of the object
+                obj['default_pose'] = list(obj.matrix_world) #### keep track of the default pose of the object
                 
 
         
@@ -205,7 +205,7 @@ def create_joint(name, radius, is_global = True, collection_name = 'Joint center
                 child_body_obj.matrix_parent_inverse = obj.matrix_world.inverted()
 
                 if 'default_pose' not in obj: #if it wasn't created during parent object setting, set it here
-                    obj['default_pose'] = obj.matrix_world #### keep track of the default pose of the object
+                    obj['default_pose'] = list(obj.matrix_world) #### keep track of the default pose of the object
                 
                 
         #if local frame is assigned, then you can assign the local orientation and position
