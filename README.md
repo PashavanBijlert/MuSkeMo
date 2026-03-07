@@ -1,3 +1,5 @@
+# **This branch adds Photogrammetry Kinematics processing to MuSkeMo, which is not part of the main functionality of MuSkeMo yet**
+
 # **MuSkeMo**
 
 ![Horse multipanel figure](./MuSkeMo%20manual/figures/Multipanel%20figure%20cropped.png?raw=true)
