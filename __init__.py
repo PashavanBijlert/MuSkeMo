@@ -61,10 +61,7 @@ from .scripts.body_panel import (VIEW3D_PT_MuSkeMo, VIEW3D_PT_body_panel,VIEW3D_
 from .scripts.joint_panel import ( CreateNewJointOperator, 
                                       AssignParentBodyOperator, AssignChildBodyOperator,
                                       ClearParentBodyOperator,ClearChildBodyOperator,
-                                      UpdateCoordinateNamesOperator,
-                                      FitSphereGeomOperator,FitSphereLSOperator,
-                                      FitCylinderOperator, FitEllipsoidOperator,
-                                      FitPlaneOperator, 
+                                      UpdateCoordinateNamesOperator, 
                                       MatchOrientationOperator, MatchPositionOperator,
                                       CycleThroughJointAxesOperator,
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
@@ -171,8 +168,12 @@ from .scripts.reflection_panel import (ReflectUnilateralBodiesOperator,
 #### Mesh tools panel
 
 from .scripts.mesh_tools_panel import (VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mesh_alignment_subpanel,
+                                       VIEW3D_PT_geom_primitive_fitting_subpanel,
                                        MeshAlignnmentICPPointToPlaneOperator,MeshIntersectionCheckerOperator,
-                                       MeshFromSelectionOperator, )
+                                       MeshFromSelectionOperator,  
+                                       FitSphereGeomOperator,FitSphereLSOperator,
+                                      FitCylinderOperator, FitEllipsoidOperator,
+                                      FitPlaneOperator, )
 
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
@@ -188,8 +189,11 @@ classes = (  #Global settings panel
                                      ResetToDefaultPoseOperator,
     # Mesh tools panel
                                     VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mesh_alignment_subpanel,
+                                    VIEW3D_PT_geom_primitive_fitting_subpanel,
                                     MeshAlignnmentICPPointToPlaneOperator,MeshIntersectionCheckerOperator,
-                                    MeshFromSelectionOperator,
+                                    MeshFromSelectionOperator, FitSphereGeomOperator,FitSphereLSOperator,
+                                      FitCylinderOperator, FitEllipsoidOperator,
+                                      FitPlaneOperator, 
 
 
     #Inertial properties panel 
@@ -221,9 +225,6 @@ classes = (  #Global settings panel
                                       AssignParentBodyOperator, AssignChildBodyOperator,
                                       ClearParentBodyOperator,ClearChildBodyOperator,
                                       UpdateCoordinateNamesOperator,
-                                      FitSphereGeomOperator,FitSphereLSOperator,
-                                      FitCylinderOperator, FitEllipsoidOperator,
-                                      FitPlaneOperator, 
                                       MatchOrientationOperator, MatchPositionOperator,
                                       CycleThroughJointAxesOperator,
                                       VIEW3D_PT_joint_panel,VIEW3D_PT_joint_coordinate_subpanel,
