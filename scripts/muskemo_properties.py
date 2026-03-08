@@ -1132,3 +1132,16 @@ class MuSkeMoProperties(PropertyGroup):
         type=bpy.types.Object,
         poll=poll_meshes
     )
+
+    sagittal_projection_plane_name: StringProperty(
+        name="Sagittal plane name",
+        description="Desired name of the sagittal plane. Suggested to name after your trial, e.g. 'animal1_strides_1-5'",
+        default="",
+        maxlen=1024,
+        )
+    
+    stride_start_frame: IntProperty(
+        name="Stride frame start",
+        description="What frame in the timeline does the stride start that you are interested in?",
+        options={'SKIP_SAVE'},
+        )
