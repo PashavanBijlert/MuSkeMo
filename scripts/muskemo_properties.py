@@ -49,7 +49,21 @@ def collection_items(self, context):
 
     return items
 
+def poll_landmarks(self, obj):
+    
+    # Example filter by custom property
+    if obj.get("MuSkeMo_type") != 'LANDMARK':
+        return False
+    
+    return True
 
+def poll_meshes(self, obj):
+    
+    # Filter by object type
+    if obj.type != 'MESH':
+        return False
+    
+    return True
 
 
 class MuSkeMoProperties(PropertyGroup):
@@ -1093,4 +1107,28 @@ class MuSkeMoProperties(PropertyGroup):
         default=6,
         min=1,
         max=99
+    )
+
+
+######## Photogrammetry Kinematics Toolbox panel
+
+    pk_FF1_landmark: PointerProperty(
+        name="Footfall 1",
+        description = "Landmark corresponding to the first footfall",
+        type=bpy.types.Object,
+        poll=poll_landmarks
+    )
+
+    pk_FF2_landmark: PointerProperty(
+        name="Footfall 2",
+        description = "Landmark corresponding to the second footfall",
+        type=bpy.types.Object,
+        poll=poll_landmarks
+    )
+
+    pk_ground_plane: PointerProperty(
+        name="Photogrammetry ground plane",
+        description = "Ground plane fitted to photogrammetry data",
+        type=bpy.types.Object,
+        poll=poll_meshes
     )

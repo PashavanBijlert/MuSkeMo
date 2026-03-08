@@ -175,6 +175,12 @@ from .scripts.mesh_tools_panel import (VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mes
                                       FitCylinderOperator, FitEllipsoidOperator,
                                       FitPlaneOperator, )
 
+#### Photogrammetry Kinematics Toolbox panel
+
+from .scripts.photogrammetry_kinematics_panel import (VIEW3D_PT_PKToolbox_panel,
+                                                      CreateSagittalProjectionPlaneOperator,
+                                              )
+
 #### body segment inertial properties function
 from .scripts.inertialproperties_func import (inertial_properties)  ## This function computes inertial properties of a mesh
 
@@ -300,7 +306,11 @@ classes = (  #Global settings panel
                                 ReflectUnilateralJointsOperator,
                                 ReflectUnilateralContactsOperator,
                                 VIEW3D_PT_reflection_panel, 
-                                       
+
+            # Photogrammetry Kinematics Toolbox panel
+
+                                VIEW3D_PT_PKToolbox_panel,       
+                                CreateSagittalProjectionPlaneOperator,                    
 
             # properties
                                    SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY
