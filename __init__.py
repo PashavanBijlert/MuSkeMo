@@ -179,6 +179,7 @@ from .scripts.mesh_tools_panel import (VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mes
 
 from .scripts.photogrammetry_kinematics_panel import (VIEW3D_PT_PKToolbox_panel,
                                                       CreateSagittalProjectionPlaneOperator,
+                                                      AddStrideSagittalProjectionPlaneOperator,
                                               )
 
 #### body segment inertial properties function
@@ -310,7 +311,8 @@ classes = (  #Global settings panel
             # Photogrammetry Kinematics Toolbox panel
 
                                 VIEW3D_PT_PKToolbox_panel,       
-                                CreateSagittalProjectionPlaneOperator,                    
+                                CreateSagittalProjectionPlaneOperator,            
+                                AddStrideSagittalProjectionPlaneOperator,        
 
             # properties
                                    SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY

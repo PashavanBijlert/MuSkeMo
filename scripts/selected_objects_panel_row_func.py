@@ -15,6 +15,7 @@ def CreateSelectedObjRow(type, layout):
         "MESH": "Meshes", #this is not a muskemo type
         "MESH_withdensity": "Meshes", #not a muskemo type. Mesh with inertial properties assigned
         "NOTJOINT": "Source",
+        "PROJECTION_PLANE": "Projection plane:"
         # Add more mappings as needed
     }
     
@@ -33,10 +34,13 @@ def CreateSelectedObjRow(type, layout):
     if type == 'NOTJOINT':
         selected_items = [ob for ob in bpy.context.selected_objects if ob.get('MuSkeMo_type') != 'JOINT']
        
-
-    # Define layout split factors
-    fact_1 = 1/8  # Label width fraction
-    fact_2 = 8/9   # Box width fraction
+    if type == 'PROJECTION_PLANE':
+        fact_1 = 1/2  # Label width fraction
+        fact_2 = 3/4   # Box width fraction
+    else: 
+        # Define layout split factors
+        fact_1 = 1/8  # Label width fraction
+        fact_2 = 8/9   # Box width fraction
 
     # Create row
     row = layout.row()
