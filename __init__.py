@@ -178,8 +178,14 @@ from .scripts.mesh_tools_panel import (VIEW3D_PT_mesh_tools_panel, VIEW3D_PT_mes
 #### Photogrammetry Kinematics Toolbox panel
 
 from .scripts.photogrammetry_kinematics_panel import (VIEW3D_PT_PKToolbox_panel,
+                                                      VIEW3D_PT_PKToolbox_create_projection_plane_subpanel,                                        
+                                                      VIEW3D_PT_PKToolbox_Animated_landmark_subpanel,
+                                                      VIEW3D_PT_PKToolbox_add_stride_projection_plane_subpanel,
                                                       CreateSagittalProjectionPlaneOperator,
                                                       AddStrideSagittalProjectionPlaneOperator,
+                                                      CreateAnimatedLandmarkOperator,
+                                                      AddKeyframeAnimatedLandmarksOperator,
+                                                      SetRecommendedSnapSettingsOperator,
                                               )
 
 #### body segment inertial properties function
@@ -310,9 +316,15 @@ classes = (  #Global settings panel
 
             # Photogrammetry Kinematics Toolbox panel
 
-                                VIEW3D_PT_PKToolbox_panel,       
+                                VIEW3D_PT_PKToolbox_panel,
+                                VIEW3D_PT_PKToolbox_create_projection_plane_subpanel,
+                                VIEW3D_PT_PKToolbox_Animated_landmark_subpanel,
+                                VIEW3D_PT_PKToolbox_add_stride_projection_plane_subpanel,
                                 CreateSagittalProjectionPlaneOperator,            
-                                AddStrideSagittalProjectionPlaneOperator,        
+                                AddStrideSagittalProjectionPlaneOperator,    
+                                CreateAnimatedLandmarkOperator,
+                                AddKeyframeAnimatedLandmarksOperator, 
+                                SetRecommendedSnapSettingsOperator,   
 
             # properties
                                    SegmentParameterItem, #THIS MUST BE REGISTERED BEFORE MUSKEMOPROPERTIES, THERE IS A DEPENDENCY

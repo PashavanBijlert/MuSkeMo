@@ -57,6 +57,14 @@ def poll_landmarks(self, obj):
     
     return True
 
+def poll_projection_planes(self, obj):
+    
+    # Example filter by custom property
+    if obj.get("MuSkeMo_type") != 'PROJECTION_PLANE':
+        return False
+    
+    return True
+
 def poll_meshes(self, obj):
     
     # Filter by object type
@@ -1133,15 +1141,45 @@ class MuSkeMoProperties(PropertyGroup):
         poll=poll_meshes
     )
 
-    sagittal_projection_plane_name: StringProperty(
+    pk_target_projection_plane: PointerProperty(
+        name="Target projection plane",
+        description = "Target projection plane",
+        type=bpy.types.Object,
+        poll=poll_projection_planes
+    )
+
+    pk_sagittal_projection_plane_name: StringProperty(
         name="Sagittal plane name",
-        description="Desired name of the sagittal plane. Suggested to name after your trial, e.g. 'animal1_strides_1-5'",
+        description="Desired name of the sagittal plane. Suggested to name after your trial, e.g. 'animal1'",
         default="",
         maxlen=1024,
         )
     
-    stride_start_frame: IntProperty(
+    pk_stride_start_frame: IntProperty(
         name="Stride frame start",
         description="What frame in the timeline does the stride start that you are interested in?",
         options={'SKIP_SAVE'},
+        )
+    
+    pk_animated_landmark_name: StringProperty(
+            name="Animated landmark name",
+            description="Desired name of the animated landmark. Suggested to name after the morphological landmark, e.g. 'hip_r'",
+            default="",
+            maxlen=1024,
+            )
+    
+    pk_keyframe_mode: EnumProperty(
+            name="Keyframe mode",
+            description="Do you want the 'add keyframe' button to act on all the ANIMATED_LANDMARKS, or only the selected ones?",
+            items=[ ('All', "All", ""),
+                ('Selected only', "Selected only", ""),
+              ],
+            default = "All",
+            )
+    
+    pk_animated_landmark_collection: StringProperty(
+        name="Animated landmarks collection name",
+        description="Name of the collection that holds all the Animated landmarks.",
+        default="Animated landmarks",
+        maxlen=1024,
         )

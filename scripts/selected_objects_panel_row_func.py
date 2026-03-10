@@ -54,7 +54,7 @@ def CreateSelectedObjRow(type, layout):
         item_names = [ob.name for ob in selected_items]
         box.label(text=", ".join(item_names))  # Display names
     else:
-        box.label(text="No " + label.lower() + " selected", icon='INFO')
+        box.label(text="None selected", icon='INFO')
 
     # Count box
     box = split.box()

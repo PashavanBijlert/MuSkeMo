@@ -15,6 +15,22 @@ import bmesh
 from .. import VIEW3D_PT_MuSkeMo  #the class in which all panels will be placed
     
 ## Operators
+class SetRecommendedSnapSettingsOperator(Operator):
+    bl_idname = "pktoolbox.set_recommended_snapping_settings"
+    bl_label = "Set the recommend object snapping settings for projecting landmarks using their object centers."
+    bl_description = "Set the recommended object snapping settings for projecting landmarks using their object centers."
+    bl_options = {"UNDO"} #enable undoing
+        
+    def execute(self, context):
+
+        bpy.data.scenes['Scene'].tool_settings.use_snap = True
+        bpy.data.scenes['Scene'].tool_settings.snap_target = 'CENTER'
+        bpy.data.scenes['Scene'].tool_settings.snap_elements_base = {'FACE'}
+
+        return {'FINISHED'}
+
+
+
 class CreateSagittalProjectionPlaneOperator(Operator):
     bl_idname = "pktoolbox.create_sagittal_projection_plane"
     bl_label = "Create a sagittal PROJECTION_PLANE from two footfall LANDMARKS and a fitted ground plane."
@@ -26,23 +42,23 @@ class CreateSagittalProjectionPlaneOperator(Operator):
         muskemo = bpy.context.scene.muskemo
 
         ## get the desired object name
-        plane_name = muskemo.sagittal_projection_plane_name
+        plane_name = muskemo.pk_sagittal_projection_plane_name
 
         if not plane_name:
             self.report({'ERROR'}, "Type in a desired name for the sagittal plane and try again.")
             return {'FINISHED'}
         
         if plane_name in bpy.data.objects:
-            self.report({'ERROR'}, "You tried to create a new sagittal plane with the name '" + plane_name + "', but an object with than name already exists. Choose a unique name, or if you're trying to add a stride, use the 'Add stride' button.")
+            self.report({'ERROR'}, "You tried to create a new sagittal plane with the name '" + plane_name + "', but an object with that name already exists. Choose a unique name, or if you're trying to add a stride, use the 'Add stride' button.")
             return {'FINISHED'}
 
-        ## Check if the stride_start_frame was set, and if not, throw an error
+        ## Check if the pk_stride_start_frame was set, and if not, throw an error
 
-        if 'stride_start_frame' not in muskemo:
+        if 'pk_stride_start_frame' not in muskemo:
             self.report({'ERROR'}, "You didn't specify at what frame the stride starts.")
             return {'CANCELLED'}
         else:
-            frame_number = muskemo.stride_start_frame
+            frame_number = muskemo.pk_stride_start_frame
 
 
         ## get the ground plane
@@ -83,13 +99,14 @@ class CreateSagittalProjectionPlaneOperator(Operator):
         
 
         ## The footfall landmarks must be coplanar with the groundplane, this means that their Z position in the ground plane frame must be zero. We check this explicitly.
+        groundPlane_wm = groundPlane.matrix_world
 
-        tolerance = 1e-4 #
-        if abs((groundPlane.matrix_world.transposed() @ FootFall1LM.matrix_world.translation)[2]) > tolerance:
+        tolerance = 1e-6 #
+        if abs((groundPlane_wm.transposed() @ (FootFall1LM.matrix_world.translation - groundPlane_wm.translation))[2]) > tolerance:
             self.report({'ERROR'}, "Footfall landmark 1 does not appear to be projected onto the fitted groundplane. Double check its position and ensure center snapping is on.")
             return {'FINISHED'}
         
-        if abs((groundPlane.matrix_world.transposed() @ FootFall2LM.matrix_world.translation)[2]) > tolerance:
+        if abs((groundPlane_wm.transposed() @ (FootFall2LM.matrix_world.translation - groundPlane_wm.translation))[2]) > tolerance:
             self.report({'ERROR'}, "Footfall landmark 2 does not appear to be projected onto the fitted groundplane. Double check its position and ensure center snapping is on.")
             return {'FINISHED'}
 
@@ -215,10 +232,10 @@ class CreateSagittalProjectionPlaneOperator(Operator):
                         kp.interpolation = 'CONSTANT'
 
         ## reset the plane name input
-        muskemo.sagittal_projection_plane_name = ''
+        muskemo.pk_sagittal_projection_plane_name = ''
 
-        ## unset the stride_start_frame input
-        muskemo.property_unset("stride_start_frame")
+        ## unset the pk_stride_start_frame input
+        muskemo.property_unset("pk_stride_start_frame")
         
         ## reset FF1 and FF2 landmark objects
         muskemo.pk_FF1_landmark = None
@@ -234,32 +251,20 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
     def execute(self, context):
 
         muskemo = bpy.context.scene.muskemo
+        
+        sagittal_plane = muskemo.pk_target_projection_plane
 
-        sel_obj = bpy.context.selected_objects  #should be the only the joint
-        
-        # throw an error if no objects are selected     
-        if (len(sel_obj) == 0):
-            self.report({'ERROR'}, "No objects selected. Select the target sagittal projection plane and try again. Operation cancelled")
-            return {'FINISHED'}
-        
-        # throw an error if too many objects are selected     
-        if (len(sel_obj) > 1):
-            self.report({'ERROR'}, "Too many objects selected. Only select the target sagittal projection plane and try again. Operation cancelled")
-            return {'FINISHED'}
-        
-        sagittal_plane = sel_obj[0]
-
-        if sagittal_plane.get('MuSkeMo_type') != 'PROJECTION_PLANE':
-            self.report({'ERROR'}, "Selected object is not a PROJECTION_PLANE. Select the target sagittal projection plane and try again. Operation cancelled")
+        if not sagittal_plane:
+            self.report({'ERROR'}, "You forgot to designate a target sagittal projection plane. Operation cancelled")
             return {'FINISHED'}
 
-        ## Check if the stride_start_frame was set, and if not, throw an error
+        ## Check if the pk_stride_start_frame was set, and if not, throw an error
 
-        if 'stride_start_frame' not in muskemo:
+        if 'pk_stride_start_frame' not in muskemo:
             self.report({'ERROR'}, "You didn't specify at what frame the stride starts.")
             return {'CANCELLED'}
         else:
-            frame_number = muskemo.stride_start_frame
+            frame_number = muskemo.pk_stride_start_frame
 
 
         ## get the ground plane
@@ -300,20 +305,21 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
         
 
         ## The footfall landmarks must be coplanar with the groundplane, this means that their Z position in the ground plane frame must be zero. We check this explicitly.
+        groundPlane_wm = groundPlane.matrix_world
 
-        tolerance = 1e-4 #
-        if abs((groundPlane.matrix_world.transposed() @ FootFall1LM.matrix_world.translation)[2]) > tolerance:
+        tolerance = 1e-6 #
+        if abs((groundPlane_wm.transposed() @ (FootFall1LM.matrix_world.translation - groundPlane_wm.translation))[2]) > tolerance:
             self.report({'ERROR'}, "Footfall landmark 1 does not appear to be projected onto the fitted groundplane. Double check its position and ensure center snapping is on.")
             return {'FINISHED'}
         
-        if abs((groundPlane.matrix_world.transposed() @ FootFall2LM.matrix_world.translation)[2]) > tolerance:
+        if abs((groundPlane_wm.transposed() @ (FootFall2LM.matrix_world.translation - groundPlane_wm.translation))[2]) > tolerance:
             self.report({'ERROR'}, "Footfall landmark 2 does not appear to be projected onto the fitted groundplane. Double check its position and ensure center snapping is on.")
             return {'FINISHED'}
         
         # set current frame
 
         if frame_number in list(sagittal_plane['stride_start_frames']):
-            self.report({'ERROR'}, "You selected the same frame number for the stride start as one of the previous strides. Double check your stride frame start. Operation cancelled.")
+            self.report({'ERROR'}, "You selected the same frame number for this new stride start as one of the previous strides. Double check your stride frame start. Operation cancelled.")
             return {'FINISHED'}
 
         bpy.context.scene.frame_set(frame_number)
@@ -367,9 +373,9 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
         sagittal_plane['current_stride'] = frame_number
 
         # append stride start frames
-        stride_start_frames = list(sagittal_plane['stride_start_frames'])
-        stride_start_frames.append(frame_number)
-        sagittal_plane['stride_start_frames'] = stride_start_frames
+        pk_stride_start_frames = list(sagittal_plane['stride_start_frames'])
+        pk_stride_start_frames.append(frame_number)
+        sagittal_plane['stride_start_frames'] = pk_stride_start_frames
         
 
         #set keyframes for the plane
@@ -394,8 +400,8 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
 
         
 
-        ## unset the stride_start_frame input
-        muskemo.property_unset("stride_start_frame")
+        ## unset the pk_stride_start_frame input
+        muskemo.property_unset("pk_stride_start_frame")
 
         ## reset FF1 and FF2 landmark objects
         muskemo.pk_FF1_landmark = None
@@ -413,10 +419,103 @@ class CreateAnimatedLandmarkOperator(Operator):
 
         muskemo = bpy.context.scene.muskemo
 
+        landmark_radius = muskemo.landmark_radius
+        colname =muskemo.pk_animated_landmark_collection
+        
+        sagittal_plane = muskemo.pk_target_projection_plane
+
+        if not sagittal_plane:
+            self.report({'ERROR'}, "You forgot to designate a target sagittal projection plane. Operation cancelled")
+            return {'FINISHED'}
+
+       
+        ## get the desired object name
+        landmark_name = muskemo.pk_animated_landmark_name
+
+        if not landmark_name:
+            self.report({'ERROR'}, "Type in a desired name for the animated landmark and try again.")
+            return {'FINISHED'}
+        
+        if landmark_name in bpy.data.objects:
+            self.report({'ERROR'}, "You tried to create a new animated landmark with the name '" + landmark_name + "', but an object with that name already exists. Choose a unique name.")
+            return {'FINISHED'}
+        
+
+        #Check if the target landmark position is actually projected onto the plane
+        target_loc = sagittal_plane.matrix_world.translation
+
+        
+
+        from .create_animated_landmark_func import create_animated_landmark
+
+
+        create_animated_landmark(landmark_name = landmark_name, 
+                        landmark_radius =landmark_radius, 
+                        collection_name = colname, 
+                        pos_in_global = target_loc, 
+                        is_global = True, 
+                        parent_body = sagittal_plane.name)
+        
+        ###  
+        
+        
+        ### Empty the landmark name input
+
+        muskemo.pk_animated_landmark_name = ''
+
         
         return {'FINISHED'}
 
+## turn on recommended snap settings Operator
 
+## Add keyframe to animated landmarks
+class AddKeyframeAnimatedLandmarksOperator(Operator):
+    bl_idname = "pktoolbox.add_keyframe_animated_landmark"
+    bl_label = "Add keyframes to one or more ANIMATED_LANDMARKs in the current position."
+    bl_description = "Add keyframes to one or more ANIMATED_LANDMARKs in the current position."
+    bl_options = {"UNDO"} #enable undoing
+        
+    def execute(self, context):
+
+        muskemo = bpy.context.scene.muskemo
+
+        keyframe_mode = muskemo.pk_keyframe_mode
+        colname = muskemo.pk_animated_landmark_collection
+        
+        target_plane = muskemo.pk_target_projection_plane
+
+        if not target_plane:
+            self.report({'ERROR'}, "You forgot to designate a target projection plane. Operation cancelled")
+            return {'FINISHED'}
+
+
+        if keyframe_mode == 'All': #Get all the animated landmarks in the collection
+            landmarks = [x for x in bpy.data.collections[colname].objects if x.get("MuSkeMo_type") == 'ANIMATED_LANDMARK']
+
+
+        elif keyframe_mode == 'Selected only': #Get the selected animated landmarks
+            sel_obj = bpy.context.selected_objects  #should be the only the projection plane
+            landmarks = [x for x in sel_obj if x.get("MuSkeMo_type") == 'ANIMATED_LANDMARK']
+
+        for landmark in landmarks:
+            
+            plane_WM = target_plane.matrix_world
+       
+            plane_pos_glob = plane_WM.translation
+            plane_bRg = plane_WM.to_3x3().transposed() #global to local frame of the sagittal plane
+            
+            target_loc = landmark.matrix_world.translation
+            tolerance = 1e-6 #
+
+            if abs((plane_bRg @ (target_loc - plane_pos_glob))[2]) >tolerance:
+                self.report({'ERROR'}, "Animated Landmark with name '" + landmark.name +  "' does not appear to be projected onto the target plane. Did you have snapping on when positioning the animated landmark? Operation cancelled.")
+                return {'FINISHED'}
+            ## keyframe the object
+
+            landmark.keyframe_insert(data_path='location')
+
+        
+        return {'FINISHED'}
 
 
 ## Panels
@@ -437,16 +536,26 @@ class VIEW3D_PT_PKToolbox_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conven
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
-        
+
+
+class VIEW3D_PT_PKToolbox_create_projection_plane_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+    bl_idname = 'VIEW3D_PT_PKToolbox_create_projection_plane_subpanel'
+    bl_label = "Create projection plane"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_PKToolbox_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
+    
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
         ### selected meshes
 
-        from .selected_objects_panel_row_func import CreateSelectedObjRow
-
-
         
         
-        ### Create sagittal projection plane
-
         ## Footfall 1 landmark
         box = layout.box()
         row = box.row()
@@ -466,26 +575,39 @@ class VIEW3D_PT_PKToolbox_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conven
         ## Create sagittal projection plane
         row = box.row()
         split = row.split(factor = 1/2)
-        split.prop(muskemo, "sagittal_projection_plane_name", text = "Name")
+        split.prop(muskemo, "pk_sagittal_projection_plane_name", text = "Name")
         
-        if 'stride_start_frame' not in muskemo:
+        if 'pk_stride_start_frame' not in muskemo:
             split.alert = True
-        split.prop(muskemo, "stride_start_frame", text = "Stride starts at frame")
+        split.prop(muskemo, "pk_stride_start_frame", text = "Stride starts at frame")
         split.alert = False
 
         row = box.row()
         row.operator("pktoolbox.create_sagittal_projection_plane", text = "Create sagittal projection plane")
 
 
-        ### Add stride to sagittal projection plane
+class VIEW3D_PT_PKToolbox_add_stride_projection_plane_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
 
+    bl_idname = 'VIEW3D_PT_PKToolbox_add_stride_projection_plane_subpanel'
+    bl_label = "Add stride to projection plane"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_PKToolbox_panel"
+    bl_options = {'DEFAULT_CLOSED'}
 
-        ### Create sagittal projection plane
-
+    def draw(self, context): 
+        
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+    
         ## Footfall 1 landmark
         box = layout.box()
         row = box.row()
-        CreateSelectedObjRow('PROJECTION_PLANE', row)
+        split = row.split(factor = 1/2)
+        split.label(text="Target projection plane")
+        split.prop(muskemo, "pk_target_projection_plane", text="")
+        
         row = box.row()
         split = row.split(factor = 1/2)
         split.label(text="Footfall 1 landmark")
@@ -503,13 +625,68 @@ class VIEW3D_PT_PKToolbox_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conven
         ## Create sagittal projection plane
         row = box.row()
         
-        if 'stride_start_frame' not in muskemo:
+        if 'pk_stride_start_frame' not in muskemo:
             row.alert = True
-        row.prop(muskemo, "stride_start_frame", text = "Stride starts at frame")
+        row.prop(muskemo, "pk_stride_start_frame", text = "Stride starts at frame")
         row.alert = False
 
         row = box.row()
         row.operator("pktoolbox.add_stride_sagittal_projection_plane", text = "Add stride to sagittal projection plane")
 
+class VIEW3D_PT_PKToolbox_Animated_landmark_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
+    #This panel inherits from the class VIEW3D_PT_MuSkeMo
+
+    bl_idname = 'VIEW3D_PT_PKToolbox_create_animated_landmark_subpanel'
+    bl_label = "Animated landmarks"  # found at the top of the Panel
+    bl_context = "objectmode"
+    bl_parent_id = "VIEW3D_PT_PKToolbox_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context): 
         
-       
+        layout = self.layout
+        scene = context.scene
+        muskemo = scene.muskemo
+
+
+        box = layout.box()
+        row = box.row()
+        split = row.split(factor = 1/2)
+        split.label(text="Target projection plane")
+        split.prop(muskemo, "pk_target_projection_plane", text="")
+
+        row = box.row()
+        
+        row.prop(muskemo, "pk_animated_landmark_name", text = "Name")
+        row = box.row()
+        row.operator("pktoolbox.create_animated_landmark", text = "Create animated landmark")
+        row = box.row()
+        row = box.row()
+        row.prop(muskemo, "landmark_radius", text = "Landmark radius")
+
+        ## Add keyframes
+        row = layout.row()
+        row = layout.row()
+        row = layout.row()
+        row.operator("pktoolbox.set_recommended_snapping_settings", text = "Set recommended snapping settings")
+        row = layout.row()
+        row = layout.row()
+        row = layout.row()
+        box = layout.box()
+
+        ## SEL OBJ ANIMATED LANDMARKS
+        row = box.row()
+        row = box.row()
+        split = row.split(factor = 1/2)
+        split.label(text="Target projection plane")
+        split.prop(muskemo, "pk_target_projection_plane", text="")
+
+        row = box.row()
+        split = row.split(factor = 1/3)
+        split.label(text = "Keyframe mode:")
+        
+        sub = split.row()
+        sub.prop(muskemo, "pk_keyframe_mode", expand=True)
+
+        row = box.row()
+        row.operator("pktoolbox.add_keyframe_animated_landmark", text = "Add keyframe to animated landmarks")
