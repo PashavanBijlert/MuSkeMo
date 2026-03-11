@@ -1,14 +1,14 @@
 bl_info = {
-    "name" : "MuSkeMo",
+    "name" : "MuSkeMo - PKToolbox",
     "author" : "Pasha van Bijlert",
     "author_email" : "pasha.vanbijlert@naturalis.nl",
-    "description" : "Build, visualize, and analyze musculoskeletal models",
+    "description" : "Build, visualize, and analyze musculoskeletal models. Photogrammetry Kinematics Toolbox branch of MuSkeMo",
     "blender" : (4, 0, 0),
     "version" : (0, 9, 82),
     "location" : "",
-    "warning" : "",
+    "warning" : "Photogrammetry Kinematics Toolbox branch of MuSkeMo",
     "category" : "Physics",
-    "doc_url" : "https://github.com/PashavanBijlert/MuSkeMo",
+    "doc_url" : "https://github.com/PashavanBijlert/MuSkeMo/tree/PKtoolbox",
     "tracker_url" : "https://github.com/PashavanBijlert/MuSkeMo/issues",
     }
 
