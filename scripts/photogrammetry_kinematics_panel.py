@@ -641,8 +641,17 @@ class VIEW3D_PT_PKToolbox_Animated_landmark_subpanel(VIEW3D_PT_MuSkeMo,Panel):  
         split.prop(muskemo, "pk_target_projection_plane", text="")
 
         row = box.row()
-        
-        row.prop(muskemo, "pk_animated_landmark_name", text = "Name")
+        split = row.split(factor = 1/2)
+        split.label(text = "Animated landmark name")
+        split.prop(muskemo, "pk_animated_landmark_name", text = "")
+
+        row = box.row()
+        row = box.row()
+        split = row.split(factor = 1/2)
+        split.label(text = "Animated landmark collection")
+        split.prop(muskemo, "pk_animated_landmark_collection", text = "")
+
+
         row = box.row()
         if muskemo.pk_number_of_landmarks ==1:
             row.operator("pktoolbox.create_animated_landmark", text = "Create animated landmark")

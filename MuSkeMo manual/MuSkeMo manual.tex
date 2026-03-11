@@ -585,6 +585,7 @@ For an arbitrary point \(p\) expressed in \(\mathcal{G}\), MuSkeMo computes the 
 
 \begin{equation}
 \vec{p}_{\mathcal{B}} = {}^{\mathcal{B}} \mathbf{R}_{\mathcal{G}} \; (\vec{p}_{\mathcal{G}} - \vec{v}_{\mathcal{G}})
+\label{eq:localposition}
 \end{equation}
 
 For an arbitrary matrix \(\mathbf{I}\) expressed in \(\mathcal{G}\) (e.g., an inertial tensor with respect to the body COM), MuSkeMo computes the transformation to \(\mathcal{B}\) as follows \cite{valleryAdvancedDynamics2019}:
@@ -794,6 +795,29 @@ The reflection panel enables symmetric model construction, by only constructing 
 \textbf{Warning:} All the reflection functions use a case-sensitive string search to check whether the side string is at the end of object's name. Because this can potentially cause conflicts (e.g., the name "dorsal\_rib\_l" contains both '\_l' and '\_r'), MuSkeMo only looks for the side string at the end of the object name. Because it is impossible to account for all naming conventions, a workaround can be to place the target component in its own collection and temporarily changing the name(s). In particular with muscles, where each point is parented to a body with a HOOK modifier (see \ref{sec:muscle}), conflicts may need to be resolved manually.
 
 Muscle point positions are reflected by multiplying the relevant component by -1, depending on which reflection plane is chosen. All other positional data are reflected by defining reflection matrix (a unit matrix with one diagonal equal to -1). Orientations are reflected by enacting a change of basis with the reflection matrix, using equation \ref{eq:similaritytransformation}.
+
+\subsection{Photogrammetry Kinematics Toolbox}
+\label{sec:pktoolbox}
+The Photogrammetry Kinematics Toolbox is a collection of features aimed at acquiring kinematic and spatiotemporal (stride length) data using photogrammetry. This panel is currently under development, and will be merged into MuSkeMo once testing and validation has been completed.
+\subsubsection{Setting up a scene}
+The toolbox is meant to be used on photogrammetry data acquired from videos, specifically: a mesh or pointcloud reconstruction, combined with camera positions and orientations of each video frame. There are many programs that allow you to perform photogrammetry, and it is possible to import photogrammetric reconstructions into Blender using the \href{https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer?tab=readme-ov-file}{Photogrammetry Importer} addon developed by Bullinger et al. \cite{bullingerPhotogrammetrybasedFrameworkFacilitate2021}.
+
+\subsubsection{Workflow}
+If using the Photogrammetry Importer addon, you can delete the individual cameras, select the ``animated camera'', right click, and hit ``set active camera''. Pressing the ``0'' key will now provide the undistorted camera-view, and pressing left and right on the keyboard will cycle through the frames in the timeline. The camera view is projected onto the mesh reconstruction of the environment. Using the overall direction of the animal with respect to its environment, combined with the assumption that its body was mostly vertically oriented in the frontal plane, we can construct (para-)sagittal plane onto which we can project the joint positions as viewed through the camera. This will provide us with 2D joint positions, with perspective distortions corrected using photogrammetry.
+
+The steps are:
+
+\begin{enumerate}
+\item Fit a plane through the point cloud or mesh of the ground acquired using photogrammetry, using MuSkeMo's fitting tools (sec. \ref{sec:meshtools} and sec. \ref{sec:newmeshselportion}). This will be the ground plane.
+\item While looking through the camera, place normal LANDMARKs (sec. \ref{sec:landmarkpanel}) on the ground plane corresponding to successive footfalls of the same foot (minimum 2). Blender's projections using the 3D cursor are not very accurate, so hit the button ``Set recommended snapping settings'', then manually replace the LANDMARKs by selecting them and pressing ``G''.
+\item Create a sagittal PROJECTION\_PLANE using the button in the panel. This fits a plane through the two succesive footfalls, perpendicular to the ground. Ensure that you select the correct starting frame - it should correspond to initial contact of the first footfall.
+If your plane is upside down (meaning Y is downwards), undo this and flip the ground plane by 180 degrees about its X or Y axes.
+\item Create one or multiple ANIMATED\_LANDMARKs. Starting at initial contact, once again looking through the camera (press ``0''), sequentially place all the ANIMATED\_LANDMARKs in the desired positions, and press ``Add keyframe to animated landmarks''. Repeat this for each frame in the stride. The keyframe button can act on all ``ANIMATED\_LANDMARKS'' in the designated collection, or on the ones manually selected. Use the recommended snapping settings.
+\item If desired, add as many strides to the sagittal plane, as long as they are in a different orientation and position as the previous ones. Each stride should start at the initial contact of a limb.
+\item Export the ANIMATED\_LANDMARKS using the Export panel (sec. \ref{sec:exportpanel}). The landmark positions are expressed in the reference frame of the projection plane using eq. \ref{eq:localposition}. If the z-coordinate is not zero (meaning the point is not correctly projected onto the plane), the exporter warns the user and does not export the data.
+\end{enumerate}
+
+
 
 \subsection{MuSkeMo utilities}
 \label{sec:muskemoutilities}
@@ -1131,6 +1155,28 @@ Just like JOINTS, WRAPS have parent bodies, and orientations and positions with 
     \item \texttt{wrap\_type}. Currently only 'Cylinder'.
 \end{itemize}
  
+\subsection{Photogrammetry Kinematics Toolbox}
+\label{sec:pktoolboxdatatypes}
+The Photogrammetry Kinematics Toolbox adds several datatypes to MuSkeMo that behave differently from the normal datatypes, because they are intended to be animated using keyframes (see sec. \ref{sec:pktoolbox}).
+
+\subsubsection{PROJECTION\_PLANE}
+This is a (para)sagittal plane constructed from the footfall positions and a fitted ground plane (see sec. \ref{sec:pktoolbox}). It stores the following information:
+
+\begin{itemize}
+\item \texttt{current\_stride}. This keyframed property keeps track of strides. This property starts at 1 (keyframed at the frame number at which initial contact occurs), and increases in steps of 1 after each additional stride that is added.
+\item \texttt{stride\_start\_frames}. This is a list with the frame numbers at which each sequential frame starts.
+\end{itemize}
+
+The underlying object type in Blender is a planar mesh.
+
+\subsubsection{PROJECTION\_PLANE\_FRAME}
+
+Unlike MuSkeMo's regular FRAMEs (sec. \ref{sec:frame}), PROJECTION\_PLANE\_FRAMEs are parented directly to a PROJECTION\_PLANE. This frame makes it easy to diagnose whether the projection plane is upside down (with y pointing downwards). These frames have a \texttt{parent\_plane}, which is the PROJECTION\_PLANE.
+
+\subsubsection{ANIMATED\_LANDMARK}
+
+Unlike MuSkeMo's regular LANDMARKs (sec. \ref{sec:landmark}), ANIMATED\_LANDMARKs are parented directly to a PROJECTION\_PLANE. The position of these landmarks is keyframed (while projecting onto plane), and during export, the 2D position with respect to the plane is exported (see sec. \ref{sec:pktoolbox}).
+
 % Start the appendix
 \appendix
 % Redefine the section numbering style for the appendix to use Roman numerals and the word "Appendix"
@@ -1181,7 +1227,7 @@ Rotation matrices are orthogonal (the columns and rows are orthogonal unit vecto
 \end{equation}
 
 
-So OpenSim, MuSkeMo, SCONE, etc., all implement Euler angles using an intrinsic (body-fixed), active (rotating the object) convention, in XYZ-order. Blender itself also implements Euler angles, but uses the convention of space-fixed (extrinsic) rotations. \textbf{As a result, what Blender refers to as ZYX-Euler angles is the same rotation matrix as the body-fixed XYZ-Euler angles used by MuSkeMo, OpenSim, SCONE, etc.}
+So OpenSim, MuSkeMo, SCONE, etc., all implement Euler angles using an intrinsic (body-fixed), active (rotating the object) convention, in XYZ-order. Blender itself also implements Euler angles, but uses the convention of space-fixed (extrinsic) rotations. \textbf{As a result, the matrix referred to by Blender as ``ZYX-Euler angles'' is the same rotation matrix as the body-fixed XYZ-Euler angles used by MuSkeMo, OpenSim, SCONE, etc.}
 
 \subsection{Understanding decomposed successive rotations}
 
