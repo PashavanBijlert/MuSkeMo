@@ -644,7 +644,10 @@ class VIEW3D_PT_PKToolbox_Animated_landmark_subpanel(VIEW3D_PT_MuSkeMo,Panel):  
         
         row.prop(muskemo, "pk_animated_landmark_name", text = "Name")
         row = box.row()
-        row.operator("pktoolbox.create_animated_landmark", text = "Create animated landmark")
+        if muskemo.pk_number_of_landmarks ==1:
+            row.operator("pktoolbox.create_animated_landmark", text = "Create animated landmark")
+        else:
+            row.operator("pktoolbox.create_animated_landmark", text = "Create animated landmarks")    
         row = box.row()
         row = box.row()
         row.prop(muskemo, "pk_number_of_landmarks", text = "Number of landmarks")

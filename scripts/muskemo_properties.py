@@ -1172,6 +1172,7 @@ class MuSkeMoProperties(PropertyGroup):
         name="Number of landmarks",
         description="How many animated landmarks would you like to create? If you create more than one, the landmarks are automatically numbered.",
         default = 1,
+        min = 1,
         )
     
     pk_keyframe_mode: EnumProperty(
