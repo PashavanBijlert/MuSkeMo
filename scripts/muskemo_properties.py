@@ -1163,10 +1163,16 @@ class MuSkeMoProperties(PropertyGroup):
     
     pk_animated_landmark_name: StringProperty(
             name="Animated landmark name",
-            description="Desired name of the animated landmark. Suggested to name after the morphological landmark, e.g. 'hip_r'",
+            description="Desired name of the animated landmark. If creating individual landmarks, you can name it after the morphological landmark, e.g. 'hip_r'. If creating multiple, the landmarks automatically get a number (e.g., 'pt7')",
             default="",
             maxlen=1024,
             )
+    
+    pk_number_of_landmarks: IntProperty(
+        name="Number of landmarks",
+        description="How many animated landmarks would you like to create? If you create more than one, the landmarks are automatically numbered.",
+        default = 1,
+        )
     
     pk_keyframe_mode: EnumProperty(
             name="Keyframe mode",

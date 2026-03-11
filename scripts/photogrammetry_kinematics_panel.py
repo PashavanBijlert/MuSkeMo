@@ -401,33 +401,45 @@ class CreateAnimatedLandmarkOperator(Operator):
             self.report({'ERROR'}, "You forgot to designate a target sagittal projection plane. Operation cancelled")
             return {'FINISHED'}
 
-       
         ## get the desired object name
         landmark_name = muskemo.pk_animated_landmark_name
+
+        number_of_landmarks = muskemo.pk_number_of_landmarks
+
 
         if not landmark_name:
             self.report({'ERROR'}, "Type in a desired name for the animated landmark and try again.")
             return {'FINISHED'}
         
-        if landmark_name in bpy.data.objects:
-            self.report({'ERROR'}, "You tried to create a new animated landmark with the name '" + landmark_name + "', but an object with that name already exists. Choose a unique name.")
-            return {'FINISHED'}
+        if number_of_landmarks == 1: #if one landmark
+            
+            landmark_names = [landmark_name]
+        else: #multiple landmarks
+            landmark_names = [landmark_name + str(x+1) for x in range(number_of_landmarks)]    
+            
+        for lm_name in landmark_names:
+            if lm_name in bpy.data.objects:
+                self.report({'ERROR'}, "You tried to create a new animated landmark with the name '" + lm_name + "', but an object with that name already exists. Choose a unique name.")
+                return {'FINISHED'}
         
-
-        #Check if the target landmark position is actually projected onto the plane
-        target_loc = sagittal_plane.matrix_world.translation
-
+        base_loc = sagittal_plane.matrix_world.translation
+        x_dir = sagittal_plane.matrix_world.to_3x3().col[0]
+        spacing = 3 * landmark_radius
         
 
         from .create_animated_landmark_func import create_animated_landmark
 
+        for ind,lm_name in enumerate(landmark_names):
+            
+            offset = (ind - (number_of_landmarks - 1) / 2) * spacing #equally space around midpoint of the plane.
+            target_loc = base_loc + offset*x_dir
 
-        create_animated_landmark(landmark_name = landmark_name, 
-                        landmark_radius =landmark_radius, 
-                        collection_name = colname, 
-                        pos_in_global = target_loc, 
-                        is_global = True, 
-                        parent_body = sagittal_plane.name)
+            create_animated_landmark(landmark_name = lm_name, 
+                            landmark_radius =landmark_radius, 
+                            collection_name = colname, 
+                            pos_in_global = target_loc, 
+                            is_global = True, 
+                            parent_body = sagittal_plane.name)
         
         ###  
         
@@ -635,6 +647,7 @@ class VIEW3D_PT_PKToolbox_Animated_landmark_subpanel(VIEW3D_PT_MuSkeMo,Panel):  
         row.operator("pktoolbox.create_animated_landmark", text = "Create animated landmark")
         row = box.row()
         row = box.row()
+        row.prop(muskemo, "pk_number_of_landmarks", text = "Number of landmarks")
         row.prop(muskemo, "landmark_radius", text = "Landmark radius")
 
         ## Add keyframes
