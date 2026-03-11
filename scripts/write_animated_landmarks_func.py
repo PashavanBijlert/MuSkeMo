@@ -60,7 +60,7 @@ def write_animated_landmarks(context, filepath, collection_name, delimiter, obj_
             tolerance = 1e-6
             if abs(landmark_pos_reprojected[2]) > tolerance:
 
-                self.report({'ERROR'}, "Animated landmark '" + alm.name + "' is not projected onto plane '" + proj_plane.name +  "' at frame no. " + str(frame)  + ". Ensure that object snapping is one when keyframing the animated landmarks. Export cancelled")
+                self.report({'ERROR'}, "Animated landmark '" + alm.name + "' is not projected onto plane '" + proj_plane.name +  "' at frame no. " + str(frame)  + ". Ensure that object snapping is on when keyframing the animated landmarks. Export cancelled")
                 return {'FINISHED'}
 
             x_pos = landmark_pos_reprojected[0]
