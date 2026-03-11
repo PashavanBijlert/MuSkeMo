@@ -407,7 +407,31 @@ class ExportGeometryFolderOperator(Operator):
 
         self.report({'INFO'}, "Exported " + str(len(objects)) + " geometries to the '" + geo_folder + "' subdirectory")
         return {'FINISHED'}
+
+## export landmarks markers
+class ExportAnimatedLandmarksOperator(Operator, ExportHelperCustom): #inherits from ExportHelperCustom class
+    bl_description = "Export all the animated landmarks from the designated collection to a .csv or other text file"
+    bl_idname = "export.export_animated_landmarks"
+    bl_label = "Export animated landmarks"
+
+    def invoke(self, context, event):
+        
+        self.default_filename = bpy.context.scene.muskemo.pk_animated_landmark_collection  #set the default filename to the collection name, make it available for the "invoke" command of super class "exporthelpercustom"
+
+        return super().invoke(context, event)
+        
     
+    
+    def execute(self, context):
+        from .write_animated_landmarks_func import write_animated_landmarks
+        
+        delimiter = bpy.context.scene.muskemo.delimiter #user assigned 
+        animated_landmark_colname = bpy.context.scene.muskemo.pk_animated_landmark_collection
+        
+        write_animated_landmarks(context, self.filepath, animated_landmark_colname, delimiter, 'landmark', self.number_format, self)
+        return {'FINISHED'}
+
+
 
 ### The panels
 
@@ -588,6 +612,22 @@ class VIEW3D_PT_geometry_folder_subpanel(VIEW3D_PT_MuSkeMo, Panel):
         split2 = split1.split(factor=0.5)
         split2.prop(muskemo, "geometry_collection", text="")
         split2.operator("export.export_geometry_folder", text="Export geometry folder")
+
+## Export landmarks subpanel
+class VIEW3D_PT_export_animated_landmarks_subpanel(VIEW3D_PT_MuSkeMo, Panel):
+    bl_idname = 'VIEW3D_PT_export_animated_landmarks_subpanel'
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export animated landmarks"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        muskemo = context.scene.muskemo
+        row = self.layout.row()
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "pk_animated_landmark_collection", text="")
+        split2.operator("export.export_animated_landmarks", text="Export animated landmarks")
 
 
 ## File export options

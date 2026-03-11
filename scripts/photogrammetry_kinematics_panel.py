@@ -163,26 +163,6 @@ class CreateSagittalProjectionPlaneOperator(Operator):
         sagittal_plane.rotation_mode = 'ZYX'  # Change rotation sequence
         sagittal_plane.matrix_world = world_mat
 
-        ## Create the parent body and attach the ground plane to it
-
-        from .create_body_func import create_body
-
-        pbodyname = sagittal_plane.name + '_pbody'
-
-        if not pbodyname in bpy.data.objects:
-        
-            create_body(name= pbodyname, size = muskemo.axes_size, self = self)
-
-        bpy.ops.object.select_all(action='DESELECT')
-            
-        pbody = bpy.data.objects[pbodyname] 
-        pbody.select_set(True) #select the parent body. 
-        sagittal_plane.select_set(True) #Now a BODY and a mesh are selected
-        bpy.ops.body.attach_visual_geometry() #attach visual geometry
-
-        ## Add sagittal plane to the Projection planes collection
-        bpy.data.collections['Geometry'].objects.unlink(sagittal_plane)
-        bpy.data.collections[collection_name].objects.link(sagittal_plane)
 
         ## Create the frame and assign parent body
 
@@ -194,10 +174,20 @@ class CreateSagittalProjectionPlaneOperator(Operator):
                      gRb = rot_mat)
         
         bpy.ops.object.select_all(action='DESELECT')
+        
         frame_obj = bpy.data.objects[frame_name]
-        frame_obj.select_set(True)
-        pbody.select_set(True)
-        bpy.ops.frame.assign_parent_body()
+        frame_obj['MuSkeMo_type'] = 'PROJECTION_PLANE_FRAME'
+
+        frame_obj.parent = sagittal_plane
+            
+        #this undoes the transformation after parenting
+        frame_obj.matrix_parent_inverse = sagittal_plane.matrix_world.inverted()
+
+        # Write the parent object
+        frame_obj['parent_plane'] = sagittal_plane.name
+        del frame_obj['parent_body']
+        #make it always in front
+        frame_obj.show_in_front = True
 
         ## Assign custom properties
 
@@ -217,19 +207,12 @@ class CreateSagittalProjectionPlaneOperator(Operator):
         for dp in keyframe_datapaths_plane:
             sagittal_plane.keyframe_insert(data_path=dp, frame=frame_number)
 
-        #set keyframes for the frame
-        keyframe_datapaths_frame = [ 'location', 'rotation_euler']
 
-        for dp in keyframe_datapaths_frame:
-           frame_obj.keyframe_insert(data_path=dp, frame=frame_number)
-
-
-        for obj in [sagittal_plane, frame_obj]:
-            action = obj.animation_data.action
-            if action:  # make sure the object has keyframes
-                for fcurve in action.fcurves:
-                    for kp in fcurve.keyframe_points:
-                        kp.interpolation = 'CONSTANT'
+        action = sagittal_plane.animation_data.action
+        if action:  # make sure the object has keyframes
+            for fcurve in action.fcurves:
+                for kp in fcurve.keyframe_points:
+                    kp.interpolation = 'CONSTANT'
 
         ## reset the plane name input
         muskemo.pk_sagittal_projection_plane_name = ''
@@ -364,13 +347,10 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
         ## set transformation mat sagittal plane and frame to the new world mat
         sagittal_plane.matrix_world = world_mat
 
-        frame_obj = bpy.data.objects[bpy.data.objects[sagittal_plane['Attached to']]['local_frame']]
-        
-        frame_obj.matrix_world = world_mat
-        
+       
         # set current_stride custom property
 
-        sagittal_plane['current_stride'] = frame_number
+        sagittal_plane['current_stride'] = sagittal_plane['current_stride'] +1
 
         # append stride start frames
         pk_stride_start_frames = list(sagittal_plane['stride_start_frames'])
@@ -384,19 +364,12 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
         for dp in keyframe_datapaths_plane:
             sagittal_plane.keyframe_insert(data_path=dp, frame=frame_number)
 
-        #set keyframes for the frame
-        keyframe_datapaths_frame = [ 'location', 'rotation_euler']
-
-        for dp in keyframe_datapaths_frame:
-           frame_obj.keyframe_insert(data_path=dp, frame=frame_number)
-
-
-        for obj in [sagittal_plane, frame_obj]:
-            action = obj.animation_data.action
-            if action:  # make sure the object has keyframes
-                for fcurve in action.fcurves:
-                    for kp in fcurve.keyframe_points:
-                        kp.interpolation = 'CONSTANT'
+       
+        action = sagittal_plane.animation_data.action
+        if action:  # make sure the object has keyframes
+            for fcurve in action.fcurves:
+                for kp in fcurve.keyframe_points:
+                    kp.interpolation = 'CONSTANT'
 
         
 
@@ -466,7 +439,6 @@ class CreateAnimatedLandmarkOperator(Operator):
         
         return {'FINISHED'}
 
-## turn on recommended snap settings Operator
 
 ## Add keyframe to animated landmarks
 class AddKeyframeAnimatedLandmarksOperator(Operator):
@@ -537,6 +509,9 @@ class VIEW3D_PT_PKToolbox_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conven
         scene = context.scene
         muskemo = scene.muskemo
 
+        row = layout.row()
+        row.operator("pktoolbox.set_recommended_snapping_settings", text = "Set recommended snapping settings")
+        row = layout.row()
 
 class VIEW3D_PT_PKToolbox_create_projection_plane_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’
     #This panel inherits from the class VIEW3D_PT_MuSkeMo
@@ -552,8 +527,6 @@ class VIEW3D_PT_PKToolbox_create_projection_plane_subpanel(VIEW3D_PT_MuSkeMo,Pan
         layout = self.layout
         scene = context.scene
         muskemo = scene.muskemo
-        ### selected meshes
-
         
         
         ## Footfall 1 landmark
@@ -667,9 +640,7 @@ class VIEW3D_PT_PKToolbox_Animated_landmark_subpanel(VIEW3D_PT_MuSkeMo,Panel):  
         ## Add keyframes
         row = layout.row()
         row = layout.row()
-        row = layout.row()
-        row.operator("pktoolbox.set_recommended_snapping_settings", text = "Set recommended snapping settings")
-        row = layout.row()
+        
         row = layout.row()
         row = layout.row()
         box = layout.box()

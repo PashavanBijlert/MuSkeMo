@@ -105,12 +105,14 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
                                     VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
                                     VIEW3D_PT_export_landmarks_subpanel, VIEW3D_PT_export_contacts_subpanel,
                                     VIEW3D_PT_geometry_folder_subpanel,
+                                    VIEW3D_PT_export_animated_landmarks_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
                                     ExportMusclesOperator,ExportWrappingOperator,
                                     ExportMeshInPropsOperator,
                                     ExportFramesOperator, ExportLandmarksOperator,
                                     ExportContactsOperator, ExportGeometryFolderOperator,
+                                    ExportAnimatedLandmarksOperator,
                                     SelectModelExportDirectoryOperator,
                                     )
 
@@ -260,12 +262,14 @@ classes = (  #Global settings panel
                                     VIEW3D_PT_export_mesh_inprops_subpanel, VIEW3D_PT_export_frames_subpanel,
                                     VIEW3D_PT_export_landmarks_subpanel, VIEW3D_PT_export_contacts_subpanel,
                                     VIEW3D_PT_geometry_folder_subpanel,
+                                    VIEW3D_PT_export_animated_landmarks_subpanel,
                                     VIEW3D_PT_export_options_subpanel,
                                     ExportBodiesOperator, ExportJointsOperator,
                                     ExportMusclesOperator, ExportWrappingOperator,
                                     ExportMeshInPropsOperator,
                                     ExportFramesOperator, ExportLandmarksOperator,
                                     ExportContactsOperator, ExportGeometryFolderOperator,
+                                    ExportAnimatedLandmarksOperator,
                                     SelectModelExportDirectoryOperator,
 
             #import panel
