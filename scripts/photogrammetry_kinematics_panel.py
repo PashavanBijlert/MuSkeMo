@@ -101,7 +101,14 @@ class CreateSagittalProjectionPlaneOperator(Operator):
         ## The footfall landmarks must be coplanar with the groundplane, this means that their Z position in the ground plane frame must be zero. We check this explicitly.
         groundPlane_wm = groundPlane.matrix_world
 
-        tolerance = 1e-6 #
+        #global positions of the landmarks
+        FF1pos = FootFall1LM.matrix_world.translation
+        FF2pos = FootFall2LM.matrix_world.translation
+
+        tolerance  = (FF1pos-FF2pos).length/40000
+
+        muskemo.pk_projection_tolerance = tolerance
+
         if abs((groundPlane_wm.transposed() @ (FootFall1LM.matrix_world.translation - groundPlane_wm.translation))[2]) > tolerance:
             self.report({'ERROR'}, "Footfall landmark 1 does not appear to be projected onto the fitted groundplane. Double check its position and ensure center snapping is on.")
             return {'FINISHED'}
@@ -124,9 +131,6 @@ class CreateSagittalProjectionPlaneOperator(Operator):
         #Make sure the collection is active
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[collection_name]
     
-        #global positions of the landmarks
-        FF1pos = FootFall1LM.matrix_world.translation
-        FF2pos = FootFall2LM.matrix_world.translation
 
         ## Construct the orientation of the sagittal plane
         x_dir = (FF2pos - FF1pos)
@@ -137,8 +141,11 @@ class CreateSagittalProjectionPlaneOperator(Operator):
 
         z_dir = x_dir.cross(y_dir)
 
-        if y_dir.dot(Vector((0,0,1)))<0:
-            self.report({'ERROR'}, "Your ground plane may be upside down. Check whether the y-axis of your new sagittal plane is 'up'. If not, undo, and use 'flip plane' on your ground plane.")
+        ## Check ground plane orientation wrt camera orientation
+        camera_y = bpy.context.scene.camera.matrix_world.to_3x3().col[1]
+
+        if y_dir.dot(camera_y)<0:
+            self.report({'ERROR'}, "Your ground plane is upside down with respect to the camera view. Check whether the y-axis of your new sagittal plane is 'up'. If not, undo, and use 'flip plane' on your ground plane.")
        
         # Build 3×3 rotation matrix with columns = axes
         rot_mat = Matrix((
@@ -223,6 +230,11 @@ class CreateSagittalProjectionPlaneOperator(Operator):
         ## reset FF1 and FF2 landmark objects
         muskemo.pk_FF1_landmark = None
         muskemo.pk_FF2_landmark = None
+
+        #create timeline marker
+
+        bpy.context.scene.timeline_markers.new("stride 1", frame=frame_number)
+        
         return {'FINISHED'}
 
 class AddStrideSagittalProjectionPlaneOperator(Operator):
@@ -290,7 +302,7 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
         ## The footfall landmarks must be coplanar with the groundplane, this means that their Z position in the ground plane frame must be zero. We check this explicitly.
         groundPlane_wm = groundPlane.matrix_world
 
-        tolerance = 1e-6 #
+        tolerance = muskemo.pk_projection_tolerance
         if abs((groundPlane_wm.transposed() @ (FootFall1LM.matrix_world.translation - groundPlane_wm.translation))[2]) > tolerance:
             self.report({'ERROR'}, "Footfall landmark 1 does not appear to be projected onto the fitted groundplane. Double check its position and ensure center snapping is on.")
             return {'FINISHED'}
@@ -320,8 +332,11 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
 
         z_dir = x_dir.cross(y_dir)
 
-        if y_dir.dot(Vector((0,0,1)))<0:
-            self.report({'ERROR'}, "Your ground plane may be upside down. Check whether the y-axis of your new sagittal plane is 'up'. If not, undo, and use 'flip plane' on your ground plane.")
+        ## Check ground plane orientation wrt camera orientation
+        camera_y = bpy.context.scene.camera.matrix_world.to_3x3().col[1]
+
+        if y_dir.dot(camera_y)<0:
+            self.report({'ERROR'}, "Your ground plane is upside down with respect to the camera view. Check whether the y-axis of your new sagittal plane is 'up'. If not, undo, and use 'flip plane' on your ground plane.")
        
         # Build 3×3 rotation matrix with columns = axes
         rot_mat = Matrix((
@@ -379,6 +394,8 @@ class AddStrideSagittalProjectionPlaneOperator(Operator):
         ## reset FF1 and FF2 landmark objects
         muskemo.pk_FF1_landmark = None
         muskemo.pk_FF2_landmark = None
+
+        bpy.context.scene.timeline_markers.new("stride " + str(sagittal_plane['current_stride']), frame=frame_number)
         return {'FINISHED'}
     
 
@@ -489,7 +506,7 @@ class AddKeyframeAnimatedLandmarksOperator(Operator):
             plane_bRg = plane_WM.to_3x3().transposed() #global to local frame of the sagittal plane
             
             target_loc = landmark.matrix_world.translation
-            tolerance = 1e-6 #
+            tolerance = muskemo.pk_projection_tolerance
 
             if abs((plane_bRg @ (target_loc - plane_pos_glob))[2]) >tolerance:
                 self.report({'ERROR'}, "Animated Landmark with name '" + landmark.name +  "' does not appear to be projected onto the target plane. Did you have snapping on when positioning the animated landmark? Operation cancelled.")
@@ -497,6 +514,12 @@ class AddKeyframeAnimatedLandmarksOperator(Operator):
             ## keyframe the object
 
             landmark.keyframe_insert(data_path='location')
+            
+            #set linear interpolation
+            action = landmark.animation_data.action
+            for fc in action.fcurves:
+                if fc.data_path == "location":
+                    fc.keyframe_points[-1].interpolation = 'LINEAR'
 
         
         return {'FINISHED'}
@@ -523,6 +546,9 @@ class VIEW3D_PT_PKToolbox_panel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conven
 
         row = layout.row()
         row.operator("pktoolbox.set_recommended_snapping_settings", text = "Set recommended snapping settings")
+        row = layout.row()
+
+        row.prop(muskemo, "pk_projection_tolerance")
         row = layout.row()
 
 class VIEW3D_PT_PKToolbox_create_projection_plane_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming convention ‘CATEGORY_PT_name’

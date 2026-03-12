@@ -1190,3 +1190,14 @@ class MuSkeMoProperties(PropertyGroup):
         default="Animated landmarks",
         maxlen=1024,
         )
+
+
+    pk_projection_tolerance: FloatProperty(
+        name="Photogrammetry projection tolerance",
+        description = "The absolute distance (in meters) that landmarks are allowed to deviate from the plane they are meant to be projected on. This is set to stride_length/20000 during Sagittal Plane Creation.",
+        default=1e-4,
+        min=1e-10,
+        soft_max=5e-4,
+        precision = 8,
+        
+    )
