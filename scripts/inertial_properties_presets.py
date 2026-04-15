@@ -9,6 +9,9 @@ InertialPropertiesPresets = {
         "Macaulay 2023 Average (Bird and Non-Avian Sauropsid)": 
         (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"],
          [1.137,  6.235,  1.328,  3.369,  2.411,  2.301,  2.434,  4.820,  2.192,  2.143,  2.135]),
+         "Macaulay 2023 Mixed (Bird and Non-Avian Sauropsid)": 
+        (["head", "neck", "torso", "tail", "humerus", "forearm", "hand", "thigh", "shank", "metatarsus", "pes"],
+         [1.137,  3.825,  1.328,  3.369,  2.411,  2.301,  2.434,  4.820,  1.729,  0.792,  1.716]),
         "Sellers 2012 Large Mammals":
         (["whole_body"],
          [1.206]),
