@@ -72,13 +72,34 @@ def create_wrapgeom(name, geomtype, collection_name,
         )   
 
     elif geomtype == 'Ellipsoid':
-        print('do stuff')
+        if dimensions: #if the user specified dimensions
+            radius_x = dimensions['radius_x']
+            radius_y = dimensions['radius_y']
+            radius_z = dimensions['radius_z']
+
+        else: #otherwise just set default values
+            radius_x = 0.05
+            radius_y = 0.075
+            radius_z = 0.1
+
+
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            radius=1, scale = (radius_x, radius_y, radius_z)
+        )  
 
 
 
     bpy.context.object.name = name #set the name
     bpy.context.object.data.name = name #set the name of the object data
     obj = bpy.data.objects[name]
+
+    if geomtype == 'Ellipsoid': #this bakes the underlying object as an ellipsoid, but we're going to overwrite it with a geometry nodes parametric object anyway
+        
+        bpy.context.view_layer.objects.active = obj
+        obj.select_set(True)
+
+        bpy.ops.object.transform_apply(location=False, rotation=False,scale=True)
+        obj.select_set(False )
 
     #Node tree name, if it exists get it, otherwise create it anew.
 
@@ -116,9 +137,14 @@ def create_wrapgeom(name, geomtype, collection_name,
             
         elif geomtype == 'Ellipsoid':
             #input socket
-            node_tree.interface.new_socket(name = "Radius X", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+            node_tree.interface.new_socket(name = "Radius x", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+            node_tree.interface.new_socket(name = "Radius y", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+            node_tree.interface.new_socket(name = "Radius z", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+            node_tree.interface.new_socket(name = "Ellipsoid resolution", in_out = 'INPUT', socket_type = 'NodeSocketInt')
 
 
+            combine_xyz = node_tree.nodes.new(type='ShaderNodeCombineXYZ')
+            combine_xyz.location = (-600, 0)
 
         group_output = node_tree.nodes.new(type='NodeGroupOutput')
         group_output.location = (400, 0)
@@ -135,10 +161,15 @@ def create_wrapgeom(name, geomtype, collection_name,
         elif geomtype == 'Sphere':
             primitive_object = node_tree.nodes.new(type='GeometryNodeMeshIcoSphere')
             primitive_object.location = (-600, 200)
+            primitive_object.inputs["Subdivisions"].default_value = 3
 
         elif geomtype == 'Ellipsoid':
             primitive_object = node_tree.nodes.new(type='GeometryNodeMeshIcoSphere')
-            primitive_object.location = (-600, 200)    
+            primitive_object.location = (-600, 200)
+            
+             
+
+            
             
         set_material = node_tree.nodes.new(type='GeometryNodeSetMaterial')
         set_material.location = (200, 0)
@@ -173,6 +204,7 @@ def create_wrapgeom(name, geomtype, collection_name,
             NamedAttributeRadius.location = (-400, 300)
             NamedAttributeRadius.inputs["Name"].default_value = 'WrapSphereRadius'
 
+
         elif geomtype == 'Ellipsoid':
 
             #Store named attribute for Radii
@@ -182,13 +214,13 @@ def create_wrapgeom(name, geomtype, collection_name,
 
             #Store named attribute for Radii
             NamedAttributeRadiusY = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
-            NamedAttributeRadiusY.location = (-350, 250)
+            NamedAttributeRadiusY.location = (-300, 250)
             NamedAttributeRadiusY.inputs["Name"].default_value = 'WrapEllipsoidRadiusY'  
 
             #Store named attribute for Radii
             NamedAttributeRadiusZ = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
-            NamedAttributeRadiusZ.location = (-300, 200)
-            NamedAttributeRadiusZ.inputs["Name"].default_value = 'WrapEllipsoidRadiusY'    
+            NamedAttributeRadiusZ.location = (-200, 200)
+            NamedAttributeRadiusZ.inputs["Name"].default_value = 'WrapEllipsoidRadiusZ'    
 
         # Link nodes
         links = node_tree.links
@@ -219,12 +251,25 @@ def create_wrapgeom(name, geomtype, collection_name,
             links.new(NamedAttributeRadius.outputs['Geometry'], transform_geometry.inputs['Geometry'])
                         
         elif geomtype == 'Ellipsoid':
-            print('do stuff')
-            #link three radii sequentially. also create a combine xyz, and plug that into scale input of transform geometry
+            #link ellipsoid output to Named Attribute Radius x
+            links.new(primitive_object.outputs['Mesh'], NamedAttributeRadiusX.inputs['Geometry'])
+
+            #link  Named Attribute Radius x to Named Attribute Radius y
+            links.new(NamedAttributeRadiusX.outputs['Geometry'], NamedAttributeRadiusY.inputs['Geometry'])
+
+            #link  Named Attribute Radius y to Named Attribute Radius z
+            links.new(NamedAttributeRadiusY.outputs['Geometry'], NamedAttributeRadiusZ.inputs['Geometry'])
+
+            #link  Named Attribute Radius z to transform geometry
+            links.new(NamedAttributeRadiusZ.outputs['Geometry'], transform_geometry.inputs['Geometry'])
+
+            #link combine xyz output to transform geometry
+            links.new(combine_xyz.outputs['Vector'], transform_geometry.inputs['Scale'])
+
+
 
         # Update connection to set material
         links.new(transform_geometry.outputs['Geometry'], set_material.inputs['Geometry'])
-        
         
         
         #set output
@@ -251,6 +296,29 @@ def create_wrapgeom(name, geomtype, collection_name,
             # Link group inputs to named attribute
             links.new(group_input.outputs['Radius'], NamedAttributeRadius.inputs["Value"]) 
 
+        elif geomtype == 'Ellipsoid':
+    
+            # Link group inputs to the primitive cylinder
+            links.new(group_input.outputs['Radius x'], combine_xyz.inputs['X'])
+
+            # Link group inputs to named attribute
+            links.new(group_input.outputs['Radius x'], NamedAttributeRadiusX.inputs["Value"])   
+
+            # Link group inputs to the primitive cylinder
+            links.new(group_input.outputs['Radius y'], combine_xyz.inputs['Y'])
+
+            # Link group inputs to named attribute
+            links.new(group_input.outputs['Radius y'], NamedAttributeRadiusY.inputs["Value"])  
+
+            # Link group inputs to the primitive cylinder
+            links.new(group_input.outputs['Radius z'], combine_xyz.inputs['Z'])
+
+            # Link group inputs to named attribute
+            links.new(group_input.outputs['Radius z'], NamedAttributeRadiusZ.inputs["Value"])
+            
+            # link group input to ellipsoid (sphere) subdivision
+            links.new(group_input.outputs['Ellipsoid resolution'], primitive_object.inputs["Subdivisions"])    
+
     ## nNow Add a Geometry Nodes modifier
     modifier = obj.modifiers.new(name="WrapObjMesh", type='NODES')
 
@@ -265,6 +333,12 @@ def create_wrapgeom(name, geomtype, collection_name,
         # Set the radius and depth in the modifier socket
         modifier['Socket_1'] = radius
 
+    if geomtype == 'Ellipsoid':    
+        # Set the radii in the modifier socket
+        modifier['Socket_1'] = radius_x
+        modifier['Socket_2'] = radius_y
+        modifier['Socket_3'] = radius_z
+        modifier['Socket_4'] = 4 #default ellipsoid resolution
 
     ## custom properties for cylinder
     obj['wrap_type'] = geomtype   #to inform the user what type is created
