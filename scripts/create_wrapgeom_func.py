@@ -56,59 +56,107 @@ def create_wrapgeom(name, geomtype, collection_name,
             radius=radius, 
             depth=height, 
             
-        )
+        )   
 
 
-        bpy.context.object.name = name #set the name
-        bpy.context.object.data.name = name #set the name of the object data
-        obj = bpy.data.objects[name]
+    elif geomtype == 'Sphere':
+        
+        if dimensions: #if the user specified dimensions
+            radius = dimensions['radius']
 
-        ### create a geometry node mesh cylinder so that the object dimensions become parametric.
+        else: #otherwise just set default values
+            radius = 1.0
 
-        ## first the node tree
-        obj_type = 'WrapCylinderGeometry' #name of the cylinder node tree.
-        if obj_type in bpy.data.node_groups: #check if the node tree exists, and if so, select it.
-            node_tree= bpy.data.node_groups[obj_type]
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            radius=radius,   
+        )   
+
+    elif geomtype == 'Ellipsoid':
+        print('do stuff')
+
+
+
+    bpy.context.object.name = name #set the name
+    bpy.context.object.data.name = name #set the name of the object data
+    obj = bpy.data.objects[name]
+
+    #Node tree name, if it exists get it, otherwise create it anew.
+
+    if geomtype == 'Cylinder':
+        node_tree_name = 'WrapCylinderGeometry' #name of the cylinder node tree.
+    
+    elif geomtype == 'Sphere':
+        node_tree_name = 'WrapSphereGeometry' #name of the cylinder node tree.
+        
+
+    elif geomtype == 'Ellipsoid':
+        node_tree_name = 'WrapEllipsoidGeometry' #name of the cylinder node tree.
+
+
+    
+    if node_tree_name in bpy.data.node_groups: #check if the node tree exists, and if so, select it.
+        node_tree= bpy.data.node_groups[node_tree_name]
             
-            
-        else: #if it doesn't exist, create it now.
-                
-            node_tree = bpy.data.node_groups.new('WrapCylinderGeometry','GeometryNodeTree')
-            #output socket
-            node_tree.interface.new_socket(name='Geometry', in_out='OUTPUT', socket_type='NodeSocketGeometry')
-            
+        
+    else: #if it doesn't exist, create it now.
+
+       
+        node_tree = bpy.data.node_groups.new(node_tree_name,'GeometryNodeTree')
+        #output socket
+        node_tree.interface.new_socket(name='Geometry', in_out='OUTPUT', socket_type='NodeSocketGeometry')
+        
+        if geomtype == 'Cylinder':
             #input socket
             node_tree.interface.new_socket(name = "Radius", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
             node_tree.interface.new_socket(name = "Height", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
-            
-            
-            group_output = node_tree.nodes.new(type='NodeGroupOutput')
-            group_output.location = (400, 0)
-            
         
+        elif geomtype == 'Sphere':
+            #input socket
+            node_tree.interface.new_socket(name = "Radius", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+            
+        elif geomtype == 'Ellipsoid':
+            #input socket
+            node_tree.interface.new_socket(name = "Radius X", in_out = 'INPUT', socket_type = 'NodeSocketFloat')
+
+
+
+        group_output = node_tree.nodes.new(type='NodeGroupOutput')
+        group_output.location = (400, 0)
         
-            group_input = node_tree.nodes.new(type='NodeGroupInput')
-            group_input.location = (-800, 0)
+    
+    
+        group_input = node_tree.nodes.new(type='NodeGroupInput')
+        group_input.location = (-800, 0)
 
-            primitive_cylinder = node_tree.nodes.new(type='GeometryNodeMeshCylinder')
-            primitive_cylinder.location = (-600, 200)
+        if geomtype == 'Cylinder':
+            primitive_object = node_tree.nodes.new(type='GeometryNodeMeshCylinder')
+            primitive_object.location = (-600, 200)
 
-            set_material = node_tree.nodes.new(type='GeometryNodeSetMaterial')
-            set_material.location = (200, 0)
-            
-                
-            # Addobject info nodes
-            object_info = node_tree.nodes.new(type='GeometryNodeObjectInfo')
-            object_info.location = (-600, -100)
-            object_info.transform_space =  'RELATIVE'
-            
-            # Add a Self Object node
-            self_object = node_tree.nodes.new(type='GeometryNodeSelfObject')
-            self_object.location = (-800, -100)
-            
-            transform_geometry = node_tree.nodes.new(type='GeometryNodeTransform')
-            transform_geometry.location = (0, 0)
+        elif geomtype == 'Sphere':
+            primitive_object = node_tree.nodes.new(type='GeometryNodeMeshIcoSphere')
+            primitive_object.location = (-600, 200)
 
+        elif geomtype == 'Ellipsoid':
+            primitive_object = node_tree.nodes.new(type='GeometryNodeMeshIcoSphere')
+            primitive_object.location = (-600, 200)    
+            
+        set_material = node_tree.nodes.new(type='GeometryNodeSetMaterial')
+        set_material.location = (200, 0)
+        
+            
+        # Addobject info nodes
+        object_info = node_tree.nodes.new(type='GeometryNodeObjectInfo')
+        object_info.location = (-600, -100)
+        object_info.transform_space =  'RELATIVE'
+        
+        # Add a Self Object node
+        self_object = node_tree.nodes.new(type='GeometryNodeSelfObject')
+        self_object.location = (-800, -100)
+        
+        transform_geometry = node_tree.nodes.new(type='GeometryNodeTransform')
+        transform_geometry.location = (0, 0)
+        
+        if geomtype == 'Cylinder':
             #Store named attribute for Radius
             NamedAttributeRadius = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
             NamedAttributeRadius.location = (-400, 300)
@@ -119,95 +167,141 @@ def create_wrapgeom(name, geomtype, collection_name,
             NamedAttributeHeight.location = (-200, 250)
             NamedAttributeHeight.inputs["Name"].default_value = 'WrapCylHeight'
 
-            # Link nodes
-            links = node_tree.links
-            
-            #link self object node to object info node
-            links.new(self_object.outputs['Self Object'], object_info.inputs['Object'])
+        elif geomtype == 'Sphere':
+            #Store named attribute for Radius
+            NamedAttributeRadius = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
+            NamedAttributeRadius.location = (-400, 300)
+            NamedAttributeRadius.inputs["Name"].default_value = 'WrapSphereRadius'
 
-            # Link object info outputs to transform geometry
-            links.new(object_info.outputs['Location'], transform_geometry.inputs['Translation'])
-            links.new(object_info.outputs['Rotation'], transform_geometry.inputs['Rotation'])
+        elif geomtype == 'Ellipsoid':
 
+            #Store named attribute for Radii
+            NamedAttributeRadiusX = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
+            NamedAttributeRadiusX.location = (-400, 300)
+            NamedAttributeRadiusX.inputs["Name"].default_value = 'WrapEllipsoidRadiusX'     
+
+            #Store named attribute for Radii
+            NamedAttributeRadiusY = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
+            NamedAttributeRadiusY.location = (-350, 250)
+            NamedAttributeRadiusY.inputs["Name"].default_value = 'WrapEllipsoidRadiusY'  
+
+            #Store named attribute for Radii
+            NamedAttributeRadiusZ = node_tree.nodes.new(type='GeometryNodeStoreNamedAttribute')
+            NamedAttributeRadiusZ.location = (-300, 200)
+            NamedAttributeRadiusZ.inputs["Name"].default_value = 'WrapEllipsoidRadiusY'    
+
+        # Link nodes
+        links = node_tree.links
+        
+        #link self object node to object info node
+        links.new(self_object.outputs['Self Object'], object_info.inputs['Object'])
+
+        # Link object info outputs to transform geometry
+        links.new(object_info.outputs['Location'], transform_geometry.inputs['Translation'])
+        links.new(object_info.outputs['Rotation'], transform_geometry.inputs['Rotation'])
+
+        if geomtype == 'Cylinder':
             # Link cylinder output to Named Attribute Radius
-            links.new(primitive_cylinder.outputs['Mesh'], NamedAttributeRadius.inputs['Geometry'])
+            links.new(primitive_object.outputs['Mesh'], NamedAttributeRadius.inputs['Geometry'])
 
             # Link Named Attribute Radius to Named attribute height
             links.new(NamedAttributeRadius.outputs['Geometry'], NamedAttributeHeight.inputs['Geometry'])
-                      
+                        
             # Link Named Attribute Height to transform geometry         
             links.new(NamedAttributeHeight.outputs['Geometry'], transform_geometry.inputs['Geometry'])
 
-            # Update connection to set material
-            links.new(transform_geometry.outputs['Geometry'], set_material.inputs['Geometry'])
-            
-            
-            
-            #set output
-            links.new(set_material.outputs['Geometry'], group_output.inputs['Geometry'])
 
-            ## set material 
-            set_material.inputs['Material'].default_value = mat
-
+        elif geomtype == 'Sphere':
+            # Link sphere output to Named Attribute Radius
+            links.new(primitive_object.outputs['Mesh'], NamedAttributeRadius.inputs['Geometry'])
             
+            # Link Named Attribute Radius to Named attribute height to transform geometry
+            links.new(NamedAttributeRadius.outputs['Geometry'], transform_geometry.inputs['Geometry'])
+                        
+        elif geomtype == 'Ellipsoid':
+            print('do stuff')
+            #link three radii sequentially. also create a combine xyz, and plug that into scale input of transform geometry
+
+        # Update connection to set material
+        links.new(transform_geometry.outputs['Geometry'], set_material.inputs['Geometry'])
         
+        
+        
+        #set output
+        links.new(set_material.outputs['Geometry'], group_output.inputs['Geometry'])
+
+        ## set material 
+        set_material.inputs['Material'].default_value = mat
+
+        if geomtype == 'Cylinder':
+    
             # Link group inputs to the primitive cylinder
-            links.new(group_input.outputs['Radius'], primitive_cylinder.inputs['Radius'])
-            links.new(group_input.outputs['Height'], primitive_cylinder.inputs['Depth'])
+            links.new(group_input.outputs['Radius'], primitive_object.inputs['Radius'])
+            links.new(group_input.outputs['Height'], primitive_object.inputs['Depth'])
 
             # Link group inputs to named attribute
             links.new(group_input.outputs['Radius'], NamedAttributeRadius.inputs["Value"])
             links.new(group_input.outputs['Height'], NamedAttributeHeight.inputs["Value"])
 
-        ## nNow Add a Geometry Nodes modifier
-        modifier = obj.modifiers.new(name="WrapObjMesh", type='NODES')
+        elif geomtype == 'Sphere':
     
-        modifier.node_group = node_tree
-        
+            # Link group inputs to the primitive cylinder
+            links.new(group_input.outputs['Radius'], primitive_object.inputs['Radius'])
+
+            # Link group inputs to named attribute
+            links.new(group_input.outputs['Radius'], NamedAttributeRadius.inputs["Value"]) 
+
+    ## nNow Add a Geometry Nodes modifier
+    modifier = obj.modifiers.new(name="WrapObjMesh", type='NODES')
+
+    modifier.node_group = node_tree
+    
+    if geomtype == 'Cylinder':
         # Set the radius and depth in the modifier socket
         modifier['Socket_1'] = radius
         modifier['Socket_2'] = height
 
-       
-
-        ## custom properties for cylinder
-        obj['wrap_type'] = geomtype   #to inform the user what type is created
-        obj.id_properties_ui('wrap_type').update(description = "The type of wrapping object")
+    if geomtype == 'Sphere':
+        # Set the radius and depth in the modifier socket
+        modifier['Socket_1'] = radius
 
 
-        add_drivers = False
-        if add_drivers == True:
+    ## custom properties for cylinder
+    obj['wrap_type'] = geomtype   #to inform the user what type is created
+    obj.id_properties_ui('wrap_type').update(description = "The type of wrapping object")
 
 
-            # add drivers for radius and height custom property
-            # radius
-            driver = obj.driver_add('["cylinder_radius"]').driver
+    add_drivers = False
+    if add_drivers == True:
 
-            var = driver.variables.new()        #make a new variable
-            var.name = name + '_cyl_rad_var'            #give the variable a name
 
-            #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+        # add drivers for radius and height custom property
+        # radius
+        driver = obj.driver_add('["cylinder_radius"]').driver
 
-            var.targets[0].id = obj #set the id to the active scene
-            var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
+        var = driver.variables.new()        #make a new variable
+        var.name = name + '_cyl_rad_var'            #give the variable a name
 
-            driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
-            # height
-            driver = obj.driver_add('["cylinder_height"]').driver
+        #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
 
-            var = driver.variables.new()        #make a new variable
-            var.name = name + '_cyl_height_var'            #give the variable a name
+        var.targets[0].id = obj #set the id to the active scene
+        var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
 
-            #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
+        driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
+        # height
+        driver = obj.driver_add('["cylinder_height"]').driver
 
-            var.targets[0].id = obj #set the id to the active scene
-            var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
+        var = driver.variables.new()        #make a new variable
+        var.name = name + '_cyl_height_var'            #give the variable a name
 
-            driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
+        #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
 
-    else: #if not a cylinder, skip for now.
-        return
-    
+        var.targets[0].id = obj #set the id to the active scene
+        var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
+
+        driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
+
+
 
     ## operations that are not dependent on wrap type
     obj.rotation_mode = 'ZYX'    #change rotation sequence

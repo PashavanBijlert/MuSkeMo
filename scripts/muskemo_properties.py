@@ -203,7 +203,8 @@ class MuSkeMoProperties(PropertyGroup):
         name="Wrapping geometry type",
         description="What type of geometry would you like to create?",
         items=[ ('Cylinder', "Cylinder", ""),
-                  ],
+                  ('Sphere', "Sphere (Experimental)", ""),
+                  ('Ellipsoid', "Ellipsoid (Experimental)", ""),],
         default = "Cylinder",
         )
     

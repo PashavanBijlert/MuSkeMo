@@ -353,23 +353,35 @@ class CreateWrappingGeometryOperator(Operator):
 
         if wrap_geom_type == 'Cylinder':
 
-            
-            geomtype = 'Cylinder'
-
             dimensions = {}
             dimensions['radius'] = 0.05
             dimensions['height'] = 0.1
 
-            create_wrapgeom(name, geomtype, collection_name,
-                    parent_body='not_assigned', 
-                    pos_in_global=[nan] * 3,
-                    or_in_global_XYZeuler=[nan] * 3, 
-                    or_in_global_quat=[nan] * 4,
-                    pos_in_parent_frame=[nan] * 3,
-                    or_in_parent_frame_XYZeuler=[nan] * 3, 
-                    or_in_parent_frame_quat=[nan] * 4,
-                    dimensions = dimensions,
-                    )
+
+        elif wrap_geom_type == 'Sphere':
+
+            dimensions = {}
+            dimensions['radius'] = 0.05
+
+
+        elif wrap_geom_type == 'Ellipsoid':
+
+            dimensions = {}
+            dimensions['radius_x'] = 0.05
+            dimensions['radius_y'] = 0.075
+            dimensions['radius_z'] = 0.1
+
+
+        create_wrapgeom(name, wrap_geom_type, collection_name,
+                parent_body='not_assigned', 
+                pos_in_global=[nan] * 3,
+                or_in_global_XYZeuler=[nan] * 3, 
+                or_in_global_quat=[nan] * 4,
+                pos_in_parent_frame=[nan] * 3,
+                or_in_parent_frame_XYZeuler=[nan] * 3, 
+                or_in_parent_frame_quat=[nan] * 4,
+                dimensions = dimensions,
+                )
             
         muskemo.wrap_geom_name = "" #reset the name after object creation.   
         return {'FINISHED'}
