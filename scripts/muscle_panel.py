@@ -82,13 +82,12 @@ class CreateNewMuscleOperator(Operator):
                           body_name = body_name)
         
                
-        # restore saved state of selection
-        bpy.context.view_layer.objects.active = active_obj
-        for obj in sel_obj:
-            obj.select_set(True)
-
         muskemo.musclename = '' #reset the muscle name after creation    
         
+        # select newly created muscle
+
+        bpy.data.objects[muscle_name].select_set(True)
+
         return {'FINISHED'}
 
 
