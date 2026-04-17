@@ -3,6 +3,7 @@
 import bpy
 
 from math import nan
+from mathutils import (Vector)
 import numpy as np
 
 from bpy.types import (Panel,
@@ -564,6 +565,12 @@ class AssignWrappingOperator(Operator):
         wrap_obj = selected_wraps[0]
         wrap_obj_name = wrap_obj.name
         
+        # Throw an error if wrap object has non-unit scale
+
+        if wrap_obj.scale != Vector((1.0, 1.0, 1.0)):
+            self.report({'ERROR'}, "The wrap object has been scaled using Blender's scale tool, instead of using the geometry node modifier input for dimensions such as radius or height. Reset the scale to 1, set the desired dimensions via the modifier input (under the Wrench icon), then try again. Operation cancelled.")
+            return {'FINISHED'}
+
 
         for obj in sel_obj:
             obj.select_set(False)
