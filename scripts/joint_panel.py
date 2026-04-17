@@ -139,7 +139,7 @@ class AssignParentBodyOperator(Operator):
 
         if 'default_pose' in joint:
 
-            if Matrix(joint['default_pose'])!= joint.matrix_world:
+            if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = 1e-6, atol = 1e-12): #check default pose difference with a tolerance
                 self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it's not in its default pose. Either reposition the joint, or clear its current child body. Operation cancelled.")
                 return {'FINISHED'}
 
@@ -249,11 +249,17 @@ class AssignChildBodyOperator(Operator):
         if joint.parent == child_body:
             self.report({'ERROR'}, "You are attempting to assign body '" + child_body.name + "' as the child body, but it is already the parent body. Operation cancelled.")
             return {'FINISHED'}
+        
+        if child_body.parent:
+            self.report({'ERROR'}, "You are attempting to assign body '" + child_body.name + "' as the child body, but it is already the child of '" + child_body.parent.name + "'. Kinematic loops are currently not supported (a BODY can only be the child of one JOINT). Operation cancelled.")
+            return {'FINISHED'}
+
 
 
         if 'default_pose' in joint:
-
-            if Matrix(joint['default_pose'])!= joint.matrix_world:
+            
+            if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = 1e-6, atol = 1e-12):
+            
                 self.report({'ERROR'}, "You are attempting to assign a child body to joint '" + joint.name + "', but the joint is not in its default pose. Either reposition the joint, or clear its current parent body. Operation cancelled.")
                 return {'FINISHED'}
 

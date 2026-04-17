@@ -53,7 +53,7 @@ class ResetToDefaultPoseOperator(Operator): #the operator also works on disjoint
     bl_idname = "muskemo.reset_model_default_pose"
     bl_label = "Resets all connected components to their default pose (the pose in which inertial properties were computed or objects were parented). Select 1+ objects with a default_pose and press the button."  #not sure what bl_label does, bl_description gives a hover tooltip
     bl_description = "Resets all connected components to their default pose (the pose in which inertial properties were computed or objects were parented). Select 1+ objects with a default_pose and press the button."
-    
+    bl_options = {"UNDO"} #enable undoing    
     
     def execute(self, context):
 
@@ -88,8 +88,7 @@ class ResetToDefaultPoseOperator(Operator): #the operator also works on disjoint
             while curr_obj.parent:
                 curr_obj = curr_obj.parent
             
-            if 'default_pose' in curr_obj: #check if the selected object has a default_pose
-                root_obj.append(curr_obj) 
+            root_obj.append(curr_obj)  #make the top most parent the root obj
             
             
         root_objects = unique_objects(root_obj) #list of unique root objects

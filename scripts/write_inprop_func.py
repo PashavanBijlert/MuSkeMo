@@ -16,7 +16,7 @@ def write_inprop(context, filepath, collection_name, delimiter, obj_type, number
         worldmat = np.array(obj.matrix_world)
         default_pose = np.array(obj['default_pose'])
 
-        if not np.allclose(worldmat, default_pose, atol = 1e-6): #compare matrices with abstol of 1e-6, to account for single precision in Blender
+        if not np.allclose(worldmat, default_pose, rtol = 1e-6, atol = 1e-12): #compare matrices with abstol of 1e-6, to account for single precision in Blender
             self.report({'ERROR'}, "Inertial properties of '" + obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose (using the button), or recompute the inertial properties. Operation cancelled")
             return {'FINISHED'}
 

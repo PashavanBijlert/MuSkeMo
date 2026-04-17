@@ -199,7 +199,8 @@ class AssignInertialPropertiesOperator(Operator):
               
         #Check if all the source objects are still in the default pose (in which the inprops were computed)
         for s_obj in source_objects:
-            if s_obj.matrix_world != Matrix(s_obj['default_pose']):
+            
+            if not np.allclose(Matrix(s_obj['default_pose']), s_obj.matrix_world, rtol = 1e-6, atol = 1e-12): #default pose check with tolerance
                 self.report({'ERROR'}, "Inertial properties of '" + s_obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. Operation cancelled")
                 return {'FINISHED'}
 
