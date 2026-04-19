@@ -1299,6 +1299,14 @@ class ImportOpenSimModel(Operator):
                             dimensions['radius'] = wrap_obj.get('radius', float('nan'))
                             geomtype = 'Sphere'
 
+                        elif wrap_type == 'WrapEllipsoid':
+                            geomtype = 'Ellipsoid'
+                            dims = wrap_obj.get('dimensions', [float('nan')] * 3)
+
+                            dimensions['radius_x'] = dims[0]
+                            dimensions['radius_y'] = dims[1]
+                            dimensions['radius_z'] = dims[2]
+
 
                         else:
                             
