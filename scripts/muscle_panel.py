@@ -334,6 +334,8 @@ class CreateWrappingGeometryOperator(Operator):
     bl_label = "Create a wrapping geometry object which can be assigned to a muscle."
     bl_description = "Create a wrapping geometry object which can be assigned to a muscle."
 
+
+
     def execute(self, context):
 
         muskemo = bpy.context.scene.muskemo
@@ -392,7 +394,7 @@ class AssignWrapGeomParentOperator(Operator):
     bl_label = "Assigns a parent body to 1+ wrapping geometries. Select both the parent body and the wrapping geometries(s), then press the button."
     bl_description = "Assigns a parent body to 1+ wrapping geometries. Select both the parent body and the wrapping geometries(s), then press the button."
     bl_options = {"UNDO"} #enable undoing
-    
+
     def execute(self, context):
         
         sel_obj = bpy.context.selected_objects  #should be the parent body and the wrap
@@ -515,8 +517,6 @@ class ClearWrapGeomParentOperator(Operator):
 
 
         return {'FINISHED'}
-
-
 
 
 

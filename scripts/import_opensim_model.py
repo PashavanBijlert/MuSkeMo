@@ -1429,7 +1429,7 @@ class ImportOpenSimModel(Operator):
                         wrap_obj = bpy.data.objects[wrap_obj_name_MuSkeMo]
                         wrap_obj_data = wrap_objects[wrap_objname] #populated wrap_objects dict earlier, get one entry
 
-                        if wrap_objects[wrap_objname]['type'] == 'WrapCylinder':
+                        if wrap_objects[wrap_objname]['type'] in ['WrapCylinder', 'WrapSphere', 'WrapEllipsoid']:
 
                             
                             assign_muscle_wrap(wrap_obj_name = wrap_objname, muscle_name = muscle_name, self = self)
@@ -1475,9 +1475,7 @@ class ImportOpenSimModel(Operator):
 
                             else:
 
-
-
-                                self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
+                                self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj_data['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
 
                             #set the proj angle and Force Sided Wrap node inputs
                             for item in node_group.interface.items_tree:
@@ -1490,9 +1488,8 @@ class ImportOpenSimModel(Operator):
                                 
                         else:
 
-                            self.report({'WARNING'}, "Only cylinder wraps currently work in MuSkeMo. Other wrap objects can be imported for visualization, but they won't support wrapping.")
+                            self.report({'WARNING'}, wrap_objects[wrap_objname]['type'] + " is currently not supported by MuSkeMo.")
     
-
             ### Throw a warning about multi object wrapping
 
             duplicates = [index for index, count in pre_wrap_indices_count.items() if count > 1]
@@ -1516,7 +1513,7 @@ class ImportOpenSimModel(Operator):
             matching_objects_str = ", ".join(matching_objects) 
 
             if matching_objects:
-                self.report({'WARNING'}, "Wrapping objects '" + matching_objects_str + "' have wrapping quadrants defined. In MuSkeMo, this corresponds with the 'Force Sided Wrap' option. You may have to manually adjust 'Flip Wrap', 'Projection angle', and 'Index of pre wrap point'. See the Manual for details")
+                self.report({'WARNING'}, "Some of your Wapping objects have quadrants defined. In MuSkeMo, this corresponds with the 'Force Sided Wrap' option. You may have to manually adjust 'Flip Wrap', 'Projection angle', and 'Index of pre wrap point'. See the Manual for details. This applies to: " +  matching_objects_str )
 
         
         #### Throw warnings about conditional and/or moving pathpoints
@@ -1527,7 +1524,15 @@ class ImportOpenSimModel(Operator):
         if muscle_data['moving_pathpoint_flag']: #if there are moving pathpoints
             self.report({'WARNING'}, "Imported OpenSim model had MovingPathPoints, which have been converted to regular path points assuming the coordinate values were 0. See the Manual for details")
 
-                        
+        #### Warnings about wrapping types
+
+        if any(w['type'] in {'WrapEllipsoid'} for w in wrap_objects.values()):
+            self.report({'WARNING'}, "Imported OpenSim model had ellipsoidal wrapping, this is currently experimental in MuSkeMo, so use with caution. MuSkeMo's ellipsoid wrapping algorithm has different results than OpenSim.")
+
+        if any(w['type'] in {'WrapSphere'} for w in wrap_objects.values()):
+            self.report({'WARNING'}, "Imported OpenSim model had spherical wrapping, this is currently experimental in MuSkeMo, so use with caution.")
+
+
         ### create contacts    
         for contact_name, contact in contact_data.items():
 
