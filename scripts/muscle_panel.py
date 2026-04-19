@@ -388,6 +388,91 @@ class CreateWrappingGeometryOperator(Operator):
         muskemo.wrap_geom_name = "" #reset the name after object creation.   
         return {'FINISHED'}
     
+class CreateWrapGeomFromGeomPrimitiveOperator(Operator):
+    bl_idname = "muscle.wrapping_geometry_from_geom_primitive"
+    bl_label = "Create a wrapping geometry object from fitted spheres, cylinders, and ellipsoids, which can be assigned to a muscles. Select the fitted objects, and press the button."
+    bl_description = "Create a wrapping geometry object from fitted spheres, cylinders, and ellipsoids, which can be assigned to a muscles. Select the fitted objects, and press the button."
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+
+        muskemo = bpy.context.scene.muskemo
+        collection_name = muskemo.wrap_geom_collection
+          
+        from .create_wrapgeom_func import create_wrapgeom
+        from .quaternions import quat_from_matrix
+
+        sel_obj = bpy.context.selected_objects  #should be the geom primitives
+
+        for obj in sel_obj: #loop over selected objects
+
+            if obj.get('MuSkeMo_type') == 'GEOM_PRIMITIVE': 
+                
+                if 'cylinder_height' in obj:
+
+                    wrap_geom_type = 'Cylinder'
+
+                    dimensions = {}
+                    dimensions['radius'] = obj['cylinder_radius']
+                    dimensions['height'] = obj['cylinder_height']
+                    
+
+
+                elif 'sphere_radius' in obj:
+
+                    wrap_geom_type = 'Sphere'
+
+                    dimensions = {}
+                    dimensions['radius'] = obj['sphere_radius']
+
+
+                elif 'ellipsoid_radii' in obj:
+
+                    wrap_geom_type = 'Ellipsoid'
+                    
+                    ellipsoid_radii = tuple(obj['ellipsoid_radii'])
+                    dimensions = {}
+                    dimensions['radius_x'] = ellipsoid_radii[0]
+                    dimensions['radius_y'] = ellipsoid_radii[1]
+                    dimensions['radius_z'] = ellipsoid_radii[2]
+
+                else:
+                    self.report({'WARNING'}, "Selected object '" +  obj.name + "' was not a sphere, ellipsoid, or cylinder. Skipping this object.")
+                    continue
+
+                    
+                base_name = obj.name + '_wrapGeom'
+                name = base_name
+                
+                #ensure unique names
+                i = 1
+            
+                while name in bpy.data.objects:
+                    name = f"{base_name}_{i}" #
+                    i += 1
+
+                pos_in_global = list(obj.matrix_world.translation)
+                or_in_global_quat = quat_from_matrix(obj.matrix_world.to_3x3())
+
+
+                create_wrapgeom(name, wrap_geom_type, collection_name,
+                        parent_body='not_assigned', 
+                        pos_in_global=pos_in_global,
+                        or_in_global_XYZeuler=[nan] * 3, 
+                        or_in_global_quat=or_in_global_quat,
+                        pos_in_parent_frame=[nan] * 3,
+                        or_in_parent_frame_XYZeuler=[nan] * 3, 
+                        or_in_parent_frame_quat=[nan] * 4,
+                        dimensions = dimensions,
+                        )
+            
+            else:
+                self.report({'ERROR'}, "Selected objects were not 'GEOM_PRIMITIVES' created by MuSkeMo's object fitters. Operation aborted")
+                return {'FINISHED'} 
+
+        
+        return {'FINISHED'}
+
 
 class AssignWrapGeomParentOperator(Operator):
     bl_idname = "muscle.assign_wrap_parent_body"
@@ -1263,6 +1348,13 @@ class VIEW3D_PT_wrap_subpanel(VIEW3D_PT_MuSkeMo,Panel):  # class naming conventi
         row = self.layout.row()
         row.operator("muscle.create_wrapping_geometry", text="Create wrapping geometry")
 
+        row = self.layout.row()
+        row = self.layout.row()
+        row = self.layout.row()
+        row.operator("muscle.wrapping_geometry_from_geom_primitive", text="Create wrapping geometry from fitted objects")
+        
+        row = self.layout.row()
+        
         row = self.layout.row()
         row.operator("muscle.assign_wrap_parent_body", text="Assign parent body")
         row.operator("muscle.clear_wrap_parent_body", text="Clear parent body")

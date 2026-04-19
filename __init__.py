@@ -71,7 +71,7 @@ from .scripts.joint_panel import ( CreateNewJointOperator,
 #### muscle panel
 from .scripts.muscle_panel import (CreateNewMuscleOperator,AddMusclepointOperator, 
                                       InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
-                                      CreateWrappingGeometryOperator, 
+                                      CreateWrappingGeometryOperator, CreateWrapGeomFromGeomPrimitiveOperator,
                                       AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
                                         AssignWrappingOperator, ClearWrappingOperator,
                                         SingleDOFLengthMomentArmOperator,Regenerate2DMusclePlotOperator,
@@ -232,7 +232,7 @@ classes = (  #Global settings panel
             #Muscle panel 
                                     CreateNewMuscleOperator, AddMusclepointOperator, 
                                     InsertMusclePointOperator, UpdateMuscleVizRadiusOperator,
-                                    CreateWrappingGeometryOperator,
+                                    CreateWrappingGeometryOperator, CreateWrapGeomFromGeomPrimitiveOperator,
                                     AssignWrapGeomParentOperator, ClearWrapGeomParentOperator,
                                     AssignWrappingOperator, ClearWrappingOperator,
                                     SingleDOFLengthMomentArmOperator,Regenerate2DMusclePlotOperator,
