@@ -144,4 +144,4 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
 
         
         
-    return {'FINISHED'}    
+    return    

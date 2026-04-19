@@ -592,6 +592,15 @@ class AssignWrappingOperator(Operator):
 
         assign_muscle_wrap(wrap_obj_name = wrap_obj_name, muscle_name = muscle_name, self = self)
 
+        ## Experimental wrapping warnings.
+        if wrap_obj['wrap_type'].upper() == 'SPHERE':
+            self.report({'WARNING'}, "Spherical wrapping is currently experimental in MuSkeMo, so use with caution.")
+
+        ## Experimental wrapping warnings.
+        if wrap_obj['wrap_type'].upper() == 'ELLIPSOID':
+            self.report({'WARNING'}, "Ellipsoid wrapping is currently experimental in MuSkeMo, so use with caution.")    
+
+
         return {'FINISHED'}
 
 
