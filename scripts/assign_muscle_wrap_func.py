@@ -11,8 +11,9 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
     #some settings for if I decide to rename node group files:
 
     cylinder_wrap_node_group_name =   'CylinderWrapNodeGroupShell' #this is used later in the script. Can update when new versions of the wrap node are made  
-    sphere_wrap_node_group_name = 'Whatever' #doesn't exist yet, but this is a placeholder to make the intended structure of this script clear
-    wrap_nodefilename = 'muscle_wrapper_v7.blend'  
+    sphere_wrap_node_group_name = 'SphereWrapNodeGroupShell' #
+    ellipsoid_wrap_node_group_name = 'EllipsoidWrapNodeGroupShell'
+    wrap_nodefilename = 'muscle_wrapper_v8.blend'  
 
     wrap_obj = bpy.data.objects[wrap_obj_name]
     
@@ -22,12 +23,17 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
         
         wrap_node_group_name = cylinder_wrap_node_group_name
 
-        radius = wrap_obj.modifiers['WrapObjMesh']['Socket_1']
-        height = wrap_obj.modifiers['WrapObjMesh']['Socket_2']
+    elif wrap_obj['wrap_type'].upper() == 'SPHERE': 
+
+        wrap_node_group_name = sphere_wrap_node_group_name  
+
+    elif wrap_obj['wrap_type'].upper() == 'ELLIPSOID': 
+
+        wrap_node_group_name = ellipsoid_wrap_node_group_name  
 
     else: #not cylinder
 
-        self.report({'ERROR'},'Only cylindric wrapping is currently supported.')
+        self.report({'ERROR'},'Only cylindric, spherical, and ellipsoidal wrapping are currently supported.')
         return{'FINISHED'}
 
         

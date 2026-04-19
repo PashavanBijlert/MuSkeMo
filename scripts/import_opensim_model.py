@@ -20,6 +20,7 @@ class ImportOpenSimModel(Operator):
     bl_description = "Import an OpenSim 4.0+ model"
     bl_idname = "import.import_opensim_model"
     bl_label = "Import OpenSim model"
+    bl_options = {"UNDO"} #enable undoing
 
 
     # This section is based on importhelper
@@ -1252,7 +1253,7 @@ class ImportOpenSimModel(Operator):
 
         if enable_wrapping: #if the user wants wrapping
             
-            wrap_nodefilename = 'muscle_wrapper_v7.blend'
+            wrap_nodefilename = 'muscle_wrapper_v8.blend'
             directory = os.path.dirname(os.path.realpath(__file__)) + '\\'  #realpath__file__ gets the path to the current script
 
             with bpy.data.libraries.load(directory + wrap_nodefilename) as (data_from, data_to):  #see blender documentation, this loads in data from another library/blend file

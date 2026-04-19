@@ -391,7 +391,8 @@ class AssignWrapGeomParentOperator(Operator):
     bl_idname = "muscle.assign_wrap_parent_body"
     bl_label = "Assigns a parent body to 1+ wrapping geometries. Select both the parent body and the wrapping geometries(s), then press the button."
     bl_description = "Assigns a parent body to 1+ wrapping geometries. Select both the parent body and the wrapping geometries(s), then press the button."
-   
+    bl_options = {"UNDO"} #enable undoing
+    
     def execute(self, context):
         
         sel_obj = bpy.context.selected_objects  #should be the parent body and the wrap
