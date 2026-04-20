@@ -1131,13 +1131,13 @@ The underlying object types in Blender are regular meshes (UV Sphere, cylinder, 
 \subsection{WRAP}
 \label{sec:wrapgeom}
 
-Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (but currently not yet Gaitsym models) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface, see sec. \ref{sec:modifiers}). Currently, only cylinders are supported.
+Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (cylinders, spheres, ellipsoids) and Gaitsym models (cylinders) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface, see sec. \ref{sec:modifiers}). Currently, cylinders, spheres, and ellipsoids are supported. %Ellipsoidal wrapping is not a true geodesic, see sec. \ref{sec:ellipsoidwrapping}.
 
 Just like JOINTS, WRAPS have parent bodies, and orientations and positions with respect to parent frames if those are assigned to the body. Unique to WRAP are the following properties:
 
 \begin{itemize}
     \item \texttt{target\_muscles}. A list of all the muscles (delimited with ';') that wrap around this object. Can be 'not\_assigned'.
-    \item \texttt{wrap\_type}. Currently only 'Cylinder'.
+    \item \texttt{wrap\_type}. Currently can be `Cylinder', `Sphere', or `Ellipsoid'.
 \end{itemize}
  
 % Start the appendix
