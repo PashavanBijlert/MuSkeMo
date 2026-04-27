@@ -520,12 +520,11 @@ This button adds a geometry node modifier named "LiveLengthViewer" to the active
 The node uses a custom node group named "LiveLengthViewerNodeGroup", which is shared between all muscles that have a length viewer modifier added to it. To disable the length viewer, remove the modifier from the muscle's modifier stack.
 
 
-\subsubsection{Assigning wrapping}
+\subsubsection{Create and assign wrapping}
+\label{sec:createassignwrapping}
+You can use the ``Wrapping" subpanel to perform all the necessary steps to create and assign wrapping to a muscle. This includes creating WRAP object geometry (cylinders, spheres, and ellipsoids, sec. \ref{sec:wrapgeom}), assigning parent bodies, and assigning muscles to wrap around WRAP geometry objects. The panel also performs the reverse operations. See \ref{sec:musclewrapping} for details on how the wrapping works, what the limitations are, and what settings are available. Note that wrapping is currently only physically accurate (i.e., a true tangent solution) if each wrapped section is separated by at least one muscle point on both sides.
 
-You can use the ``Wrapping" subpanel to perform all the necessary steps to create and assign wrapping to a muscle. This includes creating wrapping object geometry (currently, only cylinders are supported), assigning parent bodies, and assigning muscles to wrap around an object. The panel also performs the reverse operations. Note that wrapping is currently only physically accurate (i.e., a true tangent solution) if each wrapped section is separated by at least one muscle point on both sides.
-
-Wrapping geometries are also generated using geometry nodes (see \ref{sec:wrapgeom} for details), so that they can be interactively resized using the inputs in the wrapping object's modifier (see \ref{sec:modifiers}). When a WRAP is assigned to a muscle, it receives a very complex geometry nodes modifier (see \ref{sec:musclewrapping} for details). Changing the wrapping geometry dimensions (e.g., the cylinder's radius) also affects the dimensions of the muscle wrapping. Information on the dimensions of the wrapping object is carried over to the Muscle by creating a \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/geometry/read/named_attribute.html}{Named Attribute} in the Geometry node for the Wrapping object, which is then sampled in the Geometry node in the muscle wrapping node (see sec. \ref{sec:musclewrapping}).
-
+It is possible to automatically create WRAP objects from 1+ compatible fitted GEOM\_PRIMITIVES (sec. \ref{sec:primitivefitting}). This is currently possible for spheres, ellipsoids, and cylinders.
 
 
 \subsubsection{Moment arms}
@@ -640,7 +639,7 @@ MuSkeMo provides an OpenSim importer. This can import most of the components of 
 
 It is also possible to import models using global definitions - this is only useful for \textit{models created using MuSkeMo's conversion scripts, using the ``Global definitions" option}. In essence, this import mode assumes that all the component positions are defined as their position in the global frame, and for joints specifically, transformations in parent and child are both set to the global position and orientation. Local frames are not created. Because this mode assumes a very particular OpenSim model setup, there is less robust support for error-checking of the Geometry folder, and ``non-standard'' transform axes are not supported (see below).
 
-During import, cylinder wrapping is supported (see \ref{sec:musclewrapping} and \ref{sec:wrapgeom}). MuSkeMo's wrapping definitions are different from OpenSim, and the importer tries to convert wrapping definitions. If the wrapping does not visualize correctly, it may be necessary to change the projection angle (combined with enabling "force wrap"), selecting "flip wrap", or "shortest wrap", depending on the situation. See \ref{sec:musclewrapping} for a full description of MuSkeMo's wrapping.
+During import, cylinder, sphere, and ellipsoid wrapping is supported (with limitations, see \ref{sec:musclewrapping} and \ref{sec:wrapgeom}). MuSkeMo's wrapping definitions are different from OpenSim, and the importer tries to convert wrapping definitions. If the wrapping does not visualize correctly, it may be necessary to change the projection angle (combined with enabling "force wrap"), selecting "flip wrap", or "shortest wrap", depending on the situation. See \ref{sec:musclewrapping} for a full description of MuSkeMo's wrapping.
 
 \textbf{Warning:} Blender does not allow \textit{any} object name to be reused. This means that all of your model components need to have unique names in MuSkeMo (so e.g., if a body is named 'shank\_r', and it has only one wrapping object, it still cannot be named 'shank\_r'. It would need a unique name such as 'shank\_wrap\_r'). If any component has a non-unique name, the OpenSim importer may fail. The importer currently checks whether frames and wrapping objects have non-unique names, but not other model components.
 
@@ -1013,20 +1012,39 @@ The full node setup performs the following steps:
     \item Muscle and tendon receive separate materials (see sec. \ref{sec:defaultcolors})
 \end{enumerate}
 
-
-
 \subsubsection{Muscle wrapping}
 \label{sec:musclewrapping}
+MuSkeMo currently supports cylindric, spherical, and ellipsoidal wrapping. MuSkeMo adds a Geometry nodes modifier to the muscle for each target wrapping object, which has to be a WRAP object (sec. \ref{sec:wrapgeom}). For clarity: the geometry node modifier on the WRAP determines the dimensions of the geometry (e.g., cylinder radius), whereas the geometry node modifier on the MUSCLE determines how the wrapper should behave. This allows multiple muscles to use the same target WRAP geom, while having individualised behaviors (e.g., wrapping about different sides of the same cylinder). Both WRAP creation and assignment are performed in the Wrapping subpanel of the Muscle panel, see sec. \ref{sec:createassignwrapping}.
 
-MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric wrapping, using a custom-designed Geometry node. Garner et al. \cite{garnerObstacleSetMethodRepresenting2000} propose an iterative root finding method for multi-object wrapping between two curve points, which is currently very challenging to implement using Geometry nodes. \textbf{If you add multiple wrapping objects per pair of muscle points, MuSkeMo only provides true tangent curve solutions if each wrapped section is separated by a curve point.} MuSkeMo adds a Geometry nodes modifier to the muscle for each wrapping object.
-
-\textbf{Wrapping will not work correctly if any of the muscle curve points clip into the wrapping object.}
-
-Cylindric wrapping has the following settings, accessible via the wrapping modifiers:
+It is important to be mindful of the following limitations:
 
 \begin{itemize}
-\item \textbf{Wrap Cylinder Radius:} Radius of the cylinder. When assigned to a muscle, also affects the wrapping radius by storing a Named Attribute in Blender.
-\item \textbf{Wrap Cylinder Height:} Height of the cylinder. When assigned to a muscle, also assigns the wrapping height by storing a Named Attribute in Blender.
+\item \textbf{If you add multiple wrapping objects per pair of muscle points, MuSkeMo only provides true tangent curve solutions if each wrapped section is separated by a curve point.} Typically, wrapping around arbitrary objects requires iteratively recomputing the wrap until the solution has stabilized (e.g., \cite{garnerObstacleSetMethodRepresenting2000,scholzFastMultiobstacleMuscle2016}), and this is currently challenging to implement in geometry nodes.
+\item \textbf{Wrapping will not work correctly if any of the muscle curve points clip into the wrapping object.} Wrapping is mathematically not defined if a muscle point is inside the wrapping object, it is your responsibility during model construction to prevent this.
+\item The sphere and ellipsoid wrappers are currently \textbf{experimental}, I have not yet performed a thorough comparison or test. If you plan to use it for anything else than visualization, perform thorough test that the expected lengths and/or moment-arms are sensible.
+\end{itemize}
+
+
+\paragraph{Cylinder and sphere.}
+MuSkeMo implements \cite{garnerObstacleSetMethodRepresenting2000} for cylindric and spherical wrapping, using a custom-designed Geometry node. These wraps are implemented as true tangent-curve, minimum distance solutions (true geodesics). Lengths of the wrapped paths are computed using expressions for the exact path lengths as derived in \cite{garnerObstacleSetMethodRepresenting2000}. The wrapper node visualizes the wrapped section by using a \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/geometry/sample/raycast.html}{Raycast node} to project intermediate points onto the surface between the two tangent points.
+
+\paragraph{Ellipsoid.}
+\label{sec:ellipsoidwrapping}
+Ellipsoidal wrapping typically requires some type of iterative approach (e.g., \cite{scholzFastMultiobstacleMuscle2016}), which is challenging to implement in Geometry Nodes. MuSkeMo instead implements ellipsoidal wrapping by scaling the ellipsoid to a unit sphere, applying standard spherical wrapping logic, and then scaling back to the ellipsoidal coordinates. Geodesic wrapping around spheres is always on a plane through the sphere origin -- this plane called a ``great circle'' of the sphere, which splits the sphere in two equal halves. Applying a similar wrap to an ellipsoid results in a wrap on a plane through the ellipsoid origin, equivalently called a ``great ellipse'', and it also splits the ellipsoid in two equal halves. \textbf{Importantly, because MuSkeMo's ellipsoidal wraps are not true geodesics, the wrapped length will in general be slightly longer than a true minimum-length ellipsoid wrap}. For visualization, this is unlikely to be noticeable, but when computing moment arms and/or muscle lengths, be aware that although MuSkeMo reports the muscle path length as it is being visualised, that path is not the shortest possible path across the ellipsoid. The benefit of this simple approach is that it behaves as smoothly and is as computationally efficient as the standard sphere wrapper.
+
+OpenSim users should be aware that OpenSim's current ellipsoid wrapping algorithm (which has `midpoint', `axial', and `hybrid' variants) is also not a true geodesic (see the comparison in \cite{marsdenNovelApproachPrediction2008}). OpenSim's implementation will give different results than MuSkeMo's approach, although the differences are likely to be small (a comparison will be provided in the future).
+
+
+The wrapper node visualizes the wrapped section by using a \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/geometry/sample/raycast.html}{Raycast node} to project intermediate points onto the surface between the two tangent points. Because the ellipsoid wrapper is not an exact geodesic, the length of the wrapped curve section is computed by summing the individual curve sections projected onto the ellipsoid surface. This is sensitive to the ``Wrapping point resolution'' setting (see below), and to the ``Ellipsoid resolution'' setting (see sec. \ref{sec:wrapgeom}).
+
+\paragraph{Wrap settings.}
+
+When a WRAP is assigned to a muscle, it receives a very complex geometry nodes modifier. Changing the WRAP geometry dimensions (e.g., the cylinder's radius) also affects the dimensions of the muscle wrapping, this information is carried over via \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/geometry/read/named_attribute.html}{Named Attributes} in the Geometry node for the Wrapping object, which is then sampled in the Geometry node in the muscle wrapping node.
+
+Wrapper nodes have the following settings, accessible via the wrapping modifier on a muscle (after wrap assignment):
+
+\begin{itemize}
+
 \item \textbf{Flip Wrap:} This allows you to flip the sidedness of the wrap manually.
 \item \textbf{Shortest Wrap:} This ensures the wrapping occurs on the side where the wrapped section would be shortest. Causes posture-dependent flipping if the curve moves to the other side of the wrapping geometry. Shortest wrap is ignored if Force Sided Wrap is enabled.
 \item \textbf{Force Sided Wrap:} Select this if you want to force a wrap in a specific projection direction, even when the curve is not intersecting the geometry. You have to specify the index of the pre-wrap point, and a projection angle. The wrap is active when the curve intersects the geometry, or when it is outside the geometry, on the opposite side of the projection direction. See below how this is achieved.
@@ -1052,8 +1070,6 @@ Readers familiar with linear algebra will recognize this as an orthogonal projec
 
 
 \paragraph{Shortest wrap.} First determines the vector $-\vec{p}_{1} \cross \vec{p}_{2}$, then computes the dot product between that vector and the cylinder z-axis. If this dot product is negative, the wrap is flipped. Shortest wrap is superceded by Force Sided Wrap.
-
-
 
 
 \subsection{JOINT}
@@ -1117,7 +1133,7 @@ In MuSkeMo, a \texttt{FRAME} is a local coordinate system that can be assigned t
 
 \subsection{GEOM\_PRIMITIVE}
 
-In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders, ellipsoids, and planes) to 3D meshes, see \ref{sec:primitivefitting}. This can be useful for defining joint centers of rotation using the skeletal geometry. The geometric details of the shapes are stored for reuse. These are:
+In MuSkeMo, it is possible to fit geometric primitive shapes (spheres, cylinders, ellipsoids, and planes) to 3D meshes, see \ref{sec:primitivefitting}. This can be useful for defining joint centers of rotation using the skeletal geometry (sec. \ref{sec:jointutilities}), or for using as wrapping geometry. The geometric details of the shapes are stored for reuse. These are:
 
 \begin{itemize}
     \item Sphere: \texttt{sphere\_radius}
@@ -1131,7 +1147,11 @@ The underlying object types in Blender are regular meshes (UV Sphere, cylinder, 
 \subsection{WRAP}
 \label{sec:wrapgeom}
 
-Wrapping geometry can be user-created in the Wrapping subpanel of the Muscle panel. Wrapping geometry defined in OpenSim models (cylinders, spheres, ellipsoids) and Gaitsym models (cylinders) are included during model import. WRAP objects are not regular meshes like GEOM\_PRIMITIVES. WRAP geometry are generated using Geometry nodes that parametrically generate the desired object. The wrapping geometry dimensions (e.g., cylinder radius) can be altered in the modifier on the object (press the blue wrench in the interface, see sec. \ref{sec:modifiers}). Currently, cylinders, spheres, and ellipsoids are supported. %Ellipsoidal wrapping is not a true geodesic, see sec. \ref{sec:ellipsoidwrapping}.
+WRAP geometry are geometric primitives that act as wrapping targets for muscles. WRAP objects are not regular meshes like GEOM\_PRIMITIVES, they are parametrically generated using Geometry nodes. This allows you to alter the wrapping geometry dimensions (e.g., cylinder radius) via the modifier on the object (press the blue wrench in the interface, see sec. \ref{sec:modifiers}). For clarity: the geometry node modifier on the WRAP determines the dimensions of the geometry (e.g., cylinder radius), whereas the geometry node modifier on the MUSCLE determines how the wrapper should behave. This allows multiple muscles to use the same target WRAP geom, while having individualised behaviors (e.g., wrapping about different sides of the same cylinder). See sec. \ref{sec:musclepanel} and \ref{sec:musclewrapping} for details. 
+
+Wrapping geometry can be created manually, or automatically from a GEOM\_PRIMITIVE, in the Wrapping subpanel of the Muscle panel (see sec. \ref{sec:createassignwrapping}). WRAPs are also automatically created and applied during model import if possible.
+
+Currently, cylinders, spheres, and ellipsoids are supported. Ellipsoidal wrapping is not a true geodesic, but an approximation that is faster but results in slightly longer wrapped paths (see sec. \ref{sec:ellipsoidwrapping}). Spherical and ellipsoidal wrapping are both currently in experimental phase, use with caution.
 
 Just like JOINTS, WRAPS have parent bodies, and orientations and positions with respect to parent frames if those are assigned to the body. Unique to WRAP are the following properties:
 
@@ -1139,7 +1159,21 @@ Just like JOINTS, WRAPS have parent bodies, and orientations and positions with 
     \item \texttt{target\_muscles}. A list of all the muscles (delimited with ';') that wrap around this object. Can be 'not\_assigned'.
     \item \texttt{wrap\_type}. Currently can be `Cylinder', `Sphere', or `Ellipsoid'.
 \end{itemize}
- 
+
+The wrapping geometry is created in a geometry node modifier, and the dimensions of the wrapping objects (e.g., cylinder radius) can be altered via the modifier input. The geometry node group stores those parameters as a \href{https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/geometry/read/named_attribute.html}{Named Attribute} on the object. Once a wrapper node is assigned to a muscle, those named attributes are passed to the wrapper node.
+
+The dimensions inputs differ per wrapping object, and are all in meters:
+
+\begin{itemize}
+\item \textbf{Radius:} Radius of the cylinder or sphere.
+\item \textbf{Height:} Height of the cylinder.
+\item \textbf{Radius x:} First radius of the ellipsoid.
+\item \textbf{Radius y:} Second radius of the ellipsoid.
+\item \textbf{Radius z:} Third radius of the ellipsoid.
+\item \textbf{Ellipsoid resolution:} Resolution of the ellipsoid. Increase this when computing moment arms while using ellipsoid wrapping.
+\end{itemize}
+
+
 % Start the appendix
 \appendix
 % Redefine the section numbering style for the appendix to use Roman numerals and the word "Appendix"
