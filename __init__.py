@@ -4,7 +4,7 @@ bl_info = {
     "author_email" : "pasha.vanbijlert@naturalis.nl",
     "description" : "Build, visualize, and analyze musculoskeletal models",
     "blender" : (4, 0, 0),
-    "version" : (0, 9, 82),
+    "version" : (0, 9, 83),
     "location" : "",
     "warning" : "",
     "category" : "Physics",
