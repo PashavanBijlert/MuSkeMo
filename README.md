@@ -61,7 +61,7 @@ Muscles can be visualized using a volume-accurate visualizer, and these visualiz
 
 ![muscle_belly_shape](https://github.com/user-attachments/assets/30f2d5ba-8799-425b-adc5-0d5375637b69)
 
-Within the muscle panel, it is also possible to create wrapping geometry (currently, only cylinders are supported), and assign these to muscles.
+Within the muscle panel, it is also possible to create wrapping geometry, and assign these to muscles. Cylinders, spheres, and ellipsoids are currently supported, but spheres and ellipsoids are still experimental so use them with caution.
 
 It is possible to compute moment arms and muscle lengths in the Muscle Panel, and these can be recomputed on the fly when changing muscle paths. A live length viewer can help tune musculotendon parameters, especially when combined with imported kinematics.
 
