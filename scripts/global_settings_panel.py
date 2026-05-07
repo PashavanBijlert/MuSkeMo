@@ -156,7 +156,7 @@ class VIEW3D_PT_default_pose_tolerance_subpanel(VIEW3D_PT_MuSkeMo, Panel):
             def draw_warning(self, context):
                 self.layout.label(text="Warning:")
                 self.layout.label(text="Changing default pose tolerances can cause inaccurate model outputs.")
-                self.layout.label(text="Please read the manual before changing this setting.")
+                self.layout.label(text="Please read the 'Default pose' section in the manual before changing this setting.")
 
             context.window_manager.popup_menu(
                 draw_warning,
