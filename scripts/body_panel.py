@@ -166,7 +166,11 @@ class AssignInertialPropertiesOperator(Operator):
    
     def execute(self, context):
         
-        
+        muskemo = bpy.context.scene.muskemo
+        atol = muskemo.absolute_tolerance
+        rtol = muskemo.relative_tolerance
+
+
         sel_obj = bpy.context.selected_objects  #should be the source objects (e.g. skin outlines) with precomputed inertial parameters
         
         if (len(sel_obj) <= 1):
@@ -200,8 +204,8 @@ class AssignInertialPropertiesOperator(Operator):
         #Check if all the source objects are still in the default pose (in which the inprops were computed)
         for s_obj in source_objects:
             
-            if not np.allclose(Matrix(s_obj['default_pose']), s_obj.matrix_world, rtol = 1e-6, atol = 1e-12): #default pose check with tolerance
-                self.report({'ERROR'}, "Inertial properties of '" + s_obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. Operation cancelled")
+            if not np.allclose(Matrix(s_obj['default_pose']), s_obj.matrix_world, rtol = rtol, atol = atol): #default pose check with tolerance
+                self.report({'ERROR'}, "Inertial properties of '" + s_obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled")
                 return {'FINISHED'}
 
         

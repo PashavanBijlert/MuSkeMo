@@ -92,6 +92,9 @@ class AssignParentBodyOperator(Operator):
    
     def execute(self, context):
         
+        muskemo = bpy.context.scene.muskemo
+        atol = muskemo.absolute_tolerance
+        rtol = muskemo.relative_tolerance
               
         sel_obj = bpy.context.selected_objects  #should be the parent body and the joint
                     
@@ -139,8 +142,8 @@ class AssignParentBodyOperator(Operator):
 
         if 'default_pose' in joint:
 
-            if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = 1e-6, atol = 1e-12): #check default pose difference with a tolerance
-                self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it's not in its default pose. Either reposition the joint, or clear its current child body. Operation cancelled.")
+            if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = rtol, atol = atol): #check default pose difference with a tolerance
+                self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it's not in its default pose. Either reposition the joint, or clear its current child body. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled.")
                 return {'FINISHED'}
 
         ### if none of the previous scenarios triggered an error, set the parent body
@@ -207,6 +210,9 @@ class AssignChildBodyOperator(Operator):
    
     def execute(self, context):
         
+        muskemo = bpy.context.scene.muskemo
+        atol = muskemo.absolute_tolerance
+        rtol = muskemo.relative_tolerance
 
         sel_obj = bpy.context.selected_objects  #should be the parent body and the joint
                     
@@ -258,9 +264,9 @@ class AssignChildBodyOperator(Operator):
 
         if 'default_pose' in joint:
             
-            if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = 1e-6, atol = 1e-12):
+            if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = rtol, atol = atol):
             
-                self.report({'ERROR'}, "You are attempting to assign a child body to joint '" + joint.name + "', but the joint is not in its default pose. Either reposition the joint, or clear its current parent body. Operation cancelled.")
+                self.report({'ERROR'}, "You are attempting to assign a child body to joint '" + joint.name + "', but the joint is not in its default pose. Either reposition the joint, or clear its current parent body. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled.")
                 return {'FINISHED'}
 
              

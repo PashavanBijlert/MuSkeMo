@@ -42,6 +42,7 @@ from .scripts.muskemo_properties import (SegmentParameterItem, #THIS MUST BE REG
 
 #### Global settings panel
 from .scripts.global_settings_panel import (VIEW3D_PT_global_settings_panel,
+                                            VIEW3D_PT_default_pose_tolerance_subpanel,
                                             SetRecommendedNavigationSettingsOperator,
                                      SetChildVisibilityInOutlinerOperator,
                                      ResetToDefaultPoseOperator,
@@ -184,6 +185,7 @@ from .scripts.inertialproperties_func import (inertial_properties)  ## This func
 
 classes = (  #Global settings panel 
                                     VIEW3D_PT_global_settings_panel,
+                                    VIEW3D_PT_default_pose_tolerance_subpanel,
                                      SetRecommendedNavigationSettingsOperator,
                                      SetChildVisibilityInOutlinerOperator,
                                      ResetToDefaultPoseOperator,

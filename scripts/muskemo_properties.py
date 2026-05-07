@@ -54,6 +54,32 @@ def collection_items(self, context):
 
 class MuSkeMoProperties(PropertyGroup):
 
+##### Global settings
+    relative_tolerance: FloatProperty(
+        name = "Default pose relative tolerance",
+        description="Relative tolerance used during default pose check (please read the manual before changing this)",
+        default = 1e-5,
+        min = 1e-12,
+        max = 5e-4,
+        precision = 7,
+        )
+    
+    
+    absolute_tolerance: FloatProperty(
+        name = "Default pose absolute tolerance",
+        description="Absolute tolerance during default pose check (please read the manual before changing this)",
+        default = 1e-6,
+        min = 1e-12,
+        max = 5e-4,
+        precision = 7,
+        )
+    
+    
+
+
+
+
+
 ##### bodies
     body_collection: StringProperty(
         name = "Body collection",

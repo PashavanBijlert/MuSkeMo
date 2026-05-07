@@ -8,15 +8,18 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
 
     coll = bpy.data.collections[collection_name]
     
+    muskemo = bpy.context.scene.muskemo
+    atol = muskemo.absolute_tolerance
+    rtol = muskemo.relative_tolerance
 
     for obj in coll.objects:
         if 'default_pose' in obj: #remove this if statement once landmarks also have a default pose
             worldmat = np.array(obj.matrix_world)
             default_pose = np.array(obj['default_pose'])
 
-            if not np.allclose(worldmat, default_pose, rtol = 1e-6, atol = 1e-12): #compare matrices with abstol of 1e-6, to account for single precision in Blender
+            if not np.allclose(worldmat, default_pose, rtol = rtol, atol = atol): #compare matrices with abstol of 1e-6, to account for single precision in Blender
        
-                self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default  (using the button), or reparent the contact. Operation cancelled")
+                self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default  (using the button), or reparent the contact. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled")
                 return {'FINISHED'}
 
 

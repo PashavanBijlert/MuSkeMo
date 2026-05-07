@@ -128,3 +128,43 @@ class VIEW3D_PT_global_settings_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming
 
         row = self.layout.row()
         row.operator("muskemo.reset_model_default_pose", text = 'Reset to default pose')
+
+
+import bpy
+
+
+class VIEW3D_PT_default_pose_tolerance_subpanel(VIEW3D_PT_MuSkeMo, Panel):
+    bl_idname = 'VIEW3D_PT_default_pose_tolerance_subpanel'
+    bl_parent_id = 'VIEW3D_PT_global_settings_panel'
+
+    bl_label = "Default pose tolerances"
+    bl_context = "objectmode"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        wm = context.window_manager
+        muskemo = context.scene.muskemo
+
+        # unique key for this panel
+        key = "muskemo_warn_default_pose_tolerances_shown"
+
+        # only trigger when first drawn after being opened
+        if not wm.get(key, False):
+            wm[key] = True
+
+            def draw_warning(self, context):
+                self.layout.label(text="Warning:")
+                self.layout.label(text="Changing default pose tolerances can cause inaccurate model outputs.")
+                self.layout.label(text="Please read the manual before changing this setting.")
+
+            context.window_manager.popup_menu(
+                draw_warning,
+                title="Default Pose Warning",
+                icon='ERROR'
+            )
+        
+        layout.prop(muskemo, "relative_tolerance")
+        layout.prop(muskemo, "absolute_tolerance")
+        
+       
