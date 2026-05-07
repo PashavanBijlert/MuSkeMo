@@ -205,7 +205,7 @@ class AssignInertialPropertiesOperator(Operator):
         for s_obj in source_objects:
             
             if not np.allclose(Matrix(s_obj['default_pose']), s_obj.matrix_world, rtol = rtol, atol = atol): #default pose check with tolerance
-                self.report({'ERROR'}, "Inertial properties of '" + s_obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled")
+                self.report({'ERROR'}, "Inertial properties of '" + s_obj.name + "' were computed in a different pose than the current pose. Reset the model to the default pose, or recompute the inertial properties. If the problem persists, you can try raising absolute tolerance to 5e-5 in the global settings panel, but your model may have errors (see the manual). Operation cancelled")
                 return {'FINISHED'}
 
         

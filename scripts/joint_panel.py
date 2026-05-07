@@ -143,7 +143,7 @@ class AssignParentBodyOperator(Operator):
         if 'default_pose' in joint:
 
             if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = rtol, atol = atol): #check default pose difference with a tolerance
-                self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it's not in its default pose. Either reposition the joint, or clear its current child body. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled.")
+                self.report({'ERROR'}, "You are attempting to assign a parent body to joint '" + joint.name + "', but it's not in its default pose. Either reposition the joint, or clear its current child body. If the problem persists, you can try raising absolute tolerance to 5e-5 in the global settings panel, but your model may have errors (see the manual). Operation cancelled.")
                 return {'FINISHED'}
 
         ### if none of the previous scenarios triggered an error, set the parent body
@@ -266,7 +266,7 @@ class AssignChildBodyOperator(Operator):
             
             if not np.allclose(Matrix(joint['default_pose']), joint.matrix_world, rtol = rtol, atol = atol):
             
-                self.report({'ERROR'}, "You are attempting to assign a child body to joint '" + joint.name + "', but the joint is not in its default pose. Either reposition the joint, or clear its current parent body. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled.")
+                self.report({'ERROR'}, "You are attempting to assign a child body to joint '" + joint.name + "', but the joint is not in its default pose. Either reposition the joint, or clear its current parent body. If the problem persists, you can try raising absolute tolerance to 5e-5 in the global settings panel, but your model may have errors (see the manual). Operation cancelled.")
                 return {'FINISHED'}
 
              

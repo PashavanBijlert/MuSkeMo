@@ -19,7 +19,7 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
 
             if not np.allclose(worldmat, default_pose, rtol = rtol, atol = atol): #compare matrices with abstol of 1e-6, to account for single precision in Blender
        
-                self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default  (using the button), or reparent the contact. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled")
+                self.report({'ERROR'}, "Contact '" + obj.name + "' was parented in a different pose than the current pose. Reset the model to the default  (using the button), or reparent the contact. If the problem persists, you can try raising absolute tolerance to 5e-5 in the global settings panel, but your model may have errors (see the manual). Operation cancelled")
                 return {'FINISHED'}
 
 

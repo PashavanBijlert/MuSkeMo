@@ -17,7 +17,7 @@ def write_joints(context, filepath, collection_name, delimiter, number_format, s
 
             if not np.allclose(worldmat, default_pose, rtol = rtol, atol = atol): #compare matrices with abstol of 1e-6, to account for single precision in Blender
        
-                self.report({'ERROR'}, "Joint '" + obj.name + "' has a parent or child assigned in a different pose than the current pose. Reset the model to the default pose (using the button), or reparent the joint. If the problem persists, try raising absolute tolerance to 1e-5 in the global settings panel (see the manual). Operation cancelled")
+                self.report({'ERROR'}, "Joint '" + obj.name + "' has a parent or child assigned in a different pose than the current pose. Reset the model to the default pose (using the button), or reparent the joint. If the problem persists, you can try raising absolute tolerance to 5e-5 in the global settings panel, but your model may have errors (see the manual). Operation cancelled")
                 return {'FINISHED'}
 
     coll = bpy.data.collections[collection_name]
