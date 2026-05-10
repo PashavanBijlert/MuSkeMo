@@ -70,7 +70,8 @@ class ResetToDefaultPoseOperator(Operator): #the operator also works on disjoint
             # Restore matrix_world if 'default_pose' is stored
             if 'default_pose' in obj:
                 obj.matrix_world = Matrix(obj['default_pose'])
-
+                bpy.context.view_layer.update()
+                
             # Recursively do this for all children
             for child in obj.children:
                 apply_default_pose(child)
