@@ -99,6 +99,8 @@ class ResetToDefaultPoseOperator(Operator): #the operator also works on disjoint
 
         return {'FINISHED'}    
 
+
+
 #### The panels
 
 class VIEW3D_PT_global_settings_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming convention ‘CATEGORY_PT_name’
@@ -131,10 +133,13 @@ class VIEW3D_PT_global_settings_panel(VIEW3D_PT_MuSkeMo, Panel):  # class naming
         row.operator("muskemo.reset_model_default_pose", text = 'Reset to default pose')
 
 
-import bpy
 
 
-class VIEW3D_PT_default_pose_tolerance_subpanel(VIEW3D_PT_MuSkeMo, Panel):
+class VIEW3D_PT_default_pose_tolerance_subpanel(
+    VIEW3D_PT_MuSkeMo,
+    Panel
+):
+
     bl_idname = 'VIEW3D_PT_default_pose_tolerance_subpanel'
     bl_parent_id = 'VIEW3D_PT_global_settings_panel'
 
@@ -143,29 +148,49 @@ class VIEW3D_PT_default_pose_tolerance_subpanel(VIEW3D_PT_MuSkeMo, Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
+
         layout = self.layout
-        wm = context.window_manager
         muskemo = context.scene.muskemo
 
-        # unique key for this panel
-        key = "muskemo_warn_default_pose_tolerances_shown"
+        if not muskemo.acknowledge_default_pose_warning:
 
-        # only trigger when first drawn after being opened
-        if not wm.get(key, False):
-            wm[key] = True
+            box = layout.box()
 
-            def draw_warning(self, context):
-                self.layout.label(text="Warning:")
-                self.layout.label(text="Changing default pose tolerances can cause inaccurate model outputs.")
-                self.layout.label(text="Please read the 'Default pose' section in the manual before changing this setting.")
-
-            context.window_manager.popup_menu(
-                draw_warning,
-                title="Default Pose Warning",
+            box.label(
+                text="Warning:",
                 icon='ERROR'
             )
-        
-        layout.prop(muskemo, "relative_tolerance")
-        layout.prop(muskemo, "absolute_tolerance")
-        
-       
+
+            box.label(
+                text="Changing default pose tolerances can"
+            )
+
+            box.label(
+                text="cause inaccurate model outputs."
+            )
+
+            box.separator()
+
+            box.label(
+                text="Please read the 'Default pose'"
+            )
+
+            box.label(
+                text="section in the manual before"
+            )
+
+            box.label(
+                text="changing this setting."
+            )
+
+            box.prop(
+                muskemo,
+                "acknowledge_default_pose_warning",
+                toggle=True
+            )
+
+        else:
+
+            layout.prop(muskemo, "relative_tolerance")
+
+            layout.prop(muskemo, "absolute_tolerance")

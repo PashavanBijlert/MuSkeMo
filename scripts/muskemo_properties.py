@@ -55,6 +55,13 @@ def collection_items(self, context):
 class MuSkeMoProperties(PropertyGroup):
 
 ##### Global settings
+
+    acknowledge_default_pose_warning: bpy.props.BoolProperty(
+    name="I Understand",
+    default=False
+)
+
+
     relative_tolerance: FloatProperty(
         name = "Default pose relative tolerance",
         description="Relative tolerance used during default pose check (please read the manual before changing this)",
