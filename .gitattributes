@@ -1,2 +1,3 @@
 # Ignore TeX files in language statistics completely
-*.tex linguist-detectable=false
+**/*.tex linguist-detectable=false
+**/*.tex linguist-vendored=true
