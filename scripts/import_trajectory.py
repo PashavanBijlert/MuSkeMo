@@ -419,12 +419,21 @@ class ImportTrajectory(Operator):
             # Muscle mat viewport display (i.e., workbench renderer)
             mat.keyframe_insert('diffuse_color',frame = frame_number)
 
-
+        #### keep track of trajectory time per frame
+        bpy.context.scene["trajectory_timebase"] = np.nan
+        # Give the custom property a tooltip description in the UI
+        id_props = bpy.context.scene.id_properties_ui("trajectory_timebase")
+        id_props.update(description="The timestamp (in seconds) of the current frame of the imported trajectory")
+        
         ##### start inserting keyframes per time point
         in_degrees = bpy.context.scene.muskemo.in_degrees
 
         for i in range(n_frames):                     
             frame_number = i+1 
+
+            #keyframe trajectory time
+            bpy.context.scene["trajectory_timebase"] = float(time_rs[i])
+            bpy.context.scene.keyframe_insert(data_path='["trajectory_timebase"]', frame=frame_number)
 
             coordinate_traj_row = coordinate_trajectories_rs[i,:] #row i of the resampled coordinate trajectory
 
