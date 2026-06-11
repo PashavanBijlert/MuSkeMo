@@ -224,6 +224,26 @@ class ExportMusclesOperator(Operator, ExportHelperCustom): #inherits from Export
         write_muscles(context, self.filepath, muscle_colname, delimiter, self.number_format)
         return {'FINISHED'}
 
+class ExportMuscleTemplateOperator(Operator, ExportHelperCustom): 
+    bl_description = "Export scaled muscle template from the designated collection to a csv or other text file"
+    bl_idname = "export.export_muscle_template"
+    bl_label = "Export muscle template"
+
+    def invoke(self, context, event):
+        self.default_filename = 'Muscle_template'  #set the default filename
+        return super().invoke(context, event)
+        
+    def execute(self, context):
+        from .write_muscle_templates_func import write_muscle_templates
+       
+        delimiter = bpy.context.scene.muskemo.delimiter 
+        muscle_colname = bpy.context.scene.muskemo.muscle_collection
+        
+                
+        write_muscle_templates(context, self.filepath, muscle_colname, delimiter, self.number_format)
+        return {'FINISHED'}
+
+
 ## export wrapping objects
 
 
@@ -490,7 +510,24 @@ class VIEW3D_PT_export_muscles_subpanel(VIEW3D_PT_MuSkeMo, Panel):
 
         row = self.layout.row()
         row.prop(muskemo, "muscle_current_position_export")
+        
+class VIEW3D_PT_export_muscle_template_subpanel(VIEW3D_PT_MuSkeMo, Panel):
+    bl_idname = 'VIEW3D_PT_export_muscle_template_subpanel'
+    bl_parent_id = 'VIEW3D_PT_export_panel'
+    bl_label = "Export muscle template"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        muskemo = context.scene.muskemo
+        row = self.layout.row()
+        split1 = row.split(factor=0.33)
+        split1.label(text="Collection")
+        split2 = split1.split(factor=0.5)
+        split2.prop(muskemo, "muscle_collection", text="")
+        split2.operator("export.export_muscle_template", text="Export muscle template")
 
+        row = self.layout.row()
+        row.prop(muskemo, "muscle_current_position_export")
 
 ## Export wrap objects subpanel
 class VIEW3D_PT_export_wrapping_subpanel(VIEW3D_PT_MuSkeMo, Panel):
