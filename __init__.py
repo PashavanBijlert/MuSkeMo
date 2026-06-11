@@ -122,7 +122,8 @@ from .scripts.export_panel import (VIEW3D_PT_export_panel,  VIEW3D_PT_export_bod
 from .scripts.import_panel import (VIEW3D_PT_import_panel, VIEW3D_PT_import_modelcomponents_subpanel,
                                    VIEW3D_PT_import_OpenSim_model_subpanel, VIEW3D_PT_import_Gaitsym_model_subpanel,
                                    VIEW3D_PT_import_MuJoCo_model_subpanel, 
-                                   ImportBodiesOperator,ImportJointsOperator,ImportMusclesOperator,
+                                   ImportBodiesOperator,ImportJointsOperator,
+                                   ImportMusclesOperator,ImportMuscleTemplateOperator,
                                    ImportContactsOperator,ImportFramesOperator,
                                    ImportOpenSimModel, ImportGaitsymModel,
                                    ImportMuJoCoModel,
@@ -265,7 +266,8 @@ classes = (  #Global settings panel
                                   VIEW3D_PT_import_panel,  VIEW3D_PT_import_modelcomponents_subpanel,
                                   VIEW3D_PT_import_OpenSim_model_subpanel, VIEW3D_PT_import_Gaitsym_model_subpanel, 
                                   VIEW3D_PT_import_MuJoCo_model_subpanel, 
-                                  ImportBodiesOperator, ImportJointsOperator, ImportMusclesOperator,
+                                  ImportBodiesOperator, ImportJointsOperator, 
+                                  ImportMusclesOperator,ImportMuscleTemplateOperator,
                                   ImportContactsOperator,ImportFramesOperator,
 
                                   ImportOpenSimModel, ImportGaitsymModel, #these are separate scripts

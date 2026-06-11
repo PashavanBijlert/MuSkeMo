@@ -342,6 +342,188 @@ class ImportMusclesOperator(Operator, ImportHelperCustom):  #inherits from Impor
 
         return {'FINISHED'}
     
+import bpy
+import re
+import mathutils
+from mathutils import Vector
+from bpy.types import Operator
+# Assuming ImportHelperCustom is available in your scope
+# from .your_custom_module import ImportHelperCustom
+
+class ImportMuscleTemplateOperator(Operator, ImportHelperCustom):  #inherits from ImportHelperCustom class
+    bl_description = "Import a MuSkeMo-created muscle template file and map to current rig"
+    bl_idname = "import.import_muscle_template"
+    bl_label = "Import muscle templates"
+
+    def execute(self, context):
+        
+        # Call the custom superclass method read_CSV_data to read the CSV data
+        data = self.read_csv_data(context)
+
+        headers = data[0]
+        data = data[1:]
+        
+        # throw an error if this isn't a template format     
+        if 'muscle_point' not in headers[0] and 'frametype' not in headers:
+            self.report({'ERROR'}, "The loaded file does not appear to be a 'muscle template' file created by MuSkeMo")
+            return {'FINISHED'}
+
+        colname = bpy.context.scene.muskemo.muscle_collection #name for the collection that will contain the hulls
+        
+        from .create_muscle_func import create_muscle
+
+        ### get unique muscle names               
+        # Extract the first column (muscle point names)
+        muscle_point_names = [row[0] for row in data]
+
+        # Define the pattern to remove suffixes (_or, _ins, _via#)
+        pattern = r'_or|_ins|_via\d+'
+
+        # Apply the regex pattern to remove the suffixes and maintain original order
+        muscle_names = []
+        seen = set()
+
+        for name in muscle_point_names:
+            clean_name = re.sub(pattern, '', name)
+            if clean_name not in seen:
+                seen.add(clean_name)
+                muscle_names.append(clean_name)
+        
+        # Tracking skipped muscles for end-of-script warning
+        skipped_muscles = {}
+        
+        # Global axis assumptions used in exporter (can be hooked to scene props later)
+        global_up = Vector((0.0, 1.0, 0.0))
+        global_forward = Vector((1.0, 0.0, 0.0))
+
+        for muscle_name in muscle_names:
+
+            data_onemusc = [x for x in data if x[0].startswith(muscle_name)] #data rows of a single muscle
+            
+            # --- Pre-check step: ensure ALL bodies and joints exist before trying to build ---
+            skip_muscle = False
+            missing_components = set()
+            
+            for point_row in data_onemusc:
+                pbody = point_row[1]
+                proxjoint = point_row[2]
+                distjoint = point_row[3]
+                frame_origin = point_row[5]
+                
+                # Check Body
+                if pbody not in bpy.data.objects:
+                    missing_components.add(f"BODY: {pbody}")
+                elif bpy.data.objects[pbody].get('MuSkeMo_type') != 'BODY':
+                    missing_components.add(f"NOT A BODY: {pbody}")
+                
+                # Check Joints
+                for j_name in [proxjoint, distjoint, frame_origin]:
+                    if j_name not in bpy.data.objects:
+                        missing_components.add(f"JOINT: {j_name}")
+                    elif bpy.data.objects[j_name].get('MuSkeMo_type') != 'JOINT':
+                        missing_components.add(f"NOT A JOINT: {j_name}")
+            
+            # If any component is missing, log it and skip to the next muscle
+            if len(missing_components) > 0:
+                skipped_muscles[muscle_name] = list(missing_components)
+                continue
+
+            # --- Frame Reconstruction and Muscle Creation ---
+            for point_row in data_onemusc:  
+                parent_body_name = point_row[1]
+                
+                J_prox = bpy.data.objects[point_row[2]]
+                J_dist = bpy.data.objects[point_row[3]]
+                frametype = point_row[4]
+                origin_joint = bpy.data.objects[point_row[5]]
+                
+                pos_x_norm = float(point_row[6])
+                pos_y_norm = float(point_row[7])
+                pos_z_norm = float(point_row[8])
+                
+                F_max_norm = float(point_row[9])
+                opt_fib_len_norm = float(point_row[10])
+                tendon_slk_norm = float(point_row[11])
+                pennation_angle = float(point_row[12])
+
+                # 1. Reverse the Frame Generation
+                p_prox = J_prox.matrix_world.translation
+                p_dist = J_dist.matrix_world.translation
+                
+                vec_prox_to_dist = p_prox - p_dist
+                frame_length = vec_prox_to_dist.length
+                
+                if frame_length == 0:
+                    continue # Failsafe against zero-length segments
+
+                axis_1 = vec_prox_to_dist.normalized()
+                
+                if frametype == 'yaxisjoint-ztemp':
+                    y_axis = axis_1
+                    z_axis = global_forward.cross(y_axis).normalized()
+                    x_axis = y_axis.cross(z_axis).normalized()
+                else: # xaxisjoint-ztemp
+                    x_axis = axis_1
+                    z_axis = x_axis.cross(global_up).normalized()
+                    y_axis = z_axis.cross(x_axis).normalized()
+
+                # Rebuild Transformation matrix (Local to Global)
+                rot_matrix = mathutils.Matrix([
+                    [x_axis.x, y_axis.x, z_axis.x],
+                    [x_axis.y, y_axis.y, z_axis.y],
+                    [x_axis.z, y_axis.z, z_axis.z]
+                ]).to_4x4()
+                
+                frame_origin_pos = origin_joint.matrix_world.translation
+                rot_matrix.translation = frame_origin_pos
+
+                # 2. De-normalize the local position
+                local_pos_scaled = Vector((
+                    pos_x_norm * frame_length, 
+                    pos_y_norm * frame_length, 
+                    pos_z_norm * frame_length
+                ))
+
+                # 3. Transform Local Position back to Global Position
+                point_global_loc = rot_matrix @ local_pos_scaled
+
+                               
+                # Create the muscle point
+                create_muscle(muscle_name = muscle_name, 
+                              is_global = True, 
+                              body_name = parent_body_name,
+                              point_position = [point_global_loc.x, point_global_loc.y, point_global_loc.z],
+                              collection_name=colname,
+                              pennation_angle = pennation_angle)
+                
+
+                muscle  = bpy.data.objects[muscle_name]
+                # 4. De-normalize the muscle properties 
+                # (Assuming F_max was normalized against current_length^2)
+                
+                depsgraph = bpy.context.evaluated_depsgraph_get()#get the dependency graph. If you change things in the scene, update this using depsgraph.update()
+                obj_ev = muscle.evaluated_get(depsgraph) #
+                obj_ev_mesh = obj_ev.to_mesh()
+                length = obj_ev_mesh.attributes['length'].data[0].value  #muscle length is stored as an attribute via the muscle geometry nodes.
+                obj_ev.to_mesh_clear()
+
+                muscle['optimal_fiber_length'] = opt_fib_len_norm * length
+                muscle['tendon_slack_length']  = tendon_slk_norm * length
+                muscle['F_max']                = F_max_norm * (length**2)
+
+        # Post-execution reporting
+        if skipped_muscles:
+            warning_msg = f"Imported with skipped muscles due to missing rig components. Check the console for details."
+            self.report({'WARNING'}, warning_msg)
+            
+            print("\n--- IMPORT MUSCLE TEMPLATES: SKIPPED MUSCLES ---")
+            for m_name, missing in skipped_muscles.items():
+                print(f"Skipped '{m_name}' - Missing: {', '.join(missing)}")
+            print("--------------------------------------------------\n")
+        else:
+            self.report({'INFO'}, "Successfully imported all muscle templates.")
+
+        return {'FINISHED'}
 
 ## import contacts
 
@@ -552,6 +734,14 @@ class VIEW3D_PT_import_modelcomponents_subpanel(VIEW3D_PT_MuSkeMo, Panel):  # cl
         split = split.split(factor=1/2)
         split.prop(muskemo, "muscle_collection", text="")
         split.operator("import.import_muscles", text="Import muscles")
+
+         # Row for muscle collection
+        row = layout.row()
+        split = row.split(factor=1/3)
+        split.label(text="Muscle Collection")
+        split = split.split(factor=1/2)
+        split.prop(muskemo, "muscle_collection", text="")
+        split.operator("import.import_muscle_template", text="Import muscle template")
 
         # Row for contact collection
         row = layout.row()

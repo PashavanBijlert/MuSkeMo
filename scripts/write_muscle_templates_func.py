@@ -109,28 +109,14 @@ def write_muscle_templates(context, filepath, collection_name, delimiter, number
                         body_name = modifier.object.name
             point_bodies.append(body_name)
 
-### Determine Muscle Directionality (Proximal-to-Distal vs Distal-to-Proximal)
-        is_prox_to_dist = True
-        if len(point_bodies) >= 2:
-            last_body = point_bodies[-1]
-            
-            # Step backward to find the first body that is DIFFERENT from last_body
-            penult_body = None
-            for b in reversed(point_bodies[:-1]):
-                if b != last_body:
-                    penult_body = b
-                    break
-            
-            # If we found a different body, check the joint flow
-            if penult_body and last_body in segments and penult_body in segments:
-                last_j_in = segments[last_body]['J_in']
-                penult_j_outs = segments[penult_body]['J_out']
-                
-                # If the previous body's out-joints contain the last body's in-joint
-                if penult_j_outs and last_j_in in penult_j_outs:
-                    is_prox_to_dist = True
-                else:
-                    is_prox_to_dist = False
+### Recursive helper to check if target_body is downstream of current_body
+        def is_downstream(current_body_name, target_body_name):
+            if not current_body_name or current_body_name not in segments: return False
+            for j in segments[current_body_name]['J_out'] or []:
+                child = j.get('child_body')
+                if child == target_body_name: return True
+                if child and is_downstream(child, target_body_name): return True
+            return False
 
 ### loop through points
         for i in range(0, len(curve.data.splines[0].points)):
@@ -147,18 +133,35 @@ def write_muscle_templates(context, filepath, collection_name, delimiter, number
                 print('ERROR! Point number ' + str(i+1) + ' of ' + curve.name + ' is not hooked to a valid body segment')
                 continue
                 
-            # Figure out topological "next" and "prev" bodies along the muscle path based on directionality
-            if is_prox_to_dist:
-                next_point_body = point_bodies[i+1] if i+1 < len(point_bodies) else None
-                prev_point_body = point_bodies[i-1] if i-1 >= 0 else None
-            else:
-                # If built distal-to-proximal, topological "next" (further down chain) is the previous index
-                next_point_body = point_bodies[i-1] if i-1 >= 0 else None
-                prev_point_body = point_bodies[i+1] if i+1 < len(point_bodies) else None
-
             segment_data = segments[body_name]
             is_distal = (segment_data['J_out'] is None)
             is_root = (body_name == root_body_name)
+
+            # Look locally at the muscle path: find the nearest different bodies
+            forward_body = next((b for b in point_bodies[i+1:] if b != body_name), None)
+            backward_body = next((b for b in reversed(point_bodies[:i]) if b != body_name), None)
+
+            # Find WHICH branch (J_out) the muscle interacts with locally
+            J_out = None
+            if segment_data['J_out']:
+                # Does the muscle travel forward into a downstream branch?
+                for j in segment_data['J_out']:
+                    child = j.get('child_body')
+                    if child == forward_body or is_downstream(child, forward_body):
+                        J_out = j
+                        break
+                
+                # If not, does the muscle come from a downstream branch (e.g. drawn backwards)?
+                if not J_out:
+                    for j in segment_data['J_out']:
+                        child = j.get('child_body')
+                        if child == backward_body or is_downstream(child, backward_body):
+                            J_out = j
+                            break
+                            
+                # Fallback: if muscle doesn't go downstream (e.g., stays entirely on this body)
+                if not J_out:
+                    J_out = segment_data['J_out'][0]
 
 ### Frame Construction Logic
             J_prox = None
@@ -166,42 +169,26 @@ def write_muscle_templates(context, filepath, collection_name, delimiter, number
             origin_joint = None
             
             if is_root:
-                # Points attached to root_body use the next segment down as their frame, but use j_in as origin.
-                if next_point_body and next_point_body in segments:
-                    next_seg = segments[next_point_body]
-                    J_prox = next_seg['J_in']
-                    
-                    # Assume the next segment is a regular segment and grab its primary J_out for the frame axis
-                    J_dist = next_seg['J_out'][0] if next_seg['J_out'] else None
-                    origin_joint = J_prox
-                else:
-                    continue
+                # Root body uses the next segment down based on the active branch we just found
+                if J_out:
+                    next_body = J_out.get('child_body')
+                    if next_body and next_body in segments:
+                        next_seg = segments[next_body]
+                        J_prox = J_out # which acts as next_seg['J_in']
+                        J_dist = next_seg['J_out'][0] if next_seg['J_out'] else None
+                        origin_joint = J_prox
 
             elif is_distal:
-                # Points attached to a distal body use the previous segment, using j_out as origin.
-                if prev_point_body and prev_point_body in segments:
-                    prev_seg = segments[prev_point_body]
-                    J_prox = prev_seg['J_in']
-                    # The j_out of the previous segment connecting to THIS distal body is exactly this body's J_in
+                # Distal body uses previous segment
+                prev_body = segment_data['J_in'].parent if segment_data['J_in'] else None
+                if prev_body and prev_body.name in segments:
+                    J_prox = segments[prev_body.name]['J_in']
                     J_dist = segment_data['J_in'] 
                     origin_joint = J_dist
-                else:
-                    continue
 
             else:
-                # All "regular" segments use the j_out as the origin.
+                # Regular segment uses the specific J_out the muscle goes through
                 J_prox = segment_data['J_in']
-                
-                # Path-trace to find WHICH J_out the muscle goes through (if the body branches)
-                J_out = None
-                if next_point_body and next_point_body in segments:
-                    next_j_in = segments[next_point_body]['J_in']
-                    if next_j_in in segment_data['J_out']:
-                        J_out = next_j_in
-                        
-                if not J_out: # Fallback
-                    J_out = segment_data['J_out'][0]
-                    
                 J_dist = J_out
                 origin_joint = J_out
 
@@ -256,8 +243,8 @@ def write_muscle_templates(context, filepath, collection_name, delimiter, number
             pos_z_norm = local_pos.z / frame_length
 
             f_max_norm = curve['F_max'] / (current_length**2)
-            opt_fib_len_norm = curve['optimal_fiber_length'] / frame_length
-            tendon_slk_norm = curve['tendon_slack_length'] / frame_length
+            opt_fib_len_norm = curve['optimal_fiber_length'] / current_length
+            tendon_slk_norm = curve['tendon_slack_length'] / current_length
             pen_angle = curve['pennation_angle']
 
 ### Muscle Exports
