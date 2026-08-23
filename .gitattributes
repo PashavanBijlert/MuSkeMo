@@ -1,3 +1,2 @@
-# Ignore TeX files in language statistics completely
-**/*.tex linguist-detectable=false
-**/*.tex linguist-vendored=true
+# Exclude documentation from GitHub Linguist language statistics
+MuSkeMo\ manual/** linguist-vendored
