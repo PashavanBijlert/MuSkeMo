@@ -80,7 +80,7 @@ def create_simple_muscle_node_group():
     compare_node.location = (-600, 150)
     compare_node.data_type = 'INT'
     compare_node.operation = 'EQUAL'
-    compare_node.inputs[3].default_value = 1
+    compare_node.inputs["B"].default_value = 1
 
     # Switch node (set to integer)
     switch_node = muscle_node_group.nodes.new('GeometryNodeSwitch')
@@ -159,7 +159,7 @@ def create_simple_muscle_node_group():
     muscle_node_group.links.new(instances_on_points.outputs['Instances'], realize_instances.inputs['Geometry'])
     muscle_node_group.links.new(uv_sphere.outputs['Mesh'], instances_on_points.inputs['Instance'])
 
-    muscle_node_group.links.new(domain_size.outputs['Point Count'], compare_node.inputs[2])
+    muscle_node_group.links.new(domain_size.outputs['Point Count'], compare_node.inputs["A"])
     muscle_node_group.links.new(compare_node.outputs['Result'], switch_node.inputs['Switch'])
     muscle_node_group.links.new(switch_node.outputs['Output'], endpoint_selection.inputs['Start Size'])
     muscle_node_group.links.new(switch_node.outputs['Output'], endpoint_selection.inputs['End Size'])
@@ -218,7 +218,14 @@ def add_simple_muscle_node(muscle_name):
     modifier = obj.modifiers.new(name=node_group_name, type='NODES')
     modifier.node_group = node_group
     
-    radius =  bpy.context.scene.muskemo.muscle_visualization_radius
-    modifier['Socket_1'] = radius
+    radius = bpy.context.scene.muskemo.muscle_visualization_radius
 
+    radsocket = modifier.node_group.interface.items_tree["Radius"].identifier
+
+    if bpy.app.version >= (5, 2, 0):
+        getattr(modifier.properties.inputs, radsocket).value = radius
+    else:
+        modifier[radsocket] = radius
+
+    
     return
