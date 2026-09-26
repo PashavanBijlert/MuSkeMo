@@ -1367,10 +1367,18 @@ class ImportOpenSimModel(Operator):
             changed_name_objects_str = ", ".join(changed_name_objects)
             self.report({'WARNING'}, "Wrapping objects '" + changed_name_objects_str + "' had identical names to other existing model components (e.g. Joints). '_wrap' has been appended to their names to prevent conflicts.")
 
-            
+        
            
         #### create muscles
-            
+
+        #Helper function to help set modifier socket inputs
+        def set_socket(modifier, socket_identifier, value):
+            if bpy.app.version >= (5, 2, 0):
+                getattr(modifier.properties.inputs, socket_identifier).value = value
+            else:
+                modifier[socket_identifier] = value
+
+
         for muscle_name, muscle in muscle_data.items():
 
             if type(muscle) == bool:  #the conditional and moving path point flags are bools, and should be skipped in this loop
@@ -1440,9 +1448,15 @@ class ImportOpenSimModel(Operator):
 
 
                             ## loop through interface items to get the correct socket identifier for pre wrap point index, which is estimated in assign_muscle_wrap (in this case, 'Socket_6')
+                           
+                            # Get pre-wrap point index
                             for item in wrap_geonode.node_group.interface.items_tree:
                                 if item.item_type == 'SOCKET' and item.name == 'Index Of Pre Wrap Point Starting At 1':
-                                    index_of_pre_wrap_point = wrap_geonode[item.identifier]
+                                    index_of_pre_wrap_point = (
+                                        getattr(wrap_geonode.properties.inputs, item.identifier).value
+                                        if bpy.app.version >= (5, 2, 0)
+                                        else wrap_geonode[item.identifier]
+                                    )
                             
                             # Track occurrences of index_of_pre_wrap_point, so that we can give a warning later
                             pre_wrap_indices_count[index_of_pre_wrap_point] = pre_wrap_indices_count.get(index_of_pre_wrap_point, 0) + 1
@@ -1477,14 +1491,13 @@ class ImportOpenSimModel(Operator):
 
                                 self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj_data['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
 
-                            #set the proj angle and Force Sided Wrap node inputs
+                            # Set the Projection Angle and Force Sided Wrap modifier inputs
                             for item in node_group.interface.items_tree:
                                 if item.item_type == 'SOCKET':
                                     if item.name == 'Projection Angle':
-                                        wrap_geonode[item.identifier] = proj_angle
+                                        set_socket(wrap_geonode, item.identifier, proj_angle)
                                     elif item.name == 'Force Sided Wrap':
-                                        wrap_geonode[item.identifier] = force_wrap
-
+                                        set_socket(wrap_geonode, item.identifier, force_wrap)
                                 
                         else:
 
