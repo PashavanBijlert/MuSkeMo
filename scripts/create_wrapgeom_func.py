@@ -323,22 +323,45 @@ def create_wrapgeom(name, geomtype, collection_name,
     modifier = obj.modifiers.new(name="WrapObjMesh", type='NODES')
 
     modifier.node_group = node_tree
-    
+
+    items_tree = modifier.node_group.interface.items_tree
+
+    if bpy.app.version >= (5, 2, 0):  #Blender 5.2 changed modifier socket assignment, we now need to use gettatr to allow for dynamic socket assignments, or use the old way in older versions of Blender.
+        def set_socket(socket, value):
+            getattr(modifier.properties.inputs, socket).value = value
+    else:
+        def set_socket(socket, value):
+            modifier[socket] = value
+
     if geomtype == 'Cylinder':
-        # Set the radius and depth in the modifier socket
-        modifier['Socket_1'] = radius
-        modifier['Socket_2'] = height
+        # Set the radius and height in the modifier sockets
+
+        radsocket = items_tree["Radius"].identifier
+        set_socket(radsocket, radius)
+
+        heightsocket = items_tree["Height"].identifier
+        set_socket(heightsocket, height)
 
     if geomtype == 'Sphere':
-        # Set the radius and depth in the modifier socket
-        modifier['Socket_1'] = radius
+        # Set the radius in the modifier socket
 
-    if geomtype == 'Ellipsoid':    
-        # Set the radii in the modifier socket
-        modifier['Socket_1'] = radius_x
-        modifier['Socket_2'] = radius_y
-        modifier['Socket_3'] = radius_z
-        modifier['Socket_4'] = 4 #default ellipsoid resolution
+        radsocket = items_tree["Radius"].identifier
+        set_socket(radsocket, radius)
+
+    if geomtype == 'Ellipsoid':
+        # Set the radii in the modifier sockets
+
+        radsocket_x = items_tree["Radius x"].identifier
+        set_socket(radsocket_x, radius_x)
+
+        radsocket_y = items_tree["Radius y"].identifier
+        set_socket(radsocket_y, radius_y)
+
+        radsocket_z = items_tree["Radius z"].identifier
+        set_socket(radsocket_z, radius_z)
+
+        ellres_socket = items_tree["Ellipsoid resolution"].identifier
+        set_socket(ellres_socket, 4)
 
     ## custom properties for cylinder
     obj['wrap_type'] = geomtype   #to inform the user what type is created
