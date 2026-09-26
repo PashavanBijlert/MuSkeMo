@@ -140,7 +140,14 @@ def assign_muscle_wrap(wrap_obj_name, muscle_name, self):
                 total_dist_to_wrap.append(dpoint0_wrap+dpoint1_wrap)
         
         index_of_pre_wrap_point = total_dist_to_wrap.index(min(total_dist_to_wrap)) +1 #get the index where the two points have minimal distance to the wrap, while also having different frames. Add 1 because the index count starts at 1
-        geonode['Socket_6']  = index_of_pre_wrap_point #socket for setting the index
+        
+        idxsocket = geonode.node_group.interface.items_tree["Index Of Pre Wrap Point Starting At 1"].identifier
+
+        if bpy.app.version >= (5, 2, 0):
+            getattr(geonode.properties.inputs, idxsocket).value = index_of_pre_wrap_point
+        else:
+            geonode[idxsocket] = index_of_pre_wrap_point
+        
 
         
         
