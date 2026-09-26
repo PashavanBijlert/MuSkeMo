@@ -162,9 +162,9 @@ def create_muscle (muscle_name, point_position, body_name = '',
             body = bpy.data.objects[body_name]     
             obj.modifiers[modname].object = body  #      
 
-    #Ensure the last two modifiers are always the Visualization and then the bevel modifier
-    n_modifiers = len(obj.modifiers)
-    obj.modifiers.move(n_modifiers-1, last_point) #new modifiers are placed at the end, index is n_modifiers-1. Place it at the index of the last curve point.
+    # Ensure every Hook modifier is before the visualization modifier.
+    hook_index = obj.modifiers.find(modname)
+    viz_index = obj.modifiers.find(muscle_name + '_SimpleMuscleViz')
 
-
-  
+    if hook_index > viz_index:
+        obj.modifiers.move(hook_index, viz_index)
