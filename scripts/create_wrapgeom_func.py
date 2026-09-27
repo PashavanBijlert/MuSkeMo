@@ -326,42 +326,28 @@ def create_wrapgeom(name, geomtype, collection_name,
 
     items_tree = modifier.node_group.interface.items_tree
 
-    if bpy.app.version >= (5, 2, 0):  #Blender 5.2 changed modifier socket assignment, we now need to use gettatr to allow for dynamic socket assignments, or use the old way in older versions of Blender.
-        def set_socket(socket, value):
-            getattr(modifier.properties.inputs, socket).value = value
-    else:
-        def set_socket(socket, value):
-            modifier[socket] = value
+    #Helper function to help set modifier socket inputs
+    from .muscle_panel import set_socket
 
     if geomtype == 'Cylinder':
         # Set the radius and height in the modifier sockets
 
-        radsocket = items_tree["Radius"].identifier
-        set_socket(radsocket, radius)
+        set_socket(modifier, "Radius", radius)
 
-        heightsocket = items_tree["Height"].identifier
-        set_socket(heightsocket, height)
+        set_socket(modifier, "Height", height)
 
     if geomtype == 'Sphere':
         # Set the radius in the modifier socket
-
-        radsocket = items_tree["Radius"].identifier
-        set_socket(radsocket, radius)
+        
+        set_socket(modifier, "Radius", radius)
 
     if geomtype == 'Ellipsoid':
         # Set the radii in the modifier sockets
 
-        radsocket_x = items_tree["Radius x"].identifier
-        set_socket(radsocket_x, radius_x)
-
-        radsocket_y = items_tree["Radius y"].identifier
-        set_socket(radsocket_y, radius_y)
-
-        radsocket_z = items_tree["Radius z"].identifier
-        set_socket(radsocket_z, radius_z)
-
-        ellres_socket = items_tree["Ellipsoid resolution"].identifier
-        set_socket(ellres_socket, 4)
+        set_socket(modifier, "Radius x", radius_x)
+        set_socket(modifier, "Radius y", radius_y)
+        set_socket(modifier, "Radius z", radius_z)
+        set_socket(modifier, "Ellipsoid resolution", 4) # a default ellipsoid radius of 4
 
     ## custom properties for cylinder
     obj['wrap_type'] = geomtype   #to inform the user what type is created

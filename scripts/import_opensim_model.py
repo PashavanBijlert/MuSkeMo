@@ -1372,13 +1372,8 @@ class ImportOpenSimModel(Operator):
         #### create muscles
 
         #Helper function to help set modifier socket inputs
-        def set_socket(modifier, socket_identifier, value):
-            if bpy.app.version >= (5, 2, 0):
-                getattr(modifier.properties.inputs, socket_identifier).value = value
-            else:
-                modifier[socket_identifier] = value
-
-
+        from .muscle_panel import set_socket
+        
         for muscle_name, muscle in muscle_data.items():
 
             if type(muscle) == bool:  #the conditional and moving path point flags are bools, and should be skipped in this loop
@@ -1492,12 +1487,10 @@ class ImportOpenSimModel(Operator):
                                 self.report({'WARNING'}, "Wrapping object '" + wrap_name + "' has wrapping quadrant '" + wrap_obj_data['quadrant'] + "', which is not yet supported. You should set the projection orientation angle manually for desired behaviour.")
 
                             # Set the Projection Angle and Force Sided Wrap modifier inputs
-                            for item in node_group.interface.items_tree:
-                                if item.item_type == 'SOCKET':
-                                    if item.name == 'Projection Angle':
-                                        set_socket(wrap_geonode, item.identifier, proj_angle)
-                                    elif item.name == 'Force Sided Wrap':
-                                        set_socket(wrap_geonode, item.identifier, force_wrap)
+                            set_socket(wrap_geonode, 'Projection Angle', proj_angle)
+                            set_socket(wrap_geonode, 'Force Sided Wrap', force_wrap)
+                            print('sloi')
+                            
                                 
                         else:
 

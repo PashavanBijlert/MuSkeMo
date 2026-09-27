@@ -220,12 +220,10 @@ def add_simple_muscle_node(muscle_name):
     
     radius = bpy.context.scene.muskemo.muscle_visualization_radius
 
-    radsocket = modifier.node_group.interface.items_tree["Radius"].identifier
+    from .muscle_panel import set_socket
 
-    if bpy.app.version >= (5, 2, 0):
-        getattr(modifier.properties.inputs, radsocket).value = radius
-    else:
-        modifier[radsocket] = radius
+    set_socket(modifier, "Radius", radius)
+
 
     
     return

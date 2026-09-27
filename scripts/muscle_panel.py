@@ -17,6 +17,28 @@ import time
 from .. import VIEW3D_PT_MuSkeMo
 
 
+## Setting and getting socket values - Muscles have many geometry node inputs that are accesible via the modifier input, known as sockets. 
+# Pre Blender 5.2, these were hardcoded by number(e.g. modifier["Socket_1"]). After Blender 5.2, this was implemented more gracefully, but to maintain backwards compatibility,
+# I've added getter and setter functions here that should be used for setting and getting modifier inputs.
+
+#Helper function to help set modifier socket inputs
+def set_socket(modifier, socket_name, value):
+
+    socket_identifier = modifier.node_group.interface.items_tree[socket_name].identifier #results in e.g. "Socket_0"
+    if bpy.app.version >= (5, 2, 0):
+        getattr(modifier.properties.inputs, socket_identifier).value = value
+    else:
+        modifier[socket_identifier] = value
+
+def get_socket(modifier, socket_name): #get the value from a socket / modifier input by inputting the name of the socket
+    socket_identifier = modifier.node_group.interface.items_tree[socket_name].identifier #results in e.g. "Socket_0"
+    if bpy.app.version >= (5, 2, 0):
+        return getattr(modifier.properties.inputs, socket_identifier).value
+    else:
+        return modifier[socket_identifier]        
+
+
+
 
 class CreateNewMuscleOperator(Operator):
     bl_idname = "muscle.create_new_muscle"
@@ -320,19 +342,12 @@ class UpdateMuscleVizRadiusOperator(Operator):
         
         muscle_visualization_radius = bpy.context.scene.muskemo.muscle_visualization_radius
 
-        #Helper function to help set modifier socket inputs
-        def set_socket(modifier, socket_identifier, value):
-            if bpy.app.version >= (5, 2, 0):
-                getattr(modifier.properties.inputs, socket_identifier).value = value
-            else:
-                modifier[socket_identifier] = value
-
-
+        
         for muscle in muscles:
             modifier = muscle.modifiers[muscle.name + '_SimpleMuscleViz']
-            radsocket = modifier.node_group.interface.items_tree["Radius"].identifier
+            socket_name = "Radius"
 
-            set_socket(modifier, radsocket, muscle_visualization_radius)
+            set_socket(modifier, socket_name, muscle_visualization_radius)
             modifier.node_group.interface_update(bpy.context)
         
         #update the merge by distance value based on the desired radius
@@ -871,26 +886,10 @@ class SingleDOFLengthMomentArmOperator(Operator):
             wrap_obj_res = []
 
 
-            def get_socket(modifier, socket_identifier): #get the value from a socket / modifier input by inputting the name of the socket
-                if bpy.app.version >= (5, 2, 0):
-                    return getattr(modifier.properties.inputs, socket_identifier).value
-                else:
-                    return modifier[socket_identifier]
-
             for modifier in wrapmods:
                 
-                # wrap_point_res.append(modifier["Socket_10"]) #resolution of the wrapping curve
-                # modifier["Socket_10"] = 250
-                # modifier.show_render = not modifier.show_render  # Toggle visibility to refresh
-                # modifier.show_render = not modifier.show_render
-
-                wrap_socket = next(
-                    item.identifier
-                    for item in modifier.node_group.interface.items_tree
-                    if item.item_type == 'SOCKET' and item.name == 'Object'
-                )
-
-                wrapobj = get_socket(modifier, wrap_socket)
+               
+                wrapobj = get_socket(modifier, "Object")
                 
                
                 wrapobj.modifiers["WrapObjMesh"]
