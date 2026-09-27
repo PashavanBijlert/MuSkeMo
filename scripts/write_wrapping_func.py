@@ -5,6 +5,8 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
     from .euler_XYZ_body import euler_XYZbody_from_matrix
     from .quaternions import quat_from_matrix
 
+    from .muscle_panel import get_socket
+
     file = open(filepath, 'w', encoding='utf-8') #create or open a file,  "w" means it's writeable
     
     header = ('WRAP_name' + delimiter  + 'WRAP_type' + delimiter  + 
@@ -53,11 +55,14 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
         wrap_type = wrapobj['wrap_type']
         file.write( wrap_type + delimiter) # wrapobj type
 
+        modifier = wrapobj.modifiers['WrapObjMesh']
+
         if wrap_type.lower() == 'cylinder':
 
-            
-            file.write(f"{wrapobj.modifiers['WrapObjMesh']['Socket_1']:{number_format}}{delimiter}")     # dimension 1 is radius
-            file.write(f"{wrapobj.modifiers['WrapObjMesh']['Socket_2']:{number_format}}{delimiter}")     # dimension 2 is height
+            radius = get_socket(modifier, "Radius")
+            height = get_socket(modifier, "Height")
+            file.write(f"{radius:{number_format}}{delimiter}")     # dimension 1 is radius
+            file.write(f"{height:{number_format}}{delimiter}")     # dimension 2 is height
             file.write(f"{np.nan:{number_format}}{delimiter}")     # dimension 3 is nan
 
         ### once implemented these should get the info from the modifier sockets
