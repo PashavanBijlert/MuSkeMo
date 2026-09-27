@@ -354,38 +354,6 @@ def create_wrapgeom(name, geomtype, collection_name,
     obj.id_properties_ui('wrap_type').update(description = "The type of wrapping object")
 
 
-    add_drivers = False
-    if add_drivers == True:
-
-
-        # add drivers for radius and height custom property
-        # radius
-        driver = obj.driver_add('["cylinder_radius"]').driver
-
-        var = driver.variables.new()        #make a new variable
-        var.name = name + '_cyl_rad_var'            #give the variable a name
-
-        #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-        var.targets[0].id = obj #set the id to the active scene
-        var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_1"]' #get the driving property
-
-        driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
-        # height
-        driver = obj.driver_add('["cylinder_height"]').driver
-
-        var = driver.variables.new()        #make a new variable
-        var.name = name + '_cyl_height_var'            #give the variable a name
-
-        #var.targets[0].id_type = 'SCENE' #default is 'OBJECT', we want muskemo.muscle_visualization_radius to drive this, which lives under SCENE
-
-        var.targets[0].id = obj #set the id to the active scene
-        var.targets[0].data_path = 'modifiers["WrapObjMesh"]["Socket_2"]' #get the driving property
-
-        driver.expression = var.name  #set the expression, in this case only the name of the variable and nothing else
-
-
-
     ## operations that are not dependent on wrap type
     obj.rotation_mode = 'ZYX'    #change rotation sequence
 
