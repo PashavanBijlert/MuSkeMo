@@ -142,7 +142,7 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
         pre_wrap_points = []
         for tm in target_muscle_objects:
             #for each of the target muscles, get the correct modifier in the muscle's modif stack and get the socket for the pre wrap point
-            pre_wrap_points.append(tm.modifiers[tm.name + '_wrap_' + wrapobj.name]['Socket_6']) #the pre wrap point
+            pre_wrap_points.append(get_socket(tm.modifiers[tm.name + '_wrap_' + wrapobj.name], "Index Of Pre Wrap Point Starting At 1")) #the pre wrap point
             
         pre_wrap_points_string = ';'.join([str(x) for x in pre_wrap_points]) + ';' #this gets written to the file
 
