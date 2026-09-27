@@ -96,4 +96,9 @@ def add_live_length_viewer_node(obj):
             node_group = bpy.data.node_groups.get("LiveLengthViewerNodeGroup")
         
         mod.node_group = node_group
-        mod["Socket_2"] = 1.0
+
+        from .muscle_panel import set_socket
+
+        set_socket(mod, "Size", 1.0) #Set the default size at the start at 1 m
+        
+       
