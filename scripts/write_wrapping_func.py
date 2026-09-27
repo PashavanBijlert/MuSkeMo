@@ -67,14 +67,20 @@ def write_wrapping(context, filepath, collection_name, delimiter, number_format)
 
         ### once implemented these should get the info from the modifier sockets
         elif wrap_type.lower() == 'sphere':
-            file.write(f"{wrapobj['radius']:{number_format}}{delimiter}")     # dimension 1 is radius
+            radius = get_socket(modifier, "Radius")
+            file.write(f"{radius:{number_format}}{delimiter}")    # dimension 1 is radius
             file.write(f"{np.nan:{number_format}}{delimiter}")     # dimension 2 is height
             file.write(f"{np.nan:{number_format}}{delimiter}")     # dimension 3 is nan
 
         elif wrap_type.lower() == 'ellipsoid':
-            file.write(f"{wrapobj['radius1']:{number_format}}{delimiter}")     # dimension 1 is radius1
-            file.write(f"{wrapobj['radius2']:{number_format}}{delimiter}")     # dimension 2 is radius2
-            file.write(f"{wrapobj['radius3']:{number_format}}{delimiter}")     # dimension 3 is radius3
+
+            radius_x = get_socket(modifier, "Radius x")
+            radius_y = get_socket(modifier, "Radius y")
+            radius_z = get_socket(modifier, "Radius z")
+
+            file.write(f"{radius_x:{number_format}}{delimiter}")     # dimension 1 is radius x
+            file.write(f"{radius_y:{number_format}}{delimiter}")     # dimension 2 is radius y
+            file.write(f"{radius_z:{number_format}}{delimiter}")     # dimension 3 is radius z
 
         elif wrap_type.lower() == 'torus':
             file.write(f"{wrapobj['minor_radius']:{number_format}}{delimiter}")     # dimension 1 is minor radius
