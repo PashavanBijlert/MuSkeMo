@@ -320,9 +320,20 @@ class UpdateMuscleVizRadiusOperator(Operator):
         
         muscle_visualization_radius = bpy.context.scene.muskemo.muscle_visualization_radius
 
+        #Helper function to help set modifier socket inputs
+        def set_socket(modifier, socket_identifier, value):
+            if bpy.app.version >= (5, 2, 0):
+                getattr(modifier.properties.inputs, socket_identifier).value = value
+            else:
+                modifier[socket_identifier] = value
+
+
         for muscle in muscles:
-            muscle.modifiers[muscle.name + '_SimpleMuscleViz']['Socket_1']=  muscle_visualization_radius
-            muscle.modifiers[muscle.name + '_SimpleMuscleViz'].node_group.interface_update(bpy.context)
+            modifier = muscle.modifiers[muscle.name + '_SimpleMuscleViz']
+            radsocket = modifier.node_group.interface.items_tree["Radius"].identifier
+
+            set_socket(modifier, radsocket, muscle_visualization_radius)
+            modifier.node_group.interface_update(bpy.context)
         
         #update the merge by distance value based on the desired radius
         bpy.data.node_groups['SimpleMuscleNode'].nodes['Merge by Distance'].inputs['Distance'].default_value = muscle_visualization_radius * 0.13
