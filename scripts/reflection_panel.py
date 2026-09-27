@@ -242,6 +242,8 @@ class ReflectUnilateralWrapsOperator(ReflectionOperatorBase): #inherits function
         from .quaternions import quat_from_matrix
         from .euler_XYZ_body import euler_XYZbody_from_matrix
 
+        from .muscle_panel import (get_socket, set_socket)
+
 
         unilateral_wraps = self.get_unilateral_objects(wraps, wrap_names, left_string=left_string, right_string=right_string)
 
@@ -260,13 +262,16 @@ class ReflectUnilateralWrapsOperator(ReflectionOperatorBase): #inherits function
             wrap_name = obj.name[0:-len(currentside)] + otherside #rename to otherside
 
             geomtype = obj['wrap_type']
+            objmodifier = obj.modifiers['WrapObjMesh']
+
             dimensions = {} #preallocate
             
             #for now only cylinders exist
             if geomtype.lower() == 'cylinder':
+
                 
-                dimensions['radius'] = obj.modifiers['WrapObjMesh']["Socket_1"]
-                dimensions['height'] = obj.modifiers['WrapObjMesh']["Socket_2"]
+                dimensions['radius'] = get_socket(objmodifier, "Radius")
+                dimensions['height'] = get_socket(objmodifier, "Height")
 
             #check if the mirrored parent exists
             if obj['parent_body'] !='not_assigned':
@@ -366,9 +371,12 @@ class ReflectUnilateralWrapsOperator(ReflectionOperatorBase): #inherits function
                         #reflected modifier
                         modifier_refl = muscle_refl.modifiers[muscle_name_refl + '_wrap_' + wrap_name]
 
-                        for x in range(5,11): #automatically generate strings for Socket_5, Socket_6, etc. till 10
-                            socket = "Socket_" + str(x)
-                            modifier_refl[socket] = modifier[socket]
+                        socket_names = ['Flip Wrap', 'Shortest Wrap', 'Force Sided Wrap', 'Index Of Pre Wrap Point Starting At 1', 'Projection Angle', 'Wrapping Point Resolution']
+
+                        for socket_name in socket_names:
+                            socket_val = get_socket(modifier, socket_name)
+                            set_socket(modifier_refl, socket_name, socket_val)
+            
                         
                         modifier_refl.show_viewport = not modifier_refl.show_viewport  # Toggle visibility to refresh in the viewport
                         modifier_refl.show_viewport = not modifier_refl.show_viewport

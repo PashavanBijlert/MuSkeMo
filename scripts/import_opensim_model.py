@@ -1489,7 +1489,6 @@ class ImportOpenSimModel(Operator):
                             # Set the Projection Angle and Force Sided Wrap modifier inputs
                             set_socket(wrap_geonode, 'Projection Angle', proj_angle)
                             set_socket(wrap_geonode, 'Force Sided Wrap', force_wrap)
-                            print('sloi')
                             
                                 
                         else:
