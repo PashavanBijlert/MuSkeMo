@@ -859,6 +859,13 @@ class SingleDOFLengthMomentArmOperator(Operator):
             wrap_point_res = []
             wrap_obj_res = []
 
+
+            def get_socket(modifier, socket_identifier): #get the value from a socket / modifier input by inputting the name of the socket
+                if bpy.app.version >= (5, 2, 0):
+                    return getattr(modifier.properties.inputs, socket_identifier).value
+                else:
+                    return modifier[socket_identifier]
+
             for modifier in wrapmods:
                 
                 # wrap_point_res.append(modifier["Socket_10"]) #resolution of the wrapping curve
@@ -866,8 +873,15 @@ class SingleDOFLengthMomentArmOperator(Operator):
                 # modifier.show_render = not modifier.show_render  # Toggle visibility to refresh
                 # modifier.show_render = not modifier.show_render
 
-                wrapobj = modifier["Socket_2"]
+                wrap_socket = next(
+                    item.identifier
+                    for item in modifier.node_group.interface.items_tree
+                    if item.item_type == 'SOCKET' and item.name == 'Object'
+                )
 
+                wrapobj = get_socket(modifier, wrap_socket)
+                
+               
                 wrapobj.modifiers["WrapObjMesh"]
 
                 if wrapobj['wrap_type'] == 'Cylinder':
