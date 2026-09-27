@@ -104,7 +104,7 @@ def create_muscle (muscle_name, point_position, body_name = '',
         obj.data.bevel_depth = bpy.context.scene.muskemo.muscle_visualization_radius
         obj.data.use_fill_caps = True 
         '''
-        ### seperate materials for each muscle so that they can be individually animated
+        ### separate materials for each muscle so that they can be individually animated
 
         from .create_muscle_material_func import create_muscle_material
 
