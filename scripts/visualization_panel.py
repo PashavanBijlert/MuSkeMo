@@ -201,31 +201,48 @@ class ConvertMusclesToVolumetricViz(Operator):
 
                 else: #if the node tree already exists (multiple successive conversions from tube to volumetric and back)
                     node_tree_copy = bpy.data.node_groups[node_tree_name]
-                    
-                #create a new geometry node for the muscle, and set the node tree we just made
-                geonode = muscle.modifiers.new(name = muscle_name + '_VolumetricMuscleViz', type = 'NODES') #add modifier to muscle
-                geonode.node_group = node_tree_copy
+
+                #Helper function to help set modifier socket inputs
+                def set_socket(modifier, socket_identifier, value):
+                    if bpy.app.version >= (5, 2, 0):
+                        getattr(modifier.properties.inputs, socket_identifier).value = value
+                    else:
+                        modifier[socket_identifier] = value
                 
+                
+                #create a new geometry node for the muscle, and set the node tree we just made
+                geonode = muscle.modifiers.new(   #add modifier to muscle
+                    name=muscle_name + '_VolumetricMuscleViz',
+                    type='NODES'
+                ) 
+                geonode.node_group = node_tree_copy
+
                 for item in geonode.node_group.interface.items_tree:
                     if item.item_type == 'SOCKET' and item.name == 'MuscleVolume':
-                        geonode[item.identifier] = vol  #item.identifier will be "Socket_2" in this case
-                    
+                        set_socket(geonode, item.identifier, vol)
+
                     elif item.item_type == 'SOCKET' and item.name == 'MuscleTendonLengthRatio':
-                        geonode[item.identifier] = muscletendonlengthratio  
+                        set_socket(geonode, item.identifier, muscletendonlengthratio)
 
                     elif item.item_type == 'SOCKET' and item.name == 'TendonMuscleRadiusRatio':
-                        geonode[item.identifier] = tendonmuscleradiusratio
+                        set_socket(geonode, item.identifier, tendonmuscleradiusratio)
 
                     elif item.item_type == 'SOCKET' and item.name == 'ProxToDistMuscleBellyBias':
-                        geonode[item.identifier] = proxdistbellybias
-  
-                    elif item.item_type == 'SOCKET' and item.name == 'FastOrVolumeAccurate':
-                   
-                        if fast_or_volume_accurate == 'Fast':
-                            geonode[item.identifier] = 0
-                        elif fast_or_volume_accurate == 'Volume accurate':    
-                            geonode[item.identifier] = 1
+                        set_socket(geonode, item.identifier, proxdistbellybias)
 
+                    elif item.item_type == 'SOCKET' and item.name == 'FastOrVolumeAccurate':
+
+                        if fast_or_volume_accurate == 'Fast':
+                            if bpy.app.version >= (5, 2, 0):
+                                set_socket(geonode, item.identifier, 'Fast')
+                            else:
+                                set_socket(geonode, item.identifier, 0)
+
+                        elif fast_or_volume_accurate == 'Volume accurate':
+                            if bpy.app.version >= (5, 2, 0):
+                                set_socket(geonode, item.identifier, 'Volume accurate')
+                            else:
+                                set_socket(geonode, item.identifier, 1)
 
 
                 #sockets are the user input sliders in the modifier. They have a name (geonode['Socket_2_attribute_name']), but you can't access this easily nor can you iterate through sockets to check, so hardcoding it as the simplest solution
