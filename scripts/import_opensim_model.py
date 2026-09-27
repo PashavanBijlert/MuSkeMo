@@ -1371,8 +1371,9 @@ class ImportOpenSimModel(Operator):
            
         #### create muscles
 
-        #Helper function to help set modifier socket inputs
+        #Helper function to help set and get modifier socket inputs
         from .muscle_panel import set_socket
+        from .muscle_panel import get_socket
         
         for muscle_name, muscle in muscle_data.items():
 
@@ -1442,16 +1443,9 @@ class ImportOpenSimModel(Operator):
                             node_group = wrap_geonode.node_group
 
 
-                            ## loop through interface items to get the correct socket identifier for pre wrap point index, which is estimated in assign_muscle_wrap (in this case, 'Socket_6')
                            
                             # Get pre-wrap point index
-                            for item in wrap_geonode.node_group.interface.items_tree:
-                                if item.item_type == 'SOCKET' and item.name == 'Index Of Pre Wrap Point Starting At 1':
-                                    index_of_pre_wrap_point = (
-                                        getattr(wrap_geonode.properties.inputs, item.identifier).value
-                                        if bpy.app.version >= (5, 2, 0)
-                                        else wrap_geonode[item.identifier]
-                                    )
+                            index_of_pre_wrap_point = get_socket(wrap_geonode,'Index Of Pre Wrap Point Starting At 1')
                             
                             # Track occurrences of index_of_pre_wrap_point, so that we can give a warning later
                             pre_wrap_indices_count[index_of_pre_wrap_point] = pre_wrap_indices_count.get(index_of_pre_wrap_point, 0) + 1
