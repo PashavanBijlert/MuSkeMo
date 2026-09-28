@@ -51,6 +51,7 @@ sys.path.append(scripts) #append the muskemo scripts folder to sys, so we can di
 ## now we can import from the muskemo scripts folder
 from compute_curve_length import compute_curve_length #from the .py file import the function
 from euler_XYZ_body import matrix_from_euler_XYZbody
+from muscle_panel import set_socket
 
 
 
