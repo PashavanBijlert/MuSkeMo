@@ -1,5 +1,7 @@
 # Download the blend file from the pose sampling stress test dataset to try out this script: https://github.com/PashavanBijlert/MuSkeMo/releases/tag/v0.x-posesamplestresstest
-# 
+# Note that the blend file on github was created in Blender 4.4, and even though it has a version of 6DOFPoseSampleTest.py preloaded in the script editor,
+# Blender 5.2 introduced changes to how modifier inputs are accessed. To run the stress-test, either open the Blend file in Blender 4.4, or
+# load the version of "6DOFPoseSampleTest.py" that comes with MuSkeMo v0.9.85+
 
 #The script will move the the target joint over the specified angle and position ranges, and checks if it is viable.
 #If the pose does not result in intersections between geometries of the parent body and the child body,
@@ -7,6 +9,7 @@
 #The default sample densities find no viable poses, because the test is intentionally designed to require very high
 #sample densities. See the manual for details. Viable poses can be found by setting sample densities to 3, at which point the code will take several hours to complete.
 
+#Changelog 28/9/26: Updated this script to maintain compatiblity with Blender v5.2+, by using the set_socket function from the muscle_panel
 
 import bpy
 import addon_utils
@@ -78,6 +81,7 @@ sys.path.append(scripts) #append the muskemo scripts folder to sys, so we can di
 from compute_curve_length import compute_curve_length #from the .py file import the function
 from euler_XYZ_body import matrix_from_euler_XYZbody
 from two_object_intersection_func import check_bvh_intersection
+from muscle_panel import set_socket
 
 
 # ------------------------
@@ -399,6 +403,7 @@ for xp in x_pos:
                         target_joint.matrix_world = target_joint_original_wm
 
 if visualize_endpoint_markers:
+
     
     # --- Create fast marker meshes ---
     print("Creating endpoint marker meshes")
@@ -428,16 +433,12 @@ if visualize_endpoint_markers:
         mod = obj.modifiers.new(name="EndpointInstancer", type='NODES')
         mod.node_group = node_group
 
-        # Set modifier inputs
-        for item in mod.node_group.interface.items_tree:
-            if item.item_type == 'SOCKET':
-                if item.name == 'Radius':
-                    mod[item.identifier] = marker_radius
-                elif item.name == 'Material':
-                    mod[item.identifier] = mat
-                elif item.name == 'Points':
-                    mod[item.identifier] = obj  # feed the vertex mesh itself as Points input
 
+        # Set modifier inputs
+        set_socket(mod, 'Radius', marker_radius)
+        set_socket(mod, 'Material', mat)
+        set_socket(mod, 'Points', obj)  # feed the vertex mesh itself as Points input
+        
     print("Endpoint marker meshes created.")
 
             

@@ -12,6 +12,8 @@
 ### Author: Pasha van Bijlert
 ### Date: 13/8/2025
 
+#Changelog 28/9/26: Updated this script to maintain compatiblity with Blender v5.2+, by using the set_socket function from the muscle_panel
+
 
 import bpy
 import bmesh
