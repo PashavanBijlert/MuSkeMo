@@ -51,7 +51,7 @@ sys.path.append(scripts) #append the muskemo scripts folder to sys, so we can di
 ## now we can import from the muskemo scripts folder
 from compute_curve_length import compute_curve_length #from the .py file import the function
 from euler_XYZ_body import matrix_from_euler_XYZbody
-from muscle_panel import set_socket
+from muscle_panel import get_socket
 
 
 
@@ -75,7 +75,7 @@ for muscle in muscles:
     
     for modifier in wrapmods:
         
-        wrapobj = modifier["Socket_2"]
+        wrapobj = get_socket(modifier, "Object") #get the target wrapping object from the modifier input
 
         wrapobj.modifiers["WrapObjMesh"]
 
@@ -283,9 +283,9 @@ for muscle in muscles:
     
     for modifier in wrapmods:
         
-    
-        wrapobj = modifier["Socket_2"]
-
+        
+        wrapobj = get_socket(modifier, "Object") #get the target wrapping object from the modifier input
+       
         wrapobj.modifiers["WrapObjMesh"]
 
         if wrapobj['wrap_type'] == 'Cylinder':
