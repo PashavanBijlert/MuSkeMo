@@ -44,7 +44,7 @@ only_keyframe_viable = True #or False, if you want to keyframe all poses. False 
 print_each_pose_to_console = False #or False. Gives a minor performance hit if true.
 #system console is accessible via Window>toggle system console
 
-sample_density_rot = 1 #The default sample density will converge quickly, but only find one viable pose, because of the way this test is designed (see Bishop et al. 2023, and the manual)
+sample_density_rot = 2 #The default sample density will converge quickly, but only find one viable pose, because of the way this test is designed (see Bishop et al. 2023, and the manual)
 sample_density_pos = 1 #The default sample density will converge quickly, but only find one viable pose, because of the way this test is designed (see Bishop et al. 2023, and the manual)
 #Set sample densities higher (e.g., to 3) if you want to perform the full test. This will take several hours
 
