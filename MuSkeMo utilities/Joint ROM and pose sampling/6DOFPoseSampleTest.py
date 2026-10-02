@@ -44,7 +44,7 @@ only_keyframe_viable = True #or False, if you want to keyframe all poses. False 
 print_each_pose_to_console = False #or False. Gives a minor performance hit if true.
 #system console is accessible via Window>toggle system console
 
-sample_density_rot = 2 #The default sample density will converge quickly, but only find one viable pose, because of the way this test is designed (see Bishop et al. 2023, and the manual)
+sample_density_rot = 1 #The default sample density will converge quickly, but only find one viable pose, because of the way this test is designed (see Bishop et al. 2023, and the manual)
 sample_density_pos = 1 #The default sample density will converge quickly, but only find one viable pose, because of the way this test is designed (see Bishop et al. 2023, and the manual)
 #Set sample densities higher (e.g., to 3) if you want to perform the full test. This will take several hours
 
@@ -142,43 +142,83 @@ def collect_proximal_and_distal_geometry_names(joint_obj):
 # Node group for visualization of endpoint markers
 #
 
+
 if visualize_endpoint_markers:
-    
-    # Check if node group exists
+
     node_group_name = "CustomInstanceGroup"
-    node_group = bpy.data.node_groups.get(node_group_name)
 
-    if node_group is None:
-        # --- Node group creation (your provided code) ---
-        geo_group = bpy.data.node_groups.new(node_group_name, 'GeometryNodeTree')
+    # Recreate this helper group so the script is self-contained.
+    old_group = bpy.data.node_groups.get(node_group_name)
+    if old_group is not None:
+        bpy.data.node_groups.remove(old_group, do_unlink=True)
 
-        group_input = geo_group.nodes.new('NodeGroupInput')
-        group_input.location = (-600, 0)
-        group_output = geo_group.nodes.new('NodeGroupOutput')
-        group_output.location = (600, 0)
+    geo_group = bpy.data.node_groups.new(node_group_name, 'GeometryNodeTree')
+    geo_group.is_modifier = True
 
-        geo_group.interface.new_socket(name='Points', in_out='INPUT', socket_type='NodeSocketGeometry')
-        geo_group.interface.new_socket(name='Radius', in_out='INPUT', socket_type='NodeSocketFloat')
-        geo_group.interface.new_socket(name='Material', in_out='INPUT', socket_type='NodeSocketMaterial')
-        geo_group.interface.new_socket(name='Geometry', in_out='OUTPUT', socket_type='NodeSocketGeometry')
+    group_input = geo_group.nodes.new('NodeGroupInput')
+    group_input.location = (-600, 0)
 
-        ico_sphere = geo_group.nodes.new('GeometryNodeMeshIcoSphere')
-        ico_sphere.location = (-200, 0)
+    group_output = geo_group.nodes.new('NodeGroupOutput')
+    group_output.location = (600, 0)
 
-        instance_node = geo_group.nodes.new('GeometryNodeInstanceOnPoints')
-        instance_node.location = (0, 0)
+    # Geometry is the modifier's own input geometry.
+    geo_group.interface.new_socket(
+        name='Geometry',
+        in_out='INPUT',
+        socket_type='NodeSocketGeometry'
+    )
+    geo_group.interface.new_socket(
+        name='Radius',
+        in_out='INPUT',
+        socket_type='NodeSocketFloat'
+    )
+    geo_group.interface.new_socket(
+        name='Material',
+        in_out='INPUT',
+        socket_type='NodeSocketMaterial'
+    )
+    geo_group.interface.new_socket(
+        name='Geometry',
+        in_out='OUTPUT',
+        socket_type='NodeSocketGeometry'
+    )
 
-        set_material = geo_group.nodes.new('GeometryNodeSetMaterial')
-        set_material.location = (300, 0)
+    ico_sphere = geo_group.nodes.new('GeometryNodeMeshIcoSphere')
+    ico_sphere.location = (-200, 0)
 
-        geo_group.links.new(group_input.outputs['Points'], instance_node.inputs['Points'])
-        geo_group.links.new(ico_sphere.outputs['Mesh'], instance_node.inputs['Instance'])
-        geo_group.links.new(group_input.outputs['Radius'], ico_sphere.inputs['Radius'])
-        geo_group.links.new(instance_node.outputs['Instances'], set_material.inputs['Geometry'])
-        geo_group.links.new(group_input.outputs['Material'], set_material.inputs['Material'])
-        geo_group.links.new(set_material.outputs['Geometry'], group_output.inputs['Geometry'])
+    instance_node = geo_group.nodes.new('GeometryNodeInstanceOnPoints')
+    instance_node.location = (0, 0)
 
-        node_group = geo_group
+    set_material = geo_group.nodes.new('GeometryNodeSetMaterial')
+    set_material.location = (300, 0)
+
+    # Use the mesh carrying the modifier as the point geometry.
+    geo_group.links.new(
+        group_input.outputs['Geometry'],
+        instance_node.inputs['Points']
+    )
+    geo_group.links.new(
+        ico_sphere.outputs['Mesh'],
+        instance_node.inputs['Instance']
+    )
+    geo_group.links.new(
+        group_input.outputs['Radius'],
+        ico_sphere.inputs['Radius']
+    )
+    geo_group.links.new(
+        instance_node.outputs['Instances'],
+        set_material.inputs['Geometry']
+    )
+    geo_group.links.new(
+        group_input.outputs['Material'],
+        set_material.inputs['Material']
+    )
+    geo_group.links.new(
+        set_material.outputs['Geometry'],
+        group_output.inputs['Geometry']
+    )
+
+    node_group = geo_group
 
 
 # ------------------------
@@ -427,7 +467,6 @@ if visualize_endpoint_markers:
         # Set modifier inputs
         set_socket(mod, 'Radius', marker_radius)
         set_socket(mod, 'Material', mat)
-        set_socket(mod, 'Points', obj)  # feed the vertex mesh itself as Points input
         
     print("Endpoint marker meshes created.")
 
