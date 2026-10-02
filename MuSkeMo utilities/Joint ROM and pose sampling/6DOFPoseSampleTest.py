@@ -12,14 +12,12 @@
 #Changelog 28/9/26: Updated this script to maintain compatiblity with Blender v5.2+, by using the set_socket function from the muscle_panel
 
 import bpy
-import addon_utils
 from mathutils import (Matrix, Vector)
 from math import (cos, sin, pi)
 import bmesh
 import numpy as np
 import csv
 import os
-import sys
 import time
 
 start_time = time.time()
