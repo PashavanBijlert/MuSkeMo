@@ -10,14 +10,12 @@
 
 
 import bpy
-import addon_utils
 from mathutils import Matrix
 from math import (cos, sin, pi)
 import bmesh
 import numpy as np
 import csv
 import os
-import sys
 import time
 
 start_time = time.time()
@@ -54,17 +52,11 @@ if export_results_as_CSV and not bpy.data.filepath:
 csv_output_path = os.path.join(os.path.dirname(bpy.data.filepath), output_filename + ".csv")
 
 
-### import scripts and functions we will need
-
-muskemo_module = next((mod for mod in addon_utils.modules() if mod.__name__ == 'MuSkeMo'), None) #assumes MuSkeMo addon is installed
-MuSkeMo_folder =  os.path.dirname(muskemo_module.__file__) #parent folder of MuSkeMo, which also includes the 'MuSkeMo utilities' folder
-scripts = os.path.join(MuSkeMo_folder, 'scripts')
-sys.path.append(scripts) #append the muskemo scripts folder to sys, so we can directly import from the folder
-
-## now we can import from the muskemo scripts folder
-from euler_XYZ_body import matrix_from_euler_XYZbody
-from two_object_intersection_func import check_bvh_intersection
-from muscle_panel import set_socket
+### import scripts and functions we will need from the muskemo scripts folder
+from MuSkeMo.scripts.compute_curve_length import compute_curve_length #from the .py file import the function
+from MuSkeMo.scripts.euler_XYZ_body import matrix_from_euler_XYZbody
+from MuSkeMo.scripts.two_object_intersection_func import check_bvh_intersection
+from MuSkeMo.scripts.muscle_panel import set_socket
 
 # ------------------------
 # HELPER FUNCTIONS TO GET MODEL GEOMETRY LISTS
