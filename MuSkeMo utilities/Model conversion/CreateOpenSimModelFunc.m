@@ -676,7 +676,9 @@ if ~isempty(contacts_file)% if the muscles file is not empty
     HertzSmoothing = ModelInfoStruct.hertz_smoothing; % HertzSmoothing; version 2
     HuntCrossleySmoothing = 50; % HuntCrossleySmoothing
     
-    
+    contact_force_type = "SmoothSphereHalfSpaceForce"; %Do we want SmoothSphereHalfSpaceForce or HuntCrossleyForce
+
+
     for i= 1:height(contacts_data)
         
         
@@ -705,23 +707,45 @@ if ~isempty(contacts_file)% if the muscles file is not empty
         contactSphere.setFrame(model.getBodySet.get(contacts_data.parent_body{i}));
         model.addContactGeometry(contactSphere);
         
-        %%%% Right side force
-        SSHSForce = SmoothSphereHalfSpaceForce();
-        SSHSForce.setName(strrep(name,'Contact','Force')); %RFootContact becomes RFootForce, etc.
-        SSHSForce.connectSocket_sphere(contactSphere);
-        SSHSForce.connectSocket_half_space(groundContactSpace);
-        
-        SSHSForce.set_stiffness(stiffness);
-        SSHSForce.set_dissipation(dissipation);
-        SSHSForce.set_static_friction(staticFriction);
-        SSHSForce.set_dynamic_friction(dynamicFriction);
-        SSHSForce.set_viscous_friction(viscousFriction);
-        
-        
-        SSHSForce.set_transition_velocity(transitionVelocity);
-        SSHSForce.set_hertz_smoothing(HertzSmoothing);
-        
-        model.addForce(SSHSForce);
+        if strcmp(contact_force_type, "SmoothSphereHalfSpaceForce")
+            %%%% Right side force
+            SSHSForce = SmoothSphereHalfSpaceForce();
+            SSHSForce.setName(strrep(name,'Contact','Force')); %RFootContact becomes RFootForce, etc.
+            SSHSForce.connectSocket_sphere(contactSphere);
+            SSHSForce.connectSocket_half_space(groundContactSpace);
+            
+            SSHSForce.set_stiffness(stiffness);
+            SSHSForce.set_dissipation(dissipation);
+            SSHSForce.set_static_friction(staticFriction);
+            SSHSForce.set_dynamic_friction(dynamicFriction);
+            SSHSForce.set_viscous_friction(viscousFriction);
+            
+            
+            SSHSForce.set_transition_velocity(transitionVelocity);
+            SSHSForce.set_hertz_smoothing(HertzSmoothing);
+            
+            model.addForce(SSHSForce);
+
+        elseif strcmp(contact_force_type, "HuntCrossleyForce")
+
+            HCForce = HuntCrossleyForce();
+            HCForce.setName(strrep(name,'Contact','Force')); %RFootContact becomes RFootForce, etc.
+            
+            HCForce.addGeometry(contactSphere.getAbsolutePathString)
+            HCForce.addGeometry(groundContactSpace.getAbsolutePathString);
+            
+            HCForce.setStiffness(stiffness);
+            HCForce.setDissipation(dissipation);
+            HCForce.setStaticFriction(staticFriction);
+            HCForce.setDynamicFriction(dynamicFriction);
+            HCForce.setViscousFriction(viscousFriction);
+            
+            
+            HCForce.setTransitionVelocity(transitionVelocity);
+                       
+            model.addForce(HCForce);
+
+        end
         
         
     end
