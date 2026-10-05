@@ -15,6 +15,7 @@ filename = ModelInfoStruct.filename;   %.osim filename
 version = ModelInfoStruct.version; %user self-updated version
 global_or_local = ModelInfoStruct.global_or_local;  %Should the model be defined in local or global coordinates? can be 'global' or 'local'
 export_nomusc_version = ModelInfoStruct.export_nomusc_version;  %does the user also want a version without muscles. Can be useful for debugging. 'yes' or 'no'
+contact_force_type = ModelInfoStruct.contact_force_type; %Do we want SmoothSphereHalfSpaceForce or HuntCrossleyForce
 
 %% error checking
 if isempty(model_dir)
@@ -676,8 +677,6 @@ if ~isempty(contacts_file)% if the muscles file is not empty
     HertzSmoothing = ModelInfoStruct.hertz_smoothing; % HertzSmoothing; version 2
     HuntCrossleySmoothing = 50; % HuntCrossleySmoothing
     
-    contact_force_type = "SmoothSphereHalfSpaceForce"; %Do we want SmoothSphereHalfSpaceForce or HuntCrossleyForce
-
 
     for i= 1:height(contacts_data)
         

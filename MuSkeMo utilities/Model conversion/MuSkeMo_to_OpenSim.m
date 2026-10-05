@@ -121,20 +121,28 @@ for i = 1:nRows
 end
 
 %% Define Contact Parameter Labels, Tooltips, and Defaults
-contactParamLabels = {'Contact sphere radius','Plane strain modulus', 'Dissipation', 'Static friction',...
-    'Dynamic friction', 'Transition velocity', 'Viscous friction', 'Hertz smoothing'};
-contactParamTooltips = { 'Contact sphere radius in m',...
+contactParamLabels = {'Contact force model', 'Contact sphere radius', ...
+    'Plane strain modulus', 'Dissipation', 'Static friction', ...
+    'Dynamic friction', 'Transition velocity', 'Viscous friction', ...
+    'Hertz smoothing'};
+
+contactParamTooltips = { ...
+    'Contact force model to use', ...
+    'Contact sphere radius in m', ...
     'Contact plane strain modulus in N/m^2', ...
     'Dissipation coefficient in s/m', ...
-    'Static friction coefficient',...
+    'Static friction coefficient', ...
     'Dynamic friction coefficient', ...
-    'Transition velocity between static and dynamic friction coefficient',...
-    'Viscous friction coefficient',...
+    'Transition velocity between static and dynamic friction coefficient', ...
+    'Viscous friction coefficient', ...
     'Hertz smoothing parameter for SmoothSphereHalfSpaceForce'};
+
 contactParamDefaults = [0.015, 2500000, 1, 0.4, 0.4, 0.2, 0.1, 300];
 
+contactForceOptions = {'SmoothSphereHalfSpaceForce', 'HuntCrossleyForce'};
+
 %% Add a grid layout to the "Contact Parameters" tab
-nRowsContact = length(contactParamLabels); % Automatically adapts to the number of parameters
+nRowsContact = length(contactParamLabels);
 contactParamsGrid = uigridlayout(contactParamsTab, [nRowsContact, 2]);
 contactParamsGrid.RowHeight = repmat({'fit'}, 1, nRowsContact);
 contactParamsGrid.ColumnWidth = {'1x', '2x'};
@@ -143,19 +151,27 @@ contactParamsGrid.ColumnWidth = {'1x', '2x'};
 contactParamFields = cell(1, nRowsContact);
 
 for i = 1:nRowsContact
-    % Create label
-    ui_label = uilabel(contactParamsGrid, 'Text', contactParamLabels{i}, 'HorizontalAlignment', 'right');
+    ui_label = uilabel(contactParamsGrid, ...
+        'Text', contactParamLabels{i}, ...
+        'HorizontalAlignment', 'right');
     ui_label.Layout.Row = i;
     ui_label.Layout.Column = 1;
 
-    % Create input field
-    ui_editfield = uieditfield(contactParamsGrid, 'numeric', 'Value', contactParamDefaults(i));
-    ui_editfield.Tooltip = contactParamTooltips{i};
-    ui_editfield.Layout.Row = i;
-    ui_editfield.Layout.Column = 2;
+    if i == 1
+        ui_field = uidropdown(contactParamsGrid, ...
+            'Items', contactForceOptions, ...
+            'Value', contactForceOptions{1});
+    else
+        ui_field = uieditfield(contactParamsGrid, ...
+            'numeric', ...
+            'Value', contactParamDefaults(i-1));
+    end
 
-    % Store the input field
-    contactParamFields{i} = ui_editfield;
+    ui_field.Tooltip = contactParamTooltips{i};
+    ui_field.Layout.Row = i;
+    ui_field.Layout.Column = 2;
+
+    contactParamFields{i} = ui_field;
 end
 
     %% Create OpenSim Model Button
@@ -208,15 +224,15 @@ function [ModelInfoStruct] = UnpackFields(modelDirField, datafileFields, ManualI
     ModelInfoStruct.SEE_strain_at_Fmax = muscleParamFields{2}.Value;
     ModelInfoStruct.PEE_strain_at_Fmax = muscleParamFields{3}.Value;
     
-    ModelInfoStruct.contact_sphere_radius = contactParamFields{1}.Value;
-    ModelInfoStruct.plane_strain_modulus= contactParamFields{2}.Value;
-    ModelInfoStruct.dissipation= contactParamFields{3}.Value;
-    ModelInfoStruct.static_friction_coef= contactParamFields{4}.Value;
-    ModelInfoStruct.dynamic_friction_coef= contactParamFields{5}.Value;
-    ModelInfoStruct.transition_velocity = contactParamFields{6}.Value;
-    ModelInfoStruct.viscous_friction_coef= contactParamFields{7}.Value;    
-    ModelInfoStruct.hertz_smoothing = contactParamFields{8}.Value;
-
+    ModelInfoStruct.contact_force_type = contactParamFields{1}.Value;
+    ModelInfoStruct.contact_sphere_radius = contactParamFields{2}.Value;
+    ModelInfoStruct.plane_strain_modulus = contactParamFields{3}.Value;
+    ModelInfoStruct.dissipation = contactParamFields{4}.Value;
+    ModelInfoStruct.static_friction_coef = contactParamFields{5}.Value;
+    ModelInfoStruct.dynamic_friction_coef = contactParamFields{6}.Value;
+    ModelInfoStruct.transition_velocity = contactParamFields{7}.Value;
+    ModelInfoStruct.viscous_friction_coef = contactParamFields{8}.Value;
+    ModelInfoStruct.hertz_smoothing = contactParamFields{9}.Value;
     
           
 
