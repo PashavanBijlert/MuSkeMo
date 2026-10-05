@@ -571,11 +571,25 @@ if ~isempty(wrapping_file)% if the muscles file is not empty
         name = wrapping_data.WRAP_name{i};
         type = lower(wrapping_data.WRAP_type{i});
         
-        if strcmp(type,'cylinder') %for now only support cylinders
+        if strcmp(type,'cylinder') %
 
             wrapobj = WrapCylinder();
             wrapobj.set_radius(wrapping_data.dimension1(i));
             wrapobj.set_length(wrapping_data.dimension2(i));
+            %wrapobj.set_quadrant('-x'); %to be modified later
+
+        elseif strcmp(type,'sphere') %
+
+            wrapobj = WrapSphere();
+            wrapobj.set_radius(wrapping_data.dimension1(i));
+            %wrapobj.set_quadrant('-x'); %to be modified later
+
+        elseif strcmp(type,'ellipsoid') %
+
+            wrapobj = WrapEllipsoid();
+
+            ellipsoid_radii = [wrapping_data.dimension1(i), wrapping_data.dimension2(i), wrapping_data.dimension3(i)];
+            wrapobj.set_dimensions(ArrayDouble.createVec3(ellipsoid_radii));
             %wrapobj.set_quadrant('-x'); %to be modified later
 
         end
