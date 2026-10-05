@@ -673,9 +673,10 @@ if ~isempty(contacts_file)% if the muscles file is not empty
     viscousFriction     = ModelInfoStruct.viscous_friction_coef;
     transitionVelocity  = ModelInfoStruct.transition_velocity;
     
-    ConstantContactForce = 1e-5; % ConstantContactForce
+    
     HertzSmoothing = ModelInfoStruct.hertz_smoothing; % HertzSmoothing; version 2
-    HuntCrossleySmoothing = 50; % HuntCrossleySmoothing
+    HuntCrossleySmoothing = ModelInfoStruct.hunt_crossley_smoothing; % HuntCrossleySmoothing
+    ConstantContactForce = ModelInfoStruct.constant_contact_force; % ConstantContactForce
     
 
     for i= 1:height(contacts_data)
