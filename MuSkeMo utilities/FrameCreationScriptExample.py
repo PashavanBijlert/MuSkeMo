@@ -5,21 +5,13 @@
 
 
 import bpy
-import addon_utils
 from mathutils import (Matrix, Vector)
 import os
-import sys
 
 
-### import scripts and functions we will need
 
-muskemo_module = next((mod for mod in addon_utils.modules() if mod.__name__ == 'MuSkeMo'), None) #assumes MuSkeMo addon is installed
-MuSkeMo_folder =  os.path.dirname(muskemo_module.__file__) #parent folder of MuSkeMo, which also includes the 'MuSkeMo utilities' folder
-scripts = os.path.join(MuSkeMo_folder, 'scripts')
-sys.path.append(scripts) #append the muskemo scripts folder to sys, so we can directly import from the folder
-
-
-from create_frame_func import create_frame #this imports the create_frame function from the scripts folder in MuSkeMo's installation dir
+### import scripts and functions we will need from MuSkeMo's scripts folder
+from MuSkeMo.scripts.create_frame_func import create_frame #this imports the create_frame function from the scripts folder in MuSkeMo's installation dir
 
 
 #example

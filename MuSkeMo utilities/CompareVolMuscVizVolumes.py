@@ -19,19 +19,10 @@ import bpy
 import bmesh
 import csv
 import os
-import addon_utils
-import sys
 
-### import scripts and functions we will need
 
-muskemo_module = next((mod for mod in addon_utils.modules() if mod.__name__ == 'MuSkeMo'), None) #assumes MuSkeMo addon is installed
-MuSkeMo_folder =  os.path.dirname(muskemo_module.__file__) #parent folder of MuSkeMo, which also includes the 'MuSkeMo utilities' folder
-scripts = os.path.join(MuSkeMo_folder, 'scripts')
-sys.path.append(scripts) #append the muskemo scripts folder to sys, so we can directly import from the folder
-
-## now we can import from the muskemo scripts folder
-
-from muscle_panel import (get_socket, set_socket)
+### import scripts and functions we will need from the muskemo scripts folder
+from MuSkeMo.scripts.muscle_panel import (get_socket, set_socket)
 
 def compute_volume(obj):
     """Compute volume of evaluated mesh in object space."""
@@ -66,6 +57,10 @@ for m in right_sided_muscles:
         continue
 
     set_socket(geonode, "TendonMuscleRadiusRatio", 0) # set tendon muscle radius ratio to 0. This results in a tendon volume of zero so it won't contribute to the total.
+
+    m.modifiers.update()
+    m.update_tag()
+    
     vol_encoded = get_socket(geonode, "MuscleVolume") #get the volume encoded in the muscle
     
     vol_actual = compute_volume(m) #compute the mesh muscle volume
@@ -85,6 +80,9 @@ for m in left_sided_muscles:
     else: # below that, we set the enum property using the corresponding index
         set_socket(geonode, 'FastOrVolumeAccurate', 1)
 
+    m.modifiers.update()
+    m.update_tag()
+    
     vol_encoded = get_socket(geonode, "MuscleVolume") #get the volume encoded in the muscle
     
     vol_actual = compute_volume(m)

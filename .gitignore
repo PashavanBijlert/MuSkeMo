@@ -29,3 +29,4 @@ MuSkeMo manual/MuSkeMo manual.run.xml
 MuSkeMo manual/MuSkeMo manual.synctex.gz
 MuSkeMo manual/MuSkeMo manual.toc
 **/*.blend1
+__pycache__/__init__.cpython-313.pyc

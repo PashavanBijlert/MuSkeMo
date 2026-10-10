@@ -12,14 +12,12 @@
 #Changelog 28/9/26: Updated this script to maintain compatiblity with Blender v5.2+, by using the set_socket function from the muscle_panel
 
 import bpy
-import addon_utils
 from mathutils import (Matrix, Vector)
 from math import (cos, sin, pi)
 import bmesh
 import numpy as np
 import csv
 import os
-import sys
 import time
 
 start_time = time.time()
@@ -70,19 +68,11 @@ if export_results_as_CSV and not bpy.data.filepath:
 csv_output_path = os.path.join(os.path.dirname(bpy.data.filepath), output_filename + ".csv")
 
 
-### import scripts and functions we will need
-
-muskemo_module = next((mod for mod in addon_utils.modules() if mod.__name__ == 'MuSkeMo'), None) #assumes MuSkeMo addon is installed
-MuSkeMo_folder =  os.path.dirname(muskemo_module.__file__) #parent folder of MuSkeMo, which also includes the 'MuSkeMo utilities' folder
-scripts = os.path.join(MuSkeMo_folder, 'scripts')
-sys.path.append(scripts) #append the muskemo scripts folder to sys, so we can directly import from the folder
-
-## now we can import from the muskemo scripts folder
-from compute_curve_length import compute_curve_length #from the .py file import the function
-from euler_XYZ_body import matrix_from_euler_XYZbody
-from two_object_intersection_func import check_bvh_intersection
-from muscle_panel import set_socket
-
+### import scripts and functions we will need from the muskemo scripts folder
+from MuSkeMo.scripts.compute_curve_length import compute_curve_length #from the .py file import the function
+from MuSkeMo.scripts.euler_XYZ_body import matrix_from_euler_XYZbody
+from MuSkeMo.scripts.muscle_panel import set_socket
+from MuSkeMo.scripts.two_object_intersection_func import check_bvh_intersection
 
 # ------------------------
 # HELPER FUNCTIONS TO GET MODEL GEOMETRY LISTS
@@ -152,43 +142,83 @@ def collect_proximal_and_distal_geometry_names(joint_obj):
 # Node group for visualization of endpoint markers
 #
 
+
 if visualize_endpoint_markers:
-    
-    # Check if node group exists
+
     node_group_name = "CustomInstanceGroup"
-    node_group = bpy.data.node_groups.get(node_group_name)
 
-    if node_group is None:
-        # --- Node group creation (your provided code) ---
-        geo_group = bpy.data.node_groups.new(node_group_name, 'GeometryNodeTree')
+    # Recreate this helper group so the script is self-contained.
+    old_group = bpy.data.node_groups.get(node_group_name)
+    if old_group is not None:
+        bpy.data.node_groups.remove(old_group, do_unlink=True)
 
-        group_input = geo_group.nodes.new('NodeGroupInput')
-        group_input.location = (-600, 0)
-        group_output = geo_group.nodes.new('NodeGroupOutput')
-        group_output.location = (600, 0)
+    geo_group = bpy.data.node_groups.new(node_group_name, 'GeometryNodeTree')
+    geo_group.is_modifier = True
 
-        geo_group.interface.new_socket(name='Points', in_out='INPUT', socket_type='NodeSocketGeometry')
-        geo_group.interface.new_socket(name='Radius', in_out='INPUT', socket_type='NodeSocketFloat')
-        geo_group.interface.new_socket(name='Material', in_out='INPUT', socket_type='NodeSocketMaterial')
-        geo_group.interface.new_socket(name='Geometry', in_out='OUTPUT', socket_type='NodeSocketGeometry')
+    group_input = geo_group.nodes.new('NodeGroupInput')
+    group_input.location = (-600, 0)
 
-        ico_sphere = geo_group.nodes.new('GeometryNodeMeshIcoSphere')
-        ico_sphere.location = (-200, 0)
+    group_output = geo_group.nodes.new('NodeGroupOutput')
+    group_output.location = (600, 0)
 
-        instance_node = geo_group.nodes.new('GeometryNodeInstanceOnPoints')
-        instance_node.location = (0, 0)
+    # Geometry is the modifier's own input geometry.
+    geo_group.interface.new_socket(
+        name='Geometry',
+        in_out='INPUT',
+        socket_type='NodeSocketGeometry'
+    )
+    geo_group.interface.new_socket(
+        name='Radius',
+        in_out='INPUT',
+        socket_type='NodeSocketFloat'
+    )
+    geo_group.interface.new_socket(
+        name='Material',
+        in_out='INPUT',
+        socket_type='NodeSocketMaterial'
+    )
+    geo_group.interface.new_socket(
+        name='Geometry',
+        in_out='OUTPUT',
+        socket_type='NodeSocketGeometry'
+    )
 
-        set_material = geo_group.nodes.new('GeometryNodeSetMaterial')
-        set_material.location = (300, 0)
+    ico_sphere = geo_group.nodes.new('GeometryNodeMeshIcoSphere')
+    ico_sphere.location = (-200, 0)
 
-        geo_group.links.new(group_input.outputs['Points'], instance_node.inputs['Points'])
-        geo_group.links.new(ico_sphere.outputs['Mesh'], instance_node.inputs['Instance'])
-        geo_group.links.new(group_input.outputs['Radius'], ico_sphere.inputs['Radius'])
-        geo_group.links.new(instance_node.outputs['Instances'], set_material.inputs['Geometry'])
-        geo_group.links.new(group_input.outputs['Material'], set_material.inputs['Material'])
-        geo_group.links.new(set_material.outputs['Geometry'], group_output.inputs['Geometry'])
+    instance_node = geo_group.nodes.new('GeometryNodeInstanceOnPoints')
+    instance_node.location = (0, 0)
 
-        node_group = geo_group
+    set_material = geo_group.nodes.new('GeometryNodeSetMaterial')
+    set_material.location = (300, 0)
+
+    # Use the mesh carrying the modifier as the point geometry.
+    geo_group.links.new(
+        group_input.outputs['Geometry'],
+        instance_node.inputs['Points']
+    )
+    geo_group.links.new(
+        ico_sphere.outputs['Mesh'],
+        instance_node.inputs['Instance']
+    )
+    geo_group.links.new(
+        group_input.outputs['Radius'],
+        ico_sphere.inputs['Radius']
+    )
+    geo_group.links.new(
+        instance_node.outputs['Instances'],
+        set_material.inputs['Geometry']
+    )
+    geo_group.links.new(
+        group_input.outputs['Material'],
+        set_material.inputs['Material']
+    )
+    geo_group.links.new(
+        set_material.outputs['Geometry'],
+        group_output.inputs['Geometry']
+    )
+
+    node_group = geo_group
 
 
 # ------------------------
@@ -437,7 +467,6 @@ if visualize_endpoint_markers:
         # Set modifier inputs
         set_socket(mod, 'Radius', marker_radius)
         set_socket(mod, 'Material', mat)
-        set_socket(mod, 'Points', obj)  # feed the vertex mesh itself as Points input
         
     print("Endpoint marker meshes created.")
 

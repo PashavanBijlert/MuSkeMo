@@ -273,6 +273,19 @@ class ReflectUnilateralWrapsOperator(ReflectionOperatorBase): #inherits function
                 dimensions['radius'] = get_socket(objmodifier, "Radius")
                 dimensions['height'] = get_socket(objmodifier, "Height")
 
+            elif geomtype.lower() == 'sphere':
+                      
+                dimensions['radius'] = get_socket(objmodifier, "Radius")
+
+            elif geomtype.lower() == 'ellipsoid':
+
+                dimensions['radius_x'] = get_socket(objmodifier, "Radius x")
+                dimensions['radius_y'] = get_socket(objmodifier, "Radius y")
+                dimensions['radius_z'] = get_socket(objmodifier, "Radius z")
+
+
+
+
             #check if the mirrored parent exists
             if obj['parent_body'] !='not_assigned':
                 original_pbname = obj['parent_body']
