@@ -438,6 +438,11 @@ class AttachVizGeometryOperator(Operator):
                     skip_geom = True
                     break
 
+            if geom.parent:
+                self.report({'ERROR'}, "The selected geometry '" + geom.name +  "' already has a parent body in Blender. Unparent it first. Skipped this geometry object.")
+                skip_geom = True
+                break        
+
             if skip_geom:
                 continue
 
