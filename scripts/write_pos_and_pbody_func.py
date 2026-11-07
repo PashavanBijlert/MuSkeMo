@@ -41,26 +41,32 @@ def write_pos_and_pbody(context, filepath, collection_name, delimiter, obj_type,
     objects = [i for i in bpy.data.collections[collection_name].objects] #get each obj from the designated collection #ADD IF STATEMENT FOR MUSKEMO TYPE?
     
     for u in range(len(objects)): #for each contact
+
+        
         
         bpy.ops.object.select_all(action='DESELECT')
         
 
         obj = objects[u]
-        location = obj.matrix_world.translation
-        
-        
-        file.write(obj.name + delimiter) # contact name 
-        file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 
-        file.write(f"{location.y:{number_format}}{delimiter}")     # y location, 
-        file.write(f"{location.z:{number_format}}")     # z location, 
-        
-        if obj_type == 'CONTACT':
-            file.write(f"{delimiter}{obj.parent.name}{delimiter}") #parent body name
-            file.write(obj.parent['local_frame'] + delimiter) #parent body local frame
-            file.write(f"{obj['pos_in_parent_frame'][0]:{number_format}}{delimiter}") #x location local
-            file.write(f"{obj['pos_in_parent_frame'][1]:{number_format}}{delimiter}") #y location local
-            file.write(f"{obj['pos_in_parent_frame'][2]:{number_format}}") #z location local
-            #contact radius?
+
+        if (obj.get('MuSkeMo_type')=='CONTACT' or obj.get('MuSkeMo_type') == 'LANDMARK'):
+                
+            
+            location = obj.matrix_world.translation
+            
+            
+            file.write(obj.name + delimiter) # contact name 
+            file.write(f"{location.x:{number_format}}{delimiter}")     # x location, 
+            file.write(f"{location.y:{number_format}}{delimiter}")     # y location, 
+            file.write(f"{location.z:{number_format}}")     # z location, 
+            
+            if obj_type == 'CONTACT':
+                file.write(f"{delimiter}{obj.parent.name}{delimiter}") #parent body name
+                file.write(obj.parent['local_frame'] + delimiter) #parent body local frame
+                file.write(f"{obj['pos_in_parent_frame'][0]:{number_format}}{delimiter}") #x location local
+                file.write(f"{obj['pos_in_parent_frame'][1]:{number_format}}{delimiter}") #y location local
+                file.write(f"{obj['pos_in_parent_frame'][2]:{number_format}}") #z location local
+                #contact radius?
         
             
 
