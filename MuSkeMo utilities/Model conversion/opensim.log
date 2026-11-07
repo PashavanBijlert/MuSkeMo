@@ -54,3 +54,59 @@
 [2026-11-07 15:20:56.431] [warning] Couldn't find file 'Emu_geometry\neck_CV1.obj'.
 [2026-11-07 15:20:56.432] [error] Mesh Emu_geometry\head_rm.obj not connected to model...ignoring
 [2026-11-07 15:20:56.432] [warning] Couldn't find file 'Emu_geometry\head_rm.obj'.
+[2026-11-07 15:21:06.747] [error] Mesh Emu_geometry\pelvisHATv3.obj not connected to model...ignoring
+[2026-11-07 15:21:06.747] [warning] Couldn't find file 'Emu_geometry\pelvisHATv3.obj'.
+[2026-11-07 15:21:06.751] [error] Mesh Emu_geometry\thigh_l_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.751] [warning] Couldn't find file 'Emu_geometry\thigh_l_v2.obj'.
+[2026-11-07 15:21:06.752] [error] Mesh Emu_geometry\shank_l_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.752] [warning] Couldn't find file 'Emu_geometry\shank_l_v2.obj'.
+[2026-11-07 15:21:06.753] [error] Mesh Emu_geometry\MTs_l_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.754] [warning] Couldn't find file 'Emu_geometry\MTs_l_v2.obj'.
+[2026-11-07 15:21:06.755] [error] Mesh Emu_geometry\toes_l_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.755] [warning] Couldn't find file 'Emu_geometry\toes_l_v2.obj'.
+[2026-11-07 15:21:06.756] [error] Mesh Emu_geometry\thigh_r_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.756] [warning] Couldn't find file 'Emu_geometry\thigh_r_v2.obj'.
+[2026-11-07 15:21:06.757] [error] Mesh Emu_geometry\shank_r_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.757] [warning] Couldn't find file 'Emu_geometry\shank_r_v2.obj'.
+[2026-11-07 15:21:06.758] [error] Mesh Emu_geometry\MTs_r_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.758] [warning] Couldn't find file 'Emu_geometry\MTs_r_v2.obj'.
+[2026-11-07 15:21:06.760] [error] Mesh Emu_geometry\toes_r_v2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.760] [warning] Couldn't find file 'Emu_geometry\toes_r_v2.obj'.
+[2026-11-07 15:21:06.761] [error] Mesh Emu_geometry\neck_DV1.obj not connected to model...ignoring
+[2026-11-07 15:21:06.761] [warning] Couldn't find file 'Emu_geometry\neck_DV1.obj'.
+[2026-11-07 15:21:06.762] [error] Mesh Emu_geometry\neck_CV17.obj not connected to model...ignoring
+[2026-11-07 15:21:06.762] [warning] Couldn't find file 'Emu_geometry\neck_CV17.obj'.
+[2026-11-07 15:21:06.763] [error] Mesh Emu_geometry\neck_CV16.obj not connected to model...ignoring
+[2026-11-07 15:21:06.763] [warning] Couldn't find file 'Emu_geometry\neck_CV16.obj'.
+[2026-11-07 15:21:06.764] [error] Mesh Emu_geometry\neck_CV15.obj not connected to model...ignoring
+[2026-11-07 15:21:06.764] [warning] Couldn't find file 'Emu_geometry\neck_CV15.obj'.
+[2026-11-07 15:21:06.765] [error] Mesh Emu_geometry\neck_CV14.obj not connected to model...ignoring
+[2026-11-07 15:21:06.766] [warning] Couldn't find file 'Emu_geometry\neck_CV14.obj'.
+[2026-11-07 15:21:06.767] [error] Mesh Emu_geometry\neck_CV13.obj not connected to model...ignoring
+[2026-11-07 15:21:06.767] [warning] Couldn't find file 'Emu_geometry\neck_CV13.obj'.
+[2026-11-07 15:21:06.768] [error] Mesh Emu_geometry\neck_CV12.obj not connected to model...ignoring
+[2026-11-07 15:21:06.768] [warning] Couldn't find file 'Emu_geometry\neck_CV12.obj'.
+[2026-11-07 15:21:06.769] [error] Mesh Emu_geometry\neck_CV11.obj not connected to model...ignoring
+[2026-11-07 15:21:06.769] [warning] Couldn't find file 'Emu_geometry\neck_CV11.obj'.
+[2026-11-07 15:21:06.770] [error] Mesh Emu_geometry\neck_CV10.obj not connected to model...ignoring
+[2026-11-07 15:21:06.770] [warning] Couldn't find file 'Emu_geometry\neck_CV10.obj'.
+[2026-11-07 15:21:06.771] [error] Mesh Emu_geometry\neck_CV9.obj not connected to model...ignoring
+[2026-11-07 15:21:06.772] [warning] Couldn't find file 'Emu_geometry\neck_CV9.obj'.
+[2026-11-07 15:21:06.774] [error] Mesh Emu_geometry\neck_CV8.obj not connected to model...ignoring
+[2026-11-07 15:21:06.774] [warning] Couldn't find file 'Emu_geometry\neck_CV8.obj'.
+[2026-11-07 15:21:06.776] [error] Mesh Emu_geometry\neck_CV7.obj not connected to model...ignoring
+[2026-11-07 15:21:06.776] [warning] Couldn't find file 'Emu_geometry\neck_CV7.obj'.
+[2026-11-07 15:21:06.777] [error] Mesh Emu_geometry\neck_CV6.obj not connected to model...ignoring
+[2026-11-07 15:21:06.777] [warning] Couldn't find file 'Emu_geometry\neck_CV6.obj'.
+[2026-11-07 15:21:06.778] [error] Mesh Emu_geometry\neck_CV5.obj not connected to model...ignoring
+[2026-11-07 15:21:06.778] [warning] Couldn't find file 'Emu_geometry\neck_CV5.obj'.
+[2026-11-07 15:21:06.780] [error] Mesh Emu_geometry\neck_CV4.obj not connected to model...ignoring
+[2026-11-07 15:21:06.780] [warning] Couldn't find file 'Emu_geometry\neck_CV4.obj'.
+[2026-11-07 15:21:06.781] [error] Mesh Emu_geometry\neck_CV3.obj not connected to model...ignoring
+[2026-11-07 15:21:06.781] [warning] Couldn't find file 'Emu_geometry\neck_CV3.obj'.
+[2026-11-07 15:21:06.782] [error] Mesh Emu_geometry\neck_CV2.obj not connected to model...ignoring
+[2026-11-07 15:21:06.782] [warning] Couldn't find file 'Emu_geometry\neck_CV2.obj'.
+[2026-11-07 15:21:06.783] [error] Mesh Emu_geometry\neck_CV1.obj not connected to model...ignoring
+[2026-11-07 15:21:06.784] [warning] Couldn't find file 'Emu_geometry\neck_CV1.obj'.
+[2026-11-07 15:21:06.785] [error] Mesh Emu_geometry\head_rm.obj not connected to model...ignoring
+[2026-11-07 15:21:06.785] [warning] Couldn't find file 'Emu_geometry\head_rm.obj'.
