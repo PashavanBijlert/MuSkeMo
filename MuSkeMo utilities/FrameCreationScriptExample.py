@@ -21,7 +21,7 @@ size = 0.1 #frame display size in meters
 worldMat = Matrix([(1.0, 0.0, 0.0, 1.0), #replace with your actual worldmat
         (0.0, 1.0, 0.0, 0.0),
         (0.0, 0.0, 1.0, 0.0),
-        (0.0, 0.0, 0.0, 0.0)])
+        (0.0, 0.0, 0.0, 1.0)])
         
 
 posInGlob = worldMat.translation #should be in meters
